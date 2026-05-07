@@ -16,11 +16,11 @@ Assuming the vertex is `V`
 :----------:|:-------------:|
 `adjacent` |  Opposite endpoints of all edges in `edge_to_vertex`
 `adjacent_dia` | Vertices that are part of the contour of the cells around `V`, but are not connected by an edge to `V`
-`surround` | Cells for which `V` is one of their vertices
-`neighbor` | Blank
+`surround` | Blank
+`neighbor` | Cells for which `V` is one of their vertices
 `edge_to_vertex` | Edges that are incident to `V`
 
-### Type 2* - Edge
+### Type 2 - Edge
 `type2` may be used for orientation. Future update will collapse all edge points to the same type. Assuming the edge is `E`
   Subfield  |      Expected value      
 :----------:|:-------------:|
@@ -36,8 +36,8 @@ These are used for corner numbers and cage. These should usually be defined as a
 :----------:|:-------------:|
 `adjacent` |  Corners that are either in a different cell than `C` but are neighbor to the same vertex, or corners that are in the same cell as `C`, and are neighbor to a vertex that is adjacent of the vertex of `C`
 `adjacent_dia` | Blank
-`surround` | Cell that contains `C`
-`neighbor` | Vertex of the cell that contains `C` closest to `C` (if pushed outwards, this would be where `C` ends up)
+`surround` | Vertex of the cell that contains `C` closest to `C` (if pushed outwards, this would be where `C` ends up)
+`neighbor` | Cell that contains `C`
 `edge_to_vertex` | Blank
 
 ### Type 4 - Compass
@@ -46,8 +46,6 @@ These are used for compass clues, principally. These should usually be defined a
 :----------:|:-------------:|
 `adjacent` |  Blank
 `adjacent_dia` | Blank
-`surround` | Cell that contains `C`
-`neighbor` | Edge of the cell that contains `C` closest to `C` (if pushed outwards, this would be where `C` ends up)
+`surround` | Edge of the cell that contains `C` closest to `C` (if pushed outwards, this would be where `C` ends up)
+`neighbor` | Cell that contains `C`
 `edge_to_vertex` | Blank
-
-Corners and Compass can be something else than 3 and 4 for now, but they need to be consistent.

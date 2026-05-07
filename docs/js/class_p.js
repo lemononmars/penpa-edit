@@ -12860,16 +12860,91 @@ class Puzzle {
             this.ctx.shadowColor = Color.TRANSPARENTBLACK;
         }
     }
-/*
+
+    // Need more detail to properly draw stuff so it looks centered
     draw_cage(pu) {
+        // assume corner_table is a 2D array with [cell][vertex] = corner
         let r = 0.16;
         for (var i in this[pu].cage) {
             var i1 = i.split(",")[0];
-            var i2 = 
+            var i2 = i.split(",")[1];
+            // Corners in same cell, simply connect them with a line
+            if (this.point[i1].neighbor[0] == this.point[i2].neighbor[0]) {
+                set_line_style(this.ctx, this[pu].cage[i]);
+                if (UserSettings.custom_colors_on && this[pu + "_col"].cage[i]) {
+                    this.ctx.strokeStyle = this[pu + "_col"].cage[i];
+                }
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.get_cage_coordinates(i1));
+                this.ctx.moveTo(this.get_cage_coordinates(i2));
+                this.ctx.stroke();
+            }
+            // Corners in adjacent cells, find intersection of the side lines and connect corners to intersection
+            else {
+                if (this.point[i1].surround[0] != this.point[i2].surround[0]) {
+                    console.log("Cage corners should not be connected");
+                    return;
+                }
+                let vertex = this.point[i1].surround[0];
+                // The corners are next to a pair of edges within their cell. If two corners are connected and are in different cells, the line should pass
+                // through one of these edge (same for both corners). Find the other edge of the pair (different for both corners), find the other vertex
+                // that is incident to that edge and find the corner that corresponds to that other vertex and face combination
+                let k1 = 0;
+                let k2 = 0;
+                for (let j = 0; j < this.point[vertex].edge_to_vertex.length; j++) {
+                    if (this.point[this.point[vertex].edge_to_vertex[j].neighbor].includes(this.point[i1].neighbor[0]) &&
+                       !this.point[this.point[vertex].edge_to_vertex[j].neighbor].includes(this.point[i2].neighbor[0])) {
+                        k1 = this.point[this.point[vertex].edge_to.vertex[j].edge_to_vertex[!this.point[vertex.edge_to.vertex[j].edge_to_vertex.indexOf(vertex)]]];
+                    }
+                    if (this.point[this.point[vertex].edge_to_vertex[j].neighbor].includes(this.point[i2].neighbor[0]) &&
+                       !this.point[this.point[vertex].edge_to_vertex[j].neighbor].includes(this.point[i1].neighbor[0])) {
+                        k2 = this.point[this.point[vertex].edge_to.vertex[j].edge_to_vertex[!this.point[vertex.edge_to.vertex[j].edge_to_vertex.indexOf(vertex)]]];
+                    }
+                }
+                let j1 = corner_table[this.point[i1].neighbor[0]][k1];
+                let j2 = corner_table[this.point[i2].neighbor[0]][k2];
+                // i1-j1 and i2-j2 can define lines. Find the intersection of both lines, and connect the intersection to i1, then the intersection to i2
+                let pi1 = this.get_cage_coordinates(i1);
+                let pi2 = this.get_cage_coordinates(i2);
+                let pj1 = this.get_cage_coordinates(j1);
+                let pj2 = this.get_cage_coordinates(j2);
+                let intersect = [];
+
+                let denom = ((pj2[1] - pi2[1]) * (pj1[0] - pi1[0])) - ((pj2[0] - pi2[0]) * (pj1[1] - pi1[1]));
+                if (denom == 0) {
+                    // Undefined intersection, just take midpoint
+                    intersect = [(pi1[0] + pi2[0]) / 2, (pi1[1] + pi2[1]) / 2];
+                }
+                else {
+                    let deltY = pi1[1] - pi2[1];
+                    let deltX = pi1[0] - pi2[0];
+                    let numer = ((pj2[0] - pi2[0]) * deltY) - ((pj2[1] - pi2[1]) * deltX);
+                    let coeff = numer/denom;
+                    intersect = [pi1[0] + (coeff * (pj1[0] - pi1[0])), pi1[1] + (coeff * (pj1[1] - pi1[1]))];
+                }
+                set_line_style(this.ctx, this[pu].cage[i]);
+                if (UserSettings.custom_colors_on && this[pu + "_col"].cage[i]) {
+                    this.ctx.strokeStyle = this[pu + "_col"].cage[i];
+                }
+                this.ctx.beginPath();
+                this.ctx.moveTo(intersect);
+                this.ctx.moveTo(pi1);
+                this.ctx.stroke();
+                this.ctx.beginPath();
+                this.ctx.moveTo(intersect);
+                this.ctx.moveTo(pi2);
+                this.ctx.stroke();
+            }
         }
     }
-*/
-    // Given a cage state, split the state into paths and loops so cages can be drawn "smartly"
+
+    get_cage_coordinates(corner) {
+        let cell = this.point[corner].neighbor[0];
+        let vertex = this.point[corner].surround[0];
+        return true; // Exact calculation to set up later
+    }
+
+    // Given a cage state, split the state into paths and loops so cages can be drawn "smartly". Unused for now
     preprocess_cage(cage) {
         let output = [];
         let neighbors = [];
@@ -12881,7 +12956,7 @@ class Puzzle {
             neighbors[i.split(",")[0]].push(i.split(",")[1]);
             neighbors[i.split(",")[1]].push(i.split(",")[0]);
         }
-        
+
         for (var i in neighbors) {
             let children = [];
             if (neighbors[i].length > 2) {
@@ -12935,6 +13010,7 @@ class Puzzle {
                 output.push(path);
             }
         }
+        return output;
     }
 
     remove_from_array(arr, val) {
