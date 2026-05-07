@@ -101,7 +101,7 @@ class Puzzle_pyramid extends Puzzle {
             }
         }
 
-        type = 3;
+        type = 12;
         for (var j = 0; j < ny; j++) {
             for (var i = 0; i < nx; i++) {
                 if (i === 0 || i === nx - 1 || j === 0 || j === ny - 1) {
@@ -122,7 +122,7 @@ class Puzzle_pyramid extends Puzzle {
 
         //  1/4
         var r = 0.25;
-        type = 4;
+        type = 3;
         for (var j = 0; j < ny; j++) {
             for (var i = 0; i < nx; i++) {
                 if (i === 0 || i === nx - 1 || j === 0 || j === ny - 1) {
@@ -162,7 +162,7 @@ class Puzzle_pyramid extends Puzzle {
           }
         }
         */
-
+        this.types = [0, 1, 2, 12, 3];
         this.point = point;
     }
 
@@ -200,43 +200,44 @@ class Puzzle_pyramid extends Puzzle {
 
     type_set() {
         var type;
+        let grouped_types = this.get_grouped_types();
         switch (this.mode[this.mode.qa].edit_mode) {
             case "surface":
             case "multicolor":
             case "board":
-                type = [0];
+                type = grouped_types[0];
                 break;
             case "symbol":
             case "move":
                 if (!UserSettings.draw_edges) {
-                    type = [0];
+                    type = grouped_types[0];
                 } else {
-                    type = [0, 1, 2, 3];
+                    type = grouped_types[0].concat(grouped_types[1], grouped_types[2]);
                 }
                 break;
             case "number":
                 if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "3") {
-                    type = [4];
+                    type = [3];
                 } else {
                     if (!UserSettings.draw_edges) {
-                        type = [0];
+                        type = grouped_types[0];
                     } else {
-                        type = [0, 1, 2, 3];
+                        type = grouped_types[0].concat(grouped_types[1], grouped_types[2]);
                     }
                 }
                 break;
             case "line":
                 if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "4") {
-                    type = [2, 3];
+                    type = grouped_types[2];
                 } else {
-                    type = [0];
+                    type = grouped_types[0];
                 }
                 break;
             case "lineE":
                 if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "4") {
-                    type = [2, 3];
+                    type = grouped_types[2];
                 } else {
-                    type = [1];
+                    type = grouped_types[1];
                 }
                 break;
             case "wall":
@@ -248,9 +249,9 @@ class Puzzle_pyramid extends Puzzle {
                 break;
             case "special":
                 if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "polygon") {
-                    type = [1];
+                    type = grouped_types[1];
                 } else {
-                    type = [0];
+                    type = grouped_types[0];
                 }
                 break;
             case "combi":
@@ -258,12 +259,12 @@ class Puzzle_pyramid extends Puzzle {
                     case "tents":
                     case "linex":
                     case "yajilin":
-                        type = [0, 2, 3];
+                        type = grouped_types[0].concat(grouped_types[2]);
                         break;
                     case "edgex":
                     case "edgexoi":
                     case "star":
-                        type = [0, 1, 2, 3];
+                        type = grouped_types[0].concat(grouped_types[1], grouped_types[2]);
                         break;
                     case "blpo":
                     case "blwh":
@@ -275,21 +276,21 @@ class Puzzle_pyramid extends Puzzle {
                     case "shaka":
                     case "numfl":
                     case "alfl":
-                        type = [0];
+                        type = grouped_types[0];
                         break;
                     case "edgesub":
-                        type = [0, 1];
+                        type = grouped_types[0].concat(grouped_types[1]);
                         break;
                     case "akari":
-                        type = [0, 2, 3];
+                        type = grouped_types[0].concat(grouped_types[2]);
                         break;
                     case "mines":
-                        type = [0, 1, 2, 3];
+                        type = grouped_types[0].concat(grouped_types[1], grouped_types[2]);
                         break;
                 }
                 break;
             case "sudoku":
-                type = [0];
+                type = grouped_types[0];
                 break;
         }
         return type;
@@ -302,7 +303,7 @@ class Puzzle_pyramid extends Puzzle {
             if (this.type.indexOf(this.point[i].type) != -1) {
                 min0 = (x - this.point[i].x) ** 2 + (y - this.point[i].y) ** 2;
                 if (min0 < min) {
-                    if (this.point[i].type === 2 || this.point[i].type === 3) {
+                    if (this.point[i].type%10 === 2) {
                         if (min0 > (0.7 * this.size) ** 2) {
                             break;
                         }
@@ -322,7 +323,7 @@ class Puzzle_pyramid extends Puzzle {
             if (this.type.indexOf(this.point[i].type) != -1) {
                 min0 = (x - this.point[i].x) ** 2 + (y - this.point[i].y) ** 2;
                 if (min0 < min) {
-                    if (this.point[i].type === 1 || this.point[i].type === 2 || this.point[i].type === 3) {
+                    if (this.point[i].type%10 === 1 || this.point[i].type%10 === 2) {
                         if (min0 > (hitboxfactor * this.size) ** 2) {
                             break;
                         }

@@ -141,6 +141,8 @@ class Puzzle {
         this.select_remove = false;
         this.surface_remove = false;
         this.panelflag = false;
+        this.corner_table = []; // Table for quick lookup for cage drawing. First coordinate is cell, second is vertex
+        this.types = [];
         this.custom_colors = {};
         // Drawing mode
         this.mmode = ""; // Problem mode
@@ -520,6 +522,16 @@ class Puzzle {
         this.cellsoutsideFrame = [...new Set(this.cellsoutsideFrame.sort(function(a, b) {
             return a - b; // Ascending
         }))]
+    }
+
+    // Returns an array grouping the types in center, vertex, edge, corner and compass
+    get_grouped_types() {
+        let output = [[],[],[],[],[]];
+        for (let i = 0; i < this.types.length; i++) {
+            let type = this.types[i];
+            output[type%10].push(type);
+        }
+        return output;
     }
 
     point_move(x, y, theta) {
@@ -12863,7 +12875,6 @@ class Puzzle {
 
     // Need more detail to properly draw stuff so it looks centered
     draw_cage(pu) {
-        // assume corner_table is a 2D array with [cell][vertex] = corner
         let r = 0.16;
         for (var i in this[pu].cage) {
             var i1 = i.split(",")[0];
@@ -12874,16 +12885,19 @@ class Puzzle {
                 if (UserSettings.custom_colors_on && this[pu + "_col"].cage[i]) {
                     this.ctx.strokeStyle = this[pu + "_col"].cage[i];
                 }
+                let p1 = this.get_cage_coordinates(i1, r);
+                let p2 = this.get_cage_coordinates(i2, r);
                 this.ctx.beginPath();
-                this.ctx.moveTo(this.get_cage_coordinates(i1));
-                this.ctx.moveTo(this.get_cage_coordinates(i2));
+                this.ctx.moveTo(p1[0], p1[1]);
+                this.ctx.lineTo(p2[0], p2[1]);
                 this.ctx.stroke();
             }
             // Corners in adjacent cells, find intersection of the side lines and connect corners to intersection
             else {
                 if (this.point[i1].surround[0] != this.point[i2].surround[0]) {
-                    console.log("Cage corners should not be connected");
-                    return;
+                    // If this is printed, something has gone wrong
+                    console.log("Cage corners that should not be connected are connected");
+                    continue;
                 }
                 let vertex = this.point[i1].surround[0];
                 // The corners are next to a pair of edges within their cell. If two corners are connected and are in different cells, the line should pass
@@ -12892,22 +12906,22 @@ class Puzzle {
                 let k1 = 0;
                 let k2 = 0;
                 for (let j = 0; j < this.point[vertex].edge_to_vertex.length; j++) {
-                    if (this.point[this.point[vertex].edge_to_vertex[j].neighbor].includes(this.point[i1].neighbor[0]) &&
-                       !this.point[this.point[vertex].edge_to_vertex[j].neighbor].includes(this.point[i2].neighbor[0])) {
-                        k1 = this.point[this.point[vertex].edge_to.vertex[j].edge_to_vertex[!this.point[vertex.edge_to.vertex[j].edge_to_vertex.indexOf(vertex)]]];
+                    if (this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i1].neighbor[0]) &&
+                       !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i2].neighbor[0])) {
+                        k1 = this.point[this.point[vertex].edge_to_vertex[j]].edge_to_vertex.filter(v => v != vertex)[0];
                     }
-                    if (this.point[this.point[vertex].edge_to_vertex[j].neighbor].includes(this.point[i2].neighbor[0]) &&
-                       !this.point[this.point[vertex].edge_to_vertex[j].neighbor].includes(this.point[i1].neighbor[0])) {
-                        k2 = this.point[this.point[vertex].edge_to.vertex[j].edge_to_vertex[!this.point[vertex.edge_to.vertex[j].edge_to_vertex.indexOf(vertex)]]];
+                    if (this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i2].neighbor[0]) &&
+                       !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i1].neighbor[0])) {
+                        k2 = this.point[this.point[vertex].edge_to_vertex[j]].edge_to_vertex.filter(v => v != vertex)[0];
                     }
                 }
-                let j1 = corner_table[this.point[i1].neighbor[0]][k1];
-                let j2 = corner_table[this.point[i2].neighbor[0]][k2];
+                let j1 = this.corner_table[this.point[i1].neighbor[0]][k1];
+                let j2 = this.corner_table[this.point[i2].neighbor[0]][k2];
                 // i1-j1 and i2-j2 can define lines. Find the intersection of both lines, and connect the intersection to i1, then the intersection to i2
-                let pi1 = this.get_cage_coordinates(i1);
-                let pi2 = this.get_cage_coordinates(i2);
-                let pj1 = this.get_cage_coordinates(j1);
-                let pj2 = this.get_cage_coordinates(j2);
+                let pi1 = this.get_cage_coordinates(i1, r);
+                let pi2 = this.get_cage_coordinates(i2, r);
+                let pj1 = this.get_cage_coordinates(j1, r);
+                let pj2 = this.get_cage_coordinates(j2, r);
                 let intersect = [];
 
                 let denom = ((pj2[1] - pi2[1]) * (pj1[0] - pi1[0])) - ((pj2[0] - pi2[0]) * (pj1[1] - pi1[1]));
@@ -12922,26 +12936,27 @@ class Puzzle {
                     let coeff = numer/denom;
                     intersect = [pi1[0] + (coeff * (pj1[0] - pi1[0])), pi1[1] + (coeff * (pj1[1] - pi1[1]))];
                 }
-                set_line_style(this.ctx, this[pu].cage[i]);
+                set_line_style(this.ctx, this[pu].cage[i] + 100);
                 if (UserSettings.custom_colors_on && this[pu + "_col"].cage[i]) {
                     this.ctx.strokeStyle = this[pu + "_col"].cage[i];
                 }
                 this.ctx.beginPath();
-                this.ctx.moveTo(intersect);
-                this.ctx.moveTo(pi1);
+                this.ctx.moveTo(pi1[0], pi1[1]);
+                this.ctx.lineTo(intersect[0], intersect[1]);
                 this.ctx.stroke();
                 this.ctx.beginPath();
-                this.ctx.moveTo(intersect);
-                this.ctx.moveTo(pi2);
+                this.ctx.moveTo(pi2[0], pi2[1]);
+                this.ctx.lineTo(intersect[0], intersect[1]);
                 this.ctx.stroke();
             }
         }
     }
 
-    get_cage_coordinates(corner) {
+    get_cage_coordinates(corner, radius) {
         let cell = this.point[corner].neighbor[0];
         let vertex = this.point[corner].surround[0];
-        return true; // Exact calculation to set up later
+
+        return [radius*this.point[cell].x + (1-radius) * this.point[vertex].x, radius*this.point[cell].y + (1-radius) * this.point[vertex].y]
     }
 
     // Given a cage state, split the state into paths and loops so cages can be drawn "smartly". Unused for now
