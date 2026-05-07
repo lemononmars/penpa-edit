@@ -20,8 +20,8 @@ Assuming the vertex is `V`
 `neighbor` | Blank
 `edge_to_vertex` | Edges that are incident to `V`
 
-### Type 2 - Edge
-`type2` may be used for orientation. Assuming the edge is `E`
+### Type 2* - Edge
+`type2` may be used for orientation. Future update will collapse all edge points to the same type. Assuming the edge is `E`
   Subfield  |      Expected value      
 :----------:|:-------------:|
 `adjacent` |  Edges that are parallel (or almost) which share a cell with `E`. These are used to draw walls. Usually of the same `type2` as `E` 
@@ -49,3 +49,5 @@ These are used for compass clues, principally. These should usually be defined a
 `surround` | Cell that contains `C`
 `neighbor` | Edge of the cell that contains `C` closest to `C` (if pushed outwards, this would be where `C` ends up)
 `edge_to_vertex` | Blank
+
+Corners and Compass can be something else than 3 and 4 for now, but they need to be consistent.

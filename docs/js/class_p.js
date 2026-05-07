@@ -9433,6 +9433,49 @@ class Puzzle {
                     // let min_cell = Math.min(...this.cageselection);
                     // let max_cell = Math.max(...this.cageselection);
 
+                    // assume corner_table is a 2D array with [cell][vertex] = corner 
+                    // assume add_line is the function to add the line to the array
+/*
+                    let cage_vertices = [];
+                    let cage_edges = [];
+                    let inside_vertices = [];
+                    for (let i = 0; i < this.cageselection.length; i++) {
+                        cage_edges.push(this.point[k].surround);
+                        cage_vertices.push(this.point[k].neighbor);
+                    }
+
+                    for (let i = 0; i < cage_vertices.length; i++) {
+                        if (this.point[cage_vertices[i]].surround.every(val=> this.cageselection.includes(val))) {
+                            inside_vertices.push(cage_vertices[i]);
+                        }
+                    }
+
+                    for (let i = 0; i < cage_edges.length; i++) {
+                        let edge = this.point[cage_edges[i]];
+                        let cell_0_in = this.cageselection.includes(edge.neighbor[0]);
+                        let cell_1_in = this.cageselection.includes(edge.neighbor[1]);
+                        if (cell_0_in !== cell_1_in) {
+                            let p0 = corner_table[cell_0_in ? edge.neighbor[0] : edge.neighbor[1]][edge.edge_to_vertex[0]];
+                            let p1 = corner_table[cell_0_in ? edge.neighbor[0] : edge.neighbor[1]][edge.edge_to_vertex[1]];
+                            key = (Math.min(p0, p1).toString() + "," + Math.max(p0, p1).toString());
+                            if (this[this.mode.qa][array][key] !== line_style) {
+                                this.re_line(array, key, line_style, this.undoredo_counter);
+                            }
+                        }
+                        else if (cell_0_in && cell_1_in) {
+                            for (let j = 0; j < 2; j++) {
+                                if (!inside_vertices.includes(edge.edge_to_vertex[i])) {
+                                    let p0 = corner_table[edge.neighbor[0]][edge.edge_to_vertex[j]];
+                                    let p1 = corner_table[edge.neighbor[1]][edge.edge_to_vertex[j]];
+                                    key = (Math.min(p0, p1).toString() + "," + Math.max(p0, p1).toString());
+                                    if (this[this.mode.qa][array][key] !== line_style) {
+                                        this.re_line(array, key, line_style, this.undoredo_counter);
+                                    }
+                                }
+                            }
+                        }
+                    }*/
+
                     // cage cell locations
                     for (let i = 0; i < row_size; i++) {
                         grid_matrix[i] = new Array(parseInt(col_size)).fill(0);
@@ -12817,7 +12860,91 @@ class Puzzle {
             this.ctx.shadowColor = Color.TRANSPARENTBLACK;
         }
     }
+/*
+    draw_cage(pu) {
+        let r = 0.16;
+        for (var i in this[pu].cage) {
+            var i1 = i.split(",")[0];
+            var i2 = 
+        }
+    }
+*/
+    // Given a cage state, split the state into paths and loops so cages can be drawn "smartly"
+    preprocess_cage(cage) {
+        let output = [];
+        let neighbors = [];
+        for (var i in cage) {
+            if (!neighbors[i.split(",")[0]])
+                neighbors[i.split(",")[0]] = []
+            if (!neighbors[i.split(",")[1]])
+                neighbors[i.split(",")[1]] = []
+            neighbors[i.split(",")[0]].push(i.split(",")[1]);
+            neighbors[i.split(",")[1]].push(i.split(",")[0]);
+        }
+        
+        for (var i in neighbors) {
+            let children = [];
+            if (neighbors[i].length > 2) {
+                children.push(i);
+                while (children.length > 0) {
+                    let subchildren = [];
+                    while (children.length > 0) {
+                        let j = children.shift();
+                        if (!!neighbors[j]) {
+                            for (let k = 0; k < neighbors[j].length; k++) {
+                                let neighbor = neighbors[j][k]
+                                output.push([Math.min(neighbor,j), Math.max(neighbor,j)]);
+                                this.remove_from_array(neighbors[neighbor], j);
+                                if (neighbors[neighbor].length > 1)
+                                    subchildren.push(neighbor);
+                            }
+                            neighbors[j] = [];
+                        }
+                    }
+                    children = subchildren;
+                }
+            }
+        }
 
+        for (var i in neighbors) {
+            let path = [];
+            if (neighbors[i].length == 1) {
+                let j = i;
+                while (!!neighbors[j]) {
+                    path.push(parseInt(j));
+                    let k = neighbors[j][0];
+                    neighbors[j] = [];
+                    this.remove_from_array(neighbors[k], j);
+                    j = k;
+                }
+                output.push(path);
+            }
+        }
+
+        for (var i in neighbors) {
+            let path = [];
+            if (neighbors[i].length == 2) {
+                let j = i;
+                while (!!neighbors[j]) {
+                    path.push(parseInt(j));
+                    let k = neighbors[j][0];
+                    neighbors[j] = [];
+                    this.remove_from_array(neighbors[k], j);
+                    j = k;
+                }
+                output.push(path);
+            }
+        }
+    }
+
+    remove_from_array(arr, val) {
+        if (!!arr) {   
+            if (arr.indexOf(val) !== -1) {
+                arr.splice(arr.indexOf(val), 1);
+            }
+        }
+    }
+    
     check_solution() {
         if (!this.multisolution) {
             if (this.solution) {
