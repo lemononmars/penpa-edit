@@ -534,6 +534,114 @@ class Puzzle {
         return output;
     }
 
+    // Fill the neighbor array for edges and vertices
+
+    fill_neighbors(point) {
+        for (var i in point) {
+            if (point[i].type%10 == 0) {
+                for (let j = 0; j < point[i].neighbor.length; j++) {
+                    point[point[i].neighbor[j]].neighbor.push(parseInt(i));
+                }
+                for (let j = 0; j < point[i].surround.length; j++) {
+                    point[point[i].surround[j]].neighbor.push(parseInt(i));
+                }
+            }
+        }
+        for (var i in point) {
+            if (point[i].type%10 == 1 || point[i].type%10 == 2) {
+                point[i].neighbor = [...new Set(point[i].neighbor)];
+            }    
+        }
+        return point;
+    }
+
+    // For this function to work correctly, cells need to have their surrond to be exact and their neighbor to contain all correct edges (there may be more edges than the correct ones)
+    // This function fills in the rest of the fields, and modify incorrect fields if needed
+
+    fix_points(point) {
+        // First pass - reset fields
+        for (var i in point) {
+            if (point[i].type%10 == 0) {
+                point[i].adjacent = [];
+            }
+            if (point[i].type%10 == 1) {
+                point[i].adjacent = [];
+                point[i].neighbor = [];
+                point[i].edge_to_vertex = [];
+            }
+            if (point[i].type%10 == 2) {
+                point[i].adjacent = [];
+                point[i].neighbor = [];
+                point[i].edge_to_vertex = [];
+            }
+        }
+
+        // Second pass - correctly link edges with their incident vertices, and vice versa
+        for (var i in point) {
+            // For all cells
+            if (point[i].type%10 == 0) {
+                let deltas = [];
+                let vertices = point[i].surround;
+                let edge_bank = point[i].neighbor;
+                // Find all possible pairs of vertices
+                for (let j = 0; j < vertices.length; j++) {
+                    if (point[j].neighbor.length > 0) {
+                        point[j].neighbor = [];
+                    }
+                    point[j].neighbor.push(i);
+                    for (let k = j + 1; k < vertices.length; k++) {
+                        // Store how far the midpoints of these pairs lie from the edge coordinates.
+                        // If an edge is incident to two vertices, its coordinate should be roughly
+                        // at the midpoint of the two vertices
+                        let midpoint = [0.5 * point[vertices[j]].x + 0.5 * point[vertices[k]].x, 0.5 * point[vertices[j]].y + 0.5 * point[vertices[k]].y];
+                        for (let l = 0; l < edge_bank.length; l++) {
+                            deltas.push({diff: (Math.abs(point[edge_bank[l]].x - midpoint[0]) +  Math.abs(point[edge_bank[l]].y - midpoint[1])), 
+                                         v1: Math.min(vertices[j], vertices[k]), 
+                                         v2: Math.max(vertices[j], vertices[k]),
+                                         edge: edge_bank[l]});
+                        }
+                    }
+                }
+                // Sort the distance, and find the best matches
+                deltas.sort((a, b) => a.diff - b.diff);
+                let edges = [];
+                for (let j = 0; j < vertices.length; j++) {
+                    // Fill in the edge_to_vertex data, and add the cell to the edge's neighbour
+                    point[deltas[j].edge].edge_to_vertex = [deltas[j].v1, deltas[j].v2];
+                    if (point[deltas[j].v1].edge_to_vertex.indexOf(deltas[j].edge) < 0) {
+                        point[deltas[j].v1].edge_to_vertex.push(deltas[j].edge);
+                    }
+                    if (point[deltas[j].v2].edge_to_vertex.indexOf(deltas[j].edge) < 0) {
+                        point[deltas[j].v2].edge_to_vertex.push(deltas[j].edge);
+                    }
+                    point[deltas[j].edge].neighbor.push(parseInt(i));
+                    edges.push(deltas[j].edge);
+                }
+                point[i].neighbor = edges;
+            }
+        }
+        // Third pass - fix cells and vertices' adjacent fields
+        for (var i in point) {
+            // For all edges, which now have correct edge_to_vertex and neighbor data
+            if (point[i].type%10 == 2) {
+                let edge = point[i];
+                for (let j = 0; j < 2; j++) {
+                    // Fix vertices adjacent
+                    if (!!edge.edge_to_vertex) {
+                        if (edge.edge_to_vertex.length == 2) {
+                            point[edge.edge_to_vertex[j]].adjacent.push(parseInt(edge.edge_to_vertex[(j + 1) % 2]));
+                        }
+                    }
+                    // Fix cells adjacent
+                    if (edge.neighbor.length == 2) {
+                        point[edge.neighbor[j]].adjacent.push(parseInt(edge.neighbor[(j + 1) % 2]));
+                    }     
+                }
+            }
+        }
+        return point;
+    }
+
     point_move(x, y, theta) {
         var x0 = this.canvasx * 0.5 + 0.5; // Rotate the canvas center +0.5, enter x,y +0.5 when moving in parallel
         var y0 = this.canvasy * 0.5 + 0.5;
@@ -9444,20 +9552,22 @@ class Puzzle {
                     this[this.mode.qa][arraykill].push(sortedcages);
                     // let min_cell = Math.min(...this.cageselection);
                     // let max_cell = Math.max(...this.cageselection);
+                    // remember drawing_mode
+                    let draw_mode = this.drawing_mode;
+                    this.drawing_mode = 100;
 
-                    // assume corner_table is a 2D array with [cell][vertex] = corner 
-                    // assume add_line is the function to add the line to the array
-/*
                     let cage_vertices = [];
                     let cage_edges = [];
                     let inside_vertices = [];
                     for (let i = 0; i < this.cageselection.length; i++) {
-                        cage_edges.push(this.point[k].surround);
-                        cage_vertices.push(this.point[k].neighbor);
+                        cage_edges = cage_edges.concat(this.point[this.cageselection[i]].neighbor);
+                        cage_vertices = cage_vertices.concat(this.point[this.cageselection[i]].surround);
                     }
+                    cage_edges = [...new Set(cage_edges)];
+                    cage_vertices = [...new Set(cage_vertices)];
 
                     for (let i = 0; i < cage_vertices.length; i++) {
-                        if (this.point[cage_vertices[i]].surround.every(val=> this.cageselection.includes(val))) {
+                        if (this.point[cage_vertices[i]].neighbor.every(val => this.cageselection.includes(val))) {
                             inside_vertices.push(cage_vertices[i]);
                         }
                     }
@@ -9467,8 +9577,8 @@ class Puzzle {
                         let cell_0_in = this.cageselection.includes(edge.neighbor[0]);
                         let cell_1_in = this.cageselection.includes(edge.neighbor[1]);
                         if (cell_0_in !== cell_1_in) {
-                            let p0 = corner_table[cell_0_in ? edge.neighbor[0] : edge.neighbor[1]][edge.edge_to_vertex[0]];
-                            let p1 = corner_table[cell_0_in ? edge.neighbor[0] : edge.neighbor[1]][edge.edge_to_vertex[1]];
+                            let p0 = this.corner_table[cell_0_in ? edge.neighbor[0] : edge.neighbor[1]][edge.edge_to_vertex[0]];
+                            let p1 = this.corner_table[cell_0_in ? edge.neighbor[0] : edge.neighbor[1]][edge.edge_to_vertex[1]];
                             key = (Math.min(p0, p1).toString() + "," + Math.max(p0, p1).toString());
                             if (this[this.mode.qa][array][key] !== line_style) {
                                 this.re_line(array, key, line_style, this.undoredo_counter);
@@ -9476,9 +9586,9 @@ class Puzzle {
                         }
                         else if (cell_0_in && cell_1_in) {
                             for (let j = 0; j < 2; j++) {
-                                if (!inside_vertices.includes(edge.edge_to_vertex[i])) {
-                                    let p0 = corner_table[edge.neighbor[0]][edge.edge_to_vertex[j]];
-                                    let p1 = corner_table[edge.neighbor[1]][edge.edge_to_vertex[j]];
+                                if (!inside_vertices.includes(edge.edge_to_vertex[j])) {
+                                    let p0 = this.corner_table[edge.neighbor[0]][edge.edge_to_vertex[j]];
+                                    let p1 = this.corner_table[edge.neighbor[1]][edge.edge_to_vertex[j]];
                                     key = (Math.min(p0, p1).toString() + "," + Math.max(p0, p1).toString());
                                     if (this[this.mode.qa][array][key] !== line_style) {
                                         this.re_line(array, key, line_style, this.undoredo_counter);
@@ -9486,196 +9596,10 @@ class Puzzle {
                                 }
                             }
                         }
-                    }*/
-
-                    // cage cell locations
-                    for (let i = 0; i < row_size; i++) {
-                        grid_matrix[i] = new Array(parseInt(col_size)).fill(0);
                     }
-                    for (let i = 0; i < sortedcages.length; i++) {
-                        let col_num = (sortedcages[i] % (this.nx0)) - 2;
-                        let row_num = parseInt(sortedcages[i] / this.nx0) - 2;
-                        grid_matrix[row_num][col_num] = 1;
-                    }
-
-                    // remember drawing_mode
-                    let draw_mode = this.drawing_mode;
-                    this.drawing_mode = 100;
-
-                    // Find the corner coordinates of the cell
-                    for (let i = 0; i < sortedcages.length; i++) {
-                        let col_num = (sortedcages[i] % (this.nx0)) - 2;
-                        let row_num = parseInt(sortedcages[i] / this.nx0) - 2;
-
-                        // current cell
-                        let top_left = 4 * (sortedcages[i] + this.nx0 * this.ny0);
-                        let top_right = top_left + 1;
-                        let bottom_left = top_left + 2;
-                        let bottom_right = top_left + 3;
-
-                        // check if left cell is shared
-                        if (col_num !== 0) {
-                            if (grid_matrix[row_num][col_num - 1]) {
-
-                                // left shared cell
-                                let top_left_left = 4 * (sortedcages[i] - 1 + this.nx0 * this.ny0);
-                                let top_right_left = top_left_left + 1;
-                                let bottom_left_left = top_left_left + 2;
-                                let bottom_right_left = top_left_left + 3;
-
-                                if ((row_num !== 0) && (grid_matrix[row_num - 1][col_num - 1]) && (grid_matrix[row_num - 1][col_num])) {
-                                    // dont do anything
-                                } else {
-                                    key = (top_right_left.toString() + "," + top_left.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-
-                                if ((row_num !== row_size - 1) && (grid_matrix[row_num + 1][col_num - 1]) && (grid_matrix[row_num + 1][col_num])) {
-                                    // dont do anything
-                                } else {
-                                    key = (bottom_right_left.toString() + "," + bottom_left.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-                            } else {
-                                key = (top_left.toString() + "," + bottom_left.toString());
-                                if (this[this.mode.qa][array][key] !== line_style) {
-                                    this.re_line(array, key, line_style, this.undoredo_counter); // left line
-                                }
-                            }
-                        } else {
-                            key = (top_left.toString() + "," + bottom_left.toString());
-                            if (this[this.mode.qa][array][key] !== line_style) {
-                                this.re_line(array, key, line_style, this.undoredo_counter); // left line
-                            }
-                        }
-
-                        // check if top cell is shared
-                        if (row_num !== 0) {
-                            if (grid_matrix[row_num - 1][col_num]) {
-
-                                // top shared cell
-                                let top_left_top = 4 * (sortedcages[i] - this.nx0 + this.nx0 * this.ny0);
-                                let top_right_top = top_left_top + 1;
-                                let bottom_left_top = top_left_top + 2;
-                                let bottom_right_top = top_left_top + 3;
-
-                                if ((col_num !== 0) && (grid_matrix[row_num - 1][col_num - 1]) && (grid_matrix[row_num][col_num - 1])) {
-                                    // dont do anything
-                                } else {
-                                    key = (bottom_left_top.toString() + "," + top_left.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-
-                                if ((col_num !== col_size - 1) && (grid_matrix[row_num - 1][col_num + 1]) && (grid_matrix[row_num][col_num + 1])) {
-                                    // dont do anything
-                                } else {
-                                    key = (bottom_right_top.toString() + "," + top_right.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-                            } else {
-                                key = (top_left.toString() + "," + top_right.toString());
-                                if (this[this.mode.qa][array][key] !== line_style) {
-                                    this.re_line(array, key, line_style, this.undoredo_counter); // top line
-                                }
-                            }
-                        } else {
-                            key = (top_left.toString() + "," + top_right.toString());
-                            if (this[this.mode.qa][array][key] !== line_style) {
-                                this.re_line(array, key, line_style, this.undoredo_counter); // top line
-                            }
-                        }
-
-                        // check if right cell is shared
-                        if (col_num !== col_size - 1) {
-                            if (grid_matrix[row_num][col_num + 1]) {
-
-                                // top shared cell
-                                let top_left_right = 4 * (sortedcages[i] + 1 + this.nx0 * this.ny0);
-                                let top_right_right = top_left_right + 1;
-                                let bottom_left_right = top_left_right + 2;
-                                let bottom_right_right = top_left_right + 3;
-
-                                if ((row_num !== 0) && (grid_matrix[row_num - 1][col_num]) && (grid_matrix[row_num - 1][col_num + 1])) {
-                                    // dont do anything
-                                } else {
-                                    key = (top_right.toString() + "," + top_left_right.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-
-                                if ((row_num !== row_size - 1) && (grid_matrix[row_num + 1][col_num]) && (grid_matrix[row_num + 1][col_num + 1])) {
-                                    // dont do anything
-                                } else {
-                                    key = (bottom_right.toString() + "," + bottom_left_right.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-                            } else {
-                                key = (top_right.toString() + "," + bottom_right.toString());
-                                if (this[this.mode.qa][array][key] !== line_style) {
-                                    this.re_line(array, key, line_style, this.undoredo_counter); // right line
-                                }
-                            }
-                        } else {
-                            key = (top_right.toString() + "," + bottom_right.toString());
-                            if (this[this.mode.qa][array][key] !== line_style) {
-                                this.re_line(array, key, line_style, this.undoredo_counter); // right line
-                            }
-                        }
-
-                        // check if bottom cell is shared
-                        if (row_num !== row_size - 1) {
-                            if (grid_matrix[row_num + 1][col_num]) {
-
-                                // top shared cell
-                                let top_left_bottom = 4 * (sortedcages[i] + this.nx0 + this.nx0 * this.ny0);
-                                let top_right_bottom = top_left_bottom + 1;
-                                let bottom_left_bottom = top_left_bottom + 2;
-                                let bottom_right_bottom = top_left_bottom + 3;
-
-                                if ((col_num !== 0) && (grid_matrix[row_num][col_num - 1]) && (grid_matrix[row_num + 1][col_num - 1])) {
-                                    // dont do anything
-                                } else {
-                                    key = (bottom_left.toString() + "," + top_left_bottom.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-
-                                if ((col_num !== col_size - 1) && (grid_matrix[row_num][col_num + 1]) && (grid_matrix[row_num + 1][col_num + 1])) {
-                                    // dont do anything
-                                } else {
-                                    key = (bottom_right.toString() + "," + top_right_bottom.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-                            } else {
-                                key = (bottom_left.toString() + "," + bottom_right.toString());
-                                if (this[this.mode.qa][array][key] !== line_style) {
-                                    this.re_line(array, key, line_style, this.undoredo_counter); // bottom line
-                                }
-                            }
-                        } else {
-                            key = (bottom_left.toString() + "," + bottom_right.toString());
-                            if (this[this.mode.qa][array][key] !== line_style) {
-                                this.re_line(array, key, line_style, this.undoredo_counter); // bottom line
-                            }
-                        }
-                    }
-                    this.record_replay(arraykill, -1, this.undoredo_counter);
-
+                
                     // reset variables
+                    this.record_replay(arraykill, -1, this.undoredo_counter);
                     this.cageselection = [];
                     this.selection = [];
                     this.drawing_mode = draw_mode;
@@ -12887,8 +12811,13 @@ class Puzzle {
                 }
                 let p1 = this.get_cage_coordinates(i1, r);
                 let p2 = this.get_cage_coordinates(i2, r);
+                let intersect = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
                 this.ctx.beginPath();
-                this.ctx.moveTo(p1[0], p1[1]);
+                this.ctx.moveTo(intersect[0], intersect[1]);
+                this.ctx.lineTo(p1[0], p1[1]);
+                this.ctx.stroke();
+                this.ctx.beginPath();
+                this.ctx.moveTo(intersect[0], intersect[1]);
                 this.ctx.lineTo(p2[0], p2[1]);
                 this.ctx.stroke();
             }
