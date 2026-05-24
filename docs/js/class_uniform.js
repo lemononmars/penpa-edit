@@ -5294,7 +5294,7 @@ class Puzzle_iso extends Puzzle_truncated_square {
                 var i3;
                 //search neighbor
                 for (var j = 0; j < 4; j++) {
-                    if (this.point[i2].neighbor.indexOf(this.point[i1].neighbor[j]) != -1) {
+                    if (this.point[i2].neighbor.indexOf(this.point[i1].neighbor[j]) !== -1) {
                         i3 = this.point[i1].neighbor[j];
                     }
                 }
@@ -5331,7 +5331,11 @@ class Puzzle_iso extends Puzzle_truncated_square {
                         this.ctx.lineCap = "butt";
                     }
                     this.ctx.moveTo(this.point[i1].x, this.point[i1].y);
-                    this.ctx.lineTo(this.point[i3].x, this.point[i3].y);
+
+                    // If neighbor then break the line at midpoint or else directly draw a line between two ends (freeline)
+                    if (this.point[i2].adjacent.includes(parseInt(i1))) {
+                        this.ctx.lineTo(this.point[i3].x, this.point[i3].y);
+                    }
                     this.ctx.lineTo(this.point[i2].x, this.point[i2].y);
                 }
                 this.ctx.stroke();

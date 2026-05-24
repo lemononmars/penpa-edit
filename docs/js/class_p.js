@@ -1219,7 +1219,7 @@ class Puzzle {
 
             var old_canvas = this.ctx;
             this.ctx = svg_canvas;
-            this.redraw(true); // Reflects SVG elements
+            this.redraw(true, false); // Reflects SVG elements
             this.ctx = old_canvas;
 
             this.mode[this.mode.qa].edit_mode = mode; // retain original mode
