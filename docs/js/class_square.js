@@ -104,7 +104,7 @@ class Puzzle_square extends Puzzle {
                 k++;
             }
         }
-        type = 2;
+        type = 3;
         for (var j = 0; j < ny; j++) {
             for (var i = 0; i < nx; i++) {
                 if (i === 0 || i === nx - 1 || j === 0 || j === ny - 1) {
@@ -368,11 +368,11 @@ class Puzzle_square extends Puzzle {
     }
 
     rotate_left() {
-        this.rotate_grid(-90);
+        this.rotate_grid(-90, false);
     }
 
     rotate_right() {
-        this.rotate_grid(90);
+        this.rotate_grid(90, false);
     }
 
     cursolcheck() {

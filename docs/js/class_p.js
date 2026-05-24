@@ -663,12 +663,16 @@ class Puzzle {
         }
         this.point_move(0, 0, th);
         this.redraw();
-    } 
+    }
 
-    rotate_theta(th) {
-        th += this.theta;
-        if (this.reflect[0] === -1) { th = (180 - th) % 360; }
-        if (this.reflect[1] === -1) { th = (0 - th) % 360; }
+    rotate_theta(th, sign = 1) {
+        th = (th + (sign * this.theta));
+        if (this.reflect[0] === -1) {
+            th = (180 - th + 360) % 360;
+        }
+        if (this.reflect[1] === -1) {
+            th = (360 - th + 360) % 360;
+        }
         th = th / 180 * Math.PI;
         return th;
     }
@@ -1581,7 +1585,7 @@ class Puzzle {
         document.getElementById('style_cage').style.display = 'none';
         document.getElementById('style_combi').style.display = 'none';
         document.getElementById('style_sudoku').style.display = 'none';
-        
+
         document.getElementById('orientation_button').style.display = 'none';
     }
 
@@ -9322,7 +9326,7 @@ class Puzzle {
                 } else {
                     number = con + "_" + arrowdirection;
                 }
-                
+
                 let edit_mode = this.mode[this.mode.qa].edit_mode;
                 let submode = this.mode[this.mode.qa][edit_mode];
                 let orientation = submode[2] && submode[2] !== 'R' ? [submode[2]] : [];

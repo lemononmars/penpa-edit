@@ -368,11 +368,11 @@ class Puzzle_hex extends Puzzle {
     }
 
     rotate_left() {
-        this.rotate_grid(-30, false);
+        this.rotate_grid(-30);
     }
 
     rotate_right() {
-        this.rotate_grid(30, false);
+        this.rotate_grid(30);
     }
 
     key_arrow(key_code, ctrl_key = false) {
@@ -1030,98 +1030,98 @@ class Puzzle_hex extends Puzzle {
                 th;
 
             if (i1 % 6 === 0) {
-                th = this.rotate_theta(150);
+                th = this.rotate_theta(150, -1);
                 x1 = this.point[i1].x + r * Math.cos(th) * this.size;
                 y1 = this.point[i1].y - r * Math.sin(th) * this.size;
                 if (i2 % 6 === 1) {
-                    th = this.rotate_theta(90);
+                    th = this.rotate_theta(90, -1);
                     x2 = this.point[i2].x + r * Math.cos(th) * this.size;
                     y2 = this.point[i2].y - r * Math.sin(th) * this.size;
                 } else if (i2 % 6 === 3) {
-                    th = this.rotate_theta(210);
+                    th = this.rotate_theta(210, -1);
                     x2 = this.point[i2].x + r * Math.cos(th) * this.size;
                     y2 = this.point[i2].y - r * Math.sin(th) * this.size;
                 }
             } else if (i1 % 6 === 1) {
-                th = this.rotate_theta(90);
+                th = this.rotate_theta(90, -1);
                 x1 = this.point[i1].x + r * Math.cos(th) * this.size;
                 y1 = this.point[i1].y - r * Math.sin(th) * this.size;
                 if (i2 % 6 === 2) {
-                    th = this.rotate_theta(30);
+                    th = this.rotate_theta(30, -1);
                     x2 = this.point[i2].x + r * Math.cos(th) * this.size;
                     y2 = this.point[i2].y - r * Math.sin(th) * this.size;
                 }
             } else if (i1 % 6 === 2) {
-                th = this.rotate_theta(30);
+                th = this.rotate_theta(30, -1);
                 x1 = this.point[i1].x + r * Math.cos(th) * this.size;
                 y1 = this.point[i1].y - r * Math.sin(th) * this.size;
                 if (i2 % 6 === 0) {
-                    th = this.rotate_theta(150);
+                    th = this.rotate_theta(150, -1);
                     x2 = this.point[i2].x + r * Math.cos(th) * this.size;
                     y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                    th = this.rotate_theta(330);
+                    th = this.rotate_theta(330, -1);
                     x3 = x1 + r0 * Math.cos(th) * this.size;
                     y3 = y1 - r0 * Math.sin(th) * this.size;
                 } else if (i2 % 6 === 5) {
-                    th = this.rotate_theta(330);
+                    th = this.rotate_theta(330, -1);
                     x2 = this.point[i2].x + r * Math.cos(th) * this.size;
                     y2 = this.point[i2].y - r * Math.sin(th) * this.size;
                 }
             } else if (i1 % 6 === 3) {
-                th = this.rotate_theta(210);
+                th = this.rotate_theta(210, -1);
                 x1 = this.point[i1].x + r * Math.cos(th) * this.size;
                 y1 = this.point[i1].y - r * Math.sin(th) * this.size;
                 if (i2 % 6 === 1) {
-                    th = this.rotate_theta(90);
+                    th = this.rotate_theta(90, -1);
                     x2 = this.point[i2].x + r * Math.cos(th) * this.size;
                     y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                    th = this.rotate_theta(270);
+                    th = this.rotate_theta(270, -1);
                     x3 = x1 + r0 * Math.cos(th) * this.size;
                     y3 = y1 - r0 * Math.sin(th) * this.size;
                 } else if (i2 % 6 === 4) {
-                    th = this.rotate_theta(270);
+                    th = this.rotate_theta(270, -1);
                     x2 = this.point[i2].x + r * Math.cos(th) * this.size;
                     y2 = this.point[i2].y - r * Math.sin(th) * this.size;
                 }
             } else if (i1 % 6 === 4) {
-                th = this.rotate_theta(270);
+                th = this.rotate_theta(270, -1);
                 x1 = this.point[i1].x + r * Math.cos(th) * this.size;
                 y1 = this.point[i1].y - r * Math.sin(th) * this.size;
                 if (i2 % 6 === 0) {
-                    th = this.rotate_theta(150);
+                    th = this.rotate_theta(150, -1);
                     x2 = this.point[i2].x + r * Math.cos(th) * this.size;
                     y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                    th = this.rotate_theta(330);
+                    th = this.rotate_theta(330, -1);
                     x3 = x1 + r0 * Math.cos(th) * this.size;
                     y3 = y1 - r0 * Math.sin(th) * this.size;
                 } else if (i2 % 6 === 2) {
-                    th = this.rotate_theta(30);
+                    th = this.rotate_theta(30, -1);
                     x2 = this.point[i2].x + r * Math.cos(th) * this.size;
                     y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                    th = this.rotate_theta(210);
+                    th = this.rotate_theta(210, -1);
                     x3 = x1 + r0 * Math.cos(th) * this.size;
                     y3 = y1 - r0 * Math.sin(th) * this.size;
                 } else if (i2 % 6 === 5) {
-                    th = this.rotate_theta(330);
+                    th = this.rotate_theta(330, -1);
                     x2 = this.point[i2].x + r * Math.cos(th) * this.size;
                     y2 = this.point[i2].y - r * Math.sin(th) * this.size;
                 }
             } else if (i1 % 6 === 5) {
-                th = this.rotate_theta(330);
+                th = this.rotate_theta(330, -1);
                 x1 = this.point[i1].x + r * Math.cos(th) * this.size;
                 y1 = this.point[i1].y - r * Math.sin(th) * this.size;
                 if (i2 % 6 === 1) {
-                    th = this.rotate_theta(90);
+                    th = this.rotate_theta(90, -1);
                     x2 = this.point[i2].x + r * Math.cos(th) * this.size;
                     y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                    th = this.rotate_theta(270);
+                    th = this.rotate_theta(270, -1);
                     x3 = x1 + r0 * Math.cos(th) * this.size;
                     y3 = y1 - r0 * Math.sin(th) * this.size;
                 } else if (i2 % 6 === 3) {
-                    th = this.rotate_theta(210);
+                    th = this.rotate_theta(210, -1);
                     x2 = this.point[i2].x + r * Math.cos(th) * this.size;
                     y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                    th = this.rotate_theta(30);
+                    th = this.rotate_theta(30, -1);
                     x3 = x1 + r0 * Math.cos(th) * this.size;
                     y3 = y1 - r0 * Math.sin(th) * this.size;
                 }
@@ -1354,23 +1354,23 @@ class Puzzle_hex extends Puzzle {
                     }
                     break;
                 case "8": //long
-                    {
-                        let number_data = this[pu].number[i];
-                        let lines = number_data[0].split('\n');
-                        let p_x = this.point[i].x;
-                        let p_y = this.point[i].y;
-                        for (let line of lines) {
-                            if (number_data[1] === 5) {
-                                set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                                set_circle_style(this.ctx, 7);
-                                this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.5 * this.size);
-                            }
+                {
+                    let number_data = this[pu].number[i];
+                    let lines = number_data[0].split('\n');
+                    let p_x = this.point[i].x;
+                    let p_y = this.point[i].y;
+                    for (let line of lines) {
+                        if (number_data[1] === 5) {
                             set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                            this.ctx.textAlign = "left";
-                            this.ctx.text(line, p_x - 0.2 * this.size, p_y);
-                            p_y += this.size * 0.5;
+                            set_circle_style(this.ctx, 7);
+                            this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.5 * this.size);
                         }
+                        set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
+                        this.ctx.textAlign = "left";
+                        this.ctx.text(line, p_x - 0.2 * this.size, p_y);
+                        p_y += this.size * 0.5;
                     }
+                }
                     break;
             }
         }
