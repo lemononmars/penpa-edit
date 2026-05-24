@@ -1197,7 +1197,7 @@ class Puzzle {
 
             var old_canvas = this.ctx;
             this.ctx = svg_canvas;
-            this.redraw(true); // Reflects SVG elements
+            this.redraw(true, false); // Reflects SVG elements
             this.ctx = old_canvas;
 
             this.mode[this.mode.qa].edit_mode = mode; // retain original mode
@@ -1563,7 +1563,7 @@ class Puzzle {
         document.getElementById('style_cage').style.display = 'none';
         document.getElementById('style_combi').style.display = 'none';
         document.getElementById('style_sudoku').style.display = 'none';
-        
+
         document.getElementById('orientation_button').style.display = 'none';
     }
 
@@ -9304,7 +9304,7 @@ class Puzzle {
                 } else {
                     number = con + "_" + arrowdirection;
                 }
-                
+
                 let edit_mode = this.mode[this.mode.qa].edit_mode;
                 let submode = this.mode[this.mode.qa][edit_mode];
                 let orientation = submode[2] && submode[2] !== 'R' ? [submode[2]] : [];
