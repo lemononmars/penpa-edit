@@ -1,6 +1,8 @@
 # Point data
-This document details the format of the different point types. Points are integer where the unit digit is the type of the point. For maximal compability, the following fields must be filled with their respective expected values.
-### Type XX0 - Center/Cell
+This document details the format of the different point type groups. Two points of the same groups can have different types. Points are integer where the unit digit is the type of the point. For maximal compability, the following fields must be filled with their respective expected values. Puzzles have an attribute called `types`, which must be filled as `[[Cells], [Vertices], [Edges], [Corners], [Compass]]` in that exact order, where `[Cells]`, for instance, is the array containing all the types of the cell group. By default, it is set to `[[0], [1], [2, 3, 4], [6], [5]]` as this is the pattern most currently implemented grid use. 
+
+Points must be defined in the `create_points` function. This is where any helpers must be called, as well as defining the specific `types` for the grid.  
+### Center/Cell
 Cells that can be shaded, contain numbers, contain shapes, etc. Assuming the cell is `C`
   Subfield  |      Expected value      
 :----------:|:-------------:|
@@ -10,7 +12,7 @@ Cells that can be shaded, contain numbers, contain shapes, etc. Assuming the cel
 `neighbor` | Edges that make up the contour of the cell `C`
 `edge_to_vertex` | Blank
 
-### Type XX1 - Vertex
+### Vertex
 Assuming the vertex is `V`
   Subfield  |      Expected value      
 :----------:|:-------------:|
@@ -20,7 +22,7 @@ Assuming the vertex is `V`
 `neighbor` | Cells for which `V` is one of their vertices
 `edge_to_vertex` | Edges that are incident to `V`
 
-### Type XX2 - Edge
+### Edge
 `type2` may be used for orientation. Assuming the edge is `E`
   Subfield  |      Expected value      
 :----------:|:-------------:|
@@ -30,7 +32,7 @@ Assuming the vertex is `V`
 `neighbor` | Cells for which `E` is one of their edges
 `edge_to_vertex` | The vertices at both ends of `E`
 
-### Type XX3 - Corner
+### Corner
 These are used for corner numbers and cage. These should usually be defined as a linear combination of a cell and a vertex. Assuming `C` is the corner
   Subfield  |      Expected value      
 :----------:|:-------------:|
@@ -40,7 +42,7 @@ These are used for corner numbers and cage. These should usually be defined as a
 `neighbor` | Cell that contains `C`
 `edge_to_vertex` | Blank
 
-### Type XX4 - Compass
+### Compass
 These are used for compass clues, principally. These should usually be defined as a linear combination of a cell and an edge. Assuming `C` is the compass location
   Subfield  |      Expected value      
 :----------:|:-------------:|
@@ -51,16 +53,20 @@ These are used for compass clues, principally. These should usually be defined a
 `edge_to_vertex` | Blank
 
 ## Helper functions
-### `get_grouped_types()`
-Returns an array of array that returns `[center, vertex, edge, corner, compass]` in that order if the `types` attribute of puzzle has been filled in with all possible types.
 
 ### `fix_points(point)`
 Build some associations given the following are defined within `point`:
 - Vertices and edges' coordinates.
 - Cells' `surround` 
-- Cells' `neighbor` (there can be incorrect edges, as long as all correct ones are present)
+- Cells' `neighbor` (there can be incorrect edges, as long as all correct ones are present). Returns the updated point array.
 
-The function will not build cells' `adjacent_dia`, vertices' `adjacent_dia`, edges' `adjacent` and all compass and corner attributes.
+The function will not build cells' `adjacent_dia`, vertices' `adjacent_dia`, edges' `adjacent` and all compass and corner attributes. Returns the updated point array.
 
-### `point_connect_corners()`
-Fill in the `adjacent` field of corners. `corner_table`, edges' `edge_to_vertex` and edges' `neighbor` must be filled beforehand.
+### `point_connect_corners(point)`
+Fill in the `adjacent` field of corners. `corner_table`, edges' `edge_to_vertex` and edges' `neighbor` must be filled beforehand. Returns the updated point array.
+
+### `point_fillin_corners(point)`
+Fill in the `neighbor` and `surround` field of corners. Cells' `surround` must be filled beforehand. Returns the updated point array.
+
+### `create_corners(point, radius, k)`
+Create corners with each of the cells, defined as a linear combination of the cells and their vertices (`radius` x coordinates of the cell + (1 - `radius`) x coordinates of the vertices). `k` is the current max point id. Returns `[point, k]`, where `k` is the new max `id` and `point` is the point array, with the added corners.

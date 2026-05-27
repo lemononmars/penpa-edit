@@ -188,7 +188,7 @@ class Puzzle_tri extends Puzzle {
                 k++;
             }
         }
-        this.point = point;
+        this.point = this.point_connect_corners(this.point_fillin_corners(this.fix_points(point)));
     }
 
 
@@ -199,11 +199,10 @@ class Puzzle_tri extends Puzzle {
             if (centerlist[j] < 2 * (this.n0) ** 2 && newlist.indexOf(this.point[centerlist[j]].adjacent[2]) === -1) {
                 newlist.push(this.point[centerlist[j]].adjacent[2]);
             } else if (centerlist[j] > 2 * (this.n0) ** 2) {
-                if (newlist.indexOf(this.point[centerlist[j]].adjacent[1]) === -1) {
-                    newlist.push(this.point[centerlist[j]].adjacent[1]);
-                }
-                if (newlist.indexOf(this.point[centerlist[j]].adjacent[2]) === -1) {
-                    newlist.push(this.point[centerlist[j]].adjacent[2]);
+                for (var k = 0; k < 3; k++) {
+                    if (newlist.indexOf(this.point[centerlist[j]].adjacent[k]) === -1 && this.point[this.point[centerlist[j]].adjacent[k]].y >= this.point[centerlist[j]].y) {
+                        newlist.push(this.point[centerlist[j]].adjacent[k]);
+                    }
                 }
             }
         }
@@ -300,7 +299,11 @@ class Puzzle_tri extends Puzzle {
                 }
                 break;
             case "cage":
-                type = [];
+                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "1") {
+                    type = [0];
+                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "2") {
+                    type = [6];
+                }
                 break;
             case "combi":
                 switch (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]) {
@@ -553,6 +556,8 @@ class Puzzle_tri extends Puzzle {
             this.draw_selection();
             this.draw_symbol("pu_q", 2);
             this.draw_symbol("pu_a", 2);
+            this.draw_cage("pu_q");
+            this.draw_cage("pu_a");
             this.draw_number("pu_q");
             this.draw_number("pu_a");
             this.draw_cursol();
@@ -572,6 +577,7 @@ class Puzzle_tri extends Puzzle {
             this.draw_lattice();
             this.draw_selection();
             this.draw_symbol("pu_q", 2);
+            this.draw_cage("pu_q");
             this.draw_number("pu_q");
             this.draw_cursol();
             this.draw_freecircle();

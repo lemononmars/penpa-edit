@@ -135,7 +135,7 @@ class Puzzle_hex extends Puzzle {
                 k++;
             }
         }
-        //  1/6
+        //  compass
         var r = 1 / 6;
         type = 5;
         for (var j = 0; j < n; j++) {
@@ -162,7 +162,7 @@ class Puzzle_hex extends Puzzle {
             }
         }
 
-        //  1/6
+        //  corner
         var r = 1 / 6;
         type = 6;
         for (var j = 0; j < n; j++) {
@@ -172,28 +172,37 @@ class Puzzle_hex extends Puzzle {
                 } else {
                     use = 1;
                 }
+                neighbor = [i + j * n];
+                this.corner_table[i + j * n] = [];
+                this.corner_table[i + j * n][point[i + j * n].surround[0]] = k;
+                this.corner_table[i + j * n][point[i + j * n].surround[1]] = k+1;
+                this.corner_table[i + j * n][point[i + j * n].surround[2]] = k+2;
+                this.corner_table[i + j * n][point[i + j * n].surround[5]] = k+3;
+                this.corner_table[i + j * n][point[i + j * n].surround[4]] = k+4;
+                this.corner_table[i + j * n][point[i + j * n].surround[3]] = k+5;
                 surround = [];
                 adjacent = [k - 6 * (n + 1) + 4 + 6 * (j % 2), k - 4, k + 1, k + 3];
-                point[k] = new Point(point[i + j * n].x - r * this.size * Math.sqrt(3), point[i + j * n].y - r * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * n].x - r * this.size * Math.sqrt(3), point[i + j * n].y - r * this.size, type, adjacent, [point[i + j * n].surround[0]], use, neighbor);
                 k++;
                 adjacent = [k - 6 * (n + 1) + 4 + 6 * (j % 2), k - 6 * (n + 1) + 8 + 6 * (j % 2), k - 1, k + 1];
-                point[k] = new Point(point[i + j * n].x, point[i + j * n].y - 2 * r * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * n].x, point[i + j * n].y - 2 * r * this.size, type, adjacent, [point[i + j * n].surround[1]], use, neighbor);
                 k++;
                 adjacent = [k - 6 * (n + 1) + 8 + 6 * (j % 2), k - 1, k + 3, k + 4];
-                point[k] = new Point(point[i + j * n].x + r * this.size * Math.sqrt(3), point[i + j * n].y - r * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * n].x + r * this.size * Math.sqrt(3), point[i + j * n].y - r * this.size, type, adjacent, [point[i + j * n].surround[2]], use, neighbor);
                 k++;
                 adjacent = [k - 4, k - 3, k + 1, k + 6 * (n - 1) - 2 + 6 * (j % 2)];
-                point[k] = new Point(point[i + j * n].x - r * this.size * Math.sqrt(3), point[i + j * n].y + r * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * n].x - r * this.size * Math.sqrt(3), point[i + j * n].y + r * this.size, type, adjacent, [point[i + j * n].surround[5]], use, neighbor);
                 k++;
                 adjacent = [k - 1, k + 1, k + 6 * (n - 1) - 2 + 6 * (j % 2), k + 6 * (n - 1) + 2 + 6 * (j % 2)];
-                point[k] = new Point(point[i + j * n].x, point[i + j * n].y + 2 * r * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * n].x, point[i + j * n].y + 2 * r * this.size, type, adjacent, [point[i + j * n].surround[4]], use, neighbor);
                 k++;
                 adjacent = [k - 3, k - 1, k + 4, k + 6 * (n - 1) + 2 + 6 * (j % 2)];
-                point[k] = new Point(point[i + j * n].x + r * this.size * Math.sqrt(3), point[i + j * n].y + r * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * n].x + r * this.size * Math.sqrt(3), point[i + j * n].y + r * this.size, type, adjacent, [point[i + j * n].surround[3]], use, neighbor);
                 k++;
             }
         }
-        this.point = point;
+        this.types = [[0], [1], [2, 3, 4], [6], [5]];
+        this.point = this.fill_neighbors(point);
     }
 
     listappend(centerlist) {
@@ -225,7 +234,9 @@ class Puzzle_hex extends Puzzle {
 
     type_set() {
         var type;
-        switch (this.mode[this.mode.qa].edit_mode) {
+        let edit_mode = this.mode[this.mode.qa].edit_mode;
+        let submode = this.mode[this.mode.qa][edit_mode][0];
+        switch (edit_mode) {
             case "surface":
             case "multicolor":
             case "board":
@@ -240,7 +251,7 @@ class Puzzle_hex extends Puzzle {
                 }
                 break;
             case "number":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "3") {
+                if (submode === "3") {
                     type = [5];
                 } else {
                     if (!UserSettings.draw_edges) {
@@ -251,18 +262,18 @@ class Puzzle_hex extends Puzzle {
                 }
                 break;
             case "line":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "4") {
+                if (submode === "4") {
                     type = [2, 3, 4];
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "5") {
+                } else if (submode === "5") {
                     type = [0, 2, 3, 4];
                 } else {
                     type = [0];
                 }
                 break;
             case "lineE":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "4") {
+                if (submode === "4") {
                     type = [2, 3, 4];
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "6") {
+                } else if (submode === "6") {
                     type = [1, 2, 3, 4];
                 } else {
                     type = [1];
@@ -276,17 +287,22 @@ class Puzzle_hex extends Puzzle {
                 }
                 break;
             case "special":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "polygon") {
+                if (submode === "polygon") {
                     type = [1];
                 } else {
                     type = [0];
                 }
                 break;
             case "cage":
-                type = [6];
+                case "cage":
+                if (submode === "1") {
+                    type = [0];
+                } else if (submode === "2") {
+                    type = [6];
+                }
                 break;
             case "combi":
-                switch (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]) {
+                switch (submode) {
                     case "tents":
                     case "linex":
                     case "yajilin":
@@ -1022,130 +1038,6 @@ class Puzzle_hex extends Puzzle {
             this.ctx.beginPath();
             this.ctx.moveTo(this.point[i1].x, this.point[i1].y);
             this.ctx.lineTo(this.point[i2].x, this.point[i2].y);
-            this.ctx.stroke();
-        }
-    }
-
-    draw_cage(pu) {
-        var r = 0.16; //space between grid
-        var r0 = Math.sqrt(3) / 3 - 1 / 3 - r;
-
-        for (var i in this[pu].cage) {
-            var i1 = i.split(",")[0];
-            var i2 = i.split(",")[1];
-            var x1, y1, x2, y2, x3 = -1,
-                y3 = -1,
-                th;
-
-            if (i1 % 6 === 0) {
-                th = this.rotate_theta_cage(150);
-                x1 = this.point[i1].x + r * Math.cos(th) * this.size;
-                y1 = this.point[i1].y - r * Math.sin(th) * this.size;
-                if (i2 % 6 === 1) {
-                    th = this.rotate_theta_cage(90);
-                    x2 = this.point[i2].x + r * Math.cos(th) * this.size;
-                    y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                } else if (i2 % 6 === 3) {
-                    th = this.rotate_theta_cage(210);
-                    x2 = this.point[i2].x + r * Math.cos(th) * this.size;
-                    y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                }
-            } else if (i1 % 6 === 1) {
-                th = this.rotate_theta_cage(90);
-                x1 = this.point[i1].x + r * Math.cos(th) * this.size;
-                y1 = this.point[i1].y - r * Math.sin(th) * this.size;
-                if (i2 % 6 === 2) {
-                    th = this.rotate_theta_cage(30);
-                    x2 = this.point[i2].x + r * Math.cos(th) * this.size;
-                    y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                }
-            } else if (i1 % 6 === 2) {
-                th = this.rotate_theta_cage(30);
-                x1 = this.point[i1].x + r * Math.cos(th) * this.size;
-                y1 = this.point[i1].y - r * Math.sin(th) * this.size;
-                if (i2 % 6 === 0) {
-                    th = this.rotate_theta_cage(150);
-                    x2 = this.point[i2].x + r * Math.cos(th) * this.size;
-                    y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                    th = this.rotate_theta_cage(330);
-                    x3 = x1 + r0 * Math.cos(th) * this.size;
-                    y3 = y1 - r0 * Math.sin(th) * this.size;
-                } else if (i2 % 6 === 5) {
-                    th = this.rotate_theta_cage(330);
-                    x2 = this.point[i2].x + r * Math.cos(th) * this.size;
-                    y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                }
-            } else if (i1 % 6 === 3) {
-                th = this.rotate_theta_cage(210);
-                x1 = this.point[i1].x + r * Math.cos(th) * this.size;
-                y1 = this.point[i1].y - r * Math.sin(th) * this.size;
-                if (i2 % 6 === 1) {
-                    th = this.rotate_theta_cage(90);
-                    x2 = this.point[i2].x + r * Math.cos(th) * this.size;
-                    y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                    th = this.rotate_theta_cage(270);
-                    x3 = x1 + r0 * Math.cos(th) * this.size;
-                    y3 = y1 - r0 * Math.sin(th) * this.size;
-                } else if (i2 % 6 === 4) {
-                    th = this.rotate_theta_cage(270);
-                    x2 = this.point[i2].x + r * Math.cos(th) * this.size;
-                    y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                }
-            } else if (i1 % 6 === 4) {
-                th = this.rotate_theta_cage(270);
-                x1 = this.point[i1].x + r * Math.cos(th) * this.size;
-                y1 = this.point[i1].y - r * Math.sin(th) * this.size;
-                if (i2 % 6 === 0) {
-                    th = this.rotate_theta_cage(150);
-                    x2 = this.point[i2].x + r * Math.cos(th) * this.size;
-                    y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                    th = this.rotate_theta_cage(330);
-                    x3 = x1 + r0 * Math.cos(th) * this.size;
-                    y3 = y1 - r0 * Math.sin(th) * this.size;
-                } else if (i2 % 6 === 2) {
-                    th = this.rotate_theta_cage(30);
-                    x2 = this.point[i2].x + r * Math.cos(th) * this.size;
-                    y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                    th = this.rotate_theta_cage(210);
-                    x3 = x1 + r0 * Math.cos(th) * this.size;
-                    y3 = y1 - r0 * Math.sin(th) * this.size;
-                } else if (i2 % 6 === 5) {
-                    th = this.rotate_theta_cage(330);
-                    x2 = this.point[i2].x + r * Math.cos(th) * this.size;
-                    y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                }
-            } else if (i1 % 6 === 5) {
-                th = this.rotate_theta_cage(330);
-                x1 = this.point[i1].x + r * Math.cos(th) * this.size;
-                y1 = this.point[i1].y - r * Math.sin(th) * this.size;
-                if (i2 % 6 === 1) {
-                    th = this.rotate_theta_cage(90);
-                    x2 = this.point[i2].x + r * Math.cos(th) * this.size;
-                    y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                    th = this.rotate_theta_cage(270);
-                    x3 = x1 + r0 * Math.cos(th) * this.size;
-                    y3 = y1 - r0 * Math.sin(th) * this.size;
-                } else if (i2 % 6 === 3) {
-                    th = this.rotate_theta_cage(210);
-                    x2 = this.point[i2].x + r * Math.cos(th) * this.size;
-                    y2 = this.point[i2].y - r * Math.sin(th) * this.size;
-                    th = this.rotate_theta_cage(30);
-                    x3 = x1 + r0 * Math.cos(th) * this.size;
-                    y3 = y1 - r0 * Math.sin(th) * this.size;
-                }
-            }
-
-            set_line_style(this.ctx, this[pu].cage[i]);
-            if (UserSettings.custom_colors_on && this[pu + "_col"].cage[i]) {
-                this.ctx.strokeStyle = this[pu + "_col"].cage[i];
-            }
-
-            this.ctx.beginPath();
-            this.ctx.moveTo(x1, y1);
-            if (x3 != -1) {
-                this.ctx.lineTo(x3, y3);
-            }
-            this.ctx.lineTo(x2, y2);
             this.ctx.stroke();
         }
     }

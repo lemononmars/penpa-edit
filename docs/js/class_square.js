@@ -104,7 +104,7 @@ class Puzzle_square extends Puzzle {
                 k++;
             }
         }
-        type = 12;
+        type = 3;
         for (var j = 0; j < ny; j++) {
             for (var i = 0; i < nx; i++) {
                 if (i === 0 || i === nx - 1 || j === 0 || j === ny - 1) {
@@ -123,7 +123,7 @@ class Puzzle_square extends Puzzle {
 
         //  corner
         var r = 0.25;
-        type = 3;
+        type = 4;
         for (var j = 0; j < ny; j++) {
             for (var i = 0; i < nx; i++) {
                 if (i === 0 || i === nx - 1 || j === 0 || j === ny - 1) {
@@ -154,7 +154,7 @@ class Puzzle_square extends Puzzle {
 
         //  compass
         var r = 0.3;
-        type = 4;
+        type = 5;
         for (var j = 0; j < ny; j++) {
             for (var i = 0; i < nx; i++) {
                 if (i === 0 || i === nx - 1 || j === 0 || j === ny - 1) {
@@ -175,7 +175,8 @@ class Puzzle_square extends Puzzle {
             }
         }
 
-        this.types = [0, 1, 2, 12, 3, 4];
+        this.types = [[0], [1], [2, 3], [4], [5]];
+        point = this.fill_neighbors(point);
         this.point = point;
         
     }
@@ -216,7 +217,7 @@ class Puzzle_square extends Puzzle {
 
     type_set() {
         var type
-        let grouped_types = this.get_grouped_types();
+        let grouped_types = this.types;
         let edit_mode = this.mode[this.mode.qa].edit_mode;
         let submode = this.mode[this.mode.qa][edit_mode][0];
         switch (edit_mode) {
@@ -1471,80 +1472,7 @@ class Puzzle_square extends Puzzle {
             this.ctx.stroke();
         }
     }
-/*
-    draw_cage(pu) {
-        var r = 0.16; //space between grid
-        var a = [0, 1, 2, 3],
-            c;
-        if (this.theta === 90) {
-            a = [2, 0, 3, 1];
-        } else if (this.theta === 180) {
-            a = [3, 2, 1, 0];
-        } else if (this.theta === 270) {
-            a = [1, 3, 0, 2];
-        }
-        if (this.reflect[0] === -1) {
-            c = a[0];
-            a[0] = a[1];
-            a[1] = c;
-            c = a[2];
-            a[2] = a[3];
-            a[3] = c;
-        }
-        if (this.reflect[1] === -1) {
-            c = a[0];
-            a[0] = a[2];
-            a[2] = c;
-            c = a[1];
-            a[1] = a[3];
-            a[3] = c;
-        }
-        for (var i in this[pu].cage) {
-            var i1 = i.split(",")[0];
-            var i2 = i.split(",")[1];
-            var x1, y1, x2, y2;
 
-            if (i1 % 4 === a[0]) {
-                x1 = this.point[i1].x - r * this.size;
-                y1 = this.point[i1].y - r * this.size;
-            } else if (i1 % 4 === a[1]) {
-                x1 = this.point[i1].x + r * this.size;
-                y1 = this.point[i1].y - r * this.size;
-            } else if (i1 % 4 === a[2]) {
-                x1 = this.point[i1].x - r * this.size;
-                y1 = this.point[i1].y + r * this.size;
-            } else if (i1 % 4 === a[3]) {
-                x1 = this.point[i1].x + r * this.size;
-                y1 = this.point[i1].y + r * this.size;
-            }
-            if (i2 % 4 === a[0]) {
-                x2 = this.point[i2].x - r * this.size;
-                y2 = this.point[i2].y - r * this.size;
-            } else if (i2 % 4 === a[1]) {
-                x2 = this.point[i2].x + r * this.size;
-                y2 = this.point[i2].y - r * this.size;
-            } else if (i2 % 4 === a[2]) {
-                x2 = this.point[i2].x - r * this.size;
-                y2 = this.point[i2].y + r * this.size;
-            } else if (i2 % 4 === a[3]) {
-                x2 = this.point[i2].x + r * this.size;
-                y2 = this.point[i2].y + r * this.size;
-            }
-            if (i1 % 4 === 3 || i2 % 4 === 0) {
-                set_line_style(this.ctx, this[pu].cage[i] + 100);
-            } else {
-                set_line_style(this.ctx, this[pu].cage[i]);
-            }
-            if (UserSettings.custom_colors_on && this[pu + "_col"].cage[i]) {
-                this.ctx.strokeStyle = this[pu + "_col"].cage[i];
-            }
-            this.ctx.beginPath();
-            this.ctx.moveTo(x1, y1);
-            this.ctx.lineTo(x2, y2);
-            this.ctx.stroke();
-        }
-    }
-*/
     draw_symbol(pu, layer) {
         /*symbol_layer*/
         var p_x, p_y;
