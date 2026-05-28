@@ -252,6 +252,8 @@ class Puzzle_hex extends Puzzle {
                 break;
             case "number":
                 if (submode === "3") {
+                    type = [6];
+                } else if (submode === "9") {
                     type = [5];
                 } else {
                     if (!UserSettings.draw_edges) {

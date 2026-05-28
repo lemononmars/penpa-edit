@@ -54,13 +54,15 @@ These are used for compass clues, principally. These should usually be defined a
 
 ## Helper functions
 
-### `fix_points(point)`
+### `fix_points(point, fix_adjacent, off_centered)`
 Build some associations given the following are defined within `point`:
 - Vertices and edges' coordinates.
 - Cells' `surround` 
 - Cells' `neighbor` (there can be incorrect edges, as long as all correct ones are present). Returns the updated point array.
 
-The function will not build cells' `adjacent_dia`, vertices' `adjacent_dia`, edges' `adjacent` and all compass and corner attributes. Returns the updated point array.
+The function will not build cells' `adjacent_dia`, vertices' `adjacent_dia`, edges' `adjacent` and all compass and corner attributes. Returns the updated point array. `fix_adjacent` defaults to being true, but
+can be set to false if the cells' adjacent are already filled. `off_centered` defaults to false, but can be
+set to true if the edges' "centers" are not in the middle of the edge.
 
 ### `point_connect_corners(point)`
 Fill in the `adjacent` field of corners. `corner_table`, edges' `edge_to_vertex` and edges' `neighbor` must be filled beforehand. Returns the updated point array.

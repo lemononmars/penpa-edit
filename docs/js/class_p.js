@@ -548,7 +548,7 @@ class Puzzle {
     // For this function to work correctly, cells need to have their surrond to be exact and their neighbor to contain all correct edges (there may be more edges than the correct ones)
     // This function fills in the rest of the fields, and modify incorrect fields if needed
 
-    fix_points(point, fix_adjacent = true) {
+    fix_points(point, fix_adjacent = true, off_centered = false) {
         // First pass - reset fields
         for (var i in point) {
             if (this.types[0].indexOf(point[i].type) !== -1 && fix_adjacent) {
@@ -584,7 +584,7 @@ class Puzzle {
                         if (Math.abs(vertex1.x - vertex2.x) < 0.001) {
                             for (let l = 0; l < edge_bank.length; l++) {
                                 if (Math.abs(point[edge_bank[l]].x - vertex1.x) < 0.001) {
-                                    if (Math.abs(vertex1.y + vertex2.y - 2*point[edge_bank[l]].y) < 0.001) {
+                                    if ((!off_centered && (Math.abs(vertex1.y + vertex2.y - 2*point[edge_bank[l]].y) < 0.001)) || (off_centered && (vertex1.y < point[edge_bank[l]].y === point[edge_bank[l]].y < vertex2.y))) {
                                         deltas.push({diff: 0,
                                                      v1: Math.min(vertices[j], vertices[k]),
                                                      v2: Math.max(vertices[j], vertices[k]),
@@ -595,7 +595,7 @@ class Puzzle {
                         } else if (Math.abs(vertex1.y - vertex2.y) < 0.001) {
                             for (let l = 0; l < edge_bank.length; l++) {
                                 if (Math.abs(point[edge_bank[l]].y - vertex1.y) < 0.001) {
-                                    if (Math.abs(vertex1.x + vertex2.x - 2*point[edge_bank[l]].x) < 0.001) {
+                                    if ((!off_centered && (Math.abs(vertex1.x + vertex2.x - 2*point[edge_bank[l]].x) < 0.001)) || (off_centered && (vertex1.x < point[edge_bank[l]].x === point[edge_bank[l]].x < vertex2.x))) {
                                         deltas.push({diff: 0,
                                                      v1: Math.min(vertices[j], vertices[k]),
                                                      v2: Math.max(vertices[j], vertices[k]),
@@ -607,7 +607,8 @@ class Puzzle {
                             for (let l = 0; l < edge_bank.length; l++) {
                                 let delta = Math.abs(((vertex1.y - point[edge_bank[l]].y)*(vertex2.x - point[edge_bank[l]].x)) -
                                                     ((vertex1.x - point[edge_bank[l]].x)*(vertex2.y - point[edge_bank[l]].y)));
-                                if ((vertex1.x > point[edge_bank[l]].x === point[edge_bank[l]].x > vertex2.x) && (vertex1.y > point[edge_bank[l]].y === point[edge_bank[l]].y > vertex2.y)) {
+                                if ((!off_centered && (Math.abs(vertex1.x + vertex2.x - 2*point[edge_bank[l]].x) < 0.001) && (Math.abs(vertex1.y + vertex2.y - 2*point[edge_bank[l]].y) < 0.001) ) ||
+                                (off_centered && (vertex1.x < point[edge_bank[l]].x === point[edge_bank[l]].x < vertex2.x) && (vertex1.y < point[edge_bank[l]].y === point[edge_bank[l]].y < vertex2.y))) {
                                     deltas.push({diff: delta,
                                                  v1: Math.min(vertices[j], vertices[k]),
                                                  v2: Math.max(vertices[j], vertices[k]),
@@ -620,21 +621,17 @@ class Puzzle {
                 // Sort the distance, and find the best matches
                 deltas.sort((a, b) => a.diff - b.diff);
                 let edges = [];
-                while (edges.length < vertices.length) {
-                    for (let j = 0; j < deltas.length; j++) {
-                        if (edges.indexOf(deltas[j].edge) === -1) {
-                            // Fill in the edge_to_vertex data, and add the cell to the edge's neighbour
-                            point[deltas[j].edge].edge_to_vertex = [deltas[j].v1, deltas[j].v2];
-                            if (point[deltas[j].v1].edge_to_vertex.indexOf(deltas[j].edge) < 0) {
-                                point[deltas[j].v1].edge_to_vertex.push(deltas[j].edge);
-                            }
-                            if (point[deltas[j].v2].edge_to_vertex.indexOf(deltas[j].edge) < 0) {
-                                point[deltas[j].v2].edge_to_vertex.push(deltas[j].edge);
-                            }
-                            point[deltas[j].edge].neighbor.push(parseInt(i));
-                            edges.push(deltas[j].edge);
-                        }
+                for (let j = 0; j < vertices.length; j++) {
+                    // Fill in the edge_to_vertex data, and add the cell to the edge's neighbour
+                    point[deltas[j].edge].edge_to_vertex = [deltas[j].v1, deltas[j].v2];
+                    if (point[deltas[j].v1].edge_to_vertex.indexOf(deltas[j].edge) < 0) {
+                        point[deltas[j].v1].edge_to_vertex.push(deltas[j].edge);
                     }
+                    if (point[deltas[j].v2].edge_to_vertex.indexOf(deltas[j].edge) < 0) {
+                        point[deltas[j].v2].edge_to_vertex.push(deltas[j].edge);
+                    }
+                    point[deltas[j].edge].neighbor.push(parseInt(i));
+                    edges.push(deltas[j].edge);
                 }
                 point[i].neighbor = edges;
             }
@@ -12851,7 +12848,7 @@ class Puzzle {
     draw_cursol() {
         let edit_mode = this.mode[this.mode.qa].edit_mode;
         /*cursol*/
-        if ((edit_mode === "number" && !this.number_multi_enabled()) || edit_mode === "symbol") {
+        if (((edit_mode === "number" && !this.number_multi_enabled()) || edit_mode === "symbol") && this.point[this.cursol]) {
             set_line_style(this.ctx, 99);
             if (edit_mode === "symbol" && UserSettings.panel_shown && !pu.onoff_symbolmode_list[pu.mode[this.mode.qa].symbol[0]]) {
                 this.ctx.strokeStyle = Color.BLUE_DARK_VERY;
@@ -12859,7 +12856,7 @@ class Puzzle {
             this.ctx.fillStyle = Color.TRANSPARENTBLACK;
             let submode = this.mode[this.mode.qa][edit_mode][0];
             if (edit_mode === "number" && (submode === "3" || submode === "9")) {
-                if (this.cursolS) {
+                if (this.cursolS && this.point[this.cursolS]) {
                     this.draw_polygon(this.ctx, this.point[this.cursolS].x, this.point[this.cursolS].y, 0.2, 4, 45);
                 } else {
                     this.default_cursol();

@@ -226,8 +226,9 @@ class Puzzle_pyramid extends Puzzle {
 
     type_set() {
         var type;
-        let grouped_types = this.types;
-        switch (this.mode[this.mode.qa].edit_mode) {
+        let edit_mode = this.mode[this.mode.qa].edit_mode;
+        let submode = this.mode[this.mode.qa][edit_mode][0];
+        switch (edit_mode) {
             case "surface":
             case "multicolor":
             case "board":
@@ -242,7 +243,7 @@ class Puzzle_pyramid extends Puzzle {
                 }
                 break;
             case "number":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "3") {
+                if (submode === "3") {
                     type = [4];
                 } else {
                     if (!UserSettings.draw_edges) {
@@ -253,14 +254,14 @@ class Puzzle_pyramid extends Puzzle {
                 }
                 break;
             case "line":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "4") {
+                if (submode === "4") {
                     type = [2, 3];
                 } else {
                     type = [0];
                 }
                 break;
             case "lineE":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "4") {
+                if (submode === "4") {
                     type = [2, 3];
                 } else {
                     type = [1];
@@ -274,7 +275,7 @@ class Puzzle_pyramid extends Puzzle {
                 }
                 break;
             case "special":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "polygon") {
+                if (submode === "polygon") {
                     type = [1];
                 } else {
                     type = [0];
@@ -282,14 +283,14 @@ class Puzzle_pyramid extends Puzzle {
                 break;
             case "cage":
                 case "cage":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "1") {
+                if (submode === "1") {
                     type = [0];
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "2") {
+                } else if (submode === "2") {
                     type = [4, 6];
                 }
                 break;
             case "combi":
-                switch (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]) {
+                switch (submode) {
                     case "tents":
                     case "linex":
                     case "yajilin":
@@ -337,7 +338,7 @@ class Puzzle_pyramid extends Puzzle {
             if (this.type.indexOf(this.point[i].type) != -1) {
                 min0 = (x - this.point[i].x) ** 2 + (y - this.point[i].y) ** 2;
                 if (min0 < min) {
-                    if (this.point[i].type%10 === 2) {
+                    if (this.types[2].indexOf(this.point[i].type) !== -1) {
                         if (min0 > (0.7 * this.size) ** 2) {
                             break;
                         }
@@ -357,7 +358,7 @@ class Puzzle_pyramid extends Puzzle {
             if (this.type.indexOf(this.point[i].type) != -1) {
                 min0 = (x - this.point[i].x) ** 2 + (y - this.point[i].y) ** 2;
                 if (min0 < min) {
-                    if (this.point[i].type%10 === 1 || this.point[i].type%10 === 2) {
+                    if (this.types[1].concat(this.types[2]).indexOf(this.point[i].type) !== -1) {
                         if (min0 > (hitboxfactor * this.size) ** 2) {
                             break;
                         }

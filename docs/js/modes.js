@@ -217,7 +217,7 @@ const penpa_modes = {
         //submodes
         'sub': ['line1', 'line3', 'line5', 'line4',
             'lineE1', 'lineE3', 'lineE4', 'lineE5', 'lineE6',
-            'number1', 'number10', 'number6', 'number5', 'number7', 'number3', 'number4', 'number2', 'number8',
+            'number1', 'number10', 'number6', 'number5', 'number7', 'number3', 'number9', 'number4', 'number2', 'number8',
             'specialthermo', 'specialnobulbthermo', 'specialarrows', 'specialdirection', 'specialsquareframe', 'specialpolygon',
             'cage1', 'cage2', 'move1', 'move2', 'move3',
             'sudoku1', 'sudoku3'
