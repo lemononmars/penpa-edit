@@ -386,19 +386,11 @@ class Puzzle_hex extends Puzzle {
     }
 
     rotate_left() {
-        this.theta = (this.theta - 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.canvasxy_update();
-        this.canvas_size_setting();
-        this.point_move(0, 0, -30);
-        this.redraw();
+        this.rotate_grid(-30);
     }
 
     rotate_right() {
-        this.theta = (this.theta + 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.canvasxy_update();
-        this.canvas_size_setting();
-        this.point_move(0, 0, 30);
-        this.redraw();
+        this.rotate_grid(30);
     }
 
     key_arrow(key_code, ctrl_key = false) {
@@ -1256,23 +1248,23 @@ class Puzzle_hex extends Puzzle {
                     }
                     break;
                 case "8": //long
-                    {
-                        let number_data = this[pu].number[i];
-                        let lines = number_data[0].split('\n');
-                        let p_x = this.point[i].x;
-                        let p_y = this.point[i].y;
-                        for (let line of lines) {
-                            if (number_data[1] === 5) {
-                                set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                                set_circle_style(this.ctx, 7);
-                                this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.5 * this.size);
-                            }
+                {
+                    let number_data = this[pu].number[i];
+                    let lines = number_data[0].split('\n');
+                    let p_x = this.point[i].x;
+                    let p_y = this.point[i].y;
+                    for (let line of lines) {
+                        if (number_data[1] === 5) {
                             set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                            this.ctx.textAlign = "left";
-                            this.ctx.text(line, p_x - 0.2 * this.size, p_y);
-                            p_y += this.size * 0.5;
+                            set_circle_style(this.ctx, 7);
+                            this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.5 * this.size);
                         }
+                        set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
+                        this.ctx.textAlign = "left";
+                        this.ctx.text(line, p_x - 0.2 * this.size, p_y);
+                        p_y += this.size * 0.5;
                     }
+                }
                     break;
             }
         }
@@ -2968,30 +2960,6 @@ class Puzzle_hex extends Puzzle {
                 }
             }
         }
-    }
-
-    rotate_theta(th) {
-        th = (th + this.theta);
-        if (this.reflect[0] === -1) {
-            th = (180 - th + 360) % 360;
-        }
-        if (this.reflect[1] === -1) {
-            th = (360 - th + 360) % 360;
-        }
-        th = th / 180 * Math.PI;
-        return th;
-    }
-
-    rotate_theta_cage(th) {
-        th = (th - this.theta);
-        if (this.reflect[0] === -1) {
-            th = (180 - th + 360) % 360;
-        }
-        if (this.reflect[1] === -1) {
-            th = (360 - th + 360) % 360;
-        }
-        th = th / 180 * Math.PI;
-        return th;
     }
 
     check_conflict(current_sol) {

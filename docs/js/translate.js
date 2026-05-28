@@ -496,7 +496,8 @@ function trans() {
             EN: "Line - Ignore Given Line Segments:",
             ZH: "线：无视已给出"
         },
-        "sol_loopedge_lb": {JP: "辺：緑・二重", EN: "Edge - Green, Double:", ZH: "边：绿、单双"},
+        "sol_loopedge_and_lb": {JP: "辺：緑・二重", EN: "Edge - Green, Double:", ZH: "边：绿、单双"},
+        "sol_loopedge_or_lb": {JP: "辺：緑・二重", EN: "Edge - Green, Double:", ZH: "边：绿、单双"},
         "sol_ignoreborder_lb": {
             JP: "辺：問題・外枠と重なった線を無視",
             EN: "Edge - Ignore Edges on Grid Border / Givens:",

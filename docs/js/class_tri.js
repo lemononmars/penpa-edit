@@ -390,19 +390,11 @@ class Puzzle_tri extends Puzzle {
     }
 
     rotate_left() {
-        this.theta = (this.theta - 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.canvasxy_update();
-        this.canvas_size_setting();
-        this.point_move(0, 0, -30);
-        this.redraw();
+        this.rotate_grid(-30);
     }
 
     rotate_right() {
-        this.theta = (this.theta + 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.canvasxy_update();
-        this.canvas_size_setting();
-        this.point_move(0, 0, 30);
-        this.redraw();
+        this.rotate_grid(30);
     }
 
     key_arrow(key_code, ctrl_key = false) {
@@ -1084,23 +1076,23 @@ class Puzzle_tri extends Puzzle {
                     }
                     break;
                 case "8": //long
-                    {
-                        let number_data = this[pu].number[i];
-                        let lines = number_data[0].split('\n');
-                        let p_x = this.point[i].x;
-                        let p_y = this.point[i].y;
-                        for (let line of lines) {
-                            if (number_data[1] === 5) {
-                                set_font_style(this.ctx, 0.4 * this.size.toString(10), number_data[1]);
-                                set_circle_style(this.ctx, 7);
-                                this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.4 * this.size);
-                            }
+                {
+                    let number_data = this[pu].number[i];
+                    let lines = number_data[0].split('\n');
+                    let p_x = this.point[i].x;
+                    let p_y = this.point[i].y;
+                    for (let line of lines) {
+                        if (number_data[1] === 5) {
                             set_font_style(this.ctx, 0.4 * this.size.toString(10), number_data[1]);
-                            this.ctx.textAlign = "left";
-                            this.ctx.text(line, p_x - 0.2 * this.size, p_y);
-                            p_y += this.size * 0.4;
+                            set_circle_style(this.ctx, 7);
+                            this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.4 * this.size);
                         }
+                        set_font_style(this.ctx, 0.4 * this.size.toString(10), number_data[1]);
+                        this.ctx.textAlign = "left";
+                        this.ctx.text(line, p_x - 0.2 * this.size, p_y);
+                        p_y += this.size * 0.4;
                     }
+                }
                     break;
             }
         }
@@ -2774,17 +2766,5 @@ class Puzzle_tri extends Puzzle {
                 this.draw_polygon(ctx, x + (i % 3 - 1) * r * pu.size, y + ((i / 3 | 0) - 1) * r * pu.size, r * 0.5 * Math.sqrt(2), 4, 45);
             }
         }
-    }
-
-    rotate_theta(th) {
-        th = (th + this.theta);
-        if (this.reflect[0] === -1) {
-            th = (180 - th + 360) % 360;
-        }
-        if (this.reflect[1] === -1) {
-            th = (360 - th + 360) % 360;
-        }
-        th = th / 180 * Math.PI;
-        return th;
     }
 }

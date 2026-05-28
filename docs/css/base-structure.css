@@ -1073,7 +1073,9 @@ body textarea {
 }
 
 #modal-image-body,
-#modal-save-body,
+#modal-save-body1,
+#modal-save-body2,
+#modal-save-body3,
 #modal-save-info {
     padding-left: 10px;
     padding-top: 10px;

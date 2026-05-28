@@ -1158,12 +1158,12 @@ onload = function() {
                 panel_pu.select_close();
                 e.preventDefault();
                 break;
-            case "panel_A_lbmenu":
+            case "panel_A_up_lbmenu":
                 panel_pu.mode_set('alphabet');
                 panel_pu.select_close();
                 e.preventDefault();
                 break;
-            case "panel_a_lbmenu":
+            case "panel_a_lo_lbmenu":
                 panel_pu.mode_set('alphabet_s');
                 panel_pu.select_close();
                 e.preventDefault();

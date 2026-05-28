@@ -469,15 +469,11 @@ class Puzzle_truncated_square extends Puzzle {
     }
 
     rotate_left() {
-        this.theta = (this.theta - 45 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, -45);
-        this.redraw();
+        this.rotate_grid(-45, false);
     }
 
     rotate_right() {
-        this.theta = (this.theta + 45 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, +45);
-        this.redraw();
+        this.rotate_grid(45, false);
     }
 
     cursolcheck() {
@@ -1231,23 +1227,23 @@ class Puzzle_truncated_square extends Puzzle {
                     }
                     break;
                 case "8": //long
-                    {
-                        let number_data = this[pu].number[i];
-                        let lines = number_data[0].split('\n');
-                        let p_x = this.point[i].x;
-                        let p_y = this.point[i].y;
-                        for (let line of lines) {
-                            if (number_data[1] === 5) {
-                                set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                                set_circle_style(this.ctx, 7);
-                                this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.5 * this.size);
-                            }
+                {
+                    let number_data = this[pu].number[i];
+                    let lines = number_data[0].split('\n');
+                    let p_x = this.point[i].x;
+                    let p_y = this.point[i].y;
+                    for (let line of lines) {
+                        if (number_data[1] === 5) {
                             set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                            this.ctx.textAlign = "left";
-                            this.ctx.text(line, p_x - 0.2 * this.size, p_y);
-                            p_y += this.size * 0.5;
+                            set_circle_style(this.ctx, 7);
+                            this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.5 * this.size);
                         }
+                        set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
+                        this.ctx.textAlign = "left";
+                        this.ctx.text(line, p_x - 0.2 * this.size, p_y);
+                        p_y += this.size * 0.5;
                     }
+                }
                     break;
             }
         }
@@ -3191,15 +3187,11 @@ class Puzzle_tetrakis_square extends Puzzle_truncated_square {
     }
 
     rotate_left() {
-        this.theta = (this.theta - 45 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, -45);
-        this.redraw();
+        this.rotate_grid(-45, false);
     }
 
     rotate_right() {
-        this.theta = (this.theta + 45 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, +45);
-        this.redraw();
+        this.rotate_grid(45, false);
     }
 
 
@@ -3920,15 +3912,11 @@ class Puzzle_snub_square extends Puzzle_truncated_square {
     }
 
     rotate_left() {
-        this.theta = (this.theta - 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, -30);
-        this.redraw();
+        this.rotate_grid(-30, false);
     }
 
     rotate_right() {
-        this.theta = (this.theta + 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, +30);
-        this.redraw();
+        this.rotate_grid(30, false);
     }
 
 
@@ -4630,15 +4618,11 @@ class Puzzle_cairo_pentagonal extends Puzzle_truncated_square {
     }
 
     rotate_left() {
-        this.theta = (this.theta - 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, -30);
-        this.redraw();
+        this.rotate_grid(-30, false);
     }
 
     rotate_right() {
-        this.theta = (this.theta + 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, +30);
-        this.redraw();
+        this.rotate_grid(30, false);
     }
 
 
@@ -5264,15 +5248,11 @@ class Puzzle_iso extends Puzzle_truncated_square {
     }
 
     rotate_left() {
-        this.theta = (this.theta - 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, -30);
-        this.redraw();
+        this.rotate_grid(-30, false);
     }
 
     rotate_right() {
-        this.theta = (this.theta + 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, +30);
-        this.redraw();
+        this.rotate_grid(30, false);
     }
 
     direction_arrow8(x, y, x0, y0) {
@@ -5370,13 +5350,11 @@ class Puzzle_iso extends Puzzle_truncated_square {
                 }
                 var i1 = i.split(",")[0];
                 var i2 = i.split(",")[1];
-                if (this.point[i2].adjacent.includes(parseInt(i1))) {
-                    var i3;
-                    //search neighbor
-                    for (var j = 0; j < 4; j++) {
-                        if (this.point[i2].neighbor.indexOf(this.point[i1].neighbor[j]) != -1) {
-                            i3 = this.point[i1].neighbor[j];
-                        }
+                var i3;
+                //search neighbor
+                for (var j = 0; j < 4; j++) {
+                    if (this.point[i2].neighbor.indexOf(this.point[i1].neighbor[j]) !== -1) {
+                        i3 = this.point[i1].neighbor[j];
                     }
                     this.ctx.beginPath();
                     if (this[pu].line[i] === 40) {
@@ -5418,6 +5396,11 @@ class Puzzle_iso extends Puzzle_truncated_square {
                 } else {
                     this.ctx.beginPath();
                     this.ctx.moveTo(this.point[i1].x, this.point[i1].y);
+
+                    // If neighbor then break the line at midpoint or else directly draw a line between two ends (freeline)
+                    if (this.point[i2].adjacent.includes(parseInt(i1))) {
+                        this.ctx.lineTo(this.point[i3].x, this.point[i3].y);
+                    }
                     this.ctx.lineTo(this.point[i2].x, this.point[i2].y);
                     this.ctx.stroke();
                 }
@@ -5692,23 +5675,23 @@ class Puzzle_iso extends Puzzle_truncated_square {
                     }
                     break;
                 case "8": //long
-                    {
-                        let number_data = this[pu].number[i];
-                        let lines = number_data[0].split('\n');
-                        let p_x = this.point[i].x;
-                        let p_y = this.point[i].y;
-                        for (let line of lines) {
-                            if (number_data[1] === 5) {
-                                set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                                set_circle_style(this.ctx, 7);
-                                this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.5 * this.size);
-                            }
+                {
+                    let number_data = this[pu].number[i];
+                    let lines = number_data[0].split('\n');
+                    let p_x = this.point[i].x;
+                    let p_y = this.point[i].y;
+                    for (let line of lines) {
+                        if (number_data[1] === 5) {
                             set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                            this.ctx.textAlign = "left";
-                            this.ctx.text(line, p_x - 0.2 * this.size, p_y);
-                            p_y += this.size * 0.5;
+                            set_circle_style(this.ctx, 7);
+                            this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.5 * this.size);
                         }
+                        set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
+                        this.ctx.textAlign = "left";
+                        this.ctx.text(line, p_x - 0.2 * this.size, p_y);
+                        p_y += this.size * 0.5;
                     }
+                }
                     break;
             }
         }
@@ -6536,15 +6519,11 @@ class Puzzle_rhombitrihexagonal extends Puzzle_truncated_square {
     }
 
     rotate_left() {
-        this.theta = (this.theta - 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, -30);
-        this.redraw();
+        this.rotate_grid(-30, false);
     }
 
     rotate_right() {
-        this.theta = (this.theta + 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, +30);
-        this.redraw();
+        this.rotate_grid(30, false);
     }
 
 
@@ -7265,15 +7244,11 @@ class Puzzle_deltoidal_trihexagonal extends Puzzle_truncated_square {
     }
 
     rotate_left() {
-        this.theta = (this.theta - 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, -30);
-        this.redraw();
+        this.rotate_grid(-30, false);
     }
 
     rotate_right() {
-        this.theta = (this.theta + 30 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, +30);
-        this.redraw();
+        this.rotate_grid(30, false);
     }
 
 
@@ -8014,15 +7989,11 @@ class Puzzle_penrose_P3 extends Puzzle {
     }
 
     rotate_left() {
-        this.theta = (this.theta - 45 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, -45);
-        this.redraw();
+        this.rotate_grid(-45, false);
     }
 
     rotate_right() {
-        this.theta = (this.theta + 45 * this.reflect[0] * this.reflect[1] + 360) % 360;
-        this.point_move(0, 0, +45);
-        this.redraw();
+        this.rotate_grid(45, false);
     }
 
     cursolcheck() {
@@ -8543,23 +8514,23 @@ class Puzzle_penrose_P3 extends Puzzle {
                     }
                     break;
                 case "8": //long
-                    {
-                        let number_data = this[pu].number[i];
-                        let lines = number_data[0].split('\n');
-                        let p_x = this.point[i].x;
-                        let p_y = this.point[i].y;
-                        for (let line of lines) {
-                            if (number_data[1] === 5) {
-                                set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                                set_circle_style(this.ctx, 7);
-                                this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.5 * this.size);
-                            }
+                {
+                    let number_data = this[pu].number[i];
+                    let lines = number_data[0].split('\n');
+                    let p_x = this.point[i].x;
+                    let p_y = this.point[i].y;
+                    for (let line of lines) {
+                        if (number_data[1] === 5) {
                             set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                            this.ctx.textAlign = "left";
-                            this.ctx.text(line, p_x - 0.2 * this.size, p_y);
-                            p_y += this.size * 0.5;
+                            set_circle_style(this.ctx, 7);
+                            this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.5 * this.size);
                         }
+                        set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
+                        this.ctx.textAlign = "left";
+                        this.ctx.text(line, p_x - 0.2 * this.size, p_y);
+                        p_y += this.size * 0.5;
                     }
+                }
                     break;
             }
         }
@@ -10023,17 +9994,5 @@ class Puzzle_penrose_P3 extends Puzzle {
                 this.draw_polygon(ctx, x + (i % 3 - 1) * r * pu.size, y + ((i / 3 | 0) - 1) * r * pu.size, r * 0.5 * Math.sqrt(2), 4, 45);
             }
         }
-    }
-
-    rotate_theta(th) {
-        th = (th + this.theta);
-        if (this.reflect[0] === -1) {
-            th = (180 - th + 360) % 360;
-        }
-        if (this.reflect[1] === -1) {
-            th = (360 - th + 360) % 360;
-        }
-        th = th / 180 * Math.PI;
-        return th;
     }
 }
