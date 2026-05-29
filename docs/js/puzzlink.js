@@ -77,7 +77,7 @@ class Puzzlink {
         }
     }
 
-    decodeNumber16(max_iter = -1) {
+    decodeNumber16(max_length = Infinity) {
         var number_list = {};
         var i = 0;
         var c = 0;
@@ -96,8 +96,7 @@ class Puzzlink {
                 i++;
             }
 
-            max_iter--;
-            if (max_iter === 0) {
+            if (c >= max_length) {
                 break;
             }
         }
