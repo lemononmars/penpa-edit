@@ -871,8 +871,8 @@ function decode_puzzlink(url) {
             }
 
             if (type === "suguru") {
-                info_shade = puzzlink_pu.decodeNumber2Binary();
-                puzzlink_pu.drawBinary2Surface(pu, info_shade, 4); // 4 is for Black Surface
+                info_surface = puzzlink_pu.decodeNumber2Binary();
+                puzzlink_pu.drawBinary2Surface(pu, info_surface, 4); // 4 is for Black Surface
             }
 
             // Change to Solution Tab
@@ -1925,16 +1925,8 @@ function decode_puzzlink(url) {
             pu.mode_grid("nb_grid2"); // Dashed lines
             setupProblem(pu, "combi");
 
-            info_number = puzzlink_pu.decodeNumber2Binary();
-            for (i in info_number) {
-                if (info_number[i] === 0) {
-                    continue;
-                }
-                row_ind = parseInt(i / cols);
-                col_ind = i % cols;
-                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
-                pu["pu_q"].surface[cell] = 4;
-            }
+            info_surface = puzzlink_pu.decodeNumber2Binary();
+            puzzlink_pu.drawBinary2Surface(pu, info_surface, 4);
 
             pu.mode_qa("pu_a");
             pu.mode_set("combi");
@@ -2106,17 +2098,8 @@ function decode_puzzlink(url) {
             info_edge = puzzlink_pu.decodeBorder();
             puzzlink_pu.drawBorder(pu, info_edge, 2);
 
-            info_number = puzzlink_pu.decodeNumber2Binary();
-            for (var i in info_number) {
-                if (!info_number[i]) {
-                    continue;
-                }
-                // Determine which row and column
-                row_ind = parseInt(i / cols);
-                col_ind = i % cols;
-                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
-                pu["pu_q"].surface[cell] = 4;
-            }
+            info_surface = puzzlink_pu.decodeNumber2Binary();
+            puzzlink_pu.drawBinary2Surface(pu, info_surface, 4);
 
             pu.mode_qa("pu_a");
             pu.mode_set("combi");
@@ -2519,17 +2502,8 @@ function decode_puzzlink(url) {
             puzzlink_pu.drawBorder(pu, info_edge, 2);
 
             // Shade marked cells
-            info_number = puzzlink_pu.decodeNumber2Binary();
-            for (var i in info_number) {
-                if (!info_number[i]) {
-                    continue;
-                }
-                // Determine which row and column
-                row_ind = parseInt(i / cols);
-                col_ind = i % cols;
-                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
-                pu["pu_q"].surface[cell] = 4;
-            }
+            info_surface = puzzlink_pu.decodeNumber2Binary();
+            puzzlink_pu.drawBinary2Surface(pu, info_surface, 4);
 
             pu.mode_qa("pu_a");
             pu.mode_set("combi");
