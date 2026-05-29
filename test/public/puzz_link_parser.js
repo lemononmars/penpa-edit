@@ -436,6 +436,9 @@ describe("puzz.link parser", () => {
         // Rassi Silai
         ["Rassi Silai 1", "https://pzprxs.vercel.app/p?rassi/8/8/b2stfautich00cq80j2gk0u060p124gl0o2g4"],
         ["Rassi Silai 2", "https://pzprxs.vercel.app/p?rassi/10/10/aqkqpdas5sbtnatdl27ms31of1k6803vfsne000000001g1g00000000"],
+        // Suguru (Capsules)
+        ["Suguru 1", "https://pzprxs.vercel.app/p?suguru/6/6/adbli15d2tluj2g1l2l3l4l5g"],
+        ["Suguru 2", "https://pzprxs.vercel.app/p?suguru/16/6/gkca9ilcv6lapem2c8fraajtje56rd8u3r2j5h1n3k3p4m4j42j2m2p5k5g2l2h2j3000g0000000000000000"],
         // Tonttiraja
         ["Tonttiraja 1", "https://pzprxs.vercel.app/p?tontti/v:/6/6/.j.p6h4p6j6"],
         ["Tonttiraja 2", "https://pzprxs.vercel.app/p?tontti/10/10/1k4u1j7i3r6y1w-11m3n2"],

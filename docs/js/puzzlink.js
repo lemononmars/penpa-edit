@@ -854,19 +854,25 @@ function decode_puzzlink(url) {
         case "putteria":
         case "renban":
         case "ripple":
+        case "suguru":
             // Setup board
             pu = new Puzzle_square(cols, rows, size);
             setupProblem(pu, "number");
 
             // Decode URL
             info_edge = puzzlink_pu.decodeBorder();
-            info_number = puzzlink_pu.decodeNumber16();
+            info_number = puzzlink_pu.decodeNumber16(puzzlink_pu.rows * puzzlink_pu.cols);
 
             puzzlink_pu.drawBorder(pu, info_edge, 2); // 2 is for Black Style
             if (type === "ripple") {
                 puzzlink_pu.drawNumbers(pu, info_number, 1, "1", false);
             } else {
                 puzzlink_pu.drawNumbers(pu, info_number, 1, "1");
+            }
+
+            if (type === "suguru") {
+                info_shade = puzzlink_pu.decodeNumber2Binary();
+                puzzlink_pu.drawBinary2Surface(pu, info_shade, 4); // 4 is for Black Surface
             }
 
             // Change to Solution Tab
@@ -881,6 +887,7 @@ function decode_puzzlink(url) {
                 meander: "meandering numbers",
                 renban: "renban (renban-madoguchi)",
                 ripple: "ripple effect",
+                suguru: "suguru (capsules)",
             };
             // Set tags
             pu.user_tags = [map_genre_tag[type] || type];

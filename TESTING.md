@@ -834,6 +834,13 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>Suguru</summary>
+
+* https://pzprxs.vercel.app/p?suguru/6/6/adbli15d2tluj2g1l2l3l4l5g
+* https://pzprxs.vercel.app/p?suguru/16/6/gkca9ilcv6lapem2c8fraajtje56rd8u3r2j5h1n3k3p4m4j42j2m2p5k5g2l2h2j3000g0000000000000000
+
+</details>
+<details>
 <summary>Tonttiraja</summary>
 
 * https://pzprxs.vercel.app/p?tontti/v:/6/6/.j.p6h4p6j6
