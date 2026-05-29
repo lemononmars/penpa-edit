@@ -50,21 +50,23 @@ class Puzzlink {
 
     drawBorder(pu, info_edge, edge_style) {
         var row_ind, col_ind, edgex, edgey;
+        var row_offset = pu.space[0];
+        var col_offset = pu.space[2];
 
         // Add edges to grid
         for (var i in info_edge) {
             if (info_edge[i] === 1) {
                 // Determine Vertical Border or Horizontal
                 if (i < (this.cols - 1) * this.rows) {
-                    row_ind = parseInt(i / (this.cols - 1));
-                    col_ind = i % (this.cols - 1);
+                    row_ind = parseInt(i / (this.cols - 1)) + row_offset;
+                    col_ind = i % (this.cols - 1) + col_offset;
                     // plus 1 at end because the 0 reference is from column 1 due to inside border
                     edgex = pu.nx0 * pu.ny0 + pu.nx0 * (1 + row_ind) + 1 + col_ind + 1;
                     edgey = edgex + pu.nx0;
                 } else {
                     i -= (this.cols - 1) * this.rows; //offset to 0
-                    row_ind = parseInt(i / this.cols);
-                    col_ind = i % this.cols;
+                    row_ind = parseInt(i / this.cols) + row_offset;
+                    col_ind = i % this.cols + col_offset;
                     // 2 + row_ind, as 1st horizontal is the 0 reference
                     edgex = pu.nx0 * pu.ny0 + pu.nx0 * (2 + row_ind) + 1 + col_ind;
                     edgey = edgex + 1;
@@ -130,12 +132,14 @@ class Puzzlink {
 
     drawNumbers(pu, info_number, style, sub_mode, hide_ques = true) {
         var row_ind, col_ind, cell, number;
+        var row_offset = pu.space[0];
+        var col_offset = pu.space[2];
 
         // Add numbers to grid
         for (var i in info_number) {
             // Determine which row and column
-            row_ind = parseInt(i / this.cols);
-            col_ind = i % this.cols;
+            row_ind = parseInt(i / this.cols) + row_offset;
+            col_ind = i % this.cols + col_offset;
             cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
             number = hide_ques && info_number[i] === "?" ? " " : info_number[i];
             pu["pu_q"].number[cell] = [number, style, sub_mode];
