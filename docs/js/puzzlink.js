@@ -426,6 +426,22 @@ class Puzzlink {
         return number_list;
     }
 
+    drawBinary2Surface(pu, info, style) {
+        var row_ind, col_ind, cell;
+        var row_offset = pu.space[0];
+        var col_offset = pu.space[2];
+        
+        for (var i in info) {
+            if (info[i] === 0) continue;
+
+            // Determine which row and column
+            row_ind = parseInt(i / this.cols) + row_offset;
+            col_ind = i % this.cols + col_offset;
+            cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
+            pu["pu_q"].surface[cell] = style;
+        }
+    }
+
     moveNumbersToRegionCorners(info_edge, info_number) {
         var cols = this.cols,
             rows = this.rows;
