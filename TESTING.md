@@ -27,6 +27,11 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 * https://puzz.link/p?akari/20/20/h.k.h.kbz.ha.gb6.hab.hbl.h.zk.h.lbbiab.hb.h.zh.gbg6b.g.i6.zz.g.i6b.g.i.g.zh.hb.h.hbbib.l.hbzi.h.n.ha.ha.gb.gb.hbzbi.h.kb
 * https://puzz.link/p?akari/40/40/i..i8.g.gco1...i1.h.g.hd.i.g...t1.j6.g.hcgch.bo1..jah.g.g.gbh.h.q1.n.j.g.gbi.g.qco.j.g.l.bobqbh..lcobxbi.rbsbmbpbzi.r.mcgckci.sck.j.rdpblbhbkbg.r.n1.j.q.rcl..i6.m7.h.ocl7.i.gbm.h.oakb.i6.qcm.m.i.h.h.p..obj.jb.h.n..g.n.lbi.gbg.p.o.k.kbbg6clbbich1bj6.j.g.n.h.k.h0..l.h.j...n.i.j......bi6bi.gblbgbh1.......i.g.l.g.n.i.i.h....g.c1cmbm66.h.h.g..gb.l1.b.o5.g.hbgcbbj....1.mcg.g.g7.j2.o1....gbgbk..g..g.u...g.g.ibk.g71.bs.h.g.i.jbbi.g.pbh1b.hbg..h.h65.hcmbkbj1cbk.z.j1..p.g.x1.h1..cn1.hbt..6...l1.......bdkbj6.g..g.n.......b.r.h.g.g..n.........h1bl2bg.6.g.n1..........g...i...k.jcm........ib..bl6.g.m
 
+<details>
+<summary>All or Nothing</summary>
+
+* https://puzz.link/p?nothing/10/10/8l5n4n2vduron0m54efqfejv1gk69gjv7s84
+
 </details>
 <details>
 <summary>Aqre</summary>
@@ -44,6 +49,13 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 * https://puzz.link/p?araf/15/7/111g5a5g1fagaaazp125g898g817g464zp118g888g111g411
 * https://puzz.link/p?araf/10/10/1h4h1h7i6h6heldh34n5icrai8nc9hblahah3ibh-32h-32hd
 * https://puzz.link/p?araf/4/3/+100-10j.i0g
+
+</details>
+<details>
+<summary>Arukone</summary>
+
+* https://puzz.link/p?arukone/14/9/zh-15h6heh3fe6-15-1354g4ci7g9u2zg3g9g-1351ch2i7g1j8of8n
+
 
 </details>
 <details>
@@ -84,6 +96,26 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>Chocona</summary>
+
+* https://puzz.link/p?chocona/10/10/205428sgp264c8phk30f1g1gu01e00u120tse691ae1532g
+* https://puzz.link/p?chocona/26/22/885kcco5lc912qccuksc8u9k8cdbs24ujt2ctre2ifbuagd77ah6bbjpubmjvt7n57t4gldt0oa6t0gi3uci41s4icrs32ar3j7cqhjpkk2lik3g3302fuitovkgv3g7tge73ifv7jejuc0r4v3ei4e1o79r01jpqune0kg1ov1f300bf783vukb00fg2mvvvggs0tvovs0g3frku1s0tg7v270064a13422432332444724242322633942221232249322222423462242621324325398321344611532442412253236225
+
+</details>
+<details>
+<summary>Circles & Squares</summary>
+
+* https://puzz.link/p?circlesquare/15/15/000003000i3030319093030400300001900303000c300001990000330030300190900300003
+
+</details>
+<details>
+<summary>Cocktail Lamp</summary>
+
+* https://puzz.link/p?cocktail/10/10/107668sgg1l3q54f0qfee0e0fevvf70c0cf7dh853h1g2h1
+* https://puzz.link/p?cocktail/17/35/0gf1sfdrdfrvnar28dkkmpab4k3i4jt99ugkvdo7nd5n6irjmdpn6sr36c1jj09tqgctc0ve8tb9b9qapr5as8be6dr575jbcphpc5cidpitt9h41fhj2poh2g2l29f0e70e8041h0t3hpk01u01n1o0hh76003hvc08000gs080e7s0oue607v0o7ha2dd1dte8371ji01o610ao6180ca790dt5fkg42rck531h314h56g28j2g6h4g2k1632g4i0h25h34111
+
+</details>
+<details>
 <summary>Cojun</summary>
 
 * https://puzz.link/p?cojun/8/8/qhebtquqmqj0l7s7c8vo1up0zzh4v1j
@@ -101,6 +133,18 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>Context</summary>
+
+* https://puzz.link/p?context/16/12/g1k12g2010k3q2h323i2p3i222i3h21l2i333l2m3j3m0l333i1l11h3i121i3p1i323h0q3k2121g20k1g
+
+</details>
+<details>
+<summary>Coral</summary>
+
+* https://puzz.link/p?coral/10/10/81i31n221h321h321h2111l1111g81i81i3111l1111g421h321h211m11i81i
+
+</details>
+<details>
 <summary>Country Road</summary>
 
 * https://puzz.link/p?country/12/12/4s6ndj8iorsml2p8llbdekqu9504hq8lvi2bt54jun8vv95nsi88c05g4g3i2i1i25o4g
@@ -109,11 +153,29 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>Creek</summary>
+
+* https://puzz.link/p?creek/10/10/qbdccdbdbibiceeeddcblbbcdcdddboabbb
+
+</details>
+<details>
+<summary>Cross the Streams</summary>
+
+* https://puzz.link/p?cts/21/11/55j.20i02120g020i..j040i06j30j0321h02120g0k420i303i..j11.i02020g020i404i040i202i050i203030k02o302020k030403k03.n0336m5.50m04040l02320l302020k.605m
+
+</details>
+<details>
 <summary>Detour</summary>
 
 * https://puzz.link/p?detour/10/10/182g307gfcug03464c07vovn00rgvnvnvg80g4g35dh2g21g6g1g
 * https://puzz.link/p?detour/8/8/10820g41g4000s000007v01g5gcg2
 * https://puzz.link/p?detour/8/8/a2gh4928h49000vs00o0vg00g1g435h5
+
+</details>
+<details>
+<summary>Dominion</summary>
+
+* https://puzz.link/p?dominion/10/10/n.h1h1j.h2h2u1i2l2i3w2k.h1j.h.m4
 
 </details>
 <details>
@@ -214,6 +276,13 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>Heyablock</summary>
+
+* https://puzz.link/p?heyablock/10/10/498g17buntfqsh12247obovv003o00vv3o3o726h22j2h4g6g2
+* https://puzz.link/p?heyablock/15/10/4i894gi914i2944i894gi914i294000vvv000vvv000vvv000vvv0001122222024024311331235234
+
+</details>
+<details>
 <summary>Heyawake</summary>
 
 * https://puzz.link/p?heyawake/10/10/0k18ih52a4k9800000003g00000000vv00008g57b
@@ -223,6 +292,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 * https://puzz.link/p?heyawake/12/12/5k2q1d0mgb85k2q0d06g381k0q00000u0001vg0007ou0ofg3tg00065g63242362i
 * https://puzz.link/p?heyawake/17/17/ju1vv0vvnm0bv07vg3gfvv7vvhvvuvvvevvnfv07vg3vo003001g00oe1v00fsvs17vo1vpvfufo001g03g0006001g1vs01v00fvvvvvsvvv0s2zj2k2m
 * https://puzz.link/p?heyawake/17/9/006g03801k00q00d006g03809004g000000000000000000007vvu007g-210g052h
+
+</details>
+<details>
+<summary>Hinge</summary>
+
+* https://puzz.link/p?hinge/14/12/k1ag51905514k4kgii2i8qa29800a010000rtg060s007o0007o30e0o0cfjg00-2bh26262626g2h
 
 </details>
 <details>
@@ -318,11 +393,23 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>Lither (Lithersink)</summary>
+
+* https://puzz.link/p?lither/8/8/g02881d3667c63c338c6b086cid12185bd
+
+</details>
+<details>
 <summary>LITS</summary>
 
 * https://puzz.link/p?lits/12/8/11084o2iif51gg8040vf3vu577erlpvfnvu
 * https://puzz.link/p?lits/8/8/5ajmi9mhai2g514bdn32f340
 * https://puzz.link/p?lits/6/6/lldoa4043q6c
+
+</details>
+<details>
+<summary>Mannequin Gate</summary>
+
+* https://puzz.link/p?mannequin/10/10/abkt6ij7o7j4nvnu69g4fapb2nsefe4ja3huhag21g2k1h1j1
 
 </details>
 <details>
@@ -409,6 +496,13 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>NIKOJI</summary>
+
+* https://puzz.link/p?nikoji/14/13/1k2j3g4g5r67j8h9iaj4bicdh66en2kf-10m-11g9g5g1peq3hf-12g8n-13g7idi-14bhcieh-15o-14-11ejah-12k-10k-13-15h
+* https://puzz.link/p?nikoji/16/40/123456789abcdef-10v-11zq-12h-13v-14q-15u1-11i-16q-17h-18g-13r2i-11n-11k-131-19o-18-19s-13k-16g-14g-17z3h-12h-1ai-16o-1bg-13l-1al-1ci1-1dk-1ej-1f-20i-212l-19l-1dh1i-1cj1g2-11h-22h-22h-22x-20l-1fg1g1-23-24p-1ao-25g1h-1bh2o-1eh1i-11k1i4h-1bi-26h-18r-1fg-13i5-27k3o7m-28i-29m-2ao-2ai-28g-2bm-28m1i1-1dk3g1o-2cn-2d-12k-2ep-2f-22h-22i-2ci-30i-26o1h3-32k-31o-34m-13g-2bl-13-19i1h-11q1
+
+</details>
+<details>
 <summary>Nonogram</summary>
 
 * https://puzz.link/p?nonogram/4/10/123h456h789habcn1g2g3g4g3g2g1g
@@ -422,6 +516,18 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 * https://puzz.link/p?norinori/18/10/365btauumbakihchaf0o3q67cbjcg8kki94dtj2oorju6tnmontv0vgb4ssnvsb9v3g
 * https://puzz.link/p?norinori/10/10/ebdcb96kfaulotutil9qscvm7ivh0aumd8mc
 * https://puzz.link/p?norinori/10/10/09binldaqlaqkl8qg4fg04v803fuk0ovu0vu
+
+</details>
+<details>
+<summary>Norinuri</summary>
+
+* https://puzz.link/p?norinuri/10/10/o.zt9g8lcg5zt.o
+
+</details>
+<details>
+<summary>No Three</summary>
+
+* https://puzz.link/p?nothree/10/10/genceemeienei6eiemeeemeiemenemeiemeeemei6eieneiemecene
 
 </details>
 <details>
@@ -471,6 +577,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>Nuri-uzu</summary>
+
+* https://puzz.link/p?nuriuzu/10/10/iaaeztepexewezwepexewezzseezzj
+
+</details>
+<details>
 <summary>Onsen-meguri (Onsen)</summary>
 
 * https://puzz.link/p?onsen/10/18/85264cappjb7n4c4pjr32fd5qeoqm8s908u000o18ee0gm97g1s826s66c778ite822zh7j6zzzzzzj3j8zh
@@ -491,6 +603,13 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 * https://puzz.link/p?pencils/8/8/1o1k1k1l1o111m1n1m11m1k1m1o1l1m1l1l
 * https://puzz.link/p?pencils/6/6/2kilgphk1w4kin5
 * https://puzz.link/p?pencils/11/11/oi2kglgsgnhin2kgngkgl32uhkjkiyhogphlg2gv4l2jho3j
+
+</details>
+<details>
+<summary>Pentominous</summary>
+
+* https://puzz.link/p?pentominous/8/8/i0gcu9gcbt2cg0ucg2i
+* https://puzz.link/p?pentominous/10/10/zzzzz080gi14o1g000000000c006o03o00030o06c
 
 </details>
 <details>
@@ -572,6 +691,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>Simplegako</summary>
+
+* https://puzz.link/p?simplegako/7/7/7h432h65i11j3g7j2j4l2p
+
+</details>
+<details>
 <summary>Simple Loop</summary>
 
 * https://puzz.link/p?simpleloop/12/12/40860g10m0kc0o0m3480q0g0008h2
@@ -616,6 +741,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>Square Jam</summary>
+
+* https://puzz.link/p?squarejam/11/11/zj1h2h3zl2h3h3zl2h1h3zj
+
+</details>
+<details>
 <summary>Star Battle</summary>
 
 * https://puzz.link/p?starbattle/10/10/2/5g252c2qkgbakk98igse7g88cp3730so000u
@@ -623,6 +754,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 * https://puzz.link/p?starbattle/12/12/2/g0410igil9ck6q3l12glrcp12c081pu07do1ge6c0g0m0628gdkcn0
 * https://puzz.link/p?starbattle/13/13/2/40142jhssb4ij4491m8d6b0io4k8ab003vosuc02181v3e00o00fo3g00073phsg
 * https://puzz.link/p?starbattle/9/9/2/12a955kh37khi20fe0g13toea1c07g
+
+</details>
+<details>
+<summary>Statue Park</summary>
+
+* https://puzz.link/p?statuepark/12/12/3g3g6000515100003ala0i003g3a0060515160003g3g0000//p
 
 </details>
 <details>
@@ -732,11 +869,30 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>Tetrominous</summary>
+
+* https://puzz.link/p?tetrochain/9/9/c33d37k32d35k31d32k22d41t34
+
+
+</details>
+<details>
+<summary>Tetrominous</summary>
+
+* https://puzz.link/p?tetrominous/4/4/1h1k3l
+
+</details>
+<details>
 <summary>Toichika 2</summary>
 
 * https://puzz.link/p?toichika2/15/15/2ii9p6jlepctpvvnvvcvtsnrvfnvumfuafuqrdigoivvuvjufvv6veme19dokvv1ovoo31to5vv0vsrduvfv*5028-4d-3c6-b4-10-90+249-5a-46-6e+2a0-30-3f+4e0-2d-1c-37-84-30-fce-28+16c-87-87-1e-84+190-62-30+555+604-1e-36$4ec40-b6-6c-8f-1e-3c-606-82+898-9a+288*457e+1b0-20-2ac-283-54-48-96+870=6f8-28-75-62-78e-1e+276-46+438a+7d2c-3c-3c-75-3c-30-37-5b6b+654-20%b50+222+258-48
 * https://puzz.link/p?toichika2/12/12/4s6ndj8iorsml2p8llbdekqu9504hq8lvi2bt54jun8vv95nsi88c05g4g3i2i1i25o4g
 * https://puzz.link/p?toichika2/20/15/10156ggr62indoe611d38431oonjrhv7hltmb6t90d6hdme4rc8jcp26ge7vo7vvo32vk8tv1v7uefro67hg208e82hg953tva7tu0fg0fv6m1u0ei5g24k54g2l7g557k92h3g3g2g3
+
+</details>
+<details>
+<summary>Touch Slitherlink</summary>
+
+* https://puzz.link/p?tslither/7/7/negdh42bmckaaci
 
 </details>
 <details>
@@ -751,6 +907,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 * https://puzz.link/p?usotatami/10/10/6e7b3a8j2e4c...b21e4c2b4b414d12c3d2d..j8a2b7e6
 * https://puzz.link/p?usotatami/6/4/c2c1h3c4c
+
+</details>
+<details>
+<summary>Vertex Slitherlink</summary>
+
+* https://puzz.link/p?vslither/9/8/1239123em1239123em1239123em1239223em
 
 </details>
 <details>
@@ -813,10 +975,46 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>City Space</summary>
+
+* https://pzprxs.vercel.app/p?cityspace/9/9/g2h4h2l6r6g5k6oakbg9r6l2h2h4g
+
+</details>
+<details>
 <summary>Dotchi-Loop</summary>
 
 * https://pzprxs.vercel.app/p?dotchi/7/7/2b2a2imi0i38h49mi873300390i0a262970
 * https://pzprxs.vercel.app/p?dotchi/10/10/54a94i93264d0qil0200vs03vs1stv0fu0vsk6lja01621i415ak6biai3b0c6bg6gi030
+
+</details>
+<details>
+<summary>Dotchi-Dotchi Loop</summary>
+
+* https://pzprxs.vercel.app/p?dotchi2/7/7/h8ka54i90f0107s01ojj001k50976l003li
+
+</details>
+<details>
+<summary>Inaba's Island</summary>
+
+* https://pzprxs.vercel.app/p?island/4/5/k0i6i0j6g
+
+</details>
+<details>
+<summary>Japanese Sums</summary>
+
+* https://pzprxs.vercel.app/p?japanesesums/6/6/5/.6g3h96g7h7.g6h13g..g74g5h58g..1
+
+</details>
+<details>
+<summary>Nibunnogo</summary>
+
+* https://pzprxs.vercel.app/p?nibunnogo/10/10/i16ai3ch22aidj7cjch6bmce53drbg6ddibch2dagcib
+
+</details>
+<details>
+<summary>Oasis</summary>
+
+* https://pzprxs.vercel.app/p?oasis/17/17/.h6o3h.m.g.o.h.h4h.h.h2u4y.i6i.i.m.k4l.l1l.i4j1g1j4i.l1l.l3k.m.i.i2i.y4u3h.h.h3h.h.o.g.m.h5o2h.
 
 </details>
 <details>
@@ -831,6 +1029,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 * https://pzprxs.vercel.app/p?rassi/8/8/b2stfautich00cq80j2gk0u060p124gl0o2g4
 * https://pzprxs.vercel.app/p?rassi/10/10/aqkqpdas5sbtnatdl27ms31of1k6803vfsne000000001g1g00000000
+
+</details>
+<details>
+<summary>Smullyanic Dynasty</summary>
+
+* https://pzprxs.vercel.app/p?smullyan/14/14/0222212212111121323232333112233322333233221313333133232221312213133231233323243222321332331223213222222334322231222023222332212310123433332123313333231311223234343331322323233331323202121222122221
 
 </details>
 <details>
