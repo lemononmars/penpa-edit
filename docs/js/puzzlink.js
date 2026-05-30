@@ -2720,6 +2720,40 @@ function decode_puzzlink(url) {
             UserSettings.tab_settings = ["Surface", "Number Normal"];
             pu.user_tags = ["box"];
             break;
+        case "alter":
+        case "hakoiri":
+        case "tontonbeya":
+            pu = new Puzzle_square(cols, rows, size);
+            setupProblem(pu, "symbol");
+
+            info_edge = puzzlink_pu.decodeBorder();
+            puzzlink_pu.drawBorder(pu, info_edge, 2);
+
+            info_number = puzzlink_pu.decodeNumber10();
+            for (i in info_number) {
+                if (![1, 2, 3].includes(info_number[i])) continue;
+                row_ind = parseInt(i / cols);
+                col_ind = i % cols;
+                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
+                pu["pu_q"].symbol[cell] = [info_number[i], "ox_B", 1];
+            }
+
+            pu.mode_qa("pu_a");
+            pu.mode_set("symbol");
+            UserSettings.tab_settings = ["Surface", "Shape"];
+
+            switch (type) {
+                case "alter":
+                    pu.user_tags = ["alternation"];
+                    break;
+                case "hakoiri":
+                    pu.user_tags = ["hakoiri (Hakoiri-masashi)"];
+                    break;
+                case "tontonbeya":
+                    pu.user_tags = ["tontonbeya"];
+                    break;
+            }
+            break;
         default:
             errorMsg(PenpaText.get('puzzlink_not_supported', type));
             break;

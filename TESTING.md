@@ -32,6 +32,11 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 * https://puzz.link/p?nothing/10/10/8l5n4n2vduron0m54efqfejv1gk69gjv7s84
 
+<details>
+<summary>Alternation</summary>
+
+* https://puzz.link/p?alter/9/9/43koipp4cpkqs8g8se1f71s73kpad0d1r1e3f1g2f3e2r3d
+
 </details>
 <details>
 <summary>Aqre</summary>
@@ -262,6 +267,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 * https://puzz.link/p?haisu/18/18/511-120000000g014009002800i004g014009002800i004g014009002800g00000000000vvu000000000000000000000000000000000000000000000007vvg00009j2zzg1o5p6zs8zx2j8n7y3z4o4zh7zzh6h5h3zs5q
 * https://puzz.link/p?haisu/4/4/44216n8d902m1m
 * https://puzz.link/p?haisu/8/8/527704h490018a00e0000s060030o455g77zt6t
+
+</details>
+<details>
+<summary>Hakoiri-masashi</summary>
+
+* https://puzz.link/p?hakoiri/12/12/0g08040g884422110gg8100g08000001vvg00003u00000fvs00000za1c2q1g2zze3h3s
 
 </details>
 <details>
@@ -899,6 +910,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 * https://puzz.link/p?toichika2/15/15/2ii9p6jlepctpvvnvvcvtsnrvfnvumfuafuqrdigoivvuvjufvv6veme19dokvv1ovoo31to5vv0vsrduvfv*5028-4d-3c6-b4-10-90+249-5a-46-6e+2a0-30-3f+4e0-2d-1c-37-84-30-fce-28+16c-87-87-1e-84+190-62-30+555+604-1e-36$4ec40-b6-6c-8f-1e-3c-606-82+898-9a+288*457e+1b0-20-2ac-283-54-48-96+870=6f8-28-75-62-78e-1e+276-46+438a+7d2c-3c-3c-75-3c-30-37-5b6b+654-20%b50+222+258-48
 * https://puzz.link/p?toichika2/12/12/4s6ndj8iorsml2p8llbdekqu9504hq8lvi2bt54jun8vv95nsi88c05g4g3i2i1i25o4g
 * https://puzz.link/p?toichika2/20/15/10156ggr62indoe611d38431oonjrhv7hltmb6t90d6hdme4rc8jcp26ge7vo7vvo32vk8tv1v7uefro67hg208e82hg953tva7tu0fg0fv6m1u0ei5g24k54g2l7g557k92h3g3g2g3
+
+</details>
+<details>
+<summary>Tontonbeya</summary>
+
+* https://puzz.link/p?tontonbeya/10/10/6odgr0o7dd2pgl1a240000snqn5o0mvn0o30k1b12b3n2b2z2b3n3b31b1k
 
 </details>
 <details>

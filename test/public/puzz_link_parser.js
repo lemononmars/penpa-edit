@@ -25,6 +25,8 @@ describe("puzz.link parser", () => {
         ["Akari 4", "https://puzz.link/p?akari/40/40/i..i8.g.gco1...i1.h.g.hd.i.g...t1.j6.g.hcgch.bo1..jah.g.g.gbh.h.q1.n.j.g.gbi.g.qco.j.g.l.bobqbh..lcobxbi.rbsbmbpbzi.r.mcgckci.sck.j.rdpblbhbkbg.r.n1.j.q.rcl..i6.m7.h.ocl7.i.gbm.h.oakb.i6.qcm.m.i.h.h.p..obj.jb.h.n..g.n.lbi.gbg.p.o.k.kbbg6clbbich1bj6.j.g.n.h.k.h0..l.h.j...n.i.j......bi6bi.gblbgbh1.......i.g.l.g.n.i.i.h....g.c1cmbm66.h.h.g..gb.l1.b.o5.g.hbgcbbj....1.mcg.g.g7.j2.o1....gbgbk..g..g.u...g.g.ibk.g71.bs.h.g.i.jbbi.g.pbh1b.hbg..h.h65.hcmbkbj1cbk.z.j1..p.g.x1.h1..cn1.hbt..6...l1.......bdkbj6.g..g.n.......b.r.h.g.g..n.........h1bl2bg.6.g.n1..........g...i...k.jcm........ib..bl6.g.m"],
         // All or nothing
         ["All or Nothing 1", "https://puzz.link/p?nothing/10/10/8l5n4n2vduron0m54efqfejv1gk69gjv7s84"],
+        // Alternation
+        ["Alternation 1", "https://puzz.link/p?alter/9/9/43koipp4cpkqs8g8se1f71s73kpad0d1r1e3f1g2f3e2r3d"],
         // Aqre
         ["Aqre 1", "https://puzz.link/p?aqre/10/10/vvvs000fvvu0007vvv00vv00vv00vv00vv002020210221g0120200211g2121212120"],
         ["Aqre 2", "https://puzz.link/p?aqre/6/11/vvvvvvvvvvv0820h4928g41012345221514131210"],
@@ -135,6 +137,8 @@ describe("puzz.link parser", () => {
         ["Haisu 1", "https://puzz.link/p?haisu/18/18/511-120000000g014009002800i004g014009002800i004g014009002800g00000000000vvu000000000000000000000000000000000000000000000007vvg00009j2zzg1o5p6zs8zx2j8n7y3z4o4zh7zzh6h5h3zs5q"],
         ["Haisu 2", "https://puzz.link/p?haisu/4/4/44216n8d902m1m"],
         ["Haisu 3", "https://puzz.link/p?haisu/8/8/527704h490018a00e0000s060030o455g77zt6t"],
+        // Hakoiri-masashi
+        ["Hakoiri-masashi 1", "https://puzz.link/p?hakoiri/12/12/0g08040g884422110gg8100g08000001vvg00003u00000fvs00000za1c2q1g2zze3h3s"],
         // Hanare-gumi
         ["Hanare-gumi 1", "https://puzz.link/p?hanare/6/6/35vbm8uaihjfzv"],
         ["Hanare-gumi 2", "https://puzz.link/p?hanare/8/8/bdbiufrpnii0u6s5t4195qcgh2zs6i3p5i5n"],
@@ -449,6 +453,8 @@ describe("puzz.link parser", () => {
         ["Toichika-2 1", "https://puzz.link/p?toichika2/15/15/2ii9p6jlepctpvvnvvcvtsnrvfnvumfuafuqrdigoivvuvjufvv6veme19dokvv1ovoo31to5vv0vsrduvfv*5028-4d-3c6-b4-10-90+249-5a-46-6e+2a0-30-3f+4e0-2d-1c-37-84-30-fce-28+16c-87-87-1e-84+190-62-30+555+604-1e-36$4ec40-b6-6c-8f-1e-3c-606-82+898-9a+288*457e+1b0-20-2ac-283-54-48-96+870=6f8-28-75-62-78e-1e+276-46+438a+7d2c-3c-3c-75-3c-30-37-5b6b+654-20%b50+222+258-48"],
         ["Toichika-2 2", "https://puzz.link/p?toichika2/12/12/4s6ndj8iorsml2p8llbdekqu9504hq8lvi2bt54jun8vv95nsi88c05g4g3i2i1i25o4g"],
         ["Toichika-2 3", "https://puzz.link/p?toichika2/20/15/10156ggr62indoe611d38431oonjrhv7hltmb6t90d6hdme4rc8jcp26ge7vo7vvo32vk8tv1v7uefro67hg208e82hg953tva7tu0fg0fv6m1u0ei5g24k54g2l7g557k92h3g3g2g3"],
+        // Tontonbeya
+        ["Tontonbeya 1", "https://puzz.link/p?tontonbeya/10/10/6odgr0o7dd2pgl1a240000snqn5o0mvn0o30k1b12b3n2b2z2b3n3b31b1k"],
         // Uso-one
         ["Uso-one 1", "https://puzz.link/p?usoone/10/10/14i94i94i284g90408v0000000vv0000vv0067c56dh77cdgbgbgcg25dicjbg2768dh7bichdgc7bab"],
         ["Uso-one 2", "https://puzz.link/p?usoone/10/10/284g90i14488gh122400000007vo003o0000r.93bckahddcdgdocidb2clbh8cichc"],
