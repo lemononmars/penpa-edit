@@ -830,6 +830,46 @@ class Puzzlink {
 
         return [number_list1, number_list2];
     }
+
+    decodeAnglers() {
+        var number_list1 = {};
+        var number_list2 = {};
+        var extra_list = {};
+        var i = 0;
+        var c = 0;
+        const clen = this.cols * this.rows;
+
+        while (i < this.gridurl.length) {
+            var ca = this.gridurl.charAt(i);
+            var res = this.readNumber16(ca, i);
+            if (res[0] !== -1) {
+                var val = res[0] === 0 ? -3 : res[0] > 0 ? res[0] - 1 : res[0];
+
+                if (val === 0 || val === -3) {
+                    extra_list[c] = val; // fish or shaded cells must be inside of the grid
+                } else {
+                    if (c >= clen) {
+                        number_list1[c - clen] = val; // numbers outside of the grid
+                    } else {
+                        number_list2[c] = val; // numbers inside the grid
+                    }
+                }
+
+                i += res[1];
+                c++;
+            } else if (ca >= "g" && ca <= "z") {
+                c += parseInt(ca, 36) - 15;
+                i++;
+            } else {
+                i++;
+            }
+        }
+
+        // Remove what was parsed so the next function call reads what is left
+        this.gridurl = this.gridurl.substr(i);
+
+        return [number_list1, number_list2, extra_list];
+    }
 }
 
 class DisjointSets {
@@ -2753,6 +2793,37 @@ function decode_puzzlink(url) {
                     pu.user_tags = ["tontonbeya"];
                     break;
             }
+            break;
+        case "anglers":
+            document.getElementById("nb_space1").value = 1;
+            document.getElementById("nb_space2").value = 1;
+            document.getElementById("nb_space3").value = 1;
+            document.getElementById("nb_space4").value = 1;
+
+            pu = new Puzzle_square(cols + 2, rows + 2, size);
+            pu.mode_grid("nb_grid2"); // Dashed gridlines
+            setupProblem(pu, "combi");
+
+            [info_number_ex, info_number, info_extra] = puzzlink_pu.decodeAnglers();
+            puzzlink_pu.drawNumbersExCell(pu, info_number_ex, 1, "1", false);
+            puzzlink_pu.drawNumbers(pu, info_number, 1, "1", false);
+
+            for (var i in info_extra) {
+                row_ind = parseInt(i / cols) + 1; // top offset
+                col_ind = (i % cols) + 1; // left offset
+                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
+                if (info_extra[i] === 0) {
+                    pu["pu_q"].symbol[cell] = [3, "tents", 1]; // fish symbol
+                } else {
+                    pu["pu_q"].surface[cell] = 4; // shaded cell
+                }
+            }
+
+            pu.mode_qa("pu_a");
+            pu.mode_set("combi");
+            pu.subcombimode("linex");
+            UserSettings.tab_settings = ["Surface", "Composite"];
+            pu.user_tags = ["anglers"];
             break;
         default:
             errorMsg(PenpaText.get('puzzlink_not_supported', type));

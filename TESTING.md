@@ -37,6 +37,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 * https://puzz.link/p?alter/9/9/43koipp4cpkqs8g8se1f71s73kpad0d1r1e3f1g2f3e2r3d
 
+<details>
+<summary>Anglers</summary>
+
+* https://puzz.link/p?anglers/6/6/1k2g10h13j1g41h1h5l6r.r
+* https://puzz.link/p?anglers/10/10/t1zw1p1s1h1g1h1u-19l-19s7ocgecic
+
 </details>
 <details>
 <summary>Aqre</summary>

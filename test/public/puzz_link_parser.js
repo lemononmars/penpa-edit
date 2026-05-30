@@ -27,6 +27,9 @@ describe("puzz.link parser", () => {
         ["All or Nothing 1", "https://puzz.link/p?nothing/10/10/8l5n4n2vduron0m54efqfejv1gk69gjv7s84"],
         // Alternation
         ["Alternation 1", "https://puzz.link/p?alter/9/9/43koipp4cpkqs8g8se1f71s73kpad0d1r1e3f1g2f3e2r3d"],
+        // Anglers
+        ["Anglers 1", "https://puzz.link/p?anglers/6/6/1k2g10h13j1g41h1h5l6r.r"],
+        ["Anglers 2", "https://puzz.link/p?anglers/10/10/t1zw1p1s1h1g1h1u-19l-19s7ocgecic"],
         // Aqre
         ["Aqre 1", "https://puzz.link/p?aqre/10/10/vvvs000fvvu0007vvv00vv00vv00vv00vv002020210221g0120200211g2121212120"],
         ["Aqre 2", "https://puzz.link/p?aqre/6/11/vvvvvvvvvvv0820h4928g41012345221514131210"],
