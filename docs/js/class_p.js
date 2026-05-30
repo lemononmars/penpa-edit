@@ -704,30 +704,13 @@ class Puzzle {
                 let vertex = point[cell.surround[j]];
                 let min = Number.MAX_VALUE;
                 let corner = 0;
-                if (Math.abs(vertex.x - cell.x) < 0.001) {
-                    for (let k = 0; k < corners.length; k++) {
-                        if (Math.abs(point[corners[k]].x - vertex.x) < 0.001) {
-                            if (vertex.y > point[corners[k]].y === point[corners[k]].y > cell.y) {
-                                corner = corners[k];
-                            }
-                        }
-                    }
-                } else if (Math.abs(vertex.y - cell.y) < 0.001) {
-                    for (let k = 0; k < corners.length; k++) {
-                        if (Math.abs(point[corners[k]].y - vertex.y) < 0.001) {
-                            if (vertex.x > point[corners[k]].x === point[corners[k]].x > cell.x) {
-                                corner = corners[k];
-                            }
-                        }
-                    }
-                } else {
-                    for (let k = 0; k < corners.length; k++) {
-                        let diff = Math.abs(((vertex.y - point[corners[k]].y)*(cell.x - point[corners[k]].x)) -
-                                            ((vertex.x - point[corners[k]].x)*(cell.y - point[corners[k]].y)));
-                        if (min > diff && (vertex.x > point[corners[k]].x === point[corners[k]].x > cell.x) && (vertex.y > point[corners[k]].y === point[corners[k]].y > cell.y)) {
-                            min = diff;
-                            corner = corners[k];
-                        }
+                  for (let k = 0; k < corners.length; k++) {
+                    let corner_point = point[corners[k]];
+                    let diff = Math.abs((cell.y - vertex.y)*corner_point.x - (cell.x - vertex.x)*corner_point.y + (cell.x * vertex.y) - (cell.y * vertex.x)) / 
+                                Math.sqrt((cell.y - vertex.y)**2 + (cell.x - vertex.x)**2);
+                    if ((min > diff) && (cell.x > point[corners[k]].x === point[corners[k]].x > vertex.x) && (cell.y > point[corners[k]].y === point[corners[k]].y > vertex.y)) {
+                        min = diff;
+                        corner = corners[k];
                     }
                 }
                 if (corner !== 0) {

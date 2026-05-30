@@ -4907,7 +4907,6 @@ class Puzzle_iso extends Puzzle_truncated_square {
                 }
             }
         }
-        [point, k] = this.create_corners(point, 0.25, k);
         // 重複判定
         var renumber = new Array(point.length);
         for (var i = 0; i < point.length; i++) {
@@ -5029,7 +5028,9 @@ class Puzzle_iso extends Puzzle_truncated_square {
                 }
             }
         }
-        this.point = this.point_connect_corners(this.point_fillin_corners(this.fix_points(point)));
+        point = this.fix_points(point);
+
+        this.point = this.point_connect_corners(this.create_corners(point, 0.25, point.length + 1)[0]);
     }
 
     reset_frame() {
@@ -5356,45 +5357,39 @@ class Puzzle_iso extends Puzzle_truncated_square {
                     if (this.point[i2].neighbor.indexOf(this.point[i1].neighbor[j]) !== -1) {
                         i3 = this.point[i1].neighbor[j];
                     }
-                    this.ctx.beginPath();
-                    if (this[pu].line[i] === 40) {
-                        var r = 0.6;
-                        var x1 = r * this.point[i1].x + (1 - r) * this.point[i3].x;
-                        var y1 = r * this.point[i1].y + (1 - r) * this.point[i3].y;
-                        var x2 = (1 - r) * this.point[i3].x + r * this.point[i2].x;
-                        var y2 = (1 - r) * this.point[i3].y + r * this.point[i2].y;
-                        this.ctx.moveTo(x1, y1);
-                        this.ctx.lineTo(this.point[i3].x, this.point[i3].y);
-                        this.ctx.lineTo(x2, y2);
-                    } else if (this[pu].line[i] === 30) {
-                        var r = 0.15 * this.size;
-                        var dx = this.point[i1].x - this.point[i2].x;
-                        var dy = this.point[i1].y - this.point[i2].y;
-                        var d = Math.sqrt(dx ** 2 + dy ** 2);
-                        this.ctx.moveTo(this.point[i1].x - r / d * dy, this.point[i1].y + r / d * dx);
-                        this.ctx.lineTo(this.point[i2].x - r / d * dy, this.point[i2].y + r / d * dx);
-                        this.ctx.stroke();
-                        this.ctx.moveTo(this.point[i1].x + r / d * dy, this.point[i1].y - r / d * dx);
-                        this.ctx.lineTo(this.point[i2].x + r / d * dy, this.point[i2].y - r / d * dx);
-                    } else {
-                        if (this.point[i1].type === 2 || this.point[i1].type === 3) { //for centerline
-                            this.ctx.moveTo(this.point[i2].x, this.point[i2].y);
-                            this.ctx.lineTo((this.point[i1].x + this.point[i2].x) * 0.5, (this.point[i1].y + this.point[i2].y) * 0.5);
-                            this.ctx.stroke();
-                            this.ctx.lineCap = "butt";
-                        } else if (this.point[i2].type === 2 || this.point[i2].type === 3) {
-                            this.ctx.moveTo(this.point[i1].x, this.point[i1].y);
-                            this.ctx.lineTo((this.point[i1].x + this.point[i2].x) * 0.5, (this.point[i1].y + this.point[i2].y) * 0.5);
-                            this.ctx.stroke();
-                            this.ctx.lineCap = "butt";
-                        }
-                        this.ctx.moveTo(this.point[i1].x, this.point[i1].y);
-                        this.ctx.lineTo(this.point[i3].x, this.point[i3].y);
-                        this.ctx.lineTo(this.point[i2].x, this.point[i2].y);
-                    }
+                }
+                this.ctx.beginPath();
+                if (this[pu].line[i] === 40) {
+                    var r = 0.6;
+                    var x1 = r * this.point[i1].x + (1 - r) * this.point[i3].x;
+                    var y1 = r * this.point[i1].y + (1 - r) * this.point[i3].y;
+                    var x2 = (1 - r) * this.point[i3].x + r * this.point[i2].x;
+                    var y2 = (1 - r) * this.point[i3].y + r * this.point[i2].y;
+                    this.ctx.moveTo(x1, y1);
+                    this.ctx.lineTo(this.point[i3].x, this.point[i3].y);
+                    this.ctx.lineTo(x2, y2);
+                } else if (this[pu].line[i] === 30) {
+                    var r = 0.15 * this.size;
+                    var dx = this.point[i1].x - this.point[i2].x;
+                    var dy = this.point[i1].y - this.point[i2].y;
+                    var d = Math.sqrt(dx ** 2 + dy ** 2);
+                    this.ctx.moveTo(this.point[i1].x - r / d * dy, this.point[i1].y + r / d * dx);
+                    this.ctx.lineTo(this.point[i2].x - r / d * dy, this.point[i2].y + r / d * dx);
                     this.ctx.stroke();
+                    this.ctx.moveTo(this.point[i1].x + r / d * dy, this.point[i1].y - r / d * dx);
+                    this.ctx.lineTo(this.point[i2].x + r / d * dy, this.point[i2].y - r / d * dx);
                 } else {
-                    this.ctx.beginPath();
+                    if (this.point[i1].type === 2 || this.point[i1].type === 3) { //for centerline
+                        this.ctx.moveTo(this.point[i2].x, this.point[i2].y);
+                        this.ctx.lineTo((this.point[i1].x + this.point[i2].x) * 0.5, (this.point[i1].y + this.point[i2].y) * 0.5);
+                        this.ctx.stroke();
+                        this.ctx.lineCap = "butt";
+                    } else if (this.point[i2].type === 2 || this.point[i2].type === 3) {
+                        this.ctx.moveTo(this.point[i1].x, this.point[i1].y);
+                        this.ctx.lineTo((this.point[i1].x + this.point[i2].x) * 0.5, (this.point[i1].y + this.point[i2].y) * 0.5);
+                        this.ctx.stroke();
+                        this.ctx.lineCap = "butt";
+                    }
                     this.ctx.moveTo(this.point[i1].x, this.point[i1].y);
 
                     // If neighbor then break the line at midpoint or else directly draw a line between two ends (freeline)
@@ -5402,8 +5397,8 @@ class Puzzle_iso extends Puzzle_truncated_square {
                         this.ctx.lineTo(this.point[i3].x, this.point[i3].y);
                     }
                     this.ctx.lineTo(this.point[i2].x, this.point[i2].y);
-                    this.ctx.stroke();
                 }
+                this.ctx.stroke();
             }
         }
         for (var i in this[pu].lineE) {
