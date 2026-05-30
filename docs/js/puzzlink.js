@@ -78,6 +78,8 @@ class Puzzlink {
     }
 
     decodeNumber16(max_length = Infinity) {
+        // refer to: genericDecodeNumber16 in robx/pzprjs => Encode.js
+
         var number_list = {};
         var i = 0;
         var c = 0;
@@ -150,6 +152,8 @@ class Puzzlink {
     }
 
     decodeNumber16ExCell(top_left_only) {
+        // refer to: decodeNumber16ExCell in robx/pzprjs => Encode.js
+
         var number_list = {};
         var ec = 0,
             i = 0;
@@ -284,98 +288,116 @@ class Puzzlink {
         return -1;
     }
 
-    decodeNumber36(max_iter = -1) {
+    decodeNumber36(max_length = Infinity) {
+        // refer to: decodeHitori in robx/pzprjs => hitori.js
         var number_list = [];
-        let index;
+        var i = 0;
+        let c = 0;
 
-        for (index = 0; index < this.gridurl.length; index++) {
-            const char = this.gridurl[index];
+        for (i = 0; i < this.gridurl.length; i++) {
+            const char = this.gridurl[i];
             if (char === "-") {
-                number_list.push(parseInt(this.gridurl.substr(index + 1, 2), 36));
-                index += 2;
-            } else if (char === "%") {
-                number_list.push("?");
-            } else if (char === ".") {
-                number_list.push(" ");
-            } else {
-                number_list.push(parseInt(char, 36));
-            }
-
-            max_iter--;
-            if (max_iter === 0) {
-                break;
-            }
-        }
-
-        // Remove what was parsed so the next function call reads what is left
-        this.gridurl = this.gridurl.substr(index);
-
-        return number_list;
-    }
-
-    decodeNumber10(max_iter = -1) {
-        var number_list = {};
-        let index = 0;
-
-        for (var char of this.gridurl) {
-            if (char === '.') {
-                number_list[index] = '?';
-            } else if (char >= "0" && char <= "9") {
-                number_list[index] = parseInt(char);
-            } else if (char >= "a" && char <= "z") {
-                index += parseInt(char, 36) - 10;
-            }
-            index++;
-
-            max_iter--;
-            if (max_iter === 0) {
-                break;
-            }
-        }
-
-        // Remove what was parsed so the next function call reads what is left
-        this.gridurl = this.gridurl.substr(index);
-
-        return number_list;
-    }
-
-    decodeNumber4() {
-        var number_list = {},
-            i = 0;
-
-        for (var char of this.gridurl) {
-            if (char === '.') {
-                number_list[i] = '?';
-            } else if (char >= "0" && char <= "4") {
-                number_list[i] = parseInt(char);
-            } else if (char >= "5" && char <= "9") {
-                number_list[i] = parseInt(char) - 5;
-                i += 1;
-            } else if (char >= "a" && char <= "e") {
-                number_list[i] = parseInt(char, 16) - 10;
+                number_list[c] = parseInt(this.gridurl.substr(i + 1, 2), 36);
                 i += 2;
-            } else if (char >= "g" && char <= "z") {
-                i += parseInt(char, 36) - 16;
+            } else if (char === "%") {
+                number_list[c] = "?";
+            } else if (char === ".") {
+                number_list[c] = " ";
+            } else {
+                number_list[c] = parseInt(char, 36);
             }
-            i += 1;
+
+            c++;
+            if (c >= max_length) {
+                break;
+            }
         }
+
+        // Remove what was parsed so the next function call reads what is left
+        this.gridurl = this.gridurl.substr(i);
 
         return number_list;
     }
 
-    decodeNumber3(max_iter = -1) {
+    decodeNumber10(max_length = Infinity) {
+        // refer to: decodeNumber10 in robx/pzprjs => Encode.js
+
+        var number_list = {};
+        var i = 0;
+        var c = 0;
+
+        for (i = 0; i < this.gridurl.length; i++) {
+            var char = this.gridurl.charAt(i);
+            if (char === '.') {
+                number_list[c] = '?';
+            } else if (char >= "0" && char <= "9") {
+                number_list[c] = parseInt(char);
+            } else if (char >= "a" && char <= "z") {
+                c += parseInt(char, 36) - 10;
+            }
+            c++;
+
+            if (c >= max_length) {
+                break;
+            }
+        }
+
+        // Remove what was parsed so the next function call reads what is left
+        this.gridurl = this.gridurl.substr(i + 1);
+
+        return number_list;
+    }
+
+    decodeNumber4(max_length = Infinity) {
+        // refer to: decode4Cell in robx/pzprjs => Encode.js
+
+        var number_list = {};
+        var i = 0;
+        var c = 0;
+
+        for (i = 0; i < this.gridurl.length; i++) {
+            const char = this.gridurl[i];
+            if (char === '.') {
+                number_list[c] = '?';
+            } else if (char >= "0" && char <= "4") {
+                number_list[c] = parseInt(char);
+            } else if (char >= "5" && char <= "9") {
+                number_list[c] = parseInt(char) - 5;
+                c += 1;
+            } else if (char >= "a" && char <= "e") {
+                number_list[c] = parseInt(char, 16) - 10;
+                c += 2;
+            } else if (char >= "g" && char <= "z") {
+                c += parseInt(char, 36) - 16;
+            }
+            c += 1;
+
+            if (c >= max_length) {
+                break;
+            }
+        }
+
+        this.gridurl = this.gridurl.substr(i + 1);
+
+        return number_list;
+    }
+
+    decodeNumber3(max_length = Infinity) {
+        // refer to: genericDecodeTriple in robx/pzprjs => Encode.js
+
         var number_list = [];
+        var c = 0;
 
         for (var char of this.gridurl) {
-            var int = parseInt(char, 36);
+            var int = parseInt(char, 27);
             number_list.push(
                 parseInt(int / 9) % 3,
                 parseInt(int / 3) % 3,
                 parseInt(int / 1) % 3,
             );
 
-            max_iter--;
-            if (max_iter === 0) {
+            c += 3;
+            if (c >= max_length) {
                 break;
             }
         }
@@ -385,24 +407,38 @@ class Puzzlink {
         return number_list;
     }
 
-    decodeNumber2() {
-        var number_list = {};
-        var index = 0;
+    decodeNumber2(max_length = Infinity) {
+        // refer to: decode1Cell in robx/pzprjs => Encode.js
 
-        for (var char of this.gridurl) {
-            if (char >= "i") {
-                index += parseInt(char, 36) - 17;
+        var number_list = {};
+        var c = 0;
+        var i = 0;
+
+        for (i = 0; i < this.gridurl.length; i++) {
+            var char = this.gridurl.charAt(i);
+            if (char >= "0" && char <= "h") {
+                number_list[c] = "1";
+                c += parseInt(char, 36);
             } else {
-                number_list[index] = "1";
-                index += parseInt(char, 36) + 1;
+                c += parseInt(char, 36) - 18;
+            }
+
+            c++;
+            if (c >= max_length) {
+                break;
             }
         }
+
+        this.gridurl = this.gridurl.substr(i + 1);
 
         return number_list;
     }
 
-    decodeNumber2Binary(max_iter = Infinity) {
+    decodeNumber2Binary(max_length = Infinity) {
+        // refer to: genericDecodeBinary in robx/pzprjs => Encode.js
+
         var number_list = [];
+        var c = 0;
 
         for (var char of this.gridurl) {
             var int = parseInt(char, 36);
@@ -414,8 +450,8 @@ class Puzzlink {
                 parseInt(int / 1) % 2,
             );
 
-            max_iter -= 5;
-            if (max_iter <= 0) {
+            c += 5;
+            if (c >= max_length) {
                 break;
             }
         }
@@ -1960,7 +1996,7 @@ function decode_puzzlink(url) {
             setupProblem(pu, "combi");
 
             // Add snake ends
-            info_number = puzzlink_pu.decodeNumber3(Math.ceil(cols * rows / 3));
+            info_number = puzzlink_pu.decodeNumber3(cols * rows);
             for (i in info_number) {
                 if (info_number[i] === 0) {
                     continue;
