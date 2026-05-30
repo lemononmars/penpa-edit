@@ -30,6 +30,8 @@ describe("puzz.link parser", () => {
         ["Aqre 2", "https://puzz.link/p?aqre/6/11/vvvvvvvvvvv0820h4928g41012345221514131210"],
         ["Aqre 3", "https://puzz.link/p?aqre/7/7/0bdm3dmg0fg0r6o0fg40g123"],
         ["Aqre 4", "https://puzz.link/p?aqre/10/10/tpro1k3fovm0f8s00004sog0dk03tgm162g0000g000000000000"],
+        // Aquarium
+        ["Aquarium 1", "https://puzz.link/p?aquarium/10/10/ljan8t4r28r4n2tapl085tni1udmfg9tnk20/4g4g7h7g77g4g747h4"],
         // Araf
         ["Araf 1", "https://puzz.link/p?araf/8/8/p45h7h44h87l8j2l3-10gabi5icbo"],
         ["Araf 2", "https://puzz.link/p?araf/15/7/111g5a5g1fagaaazp125g898g817g464zp118g888g111g411"],
@@ -46,6 +48,8 @@ describe("puzz.link parser", () => {
         ["Balance Loop 1", "https://puzz.link/p?balance/9/9/dm1ich1o0i1pcpdido1h1i0m0"],
         ["Balance Loop 2", "https://puzz.link/p?balance/5/2/kbg011"],
         ["Balance Loop 3", "https://puzz.link/p?balance/10/10/-24-22-20-1e-1c-1a-18-16-14g-25-23-21-1f-1d-1b-19-17-15zzzzg"],
+        // Box
+        ["Box 1", "https://puzz.link/p?box/10/10/98opg-14f789mmmm-1n66999"],
         // Castle Wall
         ["Castle 1", "https://puzz.link/p?castle/12/12/k223d142b141f224f234o212h236i133d123b243o034a122d131q136d145d215d246k"],
         ["Castle 2", "https://puzz.link/p?castle/10/10/k14110.10.10.03200.00.00.b10.b10.00.10.10.00.b10.b10.00.10.10.00.b10.10.10.10.00.00.00.00.b01300.00.00.22420.20.20.b00.20.20.00.22.00.00.20.b00.20.a00.22.00.a20.b00.00.00.00.20.20.20.20.k"],

@@ -43,6 +43,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>Aquarium</summary>
+
+* https://puzz.link/p?aquarium/10/10/ljan8t4r28r4n2tapl085tni1udmfg9tnk20/4g4g7h7g77g4g747h4
+
+</details>
+<details>
 <summary>Araf</summary>
 
 * https://puzz.link/p?araf/8/8/p45h7h44h87l8j2l3-10gabi5icbo
@@ -74,6 +80,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 * https://puzz.link/p?balance/5/2/kbg011
 * https://puzz.link/p?balance/9/9/-13i1i-13gdkds0g1i1idi1i0g7t1i1h-13m-13
 * https://puzz.link/p?balance/10/10/-24-22-20-1e-1c-1a-18-16-14g-25-23-21-1f-1d-1b-19-17-15zzzzg
+
+</details>
+<details>
+<summary>Box</summary>
+
+* https://puzz.link/p?box/10/10/98opg-14f789mmmm-1n66999
 
 </details>
 <details>

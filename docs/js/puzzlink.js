@@ -429,7 +429,7 @@ class Puzzlink {
         var row_ind, col_ind, cell;
         var row_offset = pu.space[0];
         var col_offset = pu.space[2];
-        
+
         for (var i in info) {
             if (info[i] === 0) continue;
 
@@ -755,6 +755,44 @@ class Puzzlink {
         this.gridurl = this.gridurl.substr(this.cols * this.rows);
 
         return info_number;
+    }
+
+    decodeBox() {
+        var number_list1 = {};
+        var number_list2 = {};
+        var ec = 0,
+            i = 0;
+        var skipped_bottom = false;
+
+        for (var i = 0; i < this.gridurl.length; i++) {
+            var ca = this.gridurl.charAt(i);
+            if (ca === "-") {
+                number_list1[ec] = parseInt(this.gridurl.substr(i + 1, 2), 32);
+                i += 2;
+            } else {
+                number_list1[ec] = parseInt(ca, 32);
+            }
+
+            ec++;
+            if (!skipped_bottom && ec >= this.cols) {
+                skipped_bottom = true;
+                // append numbers for bottom row
+                for (var j = 0; j < this.cols; j++) number_list2[ec + j] = j + 1;
+                ec += this.cols;
+            }
+
+            if (ec >= 2 * this.cols + this.rows) {
+                // append numbers for rightmost column
+                for (var j = 0; j < this.rows; j++) number_list2[ec + j] = j + 1;
+                ec += this.rows;
+            }
+
+            if (ec >= this.rows * 2 + this.cols * 2) {
+                break; // Finished all four sides
+            }
+        }
+
+        return [number_list1, number_list2];
     }
 }
 
@@ -2607,6 +2645,44 @@ function decode_puzzlink(url) {
             pu.subcombimode("rassisillai");
             UserSettings.tab_settings = ["Surface", "Composite"];
             pu.user_tags = ["rassi silai"]; // Genre Tags
+            break;
+        case "aquarium":
+            document.getElementById("nb_space1").value = 1;
+            document.getElementById("nb_space3").value = 1;
+
+            pu = new Puzzle_square(cols + 1, rows + 1, size);
+            setupProblem(pu, "combi");
+
+            info_edge = puzzlink_pu.decodeBorder();
+            puzzlink_pu.drawBorder(pu, info_edge, 2);
+
+            var puzzlink_nb = new Puzzlink(cols, rows, urldata[4]);
+            info_number = puzzlink_nb.decodeNumber16ExCell(true);
+            puzzlink_nb.drawNumbersExCell(pu, info_number, 1, "1", false);
+
+            pu.mode_qa("pu_a");
+            pu.mode_set("combi");
+            pu.subcombimode("blpo");
+            UserSettings.tab_settings = ["Surface", "Composite"];
+            pu.user_tags = ["aquarium"];
+            break;
+        case "box":
+            document.getElementById("nb_space1").value = 1;
+            document.getElementById("nb_space2").value = 1;
+            document.getElementById("nb_space3").value = 1;
+            document.getElementById("nb_space4").value = 1;
+
+            pu = new Puzzle_square(cols + 2, rows + 2, size);
+            setupProblem(pu, "number");
+
+            [info_number1, info_number2] = puzzlink_pu.decodeBox();
+            puzzlink_pu.drawNumbersExCell(pu, info_number1, 1, "1", false);
+            puzzlink_pu.drawNumbersExCell(pu, info_number2, 6, "1", false);
+
+            pu.mode_qa("pu_a");
+            pu.mode_set("number");
+            UserSettings.tab_settings = ["Surface", "Number Normal"];
+            pu.user_tags = ["box"];
             break;
         default:
             errorMsg(PenpaText.get('puzzlink_not_supported', type));
