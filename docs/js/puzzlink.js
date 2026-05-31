@@ -2050,11 +2050,9 @@ function decode_puzzlink(url) {
         case "tents":
             // Add whitespace
             document.getElementById("nb_space1").value = 1;
-            document.getElementById("nb_space2").value = 1;
             document.getElementById("nb_space3").value = 1;
-            document.getElementById("nb_space4").value = 1;
 
-            pu = new Puzzle_square(cols + 2, rows + 2, size);
+            pu = new Puzzle_square(cols + 1, rows + 1, size);
             setupProblem(pu, "combi");
 
             info_number = puzzlink_pu.decodeNumber16ExCell(true);
@@ -2063,9 +2061,9 @@ function decode_puzzlink(url) {
             info_number = puzzlink_pu.decodeNumber2();
             for (var i in info_number) {
                 // Determine which row and column
-                row_ind = parseInt(i / cols);
-                col_ind = i % cols;
-                cell = pu.nx0 * (3 + row_ind) + 3 + col_ind;
+                row_ind = parseInt(i / cols) + 1; // row offset
+                col_ind = i % cols + 1; // col offset
+                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
                 pu["pu_q"].symbol[cell] = [1, "tents", 1];
             }
 
@@ -2080,11 +2078,9 @@ function decode_puzzlink(url) {
         case "snake":
             // Add whitespace
             document.getElementById("nb_space1").value = 1;
-            document.getElementById("nb_space2").value = 1;
             document.getElementById("nb_space3").value = 1;
-            document.getElementById("nb_space4").value = 1;
 
-            pu = new Puzzle_square(cols + 2, rows + 2, size);
+            pu = new Puzzle_square(cols + 1, rows + 1, size);
             setupProblem(pu, "combi");
 
             // Add snake ends
@@ -2093,9 +2089,9 @@ function decode_puzzlink(url) {
                 if (info_number[i] === 0) {
                     continue;
                 }
-                row_ind = parseInt(i / cols);
-                col_ind = i % cols;
-                cell = pu.nx0 * (3 + row_ind) + 3 + col_ind;
+                row_ind = parseInt(i / cols) + 1; // row offset
+                col_ind = i % cols + 1; // col offset
+                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
                 pu["pu_q"].symbol[cell] = [info_number[i], "circle_L", 1];
             }
 
