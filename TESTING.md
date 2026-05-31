@@ -111,6 +111,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 * https://puzz.link/p?barns/10/10/000o98010082129404000g801g4080g000002800014g00io00010200
 
+</details>
+<details>
+<summary>Border Block</summary>
+
+* https://puzz.link/p?bdblock/10/10/51b20o7p66g51/k4g6h1g4s1g2h2g7zr3g2h6g5s5g6h7g3k
+
 
 </details>
 <details>
@@ -1014,6 +1020,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <!-- ============ https://pzprxs.vercel.app/p ============ -->
+</details>
+<details>
+<summary>Battenberg Painting</summary>
+
+* https://pzprxs.vercel.app/p?batten/10/5/4021434a0g2222h322g3g1
+
 <details>
 <summary>Canal View</summary>
 

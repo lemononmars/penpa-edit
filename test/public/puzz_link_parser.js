@@ -57,6 +57,8 @@ describe("puzz.link parser", () => {
         ["Balance Loop 3", "https://puzz.link/p?balance/10/10/-24-22-20-1e-1c-1a-18-16-14g-25-23-21-1f-1d-1b-19-17-15zzzzg"],
         // Barns
         ["Barns 1", "https://puzz.link/p?barns/10/10/000o98010082129404000g801g4080g000002800014g00io00010200"],
+        // Border Block
+        ["Border Block 1", "https://puzz.link/p?bdblock/10/10/51b20o7p66g51/k4g6h1g4s1g2h2g7zr3g2h6g5s5g6h7g3k"],
         // Battleship
         ["Battleship 1", "https://puzz.link/p?battleship/10/10/13h44i121h44i2zw6m0n0m5zw//d"],
         ["Battleship 2", "https://puzz.link/p?battleship/9/9/h6j35h43h44gzzzzg//e"],
@@ -497,6 +499,8 @@ describe("puzz.link parser", () => {
         ["Yin-Yang 4", "https://puzz.link/p?yinyang/14/10/000003fji00i3i669j099i31109960kl0320g010a000000"],
 
         // ============ https://pzprxs.vercel.app/p ============
+        // Battenberg Painting
+        ["Battenberg Painting 1", "https://pzprxs.vercel.app/p?batten/10/5/4021434a0g2222h322g3g1"],
         // Canal View
         ["Canal View 1", "https://pzprxs.vercel.app/p?canal/6/6/.j.p6h4p6j6"],
         ["Canal View 2", "https://pzprxs.vercel.app/p?canal/v:/10/10/1k4u1j7i3r6y1w-11m3n2"],
