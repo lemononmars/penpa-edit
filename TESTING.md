@@ -54,6 +54,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 </details>
 <details>
+<summary>Aquapelago</summary>
+
+* https://puzz.link/p?aquapelago/20/20/5j.s9q4w5zzk2j2o.zzm3k5v3zp2m.g.t3zr5n4zu1zzq2s7h4m1la
+
+</details>
+<details>
 <summary>Aquarium</summary>
 
 * https://puzz.link/p?aquarium/10/10/ljan8t4r28r4n2tapl085tni1udmfg9tnk20/4g4g7h7g77g4g747h4
@@ -91,6 +97,20 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 * https://puzz.link/p?balance/5/2/kbg011
 * https://puzz.link/p?balance/9/9/-13i1i-13gdkds0g1i1idi1i0g7t1i1h-13m-13
 * https://puzz.link/p?balance/10/10/-24-22-20-1e-1c-1a-18-16-14g-25-23-21-1f-1d-1b-19-17-15zzzzg
+
+</details>
+<details>
+<summary>Battleship</summary>
+
+* https://puzz.link/p?battleship/10/10/13h44i121h44i2zw6m0n0m5zw//d
+* https://puzz.link/p?battleship/9/9/h6j35h43h44gzzzzg//e
+
+</details>
+<details>
+<summary>Barns</summary>
+
+* https://puzz.link/p?barns/10/10/000o98010082129404000g801g4080g000002800014g00io00010200
+
 
 </details>
 <details>
@@ -199,6 +219,12 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 <summary>Dominion</summary>
 
 * https://puzz.link/p?dominion/10/10/n.h1h1j.h2h2u1i2l2i3w2k.h1j.h.m4
+
+</details>
+<details>
+<summary>Doppelblock</summary>
+
+* https://puzz.link/p?doppelblock/8/8/48acg5fc00000000w4h6k5p1k3v2i
 
 </details>
 <details>

@@ -35,6 +35,8 @@ describe("puzz.link parser", () => {
         ["Aqre 2", "https://puzz.link/p?aqre/6/11/vvvvvvvvvvv0820h4928g41012345221514131210"],
         ["Aqre 3", "https://puzz.link/p?aqre/7/7/0bdm3dmg0fg0r6o0fg40g123"],
         ["Aqre 4", "https://puzz.link/p?aqre/10/10/tpro1k3fovm0f8s00004sog0dk03tgm162g0000g000000000000"],
+        // Aquapelago
+        ["Aquapelago 1", "https://puzz.link/p?aquapelago/20/20/5j.s9q4w5zzk2j2o.zzm3k5v3zp2m.g.t3zr5n4zu1zzq2s7h4m1la"],
         // Aquarium
         ["Aquarium 1", "https://puzz.link/p?aquarium/10/10/ljan8t4r28r4n2tapl085tni1udmfg9tnk20/4g4g7h7g77g4g747h4"],
         // Araf
@@ -53,6 +55,11 @@ describe("puzz.link parser", () => {
         ["Balance Loop 1", "https://puzz.link/p?balance/9/9/dm1ich1o0i1pcpdido1h1i0m0"],
         ["Balance Loop 2", "https://puzz.link/p?balance/5/2/kbg011"],
         ["Balance Loop 3", "https://puzz.link/p?balance/10/10/-24-22-20-1e-1c-1a-18-16-14g-25-23-21-1f-1d-1b-19-17-15zzzzg"],
+        // Barns
+        ["Barns 1", "https://puzz.link/p?barns/10/10/000o98010082129404000g801g4080g000002800014g00io00010200"],
+        // Battleship
+        ["Battleship 1", "https://puzz.link/p?battleship/10/10/13h44i121h44i2zw6m0n0m5zw//d"],
+        ["Battleship 2", "https://puzz.link/p?battleship/9/9/h6j35h43h44gzzzzg//e"],
         // Box
         ["Box 1", "https://puzz.link/p?box/10/10/98opg-14f789mmmm-1n66999"],
         // Castle Wall
@@ -101,6 +108,8 @@ describe("puzz.link parser", () => {
         ["Detour 3", "https://puzz.link/p?detour/8/8/a2gh4928h49000vs00o0vg00g1g435h5"],
         // Dominion
         ["Dominion 1", "https://puzz.link/p?dominion/10/10/n.h1h1j.h2h2u1i2l2i3w2k.h1j.h.m4"],
+        // Doppelblock
+        ["Doppelblock 1", "https://puzz.link/p?doppelblock/8/8/48acg5fc00000000w4h6k5p1k3v2i"],
         // Double Back
         ["Double Back 1", "https://puzz.link/p?doubleback/10/10/o1g300000000162c4o007vvvvvvvvvvv7f70"],
         ["Double Back 2", "https://puzz.link/p?doubleback/8/8/b2stfautich00cq80j2gk0u0"],

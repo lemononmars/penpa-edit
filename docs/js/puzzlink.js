@@ -2825,6 +2825,88 @@ function decode_puzzlink(url) {
             UserSettings.tab_settings = ["Surface", "Composite"];
             pu.user_tags = ["anglers"];
             break;
+        case "doppelblock":
+            document.getElementById("nb_space1").value = 1;
+            document.getElementById("nb_space3").value = 1;
+
+            pu = new Puzzle_square(cols + 1, rows + 1, size);
+            setupProblem(pu, "number");
+
+            info_number_ex = puzzlink_pu.decodeNumber16ExCell(true);
+            info_number = puzzlink_pu.decodeNumber16();
+            puzzlink_pu.drawNumbersExCell(pu, info_number_ex, 1, "1");
+            puzzlink_pu.drawNumbers(pu, info_number, 1, "1");
+
+            pu.mode_qa("pu_a");
+            pu.mode_set("number");
+            UserSettings.tab_settings = ["Surface", "Number Normal"];
+            pu.user_tags = ["doppelblock"];
+            break;
+        case "aquapelago":
+            info_number = puzzlink_pu.decodeNumber16();
+
+            pu = new Puzzle_square(cols, rows, size);
+            setupProblem(pu, "combi");
+            puzzlink_pu.drawNumbers(pu, info_number, 7, "1");
+
+            // Draw black behind numbers
+            for (i in info_number) {
+                // Determine which row and column
+                row_ind = parseInt(i / cols);
+                col_ind = i % cols;
+                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
+                pu["pu_q"].surface[cell] = 4;
+            }
+
+            pu.mode_qa("pu_a");
+            pu.mode_set("combi");
+            pu.subcombimode("blpo");
+            UserSettings.tab_settings = ["Surface", "Composite"];
+            pu.user_tags = ["aquapelago"];
+            break;
+        case "barns":
+            pu = new Puzzle_square(cols, rows, size);
+            pu.mode_grid("nb_grid2"); // Dashed gridlines
+            setupProblem(pu, "combi");
+
+            info_number = puzzlink_pu.decodeNumber2Binary(puzzlink_pu.rows * puzzlink_pu.cols);
+            puzzlink_pu.drawBinary2Surface(pu, info_number, 5); // 5 is for icy/water style
+
+            info_edge = puzzlink_pu.decodeBorder();
+            puzzlink_pu.drawBorder(pu, info_edge, 2); // 2 is for Black Style
+
+            pu.mode_qa("pu_a");
+            pu.mode_set("combi");
+            pu.subcombimode("linex");
+            UserSettings.tab_settings = ["Surface", "Composite"];
+            pu.user_tags = ["barns"];
+            break;
+        case "battleship":
+            document.getElementById("nb_space1").value = 1;
+            document.getElementById("nb_space3").value = 1;
+
+            pu = new Puzzle_square(cols + 1, rows + 1, size);
+            setupProblem(pu, "combi");
+
+            info_exnumber = puzzlink_pu.decodeNumber16ExCell(true);
+            puzzlink_pu.drawNumbersExCell(pu, info_exnumber, 1, "1", true);
+
+            info_number = puzzlink_pu.decodeNumber16();
+            const battleship_map = [7, 4, 6, 3, 5, 2, 1];
+
+            for (i in info_number) {
+                row_ind = parseInt(i / cols) + 1; // row offset
+                col_ind = (i % cols) + 1; // column offset
+                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
+                pu["pu_q"].symbol[cell] = [battleship_map[info_number[i]], "battleship_B", 1];
+            }
+
+            pu.mode_qa("pu_a");
+            pu.mode_set("combi");
+            pu.subcombimode("battleship");
+            UserSettings.tab_settings = ["Surface", "Composite"];
+            pu.user_tags = ["battleship"];
+            break;
         default:
             errorMsg(PenpaText.get('puzzlink_not_supported', type));
             break;
