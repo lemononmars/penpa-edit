@@ -870,6 +870,58 @@ class Puzzlink {
 
         return [number_list1, number_list2, extra_list];
     }
+
+    decodeCrossMark(hasborder = false) {
+        // refer to decodeCrossMark in robx/pzprjs => Encode.js
+
+        var cc = 0,
+            i = 0,
+            crossmark_list = {};
+        var cp = hasborder ? 1 : 0,
+            cp2 = cp << 1;
+        var rows = this.rows - 1 + cp2,
+            cols = this.cols - 1 + cp2;
+
+        for (i = 0; i < this.gridurl.length; i++) {
+            var ca = this.gridurl.charAt(i);
+
+            if (this.include(ca, "0", "9") || this.include(ca, "a", "z")) {
+                cc += parseInt(ca, 36);
+                if (cc >= cols * rows) {
+                    i++;
+                    break;
+                }
+                crossmark_list[cc] = 1;
+            } else if (ca === ".") {
+                cc += 35;
+            }
+
+            cc++;
+            if (cc >= cols * rows) {
+                i++;
+                break;
+            }
+        }
+
+        // Remove what was parsed so the next function call reads what is left
+        this.gridurl = this.gridurl.substr(i);
+        return crossmark_list;
+    }
+
+    drawCrossMark(pu, info, symbol, style, hasborder = false) {
+        var i, row_ind, col_ind, cell;
+        var cp = hasborder ? 1 : 0,
+            cp2 = cp << 1;
+
+        for (i in info) {
+            row_ind = parseInt(i / (this.cols - 1 + cp2)) - cp + pu.space[0]; // border shrink/expand + offset
+            col_ind = (i % (this.cols - 1 + cp2)) - cp + pu.space[2]; // border shrink/expand + offset
+            cell = pu.nx0 * pu.ny0 + pu.nx0 * (2 + row_ind) + 2 + col_ind;
+            if (info[i] === 1) {
+                pu["pu_q"].symbol[cell] = [style, symbol, 2]; // 2 for behind line
+            }
+        }
+    }
 }
 
 class DisjointSets {
