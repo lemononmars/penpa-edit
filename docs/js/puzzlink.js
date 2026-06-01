@@ -2294,9 +2294,13 @@ function decode_puzzlink(url) {
 
             pu = new Puzzle_square(cols + 2, rows + 2, size);
 
-            pu.mode_grid("nb_grid2"); // Dashed gridlines
-            pu.mode_grid("nb_out2"); // No grid frame
-            setupProblem(pu, "lineE");
+            if (type === "gokigen") {
+                pu.mode_grid("nb_grid2"); // Dashed gridlines
+                pu.mode_grid("nb_out2"); // No grid frame
+                setupProblem(pu, "lineE");
+            } else {
+                setupProblem(pu, "combi");
+            }
 
             info_number = puzzlink_pu.decodeNumber4();
 
@@ -2309,9 +2313,17 @@ function decode_puzzlink(url) {
             }
 
             pu.mode_qa("pu_a");
-            pu.mode_set("lineE");
-            pu.submode_check("sub_lineE2");
-            UserSettings.tab_settings = ["Edge Diagonal"];
+
+            if (type === "gokigen") {
+                pu.mode_set("lineE");
+                pu.submode_check("sub_lineE2");
+                UserSettings.tab_settings = ["Edge Diagonal"];
+            } else {
+                pu.mode_set("combi");
+                pu.subcombimode("blpo");
+                UserSettings.tab_settings = ["Surface", "Composite"];
+            }
+
             pu.user_tags = [type === "gokigen" ? 'slant (gokigen)' : type]; // Genre Tags
             break
         case "ringring":
