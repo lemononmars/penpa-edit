@@ -115,6 +115,7 @@ Use following links to do testing of Penpa+. This by no means an exhaustive test
 
 * https://puzz.link/p?battleship/10/10/13h44i121h44i2zw6m0n0m5zw//d
 * https://puzz.link/p?battleship/9/9/h6j35h43h44gzzzzg//e
+* https://puzz.link/p?battleship/10/10/zr7jazzt8j9zh//p
 
 </details>
 <details>

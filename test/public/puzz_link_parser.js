@@ -65,6 +65,7 @@ describe("puzz.link parser", () => {
         // Battleship
         ["Battleship 1", "https://puzz.link/p?battleship/10/10/13h44i121h44i2zw6m0n0m5zw//d"],
         ["Battleship 2", "https://puzz.link/p?battleship/9/9/h6j35h43h44gzzzzg//e"],
+        ["Battleship 3", "https://puzz.link/p?battleship/10/10/zr7jazzt8j9zh//p"],
         // Border Block
         ["Border Block 1", "https://puzz.link/p?bdblock/10/10/51b20o7p66g51/k4g6h1g4s1g2h2g7zr3g2h6g5s5g6h7g3k"],
         ["Border Block 2", "https://puzz.link/p?bdblock/15/15/.......4/m4n2q1zg3i3zi2m2x4j1i3j4x2m2zi1i1zg3q2n4m"],

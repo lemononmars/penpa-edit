@@ -2956,18 +2956,23 @@ function decode_puzzlink(url) {
 
             info_number = puzzlink_pu.decodeNumber16();
             const battleship_map = [7, 4, 6, 3, 5, 2, 1];
+            const battleship_map_plus = [2, 3, 1, 4];
 
             for (i in info_number) {
                 row_ind = parseInt(i / cols) + 1; // row offset
                 col_ind = (i % cols) + 1; // column offset
                 cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
-                pu["pu_q"].symbol[cell] = [battleship_map[info_number[i]], "battleship_B", 1];
+                if (info_number[i] >= 0 && info_number[i] < 7) {
+                    pu["pu_q"].symbol[cell] = [battleship_map[info_number[i]], "battleship_B", 1];
+                } else if (info_number[i] >= 7 && info_number[i] < 11) {
+                    pu["pu_q"].symbol[cell] = [battleship_map_plus[info_number[i] - 7], "battleship_B+", 1];
+                }
             }
 
             pu.mode_qa("pu_a");
             pu.mode_set("combi");
             pu.subcombimode("battleship");
-            UserSettings.tab_settings = ["Surface", "Composite"];
+            UserSettings.tab_settings = ["Surface", "Shape", "Composite"];
             pu.user_tags = ["battleship"];
             break;
         case "bdblock":
