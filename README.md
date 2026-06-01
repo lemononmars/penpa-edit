@@ -594,7 +594,7 @@ Kurodoko :heavy_check_mark: ;
 Kurotto :heavy_check_mark: ;
 Kusabi :x: ;
 L-route :x: ;
-Lither (Lithersink) :heavy_check_mark: ;
+Lither (Litherslink) :heavy_check_mark: ;
 LITS :heavy_check_mark: ;
 Look-Air :heavy_check_mark: ;
 Loop Special :x: ;

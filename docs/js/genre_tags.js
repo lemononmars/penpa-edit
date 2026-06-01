@@ -111,7 +111,7 @@ const penpa_tags = {
             "kropki",
             "kurochute",
             "kurodoko",
-            "lither (lithersink)",
+            "lither (litherslink)",
             "lookair",
             "mannequin gate",
             "maxi loop",

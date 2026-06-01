@@ -1371,7 +1371,7 @@ function decode_puzzlink(url) {
             // Set tags
             switch (type) {
                 case "lither":
-                    pu.user_tags = ["lither (lithersink)"];
+                    pu.user_tags = ["lither (litherslink)"];
                     break;
                 case "tslither":
                     pu.user_tags = ["tslither (touch slitherlink)"];
@@ -1561,6 +1561,9 @@ function decode_puzzlink(url) {
         case "nothree":
         case "nuriuzu":
             pu = new Puzzle_square(cols, rows, size);
+            if (type === "nuriuzu") {
+                pu.mode_grid("nb_grid2"); // Dashed gridlines
+            }
             setupProblem(pu, "surface");
 
             info_edge = puzzlink_pu.decodeMidloop();
