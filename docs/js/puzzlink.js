@@ -2666,125 +2666,6 @@ function decode_puzzlink(url) {
 
             pu.user_tags = ["tatebo-yokobo"]; // Set tags
             break;
-        // ============ https://pzprxs.vercel.app/p ============
-        case "canal":
-        case "cbanana":
-        case "tontti":
-            pu = new Puzzle_square(cols, rows, size);
-            setupProblem(pu, "combi");
-
-            info_number = puzzlink_pu.decodeNumber16();
-            puzzlink_pu.drawNumbers(pu, info_number, 1, "1", false);
-
-            pu.mode_qa("pu_a");
-
-            // Set controls and tags
-            switch (type) {
-                case "canal":
-                    pu.mode_set("combi");
-                    pu.subcombimode("blpo");
-                    UserSettings.tab_settings = ["Surface", "Composite"];
-                    pu.user_tags = ["canal view"];
-                    break;
-                case "cbanana":
-                    pu.mode_set("surface");
-                    UserSettings.tab_settings = ["Surface"];
-                    pu.user_tags = ["choco banana"];
-                    break;
-                case "tontti":
-                    pu.mode_set("line");
-                    pu.submode_check("sub_line5"); // Middle submode
-                    UserSettings.tab_settings = ["Surface", "Line Middle"];
-                    pu.user_tags = ["tonttiraja"];
-                    break;
-            }
-            break;
-        case "dotchi":
-        case "dotchi2":
-            pu = new Puzzle_square(cols, rows, size);
-            pu.mode_grid("nb_grid2"); // Dashed gridlines
-            setupProblem(pu, "combi");
-
-            info_edge = puzzlink_pu.decodeBorder();
-            puzzlink_pu.drawBorder(pu, info_edge, 2);
-
-            // Draw Circles
-            info_number = puzzlink_pu.decodeNumber3();
-            for (i in info_number) {
-                if (info_number[i] === 0) {
-                    continue;
-                }
-                // Determine which row and column
-                row_ind = parseInt(i / cols);
-                col_ind = i % cols;
-                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
-                pu["pu_q"].symbol[cell] = [info_number[i], "circle_L", 1];
-            }
-
-            pu.mode_qa("pu_a");
-            pu.mode_set("combi");
-            pu.subcombimode("linex");
-            UserSettings.tab_settings = ["Surface", "Composite"];
-            pu.user_tags = [type === "dotchi" ? "dotchi-loop" : "dotchi-dotchi loop"];
-            break;
-        case "chainedb":
-            pu = new Puzzle_square(cols, rows, size);
-            setupProblem(pu, "combi");
-
-            info_number = puzzlink_pu.decodeNumber16();
-            puzzlink_pu.drawNumbers(pu, info_number, 4, "1", false);
-
-            // Draw black behind numbers
-            for (i in info_number) {
-                // Determine which row and column
-                row_ind = parseInt(i / cols);
-                col_ind = i % cols;
-                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
-                pu["pu_q"].surface[cell] = 4;
-            }
-
-            pu.mode_qa("pu_a");
-            pu.mode_set("surface");
-            UserSettings.tab_settings = ["Surface"];
-            pu.user_tags = ["chained block"];
-            break;
-        case "oneroom":
-            // Setup board
-            pu = new Puzzle_square(cols, rows, size);
-            setupProblem(pu, "surface");
-
-            // Decode URL
-            info_edge = puzzlink_pu.decodeBorder();
-            info_number = puzzlink_pu.decodeNumber16();
-            info_number = puzzlink_pu.moveNumbersToRegionCorners(info_edge, info_number);
-
-            puzzlink_pu.drawBorder(pu, info_edge, 2);
-            puzzlink_pu.drawNumbers(pu, info_number, 1, "1", false);
-
-            // Change to Solution Tab
-            pu.mode_qa("pu_a");
-            pu.mode_set("surface"); //include redraw
-            UserSettings.tab_settings = ["Surface"];
-            pu.user_tags = ["one room one door"];
-            break;
-        case "rassi":
-            pu = new Puzzle_square(cols, rows, size);
-            pu.mode_grid("nb_grid2"); // Dashed gridlines
-            setupProblem(pu, "combi");
-
-            info_edge = puzzlink_pu.decodeBorder();
-            puzzlink_pu.drawBorder(pu, info_edge, 2);
-
-            // Shade marked cells
-            info_surface = puzzlink_pu.decodeNumber2Binary();
-            puzzlink_pu.drawBinary2Surface(pu, info_surface, 4);
-
-            pu.mode_qa("pu_a");
-            pu.mode_set("combi");
-            pu.subcombimode("rassisillai");
-            UserSettings.tab_settings = ["Surface", "Composite"];
-            pu.user_tags = ["rassi silai"]; // Genre Tags
-            break;
         case "aquarium":
             document.getElementById("nb_space1").value = 1;
             document.getElementById("nb_space3").value = 1;
@@ -2983,15 +2864,6 @@ function decode_puzzlink(url) {
             info_crossmark = puzzlink_pu.decodeCrossMark(true);
             puzzlink_pu.drawCrossMark(pu, info_crossmark, "circle_SS", 2, true); // 2 for black circle
 
-            // for (i in info_crossmark) {
-            //     row_ind = parseInt(i / (cols + 1)) - 1; // border expand
-            //     col_ind = (i % (cols + 1)) - 1; // border expand
-            //     cell = pu.nx0 * pu.ny0 + pu.nx0 * (2 + row_ind) + 2 + col_ind;
-            //     if (info_crossmark[i] === 1) {
-            //         pu["pu_q"].symbol[cell] = [2, "circle_SS", 2];
-            //     }
-            // }
-
             puzzlink_nb = new Puzzlink(cols, rows, urldata[4]);
             info_number = puzzlink_nb.decodeNumber16();
             puzzlink_nb.drawNumbers(pu, info_number, 1, "1");
@@ -3002,6 +2874,125 @@ function decode_puzzlink(url) {
             UserSettings.tab_settings = ["Surface", "Composite"];
             pu.user_tags = ["border block"];
             break;
+        // ============ https://pzprxs.vercel.app/p ============
+        case "canal":
+        case "cbanana":
+        case "tontti":
+            pu = new Puzzle_square(cols, rows, size);
+            setupProblem(pu, "combi");
+
+            info_number = puzzlink_pu.decodeNumber16();
+            puzzlink_pu.drawNumbers(pu, info_number, 1, "1", false);
+
+            pu.mode_qa("pu_a");
+
+            // Set controls and tags
+            switch (type) {
+                case "canal":
+                    pu.mode_set("combi");
+                    pu.subcombimode("blpo");
+                    UserSettings.tab_settings = ["Surface", "Composite"];
+                    pu.user_tags = ["canal view"];
+                    break;
+                case "cbanana":
+                    pu.mode_set("surface");
+                    UserSettings.tab_settings = ["Surface"];
+                    pu.user_tags = ["choco banana"];
+                    break;
+                case "tontti":
+                    pu.mode_set("line");
+                    pu.submode_check("sub_line5"); // Middle submode
+                    UserSettings.tab_settings = ["Surface", "Line Middle"];
+                    pu.user_tags = ["tonttiraja"];
+                    break;
+            }
+            break;
+        case "dotchi":
+        case "dotchi2":
+            pu = new Puzzle_square(cols, rows, size);
+            pu.mode_grid("nb_grid2"); // Dashed gridlines
+            setupProblem(pu, "combi");
+
+            info_edge = puzzlink_pu.decodeBorder();
+            puzzlink_pu.drawBorder(pu, info_edge, 2);
+
+            // Draw Circles
+            info_number = puzzlink_pu.decodeNumber3();
+            for (i in info_number) {
+                if (info_number[i] === 0) {
+                    continue;
+                }
+                // Determine which row and column
+                row_ind = parseInt(i / cols);
+                col_ind = i % cols;
+                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
+                pu["pu_q"].symbol[cell] = [info_number[i], "circle_L", 1];
+            }
+
+            pu.mode_qa("pu_a");
+            pu.mode_set("combi");
+            pu.subcombimode("linex");
+            UserSettings.tab_settings = ["Surface", "Composite"];
+            pu.user_tags = [type === "dotchi" ? "dotchi-loop" : "dotchi-dotchi loop"];
+            break;
+        case "chainedb":
+            pu = new Puzzle_square(cols, rows, size);
+            setupProblem(pu, "combi");
+
+            info_number = puzzlink_pu.decodeNumber16();
+            puzzlink_pu.drawNumbers(pu, info_number, 4, "1", false);
+
+            // Draw black behind numbers
+            for (i in info_number) {
+                // Determine which row and column
+                row_ind = parseInt(i / cols);
+                col_ind = i % cols;
+                cell = pu.nx0 * (2 + row_ind) + 2 + col_ind;
+                pu["pu_q"].surface[cell] = 4;
+            }
+
+            pu.mode_qa("pu_a");
+            pu.mode_set("surface");
+            UserSettings.tab_settings = ["Surface"];
+            pu.user_tags = ["chained block"];
+            break;
+        case "oneroom":
+            // Setup board
+            pu = new Puzzle_square(cols, rows, size);
+            setupProblem(pu, "surface");
+
+            // Decode URL
+            info_edge = puzzlink_pu.decodeBorder();
+            info_number = puzzlink_pu.decodeNumber16();
+            info_number = puzzlink_pu.moveNumbersToRegionCorners(info_edge, info_number);
+
+            puzzlink_pu.drawBorder(pu, info_edge, 2);
+            puzzlink_pu.drawNumbers(pu, info_number, 1, "1", false);
+
+            // Change to Solution Tab
+            pu.mode_qa("pu_a");
+            pu.mode_set("surface"); //include redraw
+            UserSettings.tab_settings = ["Surface"];
+            pu.user_tags = ["one room one door"];
+            break;
+        case "rassi":
+            pu = new Puzzle_square(cols, rows, size);
+            pu.mode_grid("nb_grid2"); // Dashed gridlines
+            setupProblem(pu, "combi");
+
+            info_edge = puzzlink_pu.decodeBorder();
+            puzzlink_pu.drawBorder(pu, info_edge, 2);
+
+            // Shade marked cells
+            info_surface = puzzlink_pu.decodeNumber2Binary();
+            puzzlink_pu.drawBinary2Surface(pu, info_surface, 4);
+
+            pu.mode_qa("pu_a");
+            pu.mode_set("combi");
+            pu.subcombimode("rassisillai");
+            UserSettings.tab_settings = ["Surface", "Composite"];
+            pu.user_tags = ["rassi silai"]; // Genre Tags
+            break;
         case "batten":
             document.getElementById("nb_space1").value = 1;
             document.getElementById("nb_space3").value = 1;
@@ -3011,16 +3002,6 @@ function decode_puzzlink(url) {
 
             info_crossmark = puzzlink_pu.decodeCrossMark(false);
             puzzlink_pu.drawCrossMark(pu, info_crossmark, "sudokuetc", 1, false); // Large square
-
-            // for (i in info_crossmark) {
-            //     row_ind = parseInt(i / (cols - 1)) + 1; // border shrink + offset
-            //     col_ind = (i % (cols - 1)) + 1; // border shrink + offset
-            //     cell = pu.nx0 * pu.ny0 + pu.nx0 * (2 + row_ind) + 2 + col_ind;
-            //     if (info_crossmark[i] === 1) {
-            //         pu["pu_q"].symbol[cell] = [1, "sudokuetc", 2];
-            //     }
-            // }
-
             info_number = puzzlink_pu.decodeNumber16ExCell(true);
             puzzlink_pu.drawNumbersExCell(pu, info_number, 1, "1");
 
