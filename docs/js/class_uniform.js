@@ -2968,7 +2968,7 @@ class Puzzle_tetrakis_square extends Puzzle_truncated_square {
                 point[point[i].surround[k]].use = 1;
             }
         }
-        this.point = this.point_connect_corners(this.create_corners(this.fix_points(point, true, true), 0.25, this.fix_points(point, true, true).length + 1)[0]);
+        this.point = this.point_connect_corners(this.create_corners(this.fix_points(point), 0.25, this.fix_points(point).length + 1)[0]);
     }
 
     reset_frame() {
@@ -7020,7 +7020,7 @@ class Puzzle_deltoidal_trihexagonal extends Puzzle_truncated_square {
                 point[i].surround[3] = s0;
             }
         }
-        this.point = this.point_connect_corners(this.create_corners(this.fix_points(point, true, true), 0.25, this.fix_points(point, true, true).length + 1)[0]);
+        this.point = this.point_connect_corners(this.create_corners(this.fix_points(point), 0.25, this.fix_points(point).length + 1)[0]);
     }
 
     reset_frame() {

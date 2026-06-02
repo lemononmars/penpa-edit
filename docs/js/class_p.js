@@ -548,10 +548,10 @@ class Puzzle {
     // For this function to work correctly, cells need to have their surrond to be exact and their neighbor to contain all correct edges (there may be more edges than the correct ones)
     // This function fills in the rest of the fields, and modify incorrect fields if needed
 
-    fix_points(point, fix_adjacent = true, off_centered = false) {
+    fix_points(point) {
         // First pass - reset fields
         for (var i in point) {
-            if (this.types[0].indexOf(point[i].type) !== -1 && fix_adjacent) {
+            if (this.types[0].indexOf(point[i].type) !== -1) {
                 point[i].adjacent = [];
             }
             if (this.types[1].indexOf(point[i].type) !== -1) {
@@ -579,40 +579,24 @@ class Puzzle {
                 for (let j = 0; j < vertices.length; j++) {
                     point[vertices[j]].neighbor.push(parseInt(i));
                     for (let k = j + 1; k < vertices.length; k++) {
+                        let not_connected = false;
                         let vertex1 = point[vertices[j]];
                         let vertex2 = point[vertices[k]];
-                        if (Math.abs(vertex1.x - vertex2.x) < 0.001) {
-                            for (let l = 0; l < edge_bank.length; l++) {
-                                if (Math.abs(point[edge_bank[l]].x - vertex1.x) < 0.001) {
-                                    if ((!off_centered && (Math.abs(vertex1.y + vertex2.y - 2*point[edge_bank[l]].y) < 0.001)) || (off_centered && (vertex1.y < point[edge_bank[l]].y === point[edge_bank[l]].y < vertex2.y))) {
-                                        deltas.push({diff: 0,
-                                                     v1: Math.min(vertices[j], vertices[k]),
-                                                     v2: Math.max(vertices[j], vertices[k]),
-                                                     edge: edge_bank[l]});
-                                    }
+                        for (let l = 0; l < vertices.length; l++) {
+                            if (l !== j && l !== k) {
+                                if ((this.distance_to_line(vertex1, vertex2, point[vertices[l]]) < 0.001) && this.between_points(vertex1, vertex2, point[vertices[l]])) {
+                                    not_connected = true;
                                 }
                             }
-                        } else if (Math.abs(vertex1.y - vertex2.y) < 0.001) {
+                        }
+                        if (!not_connected) {
                             for (let l = 0; l < edge_bank.length; l++) {
-                                if (Math.abs(point[edge_bank[l]].y - vertex1.y) < 0.001) {
-                                    if ((!off_centered && (Math.abs(vertex1.x + vertex2.x - 2*point[edge_bank[l]].x) < 0.001)) || (off_centered && (vertex1.x < point[edge_bank[l]].x === point[edge_bank[l]].x < vertex2.x))) {
-                                        deltas.push({diff: 0,
-                                                     v1: Math.min(vertices[j], vertices[k]),
-                                                     v2: Math.max(vertices[j], vertices[k]),
-                                                     edge: edge_bank[l]});
-                                    }
-                                }
-                            }
-                        } else {
-                            for (let l = 0; l < edge_bank.length; l++) {
-                                let delta = Math.abs(((vertex1.y - point[edge_bank[l]].y)*(vertex2.x - point[edge_bank[l]].x)) -
-                                                    ((vertex1.x - point[edge_bank[l]].x)*(vertex2.y - point[edge_bank[l]].y)));
-                                if ((!off_centered && (Math.abs(vertex1.x + vertex2.x - 2*point[edge_bank[l]].x) < 0.001) && (Math.abs(vertex1.y + vertex2.y - 2*point[edge_bank[l]].y) < 0.001) ) ||
-                                (off_centered && (vertex1.x < point[edge_bank[l]].x === point[edge_bank[l]].x < vertex2.x) && (vertex1.y < point[edge_bank[l]].y === point[edge_bank[l]].y < vertex2.y))) {
+                                let delta = this.distance_to_line(vertex1, vertex2, point[edge_bank[l]]);
+                                if (this.between_points(vertex1, vertex2, point[edge_bank[l]])) {
                                     deltas.push({diff: delta,
-                                                 v1: Math.min(vertices[j], vertices[k]),
-                                                 v2: Math.max(vertices[j], vertices[k]),
-                                                 edge: edge_bank[l]});
+                                                    v1: Math.min(vertices[j], vertices[k]),
+                                                    v2: Math.max(vertices[j], vertices[k]),
+                                                    edge: edge_bank[l]});
                                 }
                             }
                         }
@@ -624,12 +608,6 @@ class Puzzle {
                 for (let j = 0; j < vertices.length; j++) {
                     // Fill in the edge_to_vertex data, and add the cell to the edge's neighbour
                     point[deltas[j].edge].edge_to_vertex = [deltas[j].v1, deltas[j].v2];
-                    if (point[deltas[j].v1].edge_to_vertex.indexOf(deltas[j].edge) < 0) {
-                        point[deltas[j].v1].edge_to_vertex.push(deltas[j].edge);
-                    }
-                    if (point[deltas[j].v2].edge_to_vertex.indexOf(deltas[j].edge) < 0) {
-                        point[deltas[j].v2].edge_to_vertex.push(deltas[j].edge);
-                    }
                     point[deltas[j].edge].neighbor.push(parseInt(i));
                     edges.push(deltas[j].edge);
                 }
@@ -649,9 +627,14 @@ class Puzzle {
                         }
                     }
                     // Fix cells adjacent
-                    if (edge.neighbor.length == 2 && fix_adjacent) {
+                    if (edge.neighbor.length == 2) {
                         point[edge.neighbor[j]].adjacent.push(parseInt(edge.neighbor[(j + 1) % 2]));
                     }     
+                }
+                // Fix vertices' edge_to_vertex
+                if (!!edge.edge_to_vertex) {
+                    for (let j = 0; j < edge.edge_to_vertex.length; j++)
+                    point[edge.edge_to_vertex[j]].edge_to_vertex.push(parseInt(i));
                 }
             }
         }
@@ -667,14 +650,18 @@ class Puzzle {
                 let vertices = edge.edge_to_vertex;
                 if (vertices.length == 2) {
                     for (let j = 0; j < cells.length; j++) {
-                        point[this.corner_table[cells[j]][vertices[0]]].adjacent.push(parseInt(this.corner_table[cells[j]][vertices[1]]));
-                        point[this.corner_table[cells[j]][vertices[1]]].adjacent.push(parseInt(this.corner_table[cells[j]][vertices[0]]));
+                        if (!!point[this.corner_table[cells[j]][vertices[0]]] && !!point[this.corner_table[cells[j]][vertices[1]]]) {
+                            point[this.corner_table[cells[j]][vertices[0]]].adjacent.push(parseInt(this.corner_table[cells[j]][vertices[1]]));
+                            point[this.corner_table[cells[j]][vertices[1]]].adjacent.push(parseInt(this.corner_table[cells[j]][vertices[0]]));
+                        }
                     }
                 }
                 if (cells.length == 2) {
                     for (let j = 0; j < 2; j++) {
-                        point[this.corner_table[cells[1]][vertices[j]]].adjacent.push(parseInt(this.corner_table[cells[0]][vertices[j]]));
-                        point[this.corner_table[cells[0]][vertices[j]]].adjacent.push(parseInt(this.corner_table[cells[1]][vertices[j]]));
+                        if (!!point[this.corner_table[cells[0]][vertices[j]]] && !!point[this.corner_table[cells[1]][vertices[j]]]) {
+                            point[this.corner_table[cells[1]][vertices[j]]].adjacent.push(parseInt(this.corner_table[cells[0]][vertices[j]]));
+                            point[this.corner_table[cells[0]][vertices[j]]].adjacent.push(parseInt(this.corner_table[cells[1]][vertices[j]]));
+                        }
                     }
                 }
             }
@@ -687,7 +674,7 @@ class Puzzle {
         let cells = [];
         let corners = [];
         for (var i in point) {
-            if (this.types[0].indexOf(point[i].type) !== -1 && point[i].use !== -1) {
+            if (this.types[0].indexOf(point[i].type) !== -1) {
                 cells.push(parseInt(i));
             }
             if (this.types[3].indexOf(point[i].type) !== -1) {
@@ -702,13 +689,12 @@ class Puzzle {
             let cell = point[cells[i]];
             for (let j = 0; j < cell.surround.length; j++) {
                 let vertex = point[cell.surround[j]];
-                let min = Number.MAX_VALUE;
+                let min = 1;
                 let corner = 0;
                   for (let k = 0; k < corners.length; k++) {
                     let corner_point = point[corners[k]];
-                    let diff = Math.abs((cell.y - vertex.y)*corner_point.x - (cell.x - vertex.x)*corner_point.y + (cell.x * vertex.y) - (cell.y * vertex.x)) / 
-                                Math.sqrt((cell.y - vertex.y)**2 + (cell.x - vertex.x)**2);
-                    if ((min > diff) && (cell.x > point[corners[k]].x === point[corners[k]].x > vertex.x) && (cell.y > point[corners[k]].y === point[corners[k]].y > vertex.y)) {
+                    let diff = this.distance_to_line(cell, vertex, corner_point);
+                    if ((min > diff) && (Math.min(vertex.use, cell.use) !== -1) && this.between_points(vertex, cell, corner_point)) {
                         min = diff;
                         corner = corners[k];
                     }
@@ -717,12 +703,29 @@ class Puzzle {
                     point[corner].surround.push(parseInt(cell.surround[j]));
                     point[corner].neighbor.push(parseInt(cells[i]));
                     this.corner_table[cells[i]][cell.surround[j]] = corner;
-                    this.remove_from_array(corners, corner);
                 }
             }
         }
         return point;
     }
+
+    // Helper functions
+    distance_to_line(line1, line2, point) {
+        if (!line1 || !line2 || !point) {
+            return Number.MAX_VALUE;
+        }
+        return Math.abs((line1.y - line2.y)*point.x - (line1.x - line2.x)*point.y + (line1.x * line2.y) - (line1.y * line2.x)) / 
+               Math.sqrt((line1.y - line2.y)**2 + (line1.x - line2.x)**2);
+    }
+
+    between_points(p1, p2, test) {
+        if (!p1 || !p2 || !test) {
+            return false;
+        }
+        return (Math.min(p1.x,p2.x) <= (test.x + 0.00001)) && ((test.x - 0.00001) <= Math.max(p1.x, p2.x)) &&
+               (Math.min(p1.y,p2.y) <= (test.y + 0.00001)) && ((test.y - 0.00001) <= Math.max(p1.y, p2.y));
+    }
+
 
     // Create corners to be used by the puzzle
     create_corners(point, radius, k) {
@@ -9624,9 +9627,9 @@ class Puzzle {
 
 
                 let line_style = this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1];
-                // Find if any cell of the new cage (if square grid) has outside half grid cells then skip
+                // Find if any cell of the new cage has outside half grid cells then skip
                 for (let i = 0; i < this.cageselection.length; i++) {
-                    if (this.cell_outside_for_square(this.cageselection[i])) {
+                    if (this.cell_outside(this.cageselection[i])) {
                         cageexist_status = true;
                         skip_cages = true;
                         break;
@@ -9834,7 +9837,7 @@ class Puzzle {
         while (cage_queue.length > 0) {
             let cell = cage_queue.shift();
             found_cage.push(cell);
-            if (this.cell_outside_for_square(cell) || !this.corner_table[cell]) {
+            if (this.cell_outside(cell) || !this.corner_table[cell]) {
                 not_in_cage = true;
                 break;
             }
@@ -9883,7 +9886,7 @@ class Puzzle {
         while (flood_queue.length > 0) {
             let cell = flood_queue.shift();
             context.push(cell);
-            if (this.cell_outside_for_square(cell)) {
+            if (this.cell_outside(cell)) {
                 full = true;
                 break;
             }
@@ -9928,7 +9931,7 @@ class Puzzle {
                 while (temp_queue.length > 0) {
                     let cell = temp_queue.shift();
                     temp_area.push(cell);
-                    if (this.cell_outside_for_square(cell) || !this.corner_table[cell]) {
+                    if (this.cell_outside(cell) || !this.corner_table[cell]) {
                         reached_outside = true;
                         break;
                     }
@@ -9962,15 +9965,13 @@ class Puzzle {
         return output;
     }
 
-    // Returns true if a cell is partly outside on a square grid
-    cell_outside_for_square(cell) {
-        if (this.grid_is_square()) {
-            let row_size = parseInt(this.ny0 - 4);
-            let col_size = parseInt(this.nx0 - 4);
-            let col_num = (cell % (this.nx0)) - 2;
-            let row_num = parseInt(cell / this.nx0) - 2;
-
-            if ((row_num < 0) || (row_num >= row_size) || (col_num < 0) || (col_num >= col_size)) {
+    // Returns true if a cell is partly outside
+    cell_outside(cell) {
+        if (!cell) {
+            return true;
+        }
+        for (let i = 0; i < this.point[cell].surround.length; i++) {
+            if (!this.between_points({x: -1, y: -1}, {x: this.canvasx + 1, y: this.canvasy + 1}, this.point[this.point[cell].surround[i]])) {
                 return true;
             }
         }
@@ -13023,11 +13024,19 @@ class Puzzle {
                     // i1-j1 and i2-j2 can define lines. Find the intersection of both lines, and connect the intersection to i1, then the intersection to i2
                     let pi1 = this.get_cage_coordinates(i1, r);
                     let pi2 = this.get_cage_coordinates(i2, r);
-                    let pj1 = this.get_cage_coordinates(j1, r);
-                    let pj2 = this.get_cage_coordinates(j2, r);
+                    let pj1, pj2, denom;
+                    let skip = false;
                     let intersect = [];
-
-                    let denom = ((pj2[1] - pi2[1]) * (pj1[0] - pi1[0])) - ((pj2[0] - pi2[0]) * (pj1[1] - pi1[1]));
+                    if (!this.point[j1] || !this.point[j2]) {
+                        // Cannot find the other points for some reason
+                        skip = true;
+                        denom = 0;
+                    }
+                    if (!skip) {
+                        pj1 = this.get_cage_coordinates(j1, r);
+                        pj2 = this.get_cage_coordinates(j2, r);
+                        denom = ((pj2[1] - pi2[1]) * (pj1[0] - pi1[0])) - ((pj2[0] - pi2[0]) * (pj1[1] - pi1[1]));
+                    }
                     if (Math.abs(denom) < 0.0001 ) {
                         // Undefined intersection, just take midpoint
                         intersect = [(pi1[0] + pi2[0]) / 2, (pi1[1] + pi2[1]) / 2];

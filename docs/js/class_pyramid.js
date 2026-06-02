@@ -189,17 +189,18 @@ class Puzzle_pyramid extends Puzzle {
         }
         */
         this.types = [[0], [1], [2, 3], [4, 6], []];
-        this.point = this.point_connect_corners(this.point_fillin_corners(this.fix_points(point, false)));
+        this.point = this.point_connect_corners(this.point_fillin_corners(this.fix_points(point)));
     }
 
     listappend(centerlist) {
         var n = centerlist.length;
         for (var j = 0; j < n; j++) {
-            if (centerlist.indexOf(this.point[centerlist[j]].adjacent[4]) === -1) {
-                centerlist.push(this.point[centerlist[j]].adjacent[4]);
-            }
-            if (centerlist.indexOf(this.point[centerlist[j]].adjacent[5]) === -1) {
-                centerlist.push(this.point[centerlist[j]].adjacent[5]);
+            for (let k = 0; k < this.point[centerlist[j]].adjacent.length; k++) {
+                if (this.point[centerlist[j]].y < this.point[this.point[centerlist[j]].adjacent[k]].y) {
+                    if (centerlist.indexOf(this.point[centerlist[j]].adjacent[k]) === -1) {
+                        centerlist.push(this.point[centerlist[j]].adjacent[k])
+                    }
+                }
             }
         }
         return centerlist;
