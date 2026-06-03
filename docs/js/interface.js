@@ -37,6 +37,9 @@ const PenpaUI = {
         for (var i of allModes.li) {
             document.getElementById("li_" + i).classList.toggle('is_hidden', hidden);
         }
+        for (var i of allModes.rot) {
+            document.getElementById("rot_" + i).parentElement.classList.toggle('is_hidden', hidden);
+        }
     },
 
     set_visible_modes_by_gridtype(gridtype) {
@@ -77,6 +80,9 @@ const PenpaUI = {
         }
         for (var i of allPossible.exceptions) {
             document.getElementById(i).classList.toggle('is_hidden', selectedGrid.exceptions.indexOf(i) < 0);
+        }
+        for (var i of allPossible.rot) {
+            document.getElementById("rot_" + i).parentElement.classList.toggle('is_hidden', selectedGrid.rot.indexOf(i) < 0);
         }
         // document.getElementById("sub_number4_lb").innerText = (gridtype === 'sudoku') ? 'Quad' : 'Tapa';
     },

@@ -47,7 +47,7 @@
     <!-- STYLES -->
     <!-- Local styles -->
     <script>
-        var ver = "3.2.3"; // Also defined in class_p.js
+        var ver = "3.2.4"; // Also defined in class_p.js
         let style_sources = [
             "./css/font-awesome.min.css",
             "./css/light_theme.css",
@@ -755,7 +755,9 @@
                 </div>
                 <div id="orientation_button" style="display:none;">
                     <span>
-                        <label class="label_mode tooltip" id="style_txt_rot">Orientation:</label>
+                        <label class="label_mode tooltip" id="style_txt_rot">Orientation:<span id="style_text_rot"
+                                                                                     class="tooltiptext">Choose one
+                            orientation</span></label>
                     </span>
                     <input type="radio" name="orientation_button" value="R" id="rot_R" checked="checked">
                     <label for="rot_R" class="labelL" id="rot_R_lb">A</label>

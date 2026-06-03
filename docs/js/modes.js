@@ -81,6 +81,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': ['U', 'L', 'D', 'R', 'UL', 'UR', 'DL', 'DR'],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'linedir', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -138,6 +139,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': ['U', 'L', 'D', 'R', 'UL', 'UR', 'DL', 'DR'],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'linedir', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -195,6 +197,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': ['U', 'L', 'D', 'R', 'UL', 'UR', 'DL', 'DR'],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'linedir', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -252,6 +255,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -305,6 +309,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['tents', 'star', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -359,6 +364,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -412,6 +418,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -465,6 +472,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -518,6 +526,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -571,6 +580,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -624,6 +634,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -677,6 +688,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -730,6 +742,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -783,6 +796,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',

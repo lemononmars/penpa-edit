@@ -205,7 +205,7 @@ class Puzzle {
             'deltoidal': 20,
             'penrose': 20
         }; // also defined in general.js
-        this.version = [3, 2, 3]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
+        this.version = [3, 2, 4]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
         this.undoredo_disable = false;
         this.comp = false;
         this.multisolution = false;
@@ -540,7 +540,7 @@ class Puzzle {
         for (var i in point) {
             if (this.types[1].indexOf(point[i].type) !== -1 || this.types[2].indexOf(point[i].type) !== -1) {
                 point[i].neighbor = [...new Set(point[i].neighbor)];
-            }    
+            }
         }
         return point;
     }
@@ -593,10 +593,12 @@ class Puzzle {
                             for (let l = 0; l < edge_bank.length; l++) {
                                 let delta = this.distance_to_line(vertex1, vertex2, point[edge_bank[l]]);
                                 if (this.between_points(vertex1, vertex2, point[edge_bank[l]])) {
-                                    deltas.push({diff: delta,
-                                                    v1: Math.min(vertices[j], vertices[k]),
-                                                    v2: Math.max(vertices[j], vertices[k]),
-                                                    edge: edge_bank[l]});
+                                    deltas.push({
+                                        diff: delta,
+                                        v1: Math.min(vertices[j], vertices[k]),
+                                        v2: Math.max(vertices[j], vertices[k]),
+                                        edge: edge_bank[l]
+                                    });
                                 }
                             }
                         }
@@ -629,12 +631,12 @@ class Puzzle {
                     // Fix cells adjacent
                     if (edge.neighbor.length == 2) {
                         point[edge.neighbor[j]].adjacent.push(parseInt(edge.neighbor[(j + 1) % 2]));
-                    }     
+                    }
                 }
                 // Fix vertices' edge_to_vertex
                 if (!!edge.edge_to_vertex) {
                     for (let j = 0; j < edge.edge_to_vertex.length; j++)
-                    point[edge.edge_to_vertex[j]].edge_to_vertex.push(parseInt(i));
+                        point[edge.edge_to_vertex[j]].edge_to_vertex.push(parseInt(i));
                 }
             }
         }
@@ -677,7 +679,7 @@ class Puzzle {
             if (this.types[0].indexOf(point[i].type) !== -1) {
                 cells.push(parseInt(i));
             }
-            if (this.types[3].indexOf(point[i].type) !== -1) {
+            if (this.types[3].indexOf(point[i].type) !== -1 && point[i].use === 1) {
                 corners.push(parseInt(i));
                 point[i].adjacent = [];
                 point[i].neighbor = [];
@@ -691,7 +693,7 @@ class Puzzle {
                 let vertex = point[cell.surround[j]];
                 let min = 1;
                 let corner = 0;
-                  for (let k = 0; k < corners.length; k++) {
+                for (let k = 0; k < corners.length; k++) {
                     let corner_point = point[corners[k]];
                     let diff = this.distance_to_line(cell, vertex, corner_point);
                     if ((min > diff) && (Math.min(vertex.use, cell.use) !== -1) && this.between_points(vertex, cell, corner_point)) {
@@ -714,16 +716,16 @@ class Puzzle {
         if (!line1 || !line2 || !point) {
             return Number.MAX_VALUE;
         }
-        return Math.abs((line1.y - line2.y)*point.x - (line1.x - line2.x)*point.y + (line1.x * line2.y) - (line1.y * line2.x)) / 
-               Math.sqrt((line1.y - line2.y)**2 + (line1.x - line2.x)**2);
+        return Math.abs((line1.y - line2.y) * point.x - (line1.x - line2.x) * point.y + (line1.x * line2.y) - (line1.y * line2.x)) /
+            Math.sqrt((line1.y - line2.y) ** 2 + (line1.x - line2.x) ** 2);
     }
 
     between_points(p1, p2, test) {
         if (!p1 || !p2 || !test) {
             return false;
         }
-        return (Math.min(p1.x,p2.x) <= (test.x + 0.00001)) && ((test.x - 0.00001) <= Math.max(p1.x, p2.x)) &&
-               (Math.min(p1.y,p2.y) <= (test.y + 0.00001)) && ((test.y - 0.00001) <= Math.max(p1.y, p2.y));
+        return (Math.min(p1.x, p2.x) <= (test.x + 0.00001)) && ((test.x - 0.00001) <= Math.max(p1.x, p2.x)) &&
+            (Math.min(p1.y, p2.y) <= (test.y + 0.00001)) && ((test.y - 0.00001) <= Math.max(p1.y, p2.y));
     }
 
 
@@ -9785,7 +9787,7 @@ class Puzzle {
     // Return the cage segments given a selection
     cage_for_selection(selection) {
         let key;
-        let output = [[],[]];
+        let output = [[], []];
         let cage_vertices = [];
         let cage_edges = [];
         let inside_vertices = [];
@@ -9811,8 +9813,7 @@ class Puzzle {
                 let p1 = this.corner_table[cell_0_in ? edge.neighbor[0] : edge.neighbor[1]][edge.edge_to_vertex[1]];
                 key = (Math.min(p0, p1).toString() + "," + Math.max(p0, p1).toString());
                 output[0].push(key);
-            }
-            else if (cell_0_in && cell_1_in) {
+            } else if (cell_0_in && cell_1_in) {
                 for (let j = 0; j < 2; j++) {
                     if (!inside_vertices.includes(edge.edge_to_vertex[j])) {
                         let p0 = this.corner_table[edge.neighbor[0]][edge.edge_to_vertex[j]];
@@ -9909,8 +9910,7 @@ class Puzzle {
                             if (!this[this.mode.qa][array][outer_cage_edge]) {
                                 this.remove_from_array(outsides, outer_cell);
                                 flood_queue.push(outer_cell);
-                            }
-                            else {
+                            } else {
                                 outsides.push(outer_cell);
                             }
                         }
@@ -9971,7 +9971,10 @@ class Puzzle {
             return true;
         }
         for (let i = 0; i < this.point[cell].surround.length; i++) {
-            if (!this.between_points({x: -1, y: -1}, {x: this.canvasx + 1, y: this.canvasy + 1}, this.point[this.point[cell].surround[i]])) {
+            if (!this.between_points({x: -1, y: -1}, {
+                x: this.canvasx + 1,
+                y: this.canvasy + 1
+            }, this.point[this.point[cell].surround[i]])) {
                 return true;
             }
         }
@@ -13011,11 +13014,11 @@ class Puzzle {
                     let k2 = 0;
                     for (let j = 0; j < this.point[vertex].edge_to_vertex.length; j++) {
                         if (this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i1].neighbor[0]) &&
-                        !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i2].neighbor[0])) {
+                            !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i2].neighbor[0])) {
                             k1 = this.point[this.point[vertex].edge_to_vertex[j]].edge_to_vertex.filter(v => v != vertex)[0];
                         }
                         if (this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i2].neighbor[0]) &&
-                        !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i1].neighbor[0])) {
+                            !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i1].neighbor[0])) {
                             k2 = this.point[this.point[vertex].edge_to_vertex[j]].edge_to_vertex.filter(v => v != vertex)[0];
                         }
                     }
@@ -13037,15 +13040,14 @@ class Puzzle {
                         pj2 = this.get_cage_coordinates(j2, r);
                         denom = ((pj2[1] - pi2[1]) * (pj1[0] - pi1[0])) - ((pj2[0] - pi2[0]) * (pj1[1] - pi1[1]));
                     }
-                    if (Math.abs(denom) < 0.0001 ) {
+                    if (Math.abs(denom) < 0.0001) {
                         // Undefined intersection, just take midpoint
                         intersect = [(pi1[0] + pi2[0]) / 2, (pi1[1] + pi2[1]) / 2];
-                    }
-                    else {
+                    } else {
                         let deltY = pi1[1] - pi2[1];
                         let deltX = pi1[0] - pi2[0];
                         let numer = ((pj2[0] - pi2[0]) * deltY) - ((pj2[1] - pi2[1]) * deltX);
-                        let coeff = numer/denom;
+                        let coeff = numer / denom;
                         intersect = [pi1[0] + (coeff * (pj1[0] - pi1[0])), pi1[1] + (coeff * (pj1[1] - pi1[1]))];
                     }
                     set_line_style(this.ctx, this[pu].cage[i] + 100);
@@ -13083,7 +13085,7 @@ class Puzzle {
                 this.ctx.moveTo(intersect[0], intersect[1]);
                 this.ctx.lineTo(p2[0], p2[1]);
                 this.ctx.stroke();
-            } 
+            }
             for (let i = 0; i < cages[1].length; i++) {
                 let s1 = cages[1][i][0];
                 let s2 = cages[1][i][1];
@@ -13092,7 +13094,7 @@ class Puzzle {
                 set_line_style(this.ctx, this[pu].cage[key]);
                 if (UserSettings.custom_colors_on && this[pu + "_col"].cage[key]) {
                     this.ctx.strokeStyle = this[pu + "_col"].cage[key];
-                } 
+                }
                 for (let j = 0; j < cages[1][i].length - 1; j++) {
                     let i1 = cages[1][i][j];
                     let i2 = cages[1][i][j + 1];
@@ -13109,11 +13111,11 @@ class Puzzle {
                     let k2 = 0;
                     for (let j = 0; j < this.point[vertex].edge_to_vertex.length; j++) {
                         if (this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i1].neighbor[0]) &&
-                        !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i2].neighbor[0])) {
+                            !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i2].neighbor[0])) {
                             k1 = this.point[this.point[vertex].edge_to_vertex[j]].edge_to_vertex.filter(v => v != vertex)[0];
                         }
                         if (this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i2].neighbor[0]) &&
-                        !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i1].neighbor[0])) {
+                            !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i1].neighbor[0])) {
                             k2 = this.point[this.point[vertex].edge_to_vertex[j]].edge_to_vertex.filter(v => v != vertex)[0];
                         }
                     }
@@ -13127,34 +13129,33 @@ class Puzzle {
                     let intersect = [];
 
                     let denom = ((pj2[1] - pi2[1]) * (pj1[0] - pi1[0])) - ((pj2[0] - pi2[0]) * (pj1[1] - pi1[1]));
-                    if (Math.abs(denom) < 0.0001 ) {
+                    if (Math.abs(denom) < 0.0001) {
                         // Undefined intersection, just take midpoint
                         intersect = [(pi1[0] + pi2[0]) / 2, (pi1[1] + pi2[1]) / 2];
-                    }
-                    else {
+                    } else {
                         let deltY = pi1[1] - pi2[1];
                         let deltX = pi1[0] - pi2[0];
                         let numer = ((pj2[0] - pi2[0]) * deltY) - ((pj2[1] - pi2[1]) * deltX);
-                        let coeff = numer/denom;
+                        let coeff = numer / denom;
                         intersect = [pi1[0] + (coeff * (pj1[0] - pi1[0])), pi1[1] + (coeff * (pj1[1] - pi1[1]))];
                     }
                     if (j === 0) {
                         points.push(pi1);
-                    }  
+                    }
                     points.push(intersect);
                     if (j === cages[1][i].length - 2) {
                         points.push(pi2);
-                    }   
+                    }
                 }
                 if (points.length == 3) {
                     this.ctx.beginPath();
                     this.ctx.moveTo(points[1][0], points[1][1]);
                     this.ctx.lineTo(points[0][0], points[0][1]);
-                    this.ctx.stroke();  
+                    this.ctx.stroke();
                     this.ctx.beginPath();
                     this.ctx.moveTo(points[1][0], points[1][1]);
                     this.ctx.lineTo(points[2][0], points[2][1]);
-                    this.ctx.stroke();  
+                    this.ctx.stroke();
                 } else {
                     for (let j = 0; j < points.length - 1; j++) {
                         let p1 = points[j];
@@ -13163,12 +13164,12 @@ class Puzzle {
                             this.ctx.beginPath();
                             this.ctx.moveTo(p1[0], p1[1]);
                             this.ctx.lineTo(p2[0], p2[1]);
-                            this.ctx.stroke();             
+                            this.ctx.stroke();
                         } else if (j === points.length - 2) {
                             this.ctx.beginPath();
                             this.ctx.moveTo(p2[0], p2[1]);
                             this.ctx.lineTo(p1[0], p1[1]);
-                            this.ctx.stroke();             
+                            this.ctx.stroke();
                         } else {
                             let intersect = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
                             this.ctx.beginPath();
@@ -13191,13 +13192,13 @@ class Puzzle {
         let cell = this.point[corner].neighbor[0];
         let vertex = this.point[corner].surround[0];
         if (regulars.indexOf(this.gridtype) !== -1) {
-            return [radius*this.point[cell].x + (1-radius) * this.point[vertex].x, radius*this.point[cell].y + (1-radius) * this.point[vertex].y];
-        } 
+            return [radius * this.point[cell].x + (1 - radius) * this.point[vertex].x, radius * this.point[cell].y + (1 - radius) * this.point[vertex].y];
+        }
         let inward = [this.point[vertex].x - this.point[cell].x, this.point[vertex].y - this.point[cell].y];
-        let length = Math.sqrt(inward[0]**2 + inward[1]**2);
-        inward = [inward[0]/length, inward[1]/length];
+        let length = Math.sqrt(inward[0] ** 2 + inward[1] ** 2);
+        inward = [inward[0] / length, inward[1] / length];
 
-        return [this.point[vertex].x -0.5*radius*this.size * inward[0], this.point[vertex].y -0.5*radius*this.size * inward[1]];
+        return [this.point[vertex].x - 0.5 * radius * this.size * inward[0], this.point[vertex].y - 0.5 * radius * this.size * inward[1]];
     }
 
     // Given a cage state, split the state into paths and loops so cages can be drawn "smartly". Unused for now
@@ -13224,7 +13225,7 @@ class Puzzle {
                         if (!!neighbors[j]) {
                             for (let k = 0; k < neighbors[j].length; k++) {
                                 let neighbor = neighbors[j][k]
-                                output.push([Math.min(neighbor,j), Math.max(neighbor,j)]);
+                                output.push([Math.min(neighbor, j), Math.max(neighbor, j)]);
                                 this.remove_from_array(neighbors[neighbor], j);
                                 if (neighbors[neighbor].length > 1)
                                     subchildren.push(neighbor);
@@ -13271,14 +13272,14 @@ class Puzzle {
 
 
     remove_from_array(arr, val) {
-        if (!!arr) {   
+        if (!!arr) {
             if (arr.indexOf(val) !== -1) {
                 arr.splice(arr.indexOf(val), 1);
-            } 
+            }
         }
     }
-    
-    
+
+
     process_for_drawing(cage, pu) {
         let output = [];
         output[0] = []; // Inside the same cell
@@ -13288,12 +13289,12 @@ class Puzzle {
             let style = -1;
             if (cage[i][0] == cage[i][cage[i].length - 1]) /* Loop */ {
                 let offset = -1;
-                for (let j = 0; j < cage[i].length - 1; j++) /* Find the first pair of corner in same cell */ { 
+                for (let j = 0; j < cage[i].length - 1; j++) /* Find the first pair of corner in same cell */ {
                     if (this.point[cage[i][j]].neighbor[0] == this.point[cage[i][(j + 1)]].neighbor[0]) {
                         offset = offset === -1 ? j : offset;
                     }
                 }
-                if (offset === -1) /* This must be a loop around a vertex, put everything separately */{ 
+                if (offset === -1) /* This must be a loop around a vertex, put everything separately */{
                     for (let j = 0; j < cage[i].length - 1; j++) {
                         if (this.point[cage[i][j]].neighbor == this.point[cage[i][j + 1]].neighbor) {
                             output[0].push([cage[i][j], cage[i][j + 1]]);
@@ -13303,10 +13304,10 @@ class Puzzle {
                     }
                 } else {
                     for (let j = 0; j < cage[i].length - 1; j++) /* Found a candidate to offset, since it is a loop we can start anywhere */ {
-                        let k1 = (j + offset)%(cage[i].length - 1);
-                        let k2 = (j + offset + 1)%(cage[i].length - 1);
+                        let k1 = (j + offset) % (cage[i].length - 1);
+                        let k2 = (j + offset + 1) % (cage[i].length - 1);
                         if (this.point[cage[i][k1]].neighbor[0] == this.point[cage[i][k2]].neighbor[0]) /* Same cell */{
-                            if (temp.length > 0) 
+                            if (temp.length > 0)
                                 output[1].push(temp);
                             temp = [];
                             style = -1;
@@ -13332,13 +13333,13 @@ class Puzzle {
                             }
                         }
                     }
-                    if (temp.length > 0) 
+                    if (temp.length > 0)
                         output[1].push(temp);
                 }
             } else {
                 for (let j = 0; j < cage[i].length - 1; j++) {
                     if (this.point[cage[i][j]].neighbor[0] == this.point[cage[i][j + 1]].neighbor[0]) {
-                        if (temp.length > 0) 
+                        if (temp.length > 0)
                             output[1].push(temp);
                         temp = [];
                         style = -1;
@@ -13364,8 +13365,8 @@ class Puzzle {
                         }
                     }
                 }
-            if (temp.length > 0) 
-                output[1].push(temp);
+                if (temp.length > 0)
+                    output[1].push(temp);
             }
         }
         return output;
