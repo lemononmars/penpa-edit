@@ -1390,12 +1390,12 @@ class Puzzle_square extends Puzzle {
                     this.ctx.moveTo(this.point[i1].x + r / d * dy, this.point[i1].y - r / d * dx);
                     this.ctx.lineTo(this.point[i2].x + r / d * dy, this.point[i2].y - r / d * dx);
                 } else {
-                    if (this.types[2].indexOf(this.point[i].type) !== -1) { //for centerline
+                    if (this.types[2].indexOf(this.point[i1].type) !== -1) { //for centerline
                         this.ctx.moveTo(this.point[i2].x, this.point[i2].y);
                         this.ctx.lineTo((this.point[i1].x + this.point[i2].x) * 0.5, (this.point[i1].y + this.point[i2].y) * 0.5);
                         this.ctx.stroke();
                         this.ctx.lineCap = "butt";
-                    } else if (this.types[2].indexOf(this.point[i].type) !== -1) {
+                    } else if (this.types[2].indexOf(this.point[i2].type) !== -1) {
                         this.ctx.moveTo(this.point[i1].x, this.point[i1].y);
                         this.ctx.lineTo((this.point[i1].x + this.point[i2].x) * 0.5, (this.point[i1].y + this.point[i2].y) * 0.5);
                         this.ctx.stroke();
