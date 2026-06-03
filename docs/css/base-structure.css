@@ -1314,6 +1314,11 @@ input[type=number] {
     margin-left: -15px;
 }
 
+#style_text_rot.tooltiptext {
+    width: 90px;
+    margin-left: -15px;
+}
+
 #undo_text.tooltiptext {
     width: 70px;
     margin-left: -35px;
@@ -1361,6 +1366,10 @@ input[type=number] {
 }
 
 #style_text.tooltiptext::after {
+    left: 15%;
+}
+
+#style_text_rot.tooltiptext::after {
     left: 15%;
 }
 

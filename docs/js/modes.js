@@ -81,6 +81,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': ['U', 'L', 'D', 'R', 'UL', 'UR', 'DL', 'DR'],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'linedir', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -138,6 +139,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': ['U', 'L', 'D', 'R', 'UL', 'UR', 'DL', 'DR'],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'linedir', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -195,6 +197,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': ['U', 'L', 'D', 'R', 'UL', 'UR', 'DL', 'DR'],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'linedir', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -217,9 +220,9 @@ const penpa_modes = {
         //submodes
         'sub': ['line1', 'line3', 'line5', 'line4',
             'lineE1', 'lineE3', 'lineE4', 'lineE5', 'lineE6',
-            'number1', 'number10', 'number6', 'number5', 'number7', 'number3', 'number4', 'number2', 'number8',
+            'number1', 'number10', 'number6', 'number5', 'number7', 'number3', 'number9', 'number4', 'number2', 'number8',
             'specialthermo', 'specialnobulbthermo', 'specialarrows', 'specialdirection', 'specialsquareframe', 'specialpolygon',
-            'cage2', 'move1', 'move2', 'move3',
+            'cage1', 'cage2', 'move1', 'move2', 'move3',
             'sudoku1', 'sudoku3'
         ],
         //composite modes
@@ -252,6 +255,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -267,13 +271,13 @@ const penpa_modes = {
     },
     'tri': {
         //modes
-        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'combi', 'sudoku', 'board', 'move'],
+        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'cage', 'combi', 'sudoku', 'board', 'move'],
         //submodes
         'sub': ['line1', 'line3', 'line5', 'line4',
             'lineE1', 'lineE3', 'lineE4', 'lineE5', 'lineE6',
             'number1', 'number6', 'number5', 'number7', 'number3', 'number4', 'number2', 'number8',
             'specialthermo', 'specialnobulbthermo', 'specialarrows', 'specialdirection', 'specialsquareframe', 'specialpolygon',
-            'cage2', 'move1', 'move2', 'move3',
+            'cage1', 'cage2', 'move1', 'move2', 'move3',
             'sudoku1', 'sudoku3'
         ],
         //composite modes
@@ -305,6 +309,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['tents', 'star', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -320,13 +325,13 @@ const penpa_modes = {
     },
     'pyramid': {
         //modes
-        'mode': ['surface', 'multicolor', 'line', 'lineE', 'wall', 'number', 'symbol', 'special', 'combi', 'sudoku', 'board', 'move'],
+        'mode': ['surface', 'multicolor', 'line', 'lineE', 'wall', 'number', 'symbol', 'special', 'cage', 'combi', 'sudoku', 'board', 'move'],
         //submodes
         'sub': ['line1', 'line3', 'line4',
             'lineE1', 'lineE3', 'lineE4', 'lineE5',
             'number1', 'number10', 'number6', 'number5', 'number7', 'number3', 'number4', 'number2', 'number8',
             'specialthermo', 'specialnobulbthermo', 'specialarrows', 'specialdirection', 'specialsquareframe', 'specialpolygon',
-            'cage2', 'move1', 'move2', 'move3',
+            'cage1', 'cage2', 'move1', 'move2', 'move3',
             'sudoku1', 'sudoku3'
         ],
         //composite modes
@@ -359,6 +364,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -374,13 +380,13 @@ const penpa_modes = {
     },
     'iso': {
         //modes
-        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'combi', 'sudoku', 'board', 'move'],
+        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'cage', 'combi', 'sudoku', 'board', 'move'],
         //submodes
         'sub': ['line1', 'line3', 'line4',
             'lineE1', 'lineE2', 'lineE3', 'lineE4', 'lineE5',
             'number1', 'number10', 'number6', 'number5', 'number7', 'number4', 'number2', 'number8',
             'specialpolygon',
-            'cage2', 'move1', 'move2', 'move3',
+            'cage1', 'cage2', 'move1', 'move2', 'move3',
             'sudoku1', 'sudoku3'
         ],
         //composite modes
@@ -412,6 +418,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -427,13 +434,13 @@ const penpa_modes = {
     },
     'tetrakis_square': {
         //modes
-        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'combi', 'sudoku', 'board', 'move'],
+        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'cage', 'combi', 'sudoku', 'board', 'move'],
         //submodes
         'sub': ['line1', 'line3', 'line4',
             'lineE1', 'lineE3', 'lineE4', 'lineE5',
             'number1', 'number10', 'number6', 'number5', 'number7', 'number4', 'number2', 'number8',
             'specialpolygon',
-            'cage2', 'move1', 'move2', 'move3',
+            'cage1', 'cage2', 'move1', 'move2', 'move3',
             'sudoku1', 'sudoku3'
         ],
         //composite modes
@@ -465,6 +472,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -480,13 +488,13 @@ const penpa_modes = {
     },
     'truncated_square': {
         //modes
-        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'combi', 'sudoku', 'board'],
+        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'cage', 'combi', 'sudoku', 'board'],
         //submodes
         'sub': ['line1', 'line3', 'line4',
             'lineE1', 'number10', 'lineE3', 'lineE4', 'lineE5',
             'number1', 'number6', 'number5', 'number8',
             'specialpolygon',
-            'cage2', 'move1', 'move2', 'move3',
+            'cage1', 'cage2', 'move1', 'move2', 'move3',
             'sudoku1', 'sudoku3'
         ],
         //composite modes
@@ -518,6 +526,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -533,13 +542,13 @@ const penpa_modes = {
     },
     'snub_square': {
         //modes
-        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'combi', 'sudoku', 'board'],
+        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'cage', 'combi', 'sudoku', 'board'],
         //submodes
         'sub': ['line1', 'line3', 'line4',
             'lineE1', 'number10', 'lineE3', 'lineE4', 'lineE5',
             'number1', 'number6', 'number5', 'number8',
             'specialpolygon',
-            'cage2', 'move1', 'move2', 'move3',
+            'cage1', 'cage2', 'move1', 'move2', 'move3',
             'sudoku1', 'sudoku3'
         ],
         //composite modes
@@ -571,6 +580,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -592,7 +602,7 @@ const penpa_modes = {
             'lineE1', 'number10', 'lineE3', 'lineE4', 'lineE5',
             'number1', 'number6', 'number5', 'number8',
             'specialpolygon',
-            'cage2', 'move1', 'move2', 'move3',
+            'cage1', 'cage2', 'move1', 'move2', 'move3',
             'sudoku1', 'sudoku3'
         ],
         //composite modes
@@ -624,6 +634,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -639,13 +650,13 @@ const penpa_modes = {
     },
     'rhombitrihexagonal': {
         //modes
-        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'combi', 'sudoku', 'board'],
+        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'cage', 'combi', 'sudoku', 'board'],
         //submodes
         'sub': ['line1', 'line3', 'line4',
             'lineE1', 'number10', 'lineE3', 'lineE4', 'lineE5',
             'number1', 'number6', 'number5', 'number8',
             'specialpolygon',
-            'cage2', 'move1', 'move2', 'move3',
+            'cage1', 'cage2', 'move1', 'move2', 'move3',
             'sudoku1', 'sudoku3'
         ],
         //composite modes
@@ -677,6 +688,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -692,13 +704,13 @@ const penpa_modes = {
     },
     'deltoidal_trihexagonal': {
         //modes
-        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'combi', 'sudoku', 'board'],
+        'mode': ['surface', 'multicolor', 'line', 'lineE', 'number', 'symbol', 'special', 'cage', 'combi', 'sudoku', 'board'],
         //submodes
         'sub': ['line1', 'line3', 'line4',
             'lineE1', 'number10', 'lineE3', 'lineE4', 'lineE5',
             'number1', 'number6', 'number5', 'number8',
             'specialpolygon',
-            'cage2', 'move1', 'move2', 'move3',
+            'cage1', 'cage2', 'move1', 'move2', 'move3',
             'sudoku1', 'sudoku3'
         ],
         //composite modes
@@ -730,6 +742,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',
@@ -745,13 +758,13 @@ const penpa_modes = {
     },
     'penrose_P3': {
         //modes
-        'mode': ['surface', 'line', 'lineE', 'number', 'symbol', 'special', 'combi', 'sudoku', 'board', 'move'],
+        'mode': ['surface', 'line', 'lineE', 'number', 'symbol', 'special', 'cage', 'combi', 'sudoku', 'board', 'move'],
         //submodes
         'sub': ['line1', 'line3', 'line4',
             'lineE1', 'lineE3', 'lineE4', 'lineE5',
             'number1', 'number10', 'number6', 'number5', 'number7', 'number4', 'number2', 'number8',
             'specialpolygon',
-            'cage2', 'move1', 'move2', 'move3',
+            'cage1', 'cage2', 'move1', 'move2', 'move3',
             'sudoku1', 'sudoku3'
         ],
         //composite modes
@@ -783,6 +796,7 @@ const penpa_modes = {
             'cage10', 'cage7', 'cage15', 'cage16',
             'sudoku1', 'sudoku2', 'sudoku8', 'sudoku3', 'sudoku9', 'sudoku10'
         ],
+        'rot': [],
         'li': ['battleship', 'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'linex', 'lineox', 'edgex', 'edgexoi', 'yajilin', 'hashi',
             'circle', 'square', 'triup', 'tridown', 'triright', 'trileft', 'diamond', 'hexpoint', 'hexflat', 'ox', 'cross', 'line', 'frameline', 'bars', 'tri',

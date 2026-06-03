@@ -188,7 +188,7 @@ class Puzzle_tri extends Puzzle {
                 k++;
             }
         }
-        this.point = point;
+        this.point = this.point_connect_corners(this.point_fillin_corners(this.fix_points(point)));
     }
 
 
@@ -199,11 +199,10 @@ class Puzzle_tri extends Puzzle {
             if (centerlist[j] < 2 * (this.n0) ** 2 && newlist.indexOf(this.point[centerlist[j]].adjacent[2]) === -1) {
                 newlist.push(this.point[centerlist[j]].adjacent[2]);
             } else if (centerlist[j] > 2 * (this.n0) ** 2) {
-                if (newlist.indexOf(this.point[centerlist[j]].adjacent[1]) === -1) {
-                    newlist.push(this.point[centerlist[j]].adjacent[1]);
-                }
-                if (newlist.indexOf(this.point[centerlist[j]].adjacent[2]) === -1) {
-                    newlist.push(this.point[centerlist[j]].adjacent[2]);
+                for (var k = 0; k < 3; k++) {
+                    if (newlist.indexOf(this.point[centerlist[j]].adjacent[k]) === -1 && this.point[this.point[centerlist[j]].adjacent[k]].y >= this.point[centerlist[j]].y) {
+                        newlist.push(this.point[centerlist[j]].adjacent[k]);
+                    }
                 }
             }
         }
@@ -242,7 +241,9 @@ class Puzzle_tri extends Puzzle {
 
     type_set() {
         var type;
-        switch (this.mode[this.mode.qa].edit_mode) {
+        let edit_mode = this.mode[this.mode.qa].edit_mode;
+        let submode = this.mode[this.mode.qa][edit_mode][0];
+        switch (edit_mode) {
             case "surface":
             case "multicolor":
             case "board":
@@ -257,7 +258,7 @@ class Puzzle_tri extends Puzzle {
                 }
                 break;
             case "number":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "3") {
+                if (submode === "3") {
                     type = [6];
                 } else {
                     if (!UserSettings.draw_edges) {
@@ -268,18 +269,18 @@ class Puzzle_tri extends Puzzle {
                 }
                 break;
             case "line":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "4") {
+                if (submode === "4") {
                     type = [2, 3, 4];
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "5") {
+                } else if (submode === "5") {
                     type = [0, 2, 3, 4];
                 } else {
                     type = [0];
                 }
                 break;
             case "lineE":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "4") {
+                if (submode === "4") {
                     type = [2, 3, 4];
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "6") {
+                } else if (submode === "6") {
                     type = [1, 2, 3, 4];
                 } else {
                     type = [1];
@@ -293,17 +294,21 @@ class Puzzle_tri extends Puzzle {
                 }
                 break;
             case "special":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "polygon") {
+                if (submode === "polygon") {
                     type = [1];
                 } else {
                     type = [0];
                 }
                 break;
             case "cage":
-                type = [];
+                if (submode === "1") {
+                    type = [0];
+                } else if (submode === "2") {
+                    type = [6];
+                }
                 break;
             case "combi":
-                switch (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]) {
+                switch (submode) {
                     case "tents":
                     case "linex":
                     case "yajilin":
@@ -545,6 +550,8 @@ class Puzzle_tri extends Puzzle {
             this.draw_selection();
             this.draw_symbol("pu_q", 2);
             this.draw_symbol("pu_a", 2);
+            this.draw_cage("pu_q");
+            this.draw_cage("pu_a");
             this.draw_number("pu_q");
             this.draw_number("pu_a");
             this.draw_cursol();
@@ -564,6 +571,7 @@ class Puzzle_tri extends Puzzle {
             this.draw_lattice();
             this.draw_selection();
             this.draw_symbol("pu_q", 2);
+            this.draw_cage("pu_q");
             this.draw_number("pu_q");
             this.draw_cursol();
             this.draw_freecircle();
