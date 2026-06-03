@@ -3,6 +3,7 @@
     * Cage mode in all grid types except cairo pentagonal
     * Bug fixes and code improvement
     * 8 orientations in Number mode
+    * puzz.link parser improvement with support added for many new genres
 * 2026/04/18 ver 3.2.3
     * New cut corner option for triangular grids
     * local storage improvements
