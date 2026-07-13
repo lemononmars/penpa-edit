@@ -124,11 +124,26 @@ function add_constraints() {
     let constraints = document.getElementById('constraints_settings_opt');
     let selected = constraints.value || "classic";
     constraints.innerHTML = "";
-    penpa_constraints['options']['sudoku'].forEach(function(variant) {
-        let opt = document.createElement("option");
-        opt.value = variant;
-        opt.textContent = variant.replace(/\b\w/g, function(letter) { return letter.toUpperCase(); });
-        constraints.appendChild(opt);
+    let implemented = penpa_constraints.implemented_sudoku || ["classic"];
+    let orderedGroups = [
+        { label: "Implemented", variants: implemented },
+        {
+            label: "Planned",
+            variants: penpa_constraints.options.sudoku.filter(function(variant) {
+                return !implemented.includes(variant);
+            })
+        }
+    ];
+    orderedGroups.forEach(function(group) {
+        let optgroup = document.createElement("optgroup");
+        optgroup.label = group.label;
+        group.variants.forEach(function(variant) {
+            let opt = document.createElement("option");
+            opt.value = variant;
+            opt.textContent = variant.replace(/\b\w/g, function(letter) { return letter.toUpperCase(); });
+            optgroup.appendChild(opt);
+        });
+        constraints.appendChild(optgroup);
     });
     constraints.value = penpa_constraints['options']['sudoku'].includes(selected) ? selected : "classic";
 }
@@ -247,7 +262,7 @@ function create_newboard() {
     } else {
         errorMsg(PenpaText.get('display_size_warning'))
     }
-    SudokuTools.setToolbarState();
+    SudokuTools.resetForNewGrid();
 }
 
 function set_display_labels(gridtype) {

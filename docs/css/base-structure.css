@@ -692,6 +692,7 @@ body textarea {
     width: fit-content;
     max-width: calc(100vw - 24px);
     background: transparent;
+    flex-wrap: wrap;
 }
 
 #mode_button {
@@ -735,6 +736,32 @@ body textarea {
     gap: 4px;
     padding-left: 4px;
     border-left: 1px solid var(--greyLight);
+    flex-wrap: wrap;
+}
+
+.sudoku-variant-group {
+    display: inline-flex;
+    align-items: stretch;
+}
+
+.sudoku-variant-group .sudoku-variant-mode,
+.sudoku-variant-group .sudoku-variant-label,
+.sudoku-variant-group .sudoku-kropki-negative,
+.sudoku-variant-group .sudoku-xv-negative {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.sudoku-variant-close {
+    width: 24px;
+    min-width: 24px;
+    height: 28px;
+    padding: 0;
+    border-left: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    font-size: 18px;
+    line-height: 1;
 }
 
 .sudoku-variant-mode.active {
@@ -744,7 +771,10 @@ body textarea {
 
 .sudoku-kropki-negative.active,
 .sudoku-kropki-negative.active:hover,
-.sudoku-kropki-negative.active:focus {
+.sudoku-kropki-negative.active:focus,
+.sudoku-xv-negative.active,
+.sudoku-xv-negative.active:hover,
+.sudoku-xv-negative.active:focus {
     background: var(--orange);
     color: var(--black);
 }
@@ -789,7 +819,7 @@ body textarea {
     overflow: auto;
     white-space: pre-wrap;
     color: inherit;
-    background: var(--greyLight);
+    background: var(--white);
     border-radius: 3px;
     font: 12px/1.35 Consolas, "Courier New", monospace;
     user-select: text;

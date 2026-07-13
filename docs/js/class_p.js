@@ -205,7 +205,7 @@ class Puzzle {
             'deltoidal': 20,
             'penrose': 20
         }; // also defined in general.js
-        this.version = [3, 2, 10]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
+        this.version = [3, 3, 15]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
         this.undoredo_disable = false;
         this.comp = false;
         this.multisolution = false;
@@ -7849,7 +7849,13 @@ class Puzzle {
                         }
                         break;
                     case "11": // Killer Sum
-                        var corner_cursor = 4 * (k + this.nx0 * this.ny0);
+                        var killer_anchor = this.killerCageAnchor(k);
+                        if (killer_anchor === null) {
+                            return;
+                        }
+                        this.cursol = killer_anchor;
+                        var corner_cursor = 4 * (killer_anchor + this.nx0 * this.ny0);
+                        this.cursolS = corner_cursor;
                         if (this[this.mode.qa].numberS[corner_cursor]) {
                             con = " " + this[this.mode.qa].numberS[corner_cursor][0];
                         } else {
@@ -8679,7 +8685,8 @@ class Puzzle {
                 this.undoredo_counter++;
 
             // Deal with starting a rectangular selection
-            if (e !== null && (this.mouse_mode === "down_left" || this.mouse_mode === "down_right"))
+            if (e !== null && (this.mouse_mode === "down_left" || this.mouse_mode === "down_right") &&
+                !(this.xv_mode && edit_mode === "number" && String(submode) === "5"))
                 this.handle_rect_mousedown(e, ctrl_key, num, obj);
 
             switch (edit_mode) {
@@ -9414,8 +9421,57 @@ class Puzzle {
     // number
     //////////////////////////
 
+    cycleXVClue(num) {
+        if (!this.isKropkiEdge(num)) {
+            this.drawing = false;
+            this.last = -1;
+            this.cursol = -1;
+            return false;
+        }
+        let current = this[this.mode.qa].number[num];
+        let value = current && current[2] === "5" ? current[0].toString().toUpperCase() : "";
+        this.undoredo_counter++;
+        this.drawing = false;
+        this.last = -1;
+        this.cursol = -1;
+        if (value !== "V" && value !== "X") {
+            this.set_value("number", num, ["V", 6, "5"], null);
+        } else if (value === "V") {
+            this.set_value("number", num, ["X", 6, "5"], null);
+        } else {
+            this.remove_value("number", num, true);
+        }
+        return true;
+    }
+
+    killerCageAnchor(num) {
+        let cages = this.refreshKillerCages(this.mode.qa);
+        for (let cage of cages) {
+            if (!cage || !cage.includes(num)) {
+                continue;
+            }
+            return cage.reduce((best, cell) => {
+                if (!this.point[cell]) {
+                    return best;
+                }
+                if (!this.point[best] || this.point[cell].y < this.point[best].y ||
+                    (this.point[cell].y === this.point[best].y && this.point[cell].x < this.point[best].x)) {
+                    return cell;
+                }
+                return best;
+            }, cage[0]);
+        }
+        return null;
+    }
+
     mouse_number(x, y, num) {
         if (this.mouse_mode === "down_left") {
+            if (this.xv_mode && String(this.mode[this.mode.qa].number[0]) === "5") {
+                this.cycleXVClue(num);
+                this.cursol = -1;
+                this.redraw();
+                return;
+            }
             this.drawing = true;
             this.last = num;
             this.lastx = x;
@@ -9579,6 +9635,44 @@ class Puzzle {
         return activeCells.length === 2;
     }
 
+    isBattenburgCorner(num) {
+        if (!this.point[num] || !Array.isArray(this.point[num].neighbor)) {
+            return false;
+        }
+        let activeCells = this.point[num].neighbor.filter((cell) => this.centerlist.includes(cell));
+        return activeCells.length === 4;
+    }
+
+    cycleBattenburgMark(num) {
+        if (!this.isBattenburgCorner(num)) {
+            return false;
+        }
+        let current = this[this.mode.qa].symbol[num];
+        this.undoredo_counter++;
+        if (!current || current[1] !== "sudokuetc" || current[0] !== 1) {
+            this.set_value("symbol", num, [1, "sudokuetc", 2], null);
+        } else {
+            this.remove_value("symbol", num, true);
+        }
+        return true;
+    }
+
+    cycleOddEvenMark(num) {
+        if (!this.centerlist.includes(num)) {
+            return false;
+        }
+        let current = this[this.mode.qa].symbol[num];
+        this.undoredo_counter++;
+        if (!current || (current[1] !== "circle_L" && current[1] !== "square_L")) {
+            this.set_value("symbol", num, [3, "circle_L", 2], null); // Odd
+        } else if (current[1] === "circle_L") {
+            this.set_value("symbol", num, [3, "square_L", 2], null); // Even
+        } else {
+            this.remove_value("symbol", num, true);
+        }
+        return true;
+    }
+
     cycleKropkiDot(num) {
         if (!this.isKropkiEdge(num)) {
             return false;
@@ -9598,8 +9692,18 @@ class Puzzle {
     mouse_symbol(x, y, num) {
         if (this.mouse_mode === "down_left") {
             this.cursol = num;
+            if (this.odd_even_mode && this.mode[this.mode.qa].symbol[0] === "circle_L") {
+                this.cycleOddEvenMark(num);
+                this.redraw();
+                return;
+            }
             if (this.kropki_mode && this.mode[this.mode.qa].symbol[0] === "circle_SS") {
                 this.cycleKropkiDot(num);
+                this.redraw();
+                return;
+            }
+            if (this.battenburg_mode && this.mode[this.mode.qa].symbol[0] === "sudokuetc") {
+                this.cycleBattenburgMark(num);
                 this.redraw();
                 return;
             }
@@ -9782,6 +9886,8 @@ class Puzzle {
                         this.drawing_mode = draw_mode;
                     }
                 }
+                this.refreshKillerCages(this.mode.qa);
+
                 // reset variables
                 this.cageselection = [];
                 this.selection = [];
@@ -9860,7 +9966,7 @@ class Puzzle {
     // From a given cell and context, returns [not_in_cage, cage], where not_in_cage is a boolean
     // That is true if the cell is not in a cage, and cage is the array of all cells of the found
     // Cage otherwise
-    flood_cage(cell, context, full, array) {
+    flood_cage(cell, context, full, array, qa = this.mode.qa) {
         let found_cage = [];
         let cage_queue = [cell];
         let not_in_cage = false;
@@ -9877,7 +9983,7 @@ class Puzzle {
                     let p0 = this.corner_table[cell][this.point[edge].edge_to_vertex[0]];
                     let p1 = this.corner_table[cell][this.point[edge].edge_to_vertex[1]];
                     let inner_cage_edge = (Math.min(p0, p1).toString() + "," + Math.max(p0, p1).toString());
-                    if (!this[this.mode.qa][array][inner_cage_edge]) {
+                    if (!this[qa][array][inner_cage_edge]) {
                         if (this.point[edge].neighbor.length === 2) {
                             let outer_cell = this.point[edge].neighbor[0] == cell ? this.point[edge].neighbor[1] : this.point[edge].neighbor[0];
                             if ((full || context.indexOf(outer_cell) !== -1)) {
@@ -9900,7 +10006,7 @@ class Puzzle {
         return output;
     }
 
-    get_cage_context(cell, array) {
+    get_cage_context(cell, array, qa = this.mode.qa) {
         // Find the "context" of the cell. That is, the smallest region that is fully defined
         // by cage segments on the outside of it. As an example:
         // AAAA
@@ -9936,7 +10042,7 @@ class Puzzle {
                             let p0 = this.corner_table[outer_cell][this.point[edge].edge_to_vertex[0]];
                             let p1 = this.corner_table[outer_cell][this.point[edge].edge_to_vertex[1]];
                             let outer_cage_edge = (Math.min(p0, p1).toString() + "," + Math.max(p0, p1).toString());
-                            if (!this[this.mode.qa][array][outer_cage_edge]) {
+                            if (!this[qa][array][outer_cage_edge]) {
                                 this.remove_from_array(outsides, outer_cell);
                                 flood_queue.push(outer_cell);
                             } else {
@@ -9992,6 +10098,31 @@ class Puzzle {
         }
         let output = [full, context];
         return output;
+    }
+
+    refreshKillerCages(qa = "pu_q") {
+        if (!this[qa] || !this[qa].cage) {
+            return [];
+        }
+        if (Object.keys(this[qa].cage).length === 0) {
+            return this[qa].killercages || [];
+        }
+        let cages = [];
+        let visited = new Set();
+        for (let cell of this.centerlist) {
+            if (visited.has(cell) || !this.point[cell] || this.point[cell].type !== 0) {
+                continue;
+            }
+            let context = this.get_cage_context(cell, "cage", qa);
+            let result = this.flood_cage(cell, context[1], context[0], "cage", qa);
+            let found = result[1] || [];
+            found.forEach((member) => visited.add(member));
+            if (!result[0] && found.length) {
+                cages.push(found);
+            }
+        }
+        this[qa].killercages = cages;
+        return cages;
     }
 
     // Returns true if a cell is partly outside

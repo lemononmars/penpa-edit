@@ -236,7 +236,9 @@ class Puzzle_square extends Puzzle {
                 }
                 break;
             case "number":
-                if (submode === "2") {
+                if (this.xv_mode && submode === "5") {
+                    type = [2, 3];
+                } else if (submode === "2") {
                     type = [0];
                 } else if (submode === "3") {
                     type = [4];

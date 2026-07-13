@@ -81,6 +81,16 @@ onload = function() {
     canvas.addEventListener("mousemove", onMove, {passive: false});
     canvas.addEventListener("mouseout", onOut, {passive: false});
     canvas.addEventListener("contextmenu", onContextmenu, {passive: false});
+    // Keep canvas input bound directly to the canvas. Penpa historically routed
+    // presses through a document-level listener, which is fragile once the native
+    // canvas is mounted inside another UI framework.
+    canvas.addEventListener(ondown_key, function(e) {
+        e.penpaCanvasHandled = true;
+        onDown(e);
+        if (checkms === 0) {
+            e.preventDefault();
+        }
+    }, {passive: false});
     document.addEventListener("keydown", onKeyDown, {passive: false});
     document.addEventListener("keyup", onKeyUp, {passive: false});
 
@@ -117,6 +127,13 @@ onload = function() {
             } else {
                 var obj = coord_point(event);
             }
+            if (pu.xv_mode && pu.mode[pu.mode.qa].edit_mode === "number" &&
+                String(pu.mode[pu.mode.qa].number[0]) === "5") {
+                let previousTypes = pu.type;
+                pu.type = [2, 3];
+                obj = coord_point(event);
+                pu.type = previousTypes;
+            }
             var x = obj.x,
                 y = obj.y,
                 num = obj.num;
@@ -125,6 +142,32 @@ onload = function() {
                 let edge = pu.point[num];
                 let distance = (x - edge.x) ** 2 + (y - edge.y) ** 2;
                 if (!pu.isKropkiEdge(num) || distance > (0.3 * pu.size) ** 2) {
+                    return;
+                }
+            }
+
+            if (pu.xv_mode && pu.mode[pu.mode.qa].edit_mode === "number" &&
+                String(pu.mode[pu.mode.qa].number[0]) === "5") {
+                let edge = pu.point[num];
+                let distance = edge ? (x - edge.x) ** 2 + (y - edge.y) ** 2 : Infinity;
+                if (!pu.isKropkiEdge(num) || distance > (0.3 * pu.size) ** 2) {
+                    pu.drawing = false;
+                    pu.last = -1;
+                    pu.cursol = -1;
+                    pu.redraw();
+                    return;
+                }
+                // XV is an edge clue, not a number selection. Handle the click
+                // here so Penpa's generic number lifecycle cannot select a cell
+                // or start its red rectangular-selection stroke first.
+                if (event.button !== 2 && edge.use === 1) {
+                    pu.mouse_mode = "down_left";
+                    pu.mouse_click = 0;
+                    pu.mouse_click_last = 1;
+                    pu.cycleXVClue(num);
+                    pu.mouse_mode = "out";
+                    pu.redraw();
+                    e.preventDefault();
                     return;
                 }
             }
@@ -925,8 +968,14 @@ onload = function() {
     }
 
     function coord_point(e, fittype = 'none', eventmode = 'none') {
-        var x = e.pageX - canvas.offsetLeft;
-        var y = e.pageY - canvas.offsetTop;
+        // The Svelte workspace nests and visually scales the native Penpa canvas.
+        // Map viewport coordinates back into canvas space so pointer input remains
+        // accurate regardless of the canvas offset or CSS zoom.
+        var canvasRect = canvas.getBoundingClientRect();
+        var scaleX = canvasRect.width ? canvas.clientWidth / canvasRect.width : 1;
+        var scaleY = canvasRect.height ? canvas.clientHeight / canvasRect.height : 1;
+        var x = (e.clientX - canvasRect.left) * scaleX;
+        var y = (e.clientY - canvasRect.top) * scaleY;
         var min0, min = 10e6;
         var num = 0;
         var improve_modes = ["star", "yajilin", "mines", "doublemines", "akari"];
@@ -942,8 +991,10 @@ onload = function() {
         }
 
         for (var i = 0; i < pu.point.length; i++) {
-            if (pu.point[i] && pu.type.indexOf(pu.point[i].type) != -1 &&
-                (!pu.kropki_mode || edit_mode !== "symbol" || pu.isKropkiEdge(i))) {
+            if (pu.point[i] && (pu.type.indexOf(pu.point[i].type) != -1 ||
+                (pu.battenburg_mode && edit_mode === "symbol" && pu.isBattenburgCorner(i))) &&
+                (!pu.kropki_mode || edit_mode !== "symbol" || pu.isKropkiEdge(i)) &&
+                (!pu.battenburg_mode || edit_mode !== "symbol" || pu.isBattenburgCorner(i))) {
                 min0 = (x - pu.point[i].x) ** 2 + (y - pu.point[i].y) ** 2;
                 if (min0 < min) {
                     min = min0;
@@ -1104,7 +1155,9 @@ onload = function() {
             //canvas
             case "canvas":
                 document.getElementById("inputtext").blur(); // Remove focus from text box
-                onDown(e);
+                if (!e.penpaCanvasHandled) {
+                    onDown(e);
+                }
                 if (checkms === 0) {
                     e.preventDefault();
                 }
@@ -2215,7 +2268,8 @@ onload = function() {
             }
 
             // Display 1 time Info regarding border setting
-            if (current_constraint !== "kropki" && penpa_constraints["border"].includes(current_constraint) && pu.borderwarning) {
+            if (current_constraint !== "kropki" && current_constraint !== "xv" && current_constraint !== "battenburg" &&
+                penpa_constraints["border"].includes(current_constraint) && pu.borderwarning) {
                 pu.borderwarning = false;
                 Swal.fire({
                     html: '<h2 class="info">' + PenpaText.get('border_setting_help') + '</h2>',

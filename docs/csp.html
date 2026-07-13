@@ -31,10 +31,18 @@
 problem.solve();                 // first satisfying assignment
 problem.enumerateAnswers(10);    // bounded answer enumeration
 problem.irrefutableFacts();      // exact candidates and forced values</code></pre>
-    <p><code>irrefutableFacts()</code> returns <code>satisfiable</code>, <code>unique</code>, <code>candidates</code>, and <code>forced</code>. The editor caches this analysis until the board or its normalized constraints change.</p>
+    <p><code>irrefutableFacts()</code> returns <code>satisfiable</code>, <code>unique</code>, <code>candidates</code>, and <code>forced</code>. The editor caches this analysis until the board or its normalized constraints change. Redraws caused only by toolbar or mode clicks reuse the completed result without running the solver again.</p>
+
+    <h2>Incremental reruns</h2>
+    <p>The asynchronous extractor retains the complete-solution witnesses from its previous run. After a digit is added or changed, it filters those witnesses against the current givens and reuses every compatible solution to seed the next exact extraction. Constraint changes use a different signature and therefore start without stale witnesses. Reuse is an optimization only: every displayed candidate is still backed by a complete solution under the current board and constraints.</p>
+    <p>Each automatic analysis and generation run has a hard 60-second deadline. The cooperative CSP search stops at its next cancellation checkpoint, reports the limit in the solver log, and leaves the Penpa board unchanged.</p>
 
     <h2>Why this does not enumerate every solution</h2>
-    <p>Enumerating every completed grid can be prohibitively expensive and is unnecessary for exact pencil marks. The extractor starts with one complete solution, then tests each not-yet-witnessed cell/digit assignment. A successful test contributes another complete-solution witness; a failed test proves that answer fact impossible. This produces the same union of candidate values as full enumeration while usually visiting far fewer solutions. The on-page CSP log shows every witness and refutation while Auto Solver runs.</p>
+    <p>Enumerating every completed grid can be prohibitively expensive and is unnecessary for exact pencil marks. The extractor starts with one or more complete-solution witnesses, then tests each not-yet-witnessed cell/digit assignment. A successful test contributes another complete-solution witness; a failed test proves that answer fact impossible. This produces the same union of candidate values as full enumeration while usually visiting far fewer solutions. The on-page CSP log shows the start, terminal result, and total runtime while Auto Solver runs.</p>
+
+    <h2>Unique puzzle generation</h2>
+    <p>The generator first constructs a completed grid satisfying the currently active supported variants. It derives valid Odd/Even, Kropki, XV, and Battenburg marks from that answer; every mark is created together with its 180-degree rotated partner. It then visits every rotational pair of given digits and generated marks in random order and temporarily removes both members. After every proposed pair removal it calls <code>problem.enumerateAnswers(2)</code>: one answer keeps the removal, while zero or two answers restore both clues. Because clue removal is monotonic, one complete pass leaves a pair-minimal puzzle: no remaining rotational clue unit can be removed while retaining uniqueness. Global Diagonal, Anti-Diagonal, Anti-King, Anti-Knight, and Non-Consecutive constraints compose with those generated marks. Generation runs in a Web Worker so repeated searches do not block Penpa's canvas.</p>
+    <p><strong>New grid</strong> constructs that completed answer from scratch. <strong>From existing</strong> first asks the CSP to complete the current givens and semantic clues, adds compatible generated marks, and then runs the same symmetric minimal-pruning pass. A generated puzzle also primes the candidate cache with its already-proven unique answer, so opening Auto Solver does not repeat the expensive initial Anti-Diagonal search.</p>
 
     <h2>Adding a constraint</h2>
     <pre><code>SudokuCSP.registerConstraint("myVariant", {
@@ -48,10 +56,18 @@ problem.irrefutableFacts();      // exact candidates and forced values</code></p
     <h2>Registered today</h2>
     <ul>
         <li>Classic Sudoku: core row, column, and box constraints</li>
+        <li>Odd / Even: grey circles require odd digits and grey squares require even digits</li>
+        <li>Diagonal: both long diagonals are all-different</li>
+        <li>Anti-Diagonal: both long diagonals contain exactly three digits repeated three times each</li>
+        <li>Anti-King: equal digits cannot be a king's move apart</li>
+        <li>Anti-Knight: equal digits cannot be a knight's move apart</li>
+        <li>Non-Consecutive: orthogonal neighbors cannot differ by one</li>
         <li>Thermo: strictly increasing paths</li>
         <li>Arrow: circle equals shaft sum</li>
         <li>Killer: distinct cage digits with a target sum</li>
         <li>Kropki: black 1:2 dots and white consecutive dots, with an optional Negative Kropki toggle for undotted edges (off by default)</li>
+        <li>Palindrome: mirrored cells along each line must contain equal digits</li>
+        <li>XV: V edges sum to 5 and X edges sum to 10, with an optional negative rule for unmarked edges (off by default)</li>
     </ul>
     <p><a href="./variants/index.html">Read the page for each selectable variant →</a></p>
 </main>

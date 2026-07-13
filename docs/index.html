@@ -2,6 +2,21 @@
 <html lang="en">
 
 <head>
+    <script>
+        // Decide the rendering surface before the browser can paint the legacy
+        // document. The /penpa iframe explicitly opts into the native UI.
+        if (new URLSearchParams(window.location.search).get("penpa") !== "legacy") {
+            document.documentElement.classList.add("svelte-home");
+        }
+    </script>
+    <style>
+        html.svelte-home:not(.svelte-mounted) {
+            background: #eef1f5;
+        }
+        html.svelte-home:not(.svelte-mounted) body {
+            visibility: hidden;
+        }
+    </style>
     <!-- HTML Meta Tags -->
     <title>Penpa+</title>
     <meta name="description" content="Web application to create and solve Sudokus and Puzzles.">
@@ -24,7 +39,7 @@
     <meta name="viewport" content="width=device-width"/>
     <meta name="keywords" content="grid editor, pencil puzzle editor, logic puzzle solving, sudoku editor">
     <!-- Favicon -->
-    <link rel="shortcut icon" href="./css/images/logo.png"/>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg"/>
     <link rel="apple-touch-icon" href="./css/images/logo.png"/>
     <!-- Google Tag Manager -->
     <script>
@@ -47,7 +62,7 @@
     <!-- STYLES -->
     <!-- Local styles -->
     <script>
-        var ver = "3.2.10"; // Also defined in class_p.js
+        var ver = "3.3.15"; // Also defined in class_p.js
         let style_sources = [
             "./css/font-awesome.min.css",
             "./css/light_theme.css",
@@ -124,6 +139,7 @@
             "./js/class_panel.js",
             "./js/style.js",
             "./js/sudoku_csp.js",
+            "./js/sudoku_generator.js",
             "./js/sudoku_solver.js",
             "./js/general.js",
             "./js/customcolor.js",
@@ -140,6 +156,8 @@
 </head>
 
 <body>
+<div id="svelte-app"></div>
+<script type="module" src="./src/main.ts"></script>
 <!-- Google Tag Manager (noscript) -->
 <noscript>
     <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TSBMV8L8" height="0" width="0"
@@ -159,6 +177,7 @@
         <div id="tool-holder">
             <div id="top_button">
                 <button id="newboard">New Grid / Update</button>
+                <button id="sudoku_reset" class="button sudoku-toolbar-icon" title="Generate a blank grid" aria-label="Generate a blank grid"><i class="fa fa-refresh" aria-hidden="true"></i></button>
                 <button id="rotation">Transform</button>
                 <button id="newsize" style="display:none;">Resize</button>
                 <button id="saveimage">Screenshot</button>
@@ -196,11 +215,9 @@
                         <button id="sudoku_load_test_board" class="button sudoku-tool-button sudoku-toolbar-icon" title="Load the CSP test board" aria-label="Load Test Board"><i class="fa fa-flask" aria-hidden="true"></i></button>
                         <span id="sudoku-auto-inline-status" class="sudoku-auto-inline-status">Idle</span>
                         <span id="sudoku-variant-tools" class="sudoku-variant-tools" aria-label="Variant modes"></span>
-                        <button id="sudoku_kropki_negative" class="button sudoku-tool-button sudoku-kropki-negative" type="button" title="Apply the negative Kropki rule to every undotted orthogonal edge" aria-label="Negative Kropki constraint" aria-pressed="false" hidden>Negative Kropki: OFF</button>
                     </div>
                     <section id="sudoku-solver-log" class="sudoku-solver-log" aria-live="polite" aria-label="Auto Solver log">
                         <div class="sudoku-solver-log-header">
-                            <strong>Auto Solver CSP log</strong>
                             <span id="sudoku-solver-status">Idle</span>
                         </div>
                         <progress id="sudoku-solver-progress" max="1" value="0"></progress>
@@ -1091,9 +1108,9 @@
         <h3 class="modal-header" id="saveimagetitle">Save screenshot</h3>
         <div id="modal-image-body">
             <h4><label class="label_imagespace" id="nb_margin_lb">White border:</label></h4>
-            <input type="radio" name="nb_margin" value="1" id="nb_margin1" checked="checked">
+            <input type="radio" name="nb_margin" value="1" id="nb_margin1">
             <label for="nb_margin1" class="label" id="nb_margin1_lb">Yes</label>
-            <input type="radio" name="nb_margin" value="2" id="nb_margin2">
+            <input type="radio" name="nb_margin" value="2" id="nb_margin2" checked="checked">
             <label for="nb_margin2" class="label" id="nb_margin2_lb">No</label>
             <br>
             <h4><label class="label_imagespace" id="nb_quality_lb">Image quality:</label></h4>
@@ -1597,7 +1614,7 @@
                 <tr>
                     <th colspan="2" class="modal-subheader" id="lb_settings_app_display">App Display</th>
                 </tr>
-                <tr>
+                <tr class="permanently-hidden-control">
                     <td>
                         <label id="lb_settings_display_theme">Display Theme:</label>
                     </td>
@@ -1749,8 +1766,8 @@
                     </td>
                     <td>
                         <select name="panelbutton" id="panel_button">
-                            <option value="1" class="lb_generic_on">ON</option>
-                            <option value="2" selected="selected" class="lb_generic_off">OFF</option>
+                            <option value="1" selected="selected" class="lb_generic_on">ON</option>
+                            <option value="2" class="lb_generic_off">OFF</option>
                         </select>
                     </td>
                 </tr>
@@ -1821,8 +1838,8 @@
                     </td>
                     <td>
                         <select name="reloadbutton" id="reload_button">
-                            <option value="1" class="lb_generic_on">ON</option>
-                            <option value="2" selected="selected" class="lb_generic_off">OFF</option>
+                            <option value="1" selected="selected" class="lb_generic_on">ON</option>
+                            <option value="2" class="lb_generic_off">OFF</option>
                         </select>
                     </td>
                 </tr>

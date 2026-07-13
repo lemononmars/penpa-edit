@@ -5,8 +5,8 @@ const root = process.cwd();
 const docsDir = join(root, "docs");
 const distDir = join(root, "dist");
 
-const directories = ["css", "fonts", "js", "variants"];
-const files = ["csp.html", "identity.js", "points.md"];
+const directories = ["css", "fonts", "js", "penpa", "variants"];
+const files = ["csp.html", "favicon.svg", "identity.js", "points.md"];
 
 mkdirSync(distDir, { recursive: true });
 

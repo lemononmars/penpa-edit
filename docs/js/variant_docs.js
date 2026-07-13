@@ -9,10 +9,45 @@
         },
         "odd-even": {
             title: "Odd / Even Sudoku",
-            status: "Planned",
-            storage: "Parity marks currently use Penpa symbols.",
-            csp: "The editor mode exists, but no odd/even CSP handler is registered yet.",
-            propagation: "Planned domains: odd cells keep 1, 3, 5, 7, 9; even cells keep 2, 4, 6, 8."
+            status: "Supported",
+            storage: "Foreground style-3 circle_L symbols represent odd cells and square_L symbols represent even cells. Clicking a cell cycles circle, square, then empty.",
+            csp: "The registered oddEven handler requires marked cells to have the indicated parity.",
+            propagation: "Odd cells retain 1, 3, 5, 7, 9; even cells retain 2, 4, 6, 8, with every displayed candidate still backed by a complete solution."
+        },
+        "diagonal": {
+            title: "Diagonal Sudoku",
+            status: "Supported",
+            storage: "The global constraint uses Penpa's native style-12 lines on both long diagonals, so the notation is included in SVG and URL exports.",
+            csp: "The registered diagonalAllDifferent handler applies an all-different constraint to both main nine-cell diagonals.",
+            propagation: "A candidate is rejected immediately when it repeats an assigned digit on either diagonal; exact extraction then retains only candidates backed by a complete diagonal-Sudoku solution."
+        },
+        "anti-diagonal": {
+            title: "Anti-Diagonal Sudoku",
+            status: "Supported",
+            storage: "The global constraint uses Penpa's native style-12 lines on both long diagonals, so the notation is included in SVG and URL exports.",
+            csp: "The registered antiDiagonals handler requires each main diagonal to contain exactly three distinct digits, each appearing three times.",
+            propagation: "Partial diagonals may contain no more than three distinct digits and no digit more than three times; completion verifies the exact 3-3-3 distribution."
+        },
+        "anti-king": {
+            title: "Anti-King Sudoku",
+            status: "Supported",
+            storage: "This is a global constraint represented by its persistent toolbar chip and requires no cell marks.",
+            csp: "The registered antiKing handler requires cells a king's move apart to contain different digits.",
+            propagation: "Every assignment immediately removes that digit from all horizontally, vertically, and diagonally adjacent cells."
+        },
+        "anti-knight": {
+            title: "Anti-Knight Sudoku",
+            status: "Supported",
+            storage: "This is a global constraint represented by its persistent toolbar chip and requires no cell marks.",
+            csp: "The registered antiKnight handler requires cells a chess knight's move apart to contain different digits.",
+            propagation: "Every assignment removes that digit from all cells one-by-two or two-by-one cells away."
+        },
+        "non-consecutive": {
+            title: "Non-Consecutive Sudoku",
+            status: "Supported",
+            storage: "This is a global constraint represented by its persistent toolbar chip and requires no edge marks.",
+            csp: "The registered nonConsecutive handler forbids orthogonally adjacent digits whose difference is one.",
+            propagation: "An assigned digit removes its predecessor and successor from each orthogonal neighbor."
         },
         "arrow": {
             title: "Arrow Sudoku",
@@ -38,7 +73,7 @@
         "killer": {
             title: "Killer Sudoku",
             status: "Supported",
-            storage: "Killer cage paths and their corner totals are normalized into cell lists and a target sum.",
+            storage: "Native Penpa cage boundary segments are flood-filled into cage cell lists. A sum typed from any cell in a cage is anchored to that cage's top-left cell.",
             csp: "The registered killers handler enforces a target sum and distinct digits within every cage.",
             propagation: "The handler computes minimum and maximum remaining sums from digits not already used in the cage."
         },
@@ -58,17 +93,17 @@
         },
         "palindrome": {
             title: "Palindrome Sudoku",
-            status: "Planned",
-            storage: "Palindrome lines are available as editor line paths.",
-            csp: "No mirrored-equality CSP handler is registered yet.",
-            propagation: "Planned behavior intersects the domains of cells mirrored across the center of each line."
+            status: "Supported",
+            storage: "Foreground style-5 center-to-center line segments are normalized into ordered cell paths.",
+            csp: "The registered palindromes handler requires cells mirrored across the center of each path to contain equal digits.",
+            propagation: "A partial assignment is rejected as soon as two assigned mirrored cells differ; exact candidate extraction then proves each remaining digit against a complete solution."
         },
         "sandwich": {
             title: "Sandwich Sudoku",
-            status: "Planned",
+            status: "Supported",
             storage: "Outside sandwich sums are available as number clues.",
-            csp: "No row/column sandwich CSP handler is registered yet.",
-            propagation: "Planned behavior enumerates possible positions of 1 and 9 and bounds the digits between them."
+            csp: "The registered sandwiches handler finds 1 and 6 in each clued row or column and requires the digits strictly between them to total the outside clue.",
+            propagation: "Partial assignments enumerate feasible endpoint positions and reject branches whose known sum already exceeds the clue or whose open cells cannot reach it."
         },
         "quadruple": {
             title: "Quadruple Sudoku",
@@ -79,10 +114,10 @@
         },
         "xv": {
             title: "XV Sudoku",
-            status: "Planned",
-            storage: "X and V edge clues are available as edge-number objects.",
-            csp: "No pair-sum CSP handler is registered yet.",
-            propagation: "Planned behavior keeps adjacent pairs summing to 10 for X or 5 for V."
+            status: "Supported",
+            storage: "Foreground small-number edge objects store V and X clues. Clicking an interior edge cycles V, X, then empty.",
+            csp: "The registered xv handler requires V pairs to sum to 5 and X pairs to sum to 10.",
+            propagation: "The optional Negative XV toggle makes every unmarked orthogonal edge sum to neither 5 nor 10; it is off by default."
         },
         "between-line": {
             title: "Between Line Sudoku",
@@ -93,10 +128,10 @@
         },
         "battenberg": {
             title: "Battenberg Sudoku",
-            status: "Planned",
-            storage: "Battenberg marks are available as Sudoku-style symbols.",
-            csp: "No parity-checkerboard CSP handler is registered yet.",
-            propagation: "Planned behavior allows only alternating odd/even parity around the marked four-cell intersection."
+            status: "Supported",
+            storage: "Battenberg marks are stored as foreground Sudoku-style symbols; the optional negative rule is stored on the puzzle.",
+            csp: "The battenburg handler enforces alternating odd/even parity around marked intersections. With Negative Battenburg enabled, every unmarked internal four-cell corner receives the complementary not-checkerboard constraint.",
+            propagation: "Partial marked corners reject equal parity across an edge or differing parity across a diagonal. Negative corners are rejected as soon as all four cells form the forbidden checkerboard."
         }
     };
 
