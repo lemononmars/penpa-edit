@@ -47,7 +47,7 @@
     <!-- STYLES -->
     <!-- Local styles -->
     <script>
-        var ver = "3.2.4"; // Also defined in class_p.js
+        var ver = "3.2.10"; // Also defined in class_p.js
         let style_sources = [
             "./css/font-awesome.min.css",
             "./css/light_theme.css",
@@ -117,13 +117,14 @@
             "./js/main.js",
             "./js/class_p.js",
             "./js/class_square.js",
-            "./js/sudoku_solver.js",
             "./js/class_hex.js",
             "./js/class_tri.js",
             "./js/class_pyramid.js",
             "./js/class_uniform.js",
             "./js/class_panel.js",
             "./js/style.js",
+            "./js/sudoku_csp.js",
+            "./js/sudoku_solver.js",
             "./js/general.js",
             "./js/customcolor.js",
             "./js/translate.js"
@@ -181,43 +182,63 @@
                     <span id="visibility_button0" class="label_mode">Visibility:</span>
                     <span id="visibility_button" class="label toggle_btn">ON</span>
                     <br id="visibility_break">
-                    <span id="edge_button0" class="label_mode">Draw on Edges:</span>
-                    <span id="edge_button" class="label toggle_btn">OFF</span>
-                    <span id="quick_panel_toggle_label" class="label_mode">Panel:</span>
-                    <span id="quick_panel_toggle" class="label toggle_btn">OFF</span>
+                    <span id="edge_button0" class="label_mode sudoku-hidden-control">Draw on Edges:</span>
+                    <span id="edge_button" class="label toggle_btn sudoku-hidden-control">OFF</span>
+                    <span id="quick_panel_toggle_label" class="label_mode sudoku-hidden-control">Panel:</span>
+                    <span id="quick_panel_toggle" class="label toggle_btn sudoku-hidden-control">OFF</span>
                 </div>
                 <div id="mode_button" class="mode_button">
-                    <label class="label_mode" id="mode_txt">Mode:</label>
-                    <input type="radio" name="mode" id="mo_surface" checked="checked"/>
-                    <label for="mo_surface" class="label" id="mo_surface_lb">Surface</label>
-                    <input type="radio" name="mode" id="mo_multicolor"/>
-                    <label for="mo_multicolor" class="label" id="mo_multicolor_lb">Multicolor</label>
-                    <input type="radio" name="mode" id="mo_line"/>
-                    <label for="mo_line" class="label" id="mo_line_lb">Line</label>
-                    <input type="radio" name="mode" id="mo_lineE"/>
-                    <label for="mo_lineE" class="label" id="mo_lineE_lb">Edge</label>
-                    <input type="radio" name="mode" id="mo_wall"/>
-                    <label for="mo_wall" class="label" id="mo_wall_lb">Wall</label>
-                    <input type="radio" name="mode" id="mo_cage"/>
-                    <label for="mo_cage" class="label" id="mo_cage_lb">Cage</label>
-                    <input type="radio" name="mode" id="mo_board"/>
-                    <label for="mo_board" class="label" id="mo_board_lb">Box</label>
-                    <input type="radio" name="mode" id="mo_move"/>
-                    <label for="mo_move" class="label" id="mo_move_lb">Move</label>
-                    <br id="mode_break">
-                    <label class="label_mode" id="mode_txt_space">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
-                    <input type="radio" name="mode" id="mo_number"/>
-                    <label for="mo_number" class="label" id="mo_number_lb">Number</label>
-                    <input type="radio" name="mode" id="mo_sudoku"/>
-                    <label for="mo_sudoku" class="label" id="mo_sudoku_lb">Sudoku</label>
-                    <input type="radio" name="mode" id="mo_symbol"/>
-                    <label for="mo_symbol" class="label" id="mo_symbol_lb">Shape</label>
-                    <input type="radio" name="mode" id="mo_special"/>
-                    <label for="mo_special" class="label" id="mo_special_lb">Special</label>
-                    <input type="radio" name="mode" id="mo_combi"/>
-                    <label for="mo_combi" class="label" id="mo_combi_lb">Composite</label>
-                    <span class="tab" id="tab_selection">
-                        <select id="mode_choices" multiple size="0"></select>
+                    <div id="sudoku-toolbar" class="sudoku-toolbar" aria-label="Sudoku toolbar">
+                        <button id="sudoku_undo" class="button sudoku-tool-button sudoku-toolbar-icon" title="Undo" aria-label="Undo"><i class="fa fa-undo" aria-hidden="true"></i></button>
+                        <button id="sudoku_redo" class="button sudoku-tool-button sudoku-toolbar-icon" title="Redo" aria-label="Redo"><i class="fa fa-repeat" aria-hidden="true"></i></button>
+                        <button id="sudoku_keypad" class="button sudoku-tool-button sudoku-toolbar-icon" title="Keypad" aria-label="Keypad"><i class="fa fa-keyboard-o" aria-hidden="true"></i></button>
+                        <button id="sudoku_auto_solver" class="button sudoku-tool-button sudoku-toolbar-icon" title="Auto Solver" aria-label="Auto Solver" aria-pressed="false"><i class="fa fa-magic" aria-hidden="true"></i></button>
+                        <button id="sudoku_load_test_board" class="button sudoku-tool-button sudoku-toolbar-icon" title="Load the CSP test board" aria-label="Load Test Board"><i class="fa fa-flask" aria-hidden="true"></i></button>
+                        <span id="sudoku-auto-inline-status" class="sudoku-auto-inline-status">Idle</span>
+                        <span id="sudoku-variant-tools" class="sudoku-variant-tools" aria-label="Variant modes"></span>
+                        <button id="sudoku_kropki_negative" class="button sudoku-tool-button sudoku-kropki-negative" type="button" title="Apply the negative Kropki rule to every undotted orthogonal edge" aria-label="Negative Kropki constraint" aria-pressed="false" hidden>Negative Kropki: OFF</button>
+                    </div>
+                    <section id="sudoku-solver-log" class="sudoku-solver-log" aria-live="polite" aria-label="Auto Solver log">
+                        <div class="sudoku-solver-log-header">
+                            <strong>Auto Solver CSP log</strong>
+                            <span id="sudoku-solver-status">Idle</span>
+                        </div>
+                        <progress id="sudoku-solver-progress" max="1" value="0"></progress>
+                        <pre id="sudoku-solver-log-output">Enable Auto Solver to analyze the current puzzle.</pre>
+                    </section>
+                    <span id="legacy_mode_controls" class="is_hidden">
+                        <label class="label_mode" id="mode_txt">Mode:</label>
+                        <input type="radio" name="mode" id="mo_surface" checked="checked"/>
+                        <label for="mo_surface" class="label" id="mo_surface_lb">Surface</label>
+                        <input type="radio" name="mode" id="mo_multicolor"/>
+                        <label for="mo_multicolor" class="label" id="mo_multicolor_lb">Multicolor</label>
+                        <input type="radio" name="mode" id="mo_line"/>
+                        <label for="mo_line" class="label" id="mo_line_lb">Line</label>
+                        <input type="radio" name="mode" id="mo_lineE"/>
+                        <label for="mo_lineE" class="label" id="mo_lineE_lb">Edge</label>
+                        <input type="radio" name="mode" id="mo_wall"/>
+                        <label for="mo_wall" class="label" id="mo_wall_lb">Wall</label>
+                        <input type="radio" name="mode" id="mo_cage"/>
+                        <label for="mo_cage" class="label" id="mo_cage_lb">Cage</label>
+                        <input type="radio" name="mode" id="mo_board"/>
+                        <label for="mo_board" class="label" id="mo_board_lb">Box</label>
+                        <input type="radio" name="mode" id="mo_move"/>
+                        <label for="mo_move" class="label" id="mo_move_lb">Move</label>
+                        <br id="mode_break">
+                        <label class="label_mode" id="mode_txt_space">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                        <input type="radio" name="mode" id="mo_number"/>
+                        <label for="mo_number" class="label" id="mo_number_lb">Number</label>
+                        <input type="radio" name="mode" id="mo_sudoku"/>
+                        <label for="mo_sudoku" class="label" id="mo_sudoku_lb">Sudoku</label>
+                        <input type="radio" name="mode" id="mo_symbol"/>
+                        <label for="mo_symbol" class="label" id="mo_symbol_lb">Shape</label>
+                        <input type="radio" name="mode" id="mo_special"/>
+                        <label for="mo_special" class="label" id="mo_special_lb">Special</label>
+                        <input type="radio" name="mode" id="mo_combi"/>
+                        <label for="mo_combi" class="label" id="mo_combi_lb">Composite</label>
+                        <span class="tab" id="tab_selection">
+                            <select id="mode_choices" multiple size="0"></select>
+                        </span>
                     </span>
                     <!-- <button id="toggle_panel_visibility" onclick="panel_toggle();">👁️</button> -->
                 </div>
@@ -793,22 +814,6 @@
             <div><label id="solution_check" class="info"/></label></div>
         </div>
         <div id="dvique" class="dvique">
-            <div id="sudoku-toolbar" class="sudoku-toolbar" aria-label="Sudoku toolbar">
-                <button id="sudoku_new" class="sudoku-tool-button" title="New" aria-label="New"><i class="fa fa-file-o"></i></button>
-                <button id="sudoku_load" class="sudoku-tool-button" title="Load" aria-label="Load"><i class="fa fa-folder-open-o"></i></button>
-                <button id="sudoku_save" class="sudoku-tool-button" title="Save" aria-label="Save"><i class="fa fa-floppy-o"></i></button>
-                <button id="sudoku_export" class="sudoku-tool-button" title="Export" aria-label="Export"><i class="fa fa-download"></i></button>
-                <span class="sudoku-tool-separator"></span>
-                <button id="sudoku_undo" class="sudoku-tool-button" title="Undo" aria-label="Undo"><i class="fa fa-undo"></i></button>
-                <button id="sudoku_redo" class="sudoku-tool-button" title="Redo" aria-label="Redo"><i class="fa fa-repeat"></i></button>
-                <span class="sudoku-tool-separator"></span>
-                <button id="sudoku_zoom_in" class="sudoku-tool-button" title="Zoom in" aria-label="Zoom in"><i class="fa fa-search-plus"></i></button>
-                <button id="sudoku_zoom_out" class="sudoku-tool-button" title="Zoom out" aria-label="Zoom out"><i class="fa fa-search-minus"></i></button>
-                <button id="sudoku_keypad" class="sudoku-tool-button" title="Keypad" aria-label="Keypad"><i class="fa fa-keyboard-o"></i></button>
-                <span class="sudoku-tool-separator"></span>
-                <button id="sudoku_solve" class="sudoku-tool-button" title="Solve" aria-label="Solve"><i class="fa fa-check"></i></button>
-                <button id="sudoku_auto_solver" class="sudoku-tool-button" title="Auto Solver" aria-label="Auto Solver" aria-pressed="false"><i class="fa fa-magic"></i></button>
-            </div>
             <canvas id="pause_canvas" style="display:none;"></canvas>
         </div>
         <div id="contestinfo">
@@ -835,7 +840,7 @@
             </span>
             <br>
         </div>
-        <div id="stop_watch">
+        <div id="stop_watch" hidden aria-hidden="true">
             <h1 id="timer" class="values">00:00:00:00:0</h1>
             <div>
                 <button id="sw_start" class="button sw">Start</button>
@@ -1629,7 +1634,7 @@
                         </select>
                     </td>
                 </tr>
-                <tr>
+                <tr class="permanently-hidden-control">
                     <td>
                         <label id="lb_settings_timer">Timer:</label>
                     </td>

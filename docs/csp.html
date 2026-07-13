@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Penpa+ Sudoku CSP</title>
+    <link rel="stylesheet" href="./css/csp-docs.css">
+</head>
+<body>
+<main>
+    <nav><a href="./index.html">Open Penpa+</a><a href="./variants/index.html">Variant pages</a></nav>
+    <h1>Sudoku CSP architecture</h1>
+    <p>The Auto Solver and full solution search use the same constraint-satisfaction problem runtime in <code>js/sudoku_csp.js</code>. Its architecture follows cspuz: puzzle code declares constraints and answer variables, while one reusable engine performs search and answer analysis.</p>
+
+    <h2>Problem model</h2>
+    <table>
+        <tr><th>CSP concept</th><th>Penpa+ representation</th></tr>
+        <tr><td>Variables</td><td>The 81 cells in a classic 9×9 Sudoku.</td></tr>
+        <tr><td>Domains</td><td>Digits 1–9, filtered by assigned values and registered constraints.</td></tr>
+        <tr><td>Core constraints</td><td>All-different rows, columns, and 3×3 boxes.</td></tr>
+        <tr><td>Variant constraints</td><td>Plug-ins registered by a stable string key such as <code>kropki</code>.</td></tr>
+        <tr><td>Answer keys</td><td>All 81 cell variables. Helper variables added by future variants do not need to be exposed as answers.</td></tr>
+        <tr><td>Search</td><td>Backtracking with minimum-remaining-values selection and forward consistency checks. The engine is currently pure JavaScript rather than SAT-encoded.</td></tr>
+    </table>
+
+    <h2>Candidate overlay</h2>
+    <p>Candidate marks are global, not merely local eliminations. For each remaining cell/digit pair, the engine finds a complete solution containing that assignment. A digit is shown exactly when such a witness exists. A one-value domain is therefore an irrefutable fact: it has that value in every solution.</p>
+
+    <h2>Problem API</h2>
+    <pre><code>var problem = SudokuCSP.createProblem(board, constraints);
+problem.solve();                 // first satisfying assignment
+problem.enumerateAnswers(10);    // bounded answer enumeration
+problem.irrefutableFacts();      // exact candidates and forced values</code></pre>
+    <p><code>irrefutableFacts()</code> returns <code>satisfiable</code>, <code>unique</code>, <code>candidates</code>, and <code>forced</code>. The editor caches this analysis until the board or its normalized constraints change.</p>
+
+    <h2>Why this does not enumerate every solution</h2>
+    <p>Enumerating every completed grid can be prohibitively expensive and is unnecessary for exact pencil marks. The extractor starts with one complete solution, then tests each not-yet-witnessed cell/digit assignment. A successful test contributes another complete-solution witness; a failed test proves that answer fact impossible. This produces the same union of candidate values as full enumeration while usually visiting far fewer solutions. The on-page CSP log shows every witness and refutation while Auto Solver runs.</p>
+
+    <h2>Adding a constraint</h2>
+    <pre><code>SudokuCSP.registerConstraint("myVariant", {
+    validatePartial: function(board, constraint, helpers) {
+        var value = helpers.cellValue(board, constraint.cell);
+        return !value || constraint.allowed.includes(value);
+    }
+});</code></pre>
+    <p>Then normalize Penpa editor objects into <code>constraints.myVariant</code> in <code>sudoku_solver.js</code>. The candidate overlay and search automatically invoke the new handler.</p>
+
+    <h2>Registered today</h2>
+    <ul>
+        <li>Classic Sudoku: core row, column, and box constraints</li>
+        <li>Thermo: strictly increasing paths</li>
+        <li>Arrow: circle equals shaft sum</li>
+        <li>Killer: distinct cage digits with a target sum</li>
+        <li>Kropki: black 1:2 dots and white consecutive dots, with an optional Negative Kropki toggle for undotted edges (off by default)</li>
+    </ul>
+    <p><a href="./variants/index.html">Read the page for each selectable variant →</a></p>
+</main>
+</body>
+</html>

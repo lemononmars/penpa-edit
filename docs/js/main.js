@@ -121,6 +121,14 @@ onload = function() {
                 y = obj.y,
                 num = obj.num;
 
+            if (pu.kropki_mode && pu.mode[pu.mode.qa].edit_mode === "symbol") {
+                let edge = pu.point[num];
+                let distance = (x - edge.x) ** 2 + (y - edge.y) ** 2;
+                if (!pu.isKropkiEdge(num) || distance > (0.3 * pu.size) ** 2) {
+                    return;
+                }
+            }
+
             let ctrl = isCtrlKeyHeld(e) || isShiftKeyHeld(e);
 
             // Remember whether this cell was already in the selection so we can
@@ -934,7 +942,8 @@ onload = function() {
         }
 
         for (var i = 0; i < pu.point.length; i++) {
-            if (pu.point[i] && pu.type.indexOf(pu.point[i].type) != -1) {
+            if (pu.point[i] && pu.type.indexOf(pu.point[i].type) != -1 &&
+                (!pu.kropki_mode || edit_mode !== "symbol" || pu.isKropkiEdge(i))) {
                 min0 = (x - pu.point[i].x) ** 2 + (y - pu.point[i].y) ** 2;
                 if (min0 < min) {
                     min = min0;
@@ -2206,7 +2215,7 @@ onload = function() {
             }
 
             // Display 1 time Info regarding border setting
-            if (penpa_constraints["border"].includes(current_constraint) && pu.borderwarning) {
+            if (current_constraint !== "kropki" && penpa_constraints["border"].includes(current_constraint) && pu.borderwarning) {
                 pu.borderwarning = false;
                 Swal.fire({
                     html: '<h2 class="info">' + PenpaText.get('border_setting_help') + '</h2>',
@@ -2214,6 +2223,9 @@ onload = function() {
                     icon: 'info'
                 })
             }
+        }
+        if (window.SudokuTools) {
+            SudokuTools.variantChanged(current_constraint);
         }
         pu.redraw();
     }

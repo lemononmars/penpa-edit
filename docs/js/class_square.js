@@ -227,7 +227,9 @@ class Puzzle_square extends Puzzle {
                 break;
             case "symbol":
             case "move":
-                if (!UserSettings.draw_edges) {
+                if (edit_mode === "symbol" && this.kropki_mode && submode === "circle_SS") {
+                    type = [2, 3];
+                } else if (!UserSettings.draw_edges) {
                     type = [0];
                 } else {
                     type = [0, 1, 2, 3];

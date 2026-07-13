@@ -64,29 +64,33 @@ async function boot() {
 }
 
 function boot_parameters() {
+    set_default_sudoku_board_options();
+}
+
+function set_default_sudoku_board_options() {
     UserSettings.gridtype = "sudoku";
+    UserSettings.displaysize = 38;
     document.getElementById("gridtype").value = "sudoku";
     document.getElementById("nb_size1").value = 9;
     document.getElementById("nb_size2").value = 9;
-    UserSettings.displaysize = 38;
+    document.getElementById("nb_size3").value = 38;
     document.getElementById("nb_space1").value = 0;
     document.getElementById("nb_space2").value = 0;
     document.getElementById("nb_space3").value = 0;
     document.getElementById("nb_space4").value = 0;
+    document.getElementById("nb_sudoku1").checked = false;
+    document.getElementById("nb_sudoku2").checked = false;
+    document.getElementById("nb_sudoku3").checked = false;
+    document.getElementById("nb_sudoku4").checked = false;
+    document.getElementById("nb_sudoku5").checked = false;
+    document.getElementById("nb_sudoku6").checked = false;
+    document.getElementById("nb_sudoku8").checked = false;
     changetype();
 }
 
 function create() {
     UserSettings.loadFromCookies("gridtype_size");
-    UserSettings.gridtype = "sudoku";
-    document.getElementById("gridtype").value = "sudoku";
-    document.getElementById("nb_size1").value = 9;
-    document.getElementById("nb_size2").value = 9;
-    document.getElementById("nb_space1").value = 0;
-    document.getElementById("nb_space2").value = 0;
-    document.getElementById("nb_space3").value = 0;
-    document.getElementById("nb_space4").value = 0;
-    changetype();
+    set_default_sudoku_board_options();
 
     gridtype = UserSettings.gridtype;
 
@@ -96,7 +100,7 @@ function create() {
     // Drawing Panel
     panel_pu = new Panel();
     panel_pu.draw_panel();
-    pu.mode_set("surface"); //include redraw
+    pu.mode_set("sudoku"); //include redraw
 
     UserSettings.loadFromCookies("others");
 
@@ -118,22 +122,15 @@ function create() {
 
 function add_constraints() {
     let constraints = document.getElementById('constraints_settings_opt');
-    penpa_constraints['options_groups'].forEach(function(element, index) {
-        let optgroup = document.createElement("optgroup");
-        optgroup.label = element;
-
-        penpa_constraints['options'][element].forEach(function(subelement, subindex) {
-            let opt = document.createElement("option");
-            opt.value = subelement;
-            opt.innerHTML = subelement;
-
-            if (subelement === "all") {
-                opt.setAttribute("selected", true);
-            }
-            optgroup.appendChild(opt);
-        });
-        constraints.appendChild(optgroup);
+    let selected = constraints.value || "classic";
+    constraints.innerHTML = "";
+    penpa_constraints['options']['sudoku'].forEach(function(variant) {
+        let opt = document.createElement("option");
+        opt.value = variant;
+        opt.textContent = variant.replace(/\b\w/g, function(letter) { return letter.toUpperCase(); });
+        constraints.appendChild(opt);
     });
+    constraints.value = penpa_constraints['options']['sudoku'].includes(selected) ? selected : "classic";
 }
 
 function init_genre_tags() {
@@ -2689,6 +2686,7 @@ async function load(urlParam, type = 'url', origurl = null) {
 
     // Make any backwards compatibility updates to the data we need for format changes
     pu.load_compat_fixes();
+    SudokuTools.init();
 }
 
 function loadver1(paramArray, rtext) {
@@ -2781,6 +2779,7 @@ function loadver1(paramArray, rtext) {
     panel_pu.draw_panel();
     pu.mode_qa(pu.mode.qa); //include redraw
     pu.mode_set(pu.mode[pu.mode.qa].edit_mode); //include redraw
+    SudokuTools.init();
 }
 
 function loadqa_arrayver1(qa, rtext_qa) {

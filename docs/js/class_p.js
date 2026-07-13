@@ -166,7 +166,7 @@ class Puzzle {
                 "sudoku": ["1", 1]
             },
             "pu_a": {
-                "edit_mode": "surface",
+                "edit_mode": "sudoku",
                 "surface": ["", 1],
                 "multicolor": ["", 1],
                 "line": ["1", 3],
@@ -205,7 +205,7 @@ class Puzzle {
             'deltoidal': 20,
             'penrose': 20
         }; // also defined in general.js
-        this.version = [3, 2, 4]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
+        this.version = [3, 2, 10]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
         this.undoredo_disable = false;
         this.comp = false;
         this.multisolution = false;
@@ -9571,9 +9571,38 @@ class Puzzle {
     // symbol
     //////////////////////////
 
+    isKropkiEdge(num) {
+        if (!this.point[num] || this.types[2].indexOf(this.point[num].type) === -1) {
+            return false;
+        }
+        let activeCells = this.point[num].neighbor.filter((cell) => this.centerlist.includes(cell));
+        return activeCells.length === 2;
+    }
+
+    cycleKropkiDot(num) {
+        if (!this.isKropkiEdge(num)) {
+            return false;
+        }
+        let current = this[this.mode.qa].symbol[num];
+        this.undoredo_counter++;
+        if (!current || current[1] !== "circle_SS") {
+            this.set_value("symbol", num, [2, "circle_SS", 2], null); // Black dot, in front of lines
+        } else if (current[0] === 2) {
+            this.set_value("symbol", num, [1, "circle_SS", 2], null); // White dot, in front of lines
+        } else {
+            this.remove_value("symbol", num, true);
+        }
+        return true;
+    }
+
     mouse_symbol(x, y, num) {
         if (this.mouse_mode === "down_left") {
             this.cursol = num;
+            if (this.kropki_mode && this.mode[this.mode.qa].symbol[0] === "circle_SS") {
+                this.cycleKropkiDot(num);
+                this.redraw();
+                return;
+            }
             if (UserSettings.panel_shown && !this.onoff_symbolmode_list[this.mode[this.mode.qa].symbol[0]]) {
                 if (0 <= panel_pu.edit_num && panel_pu.edit_num <= 8) {
                     this.key_number((panel_pu.edit_num + 1).toString());
@@ -12609,6 +12638,12 @@ class Puzzle {
             // don't crash the UI
         catch (err) {
             console.error(err);
+        } finally {
+            // Treat a completed canvas draw as the commit boundary for DOM tools.
+            // Solver work is scheduled after the current event, never from inside draw().
+            if (!svgcall && typeof SudokuSolver !== "undefined" && SudokuSolver.onPuzzleRedraw) {
+                SudokuSolver.onPuzzleRedraw(this);
+            }
         }
     }
 

@@ -64,7 +64,7 @@ header {
 }
 
 #stop_watch {
-    display: block;
+    display: none !important;
     font-size: .9em;
     text-align: center;
 }
@@ -93,6 +93,11 @@ header {
     margin-top: 35px;
 }
 
+#tool-container,
+#puzzle-container {
+    min-width: 0;
+}
+
 #tool-holder {
     width: 100%;
     margin: 0 auto;
@@ -118,6 +123,7 @@ hr.newgridhrline {
 
 #bottom_button {
     padding-top: 10px;
+    display: none !important;
 }
 
 .button.sw {
@@ -677,41 +683,70 @@ body textarea {
 }
 
 .sudoku-toolbar {
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    margin: 0 auto 8px;
+    margin: 0 auto 5px;
     padding: 4px;
     width: fit-content;
     max-width: calc(100vw - 24px);
-    background: var(--white);
-    border: 1px solid var(--greyLight);
-    border-radius: 4px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    background: transparent;
+}
+
+#mode_button {
+    text-align: center;
 }
 
 .sudoku-tool-button {
-    width: 32px;
-    height: 32px;
+    width: auto;
+    height: 28px;
+}
+
+.sudoku-toolbar-icon {
+    width: 28px;
+    min-width: 28px;
     padding: 0;
-    border: 1px solid transparent;
-    border-radius: 3px;
-    background: transparent;
+}
+
+.sudoku-tool-button.auto-solver-active,
+.sudoku-tool-button.auto-solver-active:hover,
+.sudoku-tool-button.auto-solver-active:focus {
+    background: #187bcd !important;
+    color: #ffffff !important;
+    border-color: #187bcd !important;
+}
+
+.sudoku-auto-inline-status {
+    display: none;
+    min-width: 58px;
+    color: var(--blueDark);
+    font-size: 12px;
+    font-weight: bold;
+    text-align: left;
+}
+
+.sudoku-solver-mode .sudoku-auto-inline-status {
+    display: inline-block;
+}
+
+.sudoku-variant-tools {
+    display: inline-flex;
+    gap: 4px;
+    padding-left: 4px;
+    border-left: 1px solid var(--greyLight);
+}
+
+.sudoku-variant-mode.active {
+    background: var(--orange);
     color: var(--black);
-    line-height: 32px;
-    text-align: center;
-    cursor: pointer;
 }
 
-.sudoku-tool-button:hover {
-    background: var(--greyLight);
-}
-
-.sudoku-tool-button.active {
-    background: var(--blue);
-    color: var(--white);
-    border-color: var(--blue);
+.sudoku-kropki-negative.active,
+.sudoku-kropki-negative.active:hover,
+.sudoku-kropki-negative.active:focus {
+    background: var(--orange);
+    color: var(--black);
 }
 
 .sudoku-tool-separator {
@@ -719,6 +754,53 @@ body textarea {
     height: 24px;
     margin: 0 3px;
     background: var(--greyLight);
+}
+
+.sudoku-solver-log {
+    display: block;
+    width: min(760px, calc(100% - 16px));
+    margin: 4px auto 8px;
+    padding: 8px;
+    box-sizing: border-box;
+    color: var(--black);
+    background: var(--white);
+    border: 1px solid var(--greyLight);
+    border-radius: 4px;
+    text-align: left;
+}
+
+.sudoku-solver-log-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 5px;
+}
+
+.sudoku-solver-log progress {
+    width: 100%;
+    height: 8px;
+    display: block;
+}
+
+#sudoku-solver-log-output {
+    height: 52px;
+    margin: 6px 0 0;
+    padding: 6px;
+    overflow: auto;
+    white-space: pre-wrap;
+    color: inherit;
+    background: var(--greyLight);
+    border-radius: 3px;
+    font: 12px/1.35 Consolas, "Courier New", monospace;
+    user-select: text;
+}
+
+.sudoku-hidden-control {
+    display: none !important;
+}
+
+.permanently-hidden-control {
+    display: none !important;
 }
 
 #visibility_button0,
