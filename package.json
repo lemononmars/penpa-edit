@@ -1,6 +1,9 @@
 {
   "name": "penpa-tests",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "test": "nodemon --watch test/test_server.js test/test_server.js",
     "local": "npx browser-sync start --server"
   },
@@ -9,6 +12,7 @@
     "chai": "^4.5.0",
     "express": "^4.21.2",
     "mocha": "^10.8.2",
-    "nodemon": "^2.0.22"
+    "nodemon": "^2.0.22",
+    "vite": "^8.1.4"
   }
 }

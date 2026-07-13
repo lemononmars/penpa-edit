@@ -64,18 +64,29 @@ async function boot() {
 }
 
 function boot_parameters() {
-    UserSettings.gridtype = "square";
-    document.getElementById("nb_size1").value = 10;
-    document.getElementById("nb_size2").value = 10;
+    UserSettings.gridtype = "sudoku";
+    document.getElementById("gridtype").value = "sudoku";
+    document.getElementById("nb_size1").value = 9;
+    document.getElementById("nb_size2").value = 9;
     UserSettings.displaysize = 38;
     document.getElementById("nb_space1").value = 0;
     document.getElementById("nb_space2").value = 0;
     document.getElementById("nb_space3").value = 0;
     document.getElementById("nb_space4").value = 0;
+    changetype();
 }
 
 function create() {
     UserSettings.loadFromCookies("gridtype_size");
+    UserSettings.gridtype = "sudoku";
+    document.getElementById("gridtype").value = "sudoku";
+    document.getElementById("nb_size1").value = 9;
+    document.getElementById("nb_size2").value = 9;
+    document.getElementById("nb_space1").value = 0;
+    document.getElementById("nb_space2").value = 0;
+    document.getElementById("nb_space3").value = 0;
+    document.getElementById("nb_space4").value = 0;
+    changetype();
 
     gridtype = UserSettings.gridtype;
 
@@ -102,6 +113,7 @@ function create() {
     set_genre_tags(pu.user_tags);
 
     pu.redraw();
+    SudokuTools.init();
 }
 
 function add_constraints() {
@@ -238,6 +250,7 @@ function create_newboard() {
     } else {
         errorMsg(PenpaText.get('display_size_warning'))
     }
+    SudokuTools.setToolbarState();
 }
 
 function set_display_labels(gridtype) {

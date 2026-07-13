@@ -790,6 +790,7 @@ class Puzzle_square extends Puzzle {
             this.draw_symbol("pu_a", 2);
             this.draw_cage("pu_q");
             this.draw_cage("pu_a");
+            SudokuSolver.drawAutoCandidates(this);
             this.draw_number("pu_q");
             this.draw_number("pu_a");
             this.draw_cursol();
@@ -812,6 +813,7 @@ class Puzzle_square extends Puzzle {
             this.draw_number_circle("pu_q");
             this.draw_symbol("pu_q", 2);
             this.draw_cage("pu_q");
+            SudokuSolver.drawAutoCandidates(this);
             this.draw_number("pu_q");
             this.draw_cursol();
             this.draw_freecircle();

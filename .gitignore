@@ -23,6 +23,7 @@ docs/css/images/parch.psd
 .vscode/
 jsconfig.json
 node_modules/
+dist/
 
 # AI
 agents.md

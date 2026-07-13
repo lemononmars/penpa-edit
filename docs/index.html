@@ -117,6 +117,7 @@
             "./js/main.js",
             "./js/class_p.js",
             "./js/class_square.js",
+            "./js/sudoku_solver.js",
             "./js/class_hex.js",
             "./js/class_tri.js",
             "./js/class_pyramid.js",
@@ -792,6 +793,22 @@
             <div><label id="solution_check" class="info"/></label></div>
         </div>
         <div id="dvique" class="dvique">
+            <div id="sudoku-toolbar" class="sudoku-toolbar" aria-label="Sudoku toolbar">
+                <button id="sudoku_new" class="sudoku-tool-button" title="New" aria-label="New"><i class="fa fa-file-o"></i></button>
+                <button id="sudoku_load" class="sudoku-tool-button" title="Load" aria-label="Load"><i class="fa fa-folder-open-o"></i></button>
+                <button id="sudoku_save" class="sudoku-tool-button" title="Save" aria-label="Save"><i class="fa fa-floppy-o"></i></button>
+                <button id="sudoku_export" class="sudoku-tool-button" title="Export" aria-label="Export"><i class="fa fa-download"></i></button>
+                <span class="sudoku-tool-separator"></span>
+                <button id="sudoku_undo" class="sudoku-tool-button" title="Undo" aria-label="Undo"><i class="fa fa-undo"></i></button>
+                <button id="sudoku_redo" class="sudoku-tool-button" title="Redo" aria-label="Redo"><i class="fa fa-repeat"></i></button>
+                <span class="sudoku-tool-separator"></span>
+                <button id="sudoku_zoom_in" class="sudoku-tool-button" title="Zoom in" aria-label="Zoom in"><i class="fa fa-search-plus"></i></button>
+                <button id="sudoku_zoom_out" class="sudoku-tool-button" title="Zoom out" aria-label="Zoom out"><i class="fa fa-search-minus"></i></button>
+                <button id="sudoku_keypad" class="sudoku-tool-button" title="Keypad" aria-label="Keypad"><i class="fa fa-keyboard-o"></i></button>
+                <span class="sudoku-tool-separator"></span>
+                <button id="sudoku_solve" class="sudoku-tool-button" title="Solve" aria-label="Solve"><i class="fa fa-check"></i></button>
+                <button id="sudoku_auto_solver" class="sudoku-tool-button" title="Auto Solver" aria-label="Auto Solver" aria-pressed="false"><i class="fa fa-magic"></i></button>
+            </div>
             <canvas id="pause_canvas" style="display:none;"></canvas>
         </div>
         <div id="contestinfo">
@@ -876,8 +893,8 @@
         <span id="modal-grid">
             <h4><label class="label_nb" id="nb_gridtype_lb">Board type:</label></h4>
             <select id="gridtype" onchange="changetype()">
-                <option value="square" id="nb_gridtype1_lb" selected="selected">Square</option>
-                <option value="sudoku" id="nb_gridtype6_lb">Sudoku</option>
+                <option value="square" id="nb_gridtype1_lb">Square</option>
+                <option value="sudoku" id="nb_gridtype6_lb" selected="selected">Sudoku</option>
                 <option value="hex" id="nb_gridtype2_lb">Hexagon</option>
                 <option value="tri" id="nb_gridtype3_lb">Triangle</option>
                 <option value="pyramid" id="nb_gridtype4_lb">Pyramid</option>
