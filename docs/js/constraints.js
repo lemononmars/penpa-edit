@@ -125,11 +125,13 @@ const penpa_constraints = {
         "little killer": {
             "show": ["mo_surface_lb",
                 "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
-                "mo_symbol_lb", "ms3", "li_arrow_eight"
+                "mo_number_lb", "sub_number1_lb",
+                "mo_symbol_lb", "ms3", "li_arrow_S"
             ],
-            "modeset": ["sudoku", "symbol"],
-            "submodeset": ["1", "arrow_eight"],
-            "styleset": ["", ""]
+            "modeset": ["sudoku", "number", "symbol"],
+            "submodeset": ["1", "1", "arrow_S"],
+            "styleset": ["", 1, 2],
+            "outside": true
         },
         "killer": {
             "show": ["mo_surface_lb",
@@ -180,12 +182,11 @@ const penpa_constraints = {
         "quadruple": {
             "show": ["mo_surface_lb",
                 "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
-                "mo_number_lb", "sub_number5_lb", "sub_number4_lb",
-                "mo_symbol_lb", "ms1", "ms1_circle", "li_circle", "li_circle_M"
+                "mo_number_lb", "sub_number4_lb"
             ],
-            "modeset": ["sudoku", "number", "symbol"],
-            "submodeset": ["1", "5", "circle_M"],
-            "styleset": ["", "", ""]
+            "modeset": ["sudoku", "number"],
+            "submodeset": ["1", "4"],
+            "styleset": ["", 1]
         },
         "xv": {
             "show": ["mo_surface_lb",
@@ -299,3 +300,8 @@ const penpa_constraints = {
 
     }
 }
+
+// Svelte runs as an ES module and cannot see top-level lexical bindings from
+// legacy scripts. Expose the same registry so the variation catalog can extend
+// the native selector and mode settings after Penpa initializes.
+if (typeof window !== "undefined") window.penpa_constraints = penpa_constraints;

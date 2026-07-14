@@ -268,7 +268,7 @@ const UserSettings = {
         return this._local_storage;
     },
 
-    _reload_button: 1,
+    _reload_button: 2,
     set reload_button(newValue) {
         const valueString = String(newValue);
         let valueInt = 2;

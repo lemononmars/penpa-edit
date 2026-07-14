@@ -227,7 +227,18 @@ class Puzzle_square extends Puzzle {
                 break;
             case "symbol":
             case "move":
-                if (edit_mode === "symbol" && this.kropki_mode && submode === "circle_SS") {
+                if (edit_mode === "symbol" && this.sudoku_directional_cell_mode) {
+                    type = [0];
+                } else if (edit_mode === "symbol" && this.trio_mode) {
+                    type = [0];
+                } else if (edit_mode === "symbol" && this.clockfaces_mode) {
+                    type = [1];
+                } else if (edit_mode === "symbol" && this.diagonal_consecutive_mode) {
+                    type = [1];
+                } else if (edit_mode === "symbol" && this.sudoku_corner_clue_mode) {
+                    type = [1];
+                } else if (edit_mode === "symbol" && (this.sudoku_edge_clue_mode ||
+                    (this.kropki_mode && submode === "circle_SS"))) {
                     type = [2, 3];
                 } else if (!UserSettings.draw_edges) {
                     type = [0];
@@ -236,7 +247,9 @@ class Puzzle_square extends Puzzle {
                 }
                 break;
             case "number":
-                if (this.xv_mode && submode === "5") {
+                if (this.sudoku_corner_clue_mode) {
+                    type = [1];
+                } else if ((this.xv_mode && submode === "5") || this.sudoku_edge_clue_mode) {
                     type = [2, 3];
                 } else if (submode === "2") {
                     type = [0];
@@ -1773,7 +1786,9 @@ class Puzzle_square extends Puzzle {
                             pos = j;
                         }
                     }
-                    if (sum === 1) {
+                    const keepSinglePencilmarkSmall = this.pencilmarks_mode ||
+                        (Array.isArray(this.activeSudokuVariants) && this.activeSudokuVariants.includes("pencilmarks"));
+                    if (sum === 1 && !keepSinglePencilmarkSmall) {
                         set_font_style(this.ctx, 0.7 * this.size.toString(10), this[pu].number[i][1]);
                         this.ctx.text((pos + 1).toString(), p_x, p_y + 0.06 * this.size, this.size * 0.8);
                     } else {
@@ -2193,6 +2208,12 @@ class Puzzle_square extends Puzzle {
                 ctx.strokeStyle = Color.BLACK;
                 ctx.lineWidth = 1;
                 this.draw_bars(ctx, num, x, y);
+                break;
+            case "diagonal_consecutive":
+                ctx.setLineDash([]);
+                ctx.fillStyle = ccolor || Color.BLACK;
+                if (num[0] === 1) this.draw_rectbar(ctx, x - 0.13 * pu.size, y, 0.07, 0.34, 4, 45);
+                if (num[1] === 1) this.draw_rectbar(ctx, x + 0.13 * pu.size, y, 0.07, 0.34, 4, 45);
                 break;
             //number
             case "inequality":
@@ -4260,6 +4281,7 @@ class Puzzle_sudoku extends Puzzle_square {
             "arrow_fouredge_B": 8,
             "arrow_fouredge_G": 8,
             "arrow_fouredge_E": 8,
+            "diagonal_consecutive": 2,
             "dice": 9,
             "polyomino": 9,
             "polyhex": 7

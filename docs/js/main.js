@@ -127,10 +127,16 @@ onload = function() {
             } else {
                 var obj = coord_point(event);
             }
-            if (pu.xv_mode && pu.mode[pu.mode.qa].edit_mode === "number" &&
-                String(pu.mode[pu.mode.qa].number[0]) === "5") {
+            if ((pu.xv_mode && pu.mode[pu.mode.qa].edit_mode === "number" &&
+                String(pu.mode[pu.mode.qa].number[0]) === "5") || pu.sudoku_edge_clue_mode) {
                 let previousTypes = pu.type;
                 pu.type = [2, 3];
+                obj = coord_point(event);
+                pu.type = previousTypes;
+            }
+            if (pu.sudoku_corner_clue_mode) {
+                let previousTypes = pu.type;
+                pu.type = [1];
                 obj = coord_point(event);
                 pu.type = previousTypes;
             }
@@ -171,6 +177,14 @@ onload = function() {
                     return;
                 }
             }
+
+            if (pu.sudoku_edge_clue_mode) {
+                let cluePoint = pu.point[num];
+                let clueDistance = cluePoint ? (x - cluePoint.x) ** 2 + (y - cluePoint.y) ** 2 : Infinity;
+                if (!pu.isKropkiEdge(num) || clueDistance > (0.3 * pu.size) ** 2) return;
+            }
+            if (pu.sudoku_corner_clue_mode && (!pu.isBattenburgCorner(num) ||
+                (x - pu.point[num].x) ** 2 + (y - pu.point[num].y) ** 2 > (0.3 * pu.size) ** 2)) return;
 
             let ctrl = isCtrlKeyHeld(e) || isShiftKeyHeld(e);
 
@@ -546,12 +560,15 @@ onload = function() {
                     }
                     pu.key_number(key);
                 }
-            } else if (key === " " || keycode === 46 || (keycode === 8 && pu.mode[pu.mode.qa].edit_mode === "sudoku")) {
+            } else if (key === " " || key === "Delete" || keycode === 46 ||
+                (keycode === 8 && pu.mode[pu.mode.qa].edit_mode === "sudoku")) {
                 // 46 is for Enter, 8 is for backspace which behaves as Enter for Mac Devices. Since Penpa doesnt use backspace in
                 // Sudoku mode, I have assigned it to Delete
+                e.preventDefault();
                 pu.key_space(keycode, isShiftKeyHeld(e), isCtrlKeyHeld(e));
                 e.returnValue = false;
             } else if (key === "Backspace") {
+                e.preventDefault();
                 pu.key_backspace();
                 e.returnValue = false;
             }
@@ -797,8 +814,8 @@ onload = function() {
 
     const shortcutModeMap = {
         "KeyZ": ["sudoku", "sub_sudoku1"],
-        "KeyX": ["sudoku", "sub_sudoku2"],
-        "KeyC": ["sudoku", "sub_sudoku3"],
+        "KeyX": ["sudoku", "sub_sudoku3"],
+        "KeyC": ["sudoku", "sub_sudoku2"],
         "KeyV": ["surface"]
     };
 
@@ -2196,7 +2213,8 @@ onload = function() {
     }
 
     $(document).ready(function() {
-        if (window.pu && pu.mmode !== "solve" && (pu.gridtype === "square" || pu.gridtype === "sudoku" || pu.gridtype === "kakuro")) {
+        if (!document.documentElement.classList.contains("svelte-home") && window.pu &&
+            pu.mmode !== "solve" && (pu.gridtype === "square" || pu.gridtype === "sudoku" || pu.gridtype === "kakuro")) {
             $('#constraints_settings_opt').select2({
                 'width': "resolve" // 25% was used before
             });

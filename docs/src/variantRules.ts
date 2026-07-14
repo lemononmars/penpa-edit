@@ -1,3 +1,5 @@
+import { variationByValue } from "./variationCatalog";
+
 export type VariantGuide = {
     title: string;
     rule: string;
@@ -6,7 +8,7 @@ export type VariantGuide = {
 
 export const variantRules: Record<string, VariantGuide> = {
     classic: {
-        title: "Classic Sudoku",
+        title: "Classic",
         rule: "Place each digit exactly once in every row, column, and box.",
         usage: "Click a cell, then type a digit. Use Tab to cycle through available input tools."
     },
@@ -14,6 +16,16 @@ export const variantRules: Record<string, VariantGuide> = {
         title: "Odd / Even",
         rule: "A circle contains an odd digit; a square contains an even digit.",
         usage: "Click a cell center to cycle through an odd circle, an even square, and no mark."
+    },
+    alloddalleven: {
+        title: "All Odd All Even",
+        rule: "Within each Sudoku box, all shaded cells contain digits of the same parity.",
+        usage: "Use the Cell tool to shade every constrained cell. Shaded cells are grouped by their Sudoku box."
+    },
+    clone: {
+        title: "Clone",
+        rule: "Matching translated caged shapes contain identical digits in corresponding positions.",
+        usage: "Draw cages around matching shapes. Every cage must have at least one other cage with exactly the same shape."
     },
     diagonal: {
         title: "Diagonal Sudoku",
@@ -26,7 +38,7 @@ export const variantRules: Record<string, VariantGuide> = {
         usage: "No mark is required. Select this button to inspect or activate the rule."
     },
     "anti king": {
-        title: "Anti-King",
+        title: "Anti King (No touch)",
         rule: "Equal digits may not be a chess king move apart.",
         usage: "This is a global rule and requires no additional marks."
     },
@@ -51,7 +63,7 @@ export const variantRules: Record<string, VariantGuide> = {
         usage: "Drag from the bulb through the cells in increasing order."
     },
     killer: {
-        title: "Killer Sudoku",
+        title: "Killer",
         rule: "Digits in a cage do not repeat and sum to the displayed cage total.",
         usage: "Drag across cells to make a cage, then use Killer Sum on its upper-left corner."
     },
@@ -88,7 +100,17 @@ export const variantRules: Record<string, VariantGuide> = {
 };
 
 export function guideFor(variant: string): VariantGuide {
-    return variantRules[variant] || {
+    if (variantRules[variant]) return variantRules[variant];
+    const catalog = variationByValue.get(variant);
+    const puzzle = (window as any).pu;
+    const outside = Number(puzzle?.space?.[0] || 0) + Number(puzzle?.space?.[1] || 0);
+    const size = Number(puzzle?.ny || 9) - outside;
+    const catalogRule = catalog?.rules?.[`${size}x${size}`] || catalog?.rule;
+    return catalog ? {
+        title: catalog.name,
+        rule: catalogRule,
+        usage: "Use the clue tools shown for this variation; marks remain native Penpa objects for SVG and URL export."
+    } : {
         title: variant.replace(/\b\w/g, (letter) => letter.toUpperCase()),
         rule: "This variant uses its standard Sudoku constraint.",
         usage: "Use the selected Penpa tool directly on the puzzle canvas."

@@ -12,7 +12,8 @@ var SudokuSolver = (function() {
         generation: 0,
         board: null,
         constraintsSignature: null,
-        witnesses: []
+        witnesses: [],
+        conflict: null
     };
     var analysisTimer = null;
     var activeAnalysisAbort = null;
@@ -27,6 +28,20 @@ var SudokuSolver = (function() {
             var icon = button.querySelector("i");
             if (icon) icon.className = running ? "fa fa-stop" : "fa fa-magic";
         }
+    }
+
+    function guardKeyboardWhileRunning(event) {
+        if (!document.body.classList.contains("sudoku-solver-running")) return;
+        if (event.code === "Space") {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            stopWork();
+            return;
+        }
+        var target = event.target;
+        if (target && target.closest && target.closest("input, textarea, select, [contenteditable='true']")) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
     }
 
     function puzzleSize(puzzle) {
@@ -124,6 +139,7 @@ var SudokuSolver = (function() {
                     }
                     if (event.type === "done" || event.type === "invalid" ||
                         event.type === "unsatisfiable" || event.type === "cancelled") {
+                        candidateCache.conflict = event.conflict || null;
                         setSolverRunning(false);
                         var terminalEvent = timedOut && event.type === "cancelled" ? "timeout" : event.type;
                         appendSolverLog(Object.assign({}, event, {
@@ -142,7 +158,7 @@ var SudokuSolver = (function() {
                 return SudokuCSPRuntime.getCandidatesAsync(board, constraints, analysisOptions);
             }
             return new Promise(function(resolve, reject) {
-                var worker = new Worker("./js/sudoku_solver_worker.js?v=3.3.15");
+                var worker = new Worker("./js/sudoku_solver_worker.js?v=3.3.28");
                 var settled = false;
                 function finish(result, error) {
                     if (settled) return;
@@ -209,6 +225,7 @@ var SudokuSolver = (function() {
             candidateCache.board = board.map(function(row) { return row.slice(); });
             candidateCache.constraintsSignature = constraintsSignature;
             candidateCache.witnesses = result.witnessSolutions || [];
+            candidateCache.conflict = result.conflict || null;
             setSolverRunning(false);
             puzzle.redraw();
         }).catch(function(error) {
@@ -248,7 +265,13 @@ var SudokuSolver = (function() {
         candidateCache.board = null;
         candidateCache.constraintsSignature = null;
         candidateCache.witnesses = [];
+        candidateCache.conflict = null;
         setSolverRunning(false);
+    }
+
+    function showConflict(puzzle, conflict) {
+        candidateCache.conflict = conflict || null;
+        if (puzzle) puzzle.redraw();
     }
 
     function isClassicSudoku(puzzle) {
@@ -298,7 +321,11 @@ var SudokuSolver = (function() {
             board[row] = [];
             for (var col = 0; col < SIZE; col++) {
                 var key = cellKey(puzzle, row, col);
-                board[row][col] = digitFromEntry(puzzle.pu_q.number[key]) ||
+                var problemEntry = puzzle.pu_q.number[key];
+                var pinnochioClue = variantEnabled(puzzle, "pinnochio") && puzzle.pu_q.surface && puzzle.pu_q.surface[key];
+                var problemDigit = (variantEnabled(puzzle, "pencilmarks") && problemEntry && problemEntry[2] === "7") || pinnochioClue ?
+                    0 : digitFromEntry(problemEntry);
+                board[row][col] = problemDigit ||
                     (includeSolution ? digitFromEntry(puzzle.pu_a.number[key]) : 0) || 0;
             }
         }
@@ -330,6 +357,47 @@ var SudokuSolver = (function() {
         return cells;
     }
 
+    function connectedLinePaths(puzzle, style) {
+        var active = {};
+        (puzzle.centerlist || []).forEach(function(key) { active[key] = true; });
+        var adjacency = {};
+        Object.keys(puzzle.pu_q.line || {}).forEach(function(edge) {
+            if (puzzle.pu_q.line[edge] !== style) return;
+            var endpoints = edge.split(",").map(Number);
+            if (endpoints.length !== 2 || !active[endpoints[0]] || !active[endpoints[1]]) return;
+            (adjacency[endpoints[0]] || (adjacency[endpoints[0]] = [])).push(endpoints[1]);
+            (adjacency[endpoints[1]] || (adjacency[endpoints[1]] = [])).push(endpoints[0]);
+        });
+        var visited = {};
+        var paths = [];
+        Object.keys(adjacency).forEach(function(nodeText) {
+            if (visited[nodeText]) return;
+            var component = [];
+            var queue = [Number(nodeText)];
+            visited[nodeText] = true;
+            while (queue.length) {
+                var node = queue.shift();
+                component.push(node);
+                (adjacency[node] || []).forEach(function(next) {
+                    if (!visited[next]) { visited[next] = true; queue.push(next); }
+                });
+            }
+            var current = component.find(function(key) { return adjacency[key].length === 1; }) || component[0];
+            var previous = null;
+            var ordered = [];
+            while (current !== undefined && ordered.length < component.length) {
+                ordered.push(current);
+                var next = (adjacency[current] || []).find(function(key) {
+                    return key !== previous && ordered.indexOf(key) === -1;
+                });
+                previous = current; current = next;
+            }
+            var path = ordered.map(function(key) { return keyToCell(puzzle, key); }).filter(Boolean);
+            if (path.length > 1) paths.push(path);
+        });
+        return paths;
+    }
+
     function readKillerTotal(puzzle, cage) {
         for (var i = 0; i < cage.length; i++) {
             var base = cage[i] + puzzle.nx0 * puzzle.ny0;
@@ -346,14 +414,21 @@ var SudokuSolver = (function() {
         return 0;
     }
 
+    function canonicalVariantName(name) {
+        return String(name || "").toLowerCase().replace(/\s+/g, "");
+    }
+
     function variantEnabled(puzzle, name) {
         if (!puzzle) {
             return false;
         }
+        var wanted = canonicalVariantName(name);
         if (Array.isArray(puzzle.activeSudokuVariants)) {
-            return puzzle.activeSudokuVariants.indexOf(name) !== -1;
+            return puzzle.activeSudokuVariants.some(function(variant) {
+                return canonicalVariantName(variant) === wanted;
+            });
         }
-        return puzzle.activeSudokuVariant === name;
+        return canonicalVariantName(puzzle.activeSudokuVariant) === wanted;
     }
 
     function readConstraints(puzzle) {
@@ -368,6 +443,33 @@ var SudokuSolver = (function() {
             antiKing: [],
             antiKnight: [],
             nonConsecutive: [],
+            diagonalNonConsecutive: [],
+            noEvenNeighbours: [],
+            noThreeInRow: [],
+            queenDigits: [],
+            touchyCells: [],
+            edgeRelations: [],
+            catalogLines: [],
+            quadRelations: [],
+            directionalMarks: [],
+            sumDetectorGroups: [],
+            shadedParityGroups: [],
+            regionAllDifferent: [],
+            regionCoverage: [],
+            renbanRegions: [],
+            cloneGroups: [],
+            consecutiveCloneGroups: [],
+            cloneShapeChecks: [],
+            codedGroups: [],
+            pencilmarkCells: [],
+            symmetricUnequal: [],
+            stretchedThermos: [],
+            productKillers: [],
+            soloKillerGroups: [],
+            outsideRelations: [],
+            fullRankGroups: [],
+            rossiniLines: [],
+            cellRelations: [],
             palindromes: [],
             kropki: [],
             xv: [],
@@ -385,12 +487,19 @@ var SudokuSolver = (function() {
             for (var i = 0; i < source.length; i++) {
                 var cells = pathToCells(puzzle, source[i]);
                 if (cells.length > 1) {
-                    constraints[names[1]].push(cells);
+                    if (names[0] === "nobulbthermo" && variantEnabled(puzzle, "creasing")) {
+                        constraints.catalogLines.push({ path: cells, relation: "creasing" });
+                    } else if (variantEnabled(puzzle, "stretchedthermo")) constraints.stretchedThermos.push(cells);
+                    else constraints[names[1]].push(cells);
                 }
             }
         });
         if (constraints.thermos.length) {
             constraints.supported.push("thermo");
+        }
+        if (variantEnabled(puzzle, "stretchedthermo")) constraints.supported.push("stretchedthermo");
+        if (variantEnabled(puzzle, "creasing") && constraints.supported.indexOf("creasing") === -1) {
+            constraints.supported.push("creasing");
         }
 
         var arrows = puzzle.pu_q.arrows || [];
@@ -404,16 +513,163 @@ var SudokuSolver = (function() {
             constraints.supported.push("arrow");
         }
 
+        var activeCells = {};
+        (puzzle.centerlist || []).forEach(function(key) {
+            activeCells[key] = true;
+        });
+
         var cages = typeof puzzle.refreshKillerCages === "function" ?
             puzzle.refreshKillerCages("pu_q") : (puzzle.pu_q.killercages || []);
+        var regionVariantNames = ["clone", "consecutiveclone", "deficit", "extraregion", "renban", "surplus", "windoku",
+            "productkiller", "solokiller", "fortress", "multiplication", "clock"];
+        var usesCagedRegions = regionVariantNames.some(function(name) { return variantEnabled(puzzle, name); });
+        var regionCages = [];
         for (var k = 0; k < cages.length; k++) {
             var cageCells = pathToCells(puzzle, cages[k]);
             if (cageCells.length) {
-                constraints.killers.push({ cells: cageCells, total: readKillerTotal(puzzle, cages[k]) });
+                regionCages.push(cageCells);
+                if (variantEnabled(puzzle, "killer") || !usesCagedRegions) {
+                    constraints.killers.push({ cells: cageCells, total: readKillerTotal(puzzle, cages[k]) });
+                }
             }
         }
+        var windokuRegionSignatures = ["1:1|1:2|1:3|2:1|2:2|2:3|3:1|3:2|3:3",
+            "1:4|1:5|1:6|2:4|2:5|2:6|3:4|3:5|3:6",
+            "4:1|4:2|4:3|5:1|5:2|5:3|6:1|6:2|6:3",
+            "4:4|4:5|4:6|5:4|5:5|5:6|6:4|6:5|6:6"];
+        function regionSignature(cells) {
+            return cells.map(function(cell) { return cell.row + ":" + cell.col; }).sort().join("|");
+        }
+        var variantRegionCages = regionCages;
         if (constraints.killers.length) {
             constraints.supported.push("killer");
+        }
+        if (variantEnabled(puzzle, "productkiller")) {
+            for (var productIndex = 0; productIndex < cages.length; productIndex++) {
+                var productCells = pathToCells(puzzle, cages[productIndex]);
+                var productTotal = readKillerTotal(puzzle, cages[productIndex]);
+                if (productCells.length && productTotal) constraints.productKillers.push({ cells: productCells, total: productTotal });
+            }
+            constraints.supported.push("productkiller");
+        }
+        if (variantEnabled(puzzle, "solokiller")) {
+            if (regionCages.length) constraints.soloKillerGroups.push(regionCages);
+            constraints.supported.push("solokiller");
+        }
+        if (variantEnabled(puzzle, "multiplication")) {
+            regionCages.forEach(function(cage) {
+                var rows = cage.map(function(cell) { return cell.row; });
+                var topRow = Math.min.apply(null, rows), bottomRow = Math.max.apply(null, rows);
+                var topCells = cage.filter(function(cell) { return cell.row === topRow; })
+                    .sort(function(first, second) { return first.col - second.col; });
+                var bottomCells = cage.filter(function(cell) { return cell.row === bottomRow; })
+                    .sort(function(first, second) { return first.col - second.col; });
+                if (topRow !== bottomRow && topCells.length && bottomCells.length) {
+                    constraints.cellRelations.push({ relation: "multiplication", top: topCells, bottom: bottomCells });
+                }
+            });
+            constraints.supported.push("multiplication");
+        }
+        if (variantEnabled(puzzle, "clock")) {
+            regionCages.forEach(function(cage) {
+                var ordered = cage.slice().sort(function(first, second) { return first.col - second.col; });
+                if (ordered.length === 4 && ordered.every(function(cell) { return cell.row === ordered[0].row; }) &&
+                    ordered.every(function(cell, index) { return !index || cell.col === ordered[index - 1].col + 1; })) {
+                    constraints.cellRelations.push({ relation: "clock", cells: ordered });
+                }
+            });
+            constraints.supported.push("clock");
+        }
+        if (variantEnabled(puzzle, "fortress")) {
+            var fortressCells = {};
+            regionCages.forEach(function(cage) { cage.forEach(function(cell) {
+                fortressCells[cell.row + ":" + cell.col] = true;
+            }); });
+            for (var fortressRow = 0; fortressRow < SIZE; fortressRow++) {
+                for (var fortressCol = 0; fortressCol < SIZE; fortressCol++) {
+                    [[1, 0], [0, 1]].forEach(function(offset) {
+                        var nextRow = fortressRow + offset[0], nextCol = fortressCol + offset[1];
+                        if (nextRow >= SIZE || nextCol >= SIZE) return;
+                        var firstShaded = !!fortressCells[fortressRow + ":" + fortressCol];
+                        var secondShaded = !!fortressCells[nextRow + ":" + nextCol];
+                        if (firstShaded === secondShaded) return;
+                        constraints.cellRelations.push({ relation: "fortress",
+                            shaded: firstShaded ? { row: fortressRow, col: fortressCol } : { row: nextRow, col: nextCol },
+                            unshaded: firstShaded ? { row: nextRow, col: nextCol } : { row: fortressRow, col: fortressCol } });
+                    });
+                }
+            }
+            constraints.supported.push("fortress");
+        }
+        if (variantEnabled(puzzle, "trio")) {
+            Object.keys(puzzle.pu_q.symbol || {}).forEach(function(key) {
+                if (!activeCells[key]) return;
+                var entry = puzzle.pu_q.symbol[key];
+                var ranges = { circle_L: [1, 3], square_L: [4, 6], triup_L: [7, 9], tri: [7, 9] };
+                if (!entry || !ranges[entry[1]]) return;
+                constraints.cellRelations.push({ relation: "trio", cell: keyToCell(puzzle, Number(key)),
+                    minimum: ranges[entry[1]][0], maximum: Math.min(SIZE, ranges[entry[1]][1]) });
+            });
+            constraints.supported.push("trio");
+        }
+        if (variantEnabled(puzzle, "slotmachine")) {
+            var slotColumns = [];
+            for (var slotCol = 0; slotCol < SIZE; slotCol++) {
+                var fullyShaded = true;
+                var slotCells = [];
+                for (var slotRow = 0; slotRow < SIZE; slotRow++) {
+                    var slotKey = cellKey(puzzle, slotRow, slotCol);
+                    if (!puzzle.pu_q.surface || !puzzle.pu_q.surface[slotKey]) fullyShaded = false;
+                    slotCells.push({ row: slotRow, col: slotCol });
+                }
+                if (fullyShaded) slotColumns.push(slotCells);
+            }
+            if (slotColumns.length > 1) constraints.cellRelations.push({ relation: "slotmachine", columns: slotColumns });
+            constraints.supported.push("slotmachine");
+        }
+        if (variantEnabled(puzzle, "pinnochio")) {
+            var pinnochioClues = [];
+            Object.keys(puzzle.pu_q.surface || {}).forEach(function(key) {
+                if (!puzzle.pu_q.surface[key] || !activeCells[key]) return;
+                var entry = puzzle.pu_q.number[key];
+                var value = digitFromEntry(entry);
+                var cell = keyToCell(puzzle, Number(key));
+                if (value && cell) pinnochioClues.push({ cell: cell, value: value });
+            });
+            if (pinnochioClues.length) constraints.cellRelations.push({ relation: "pinnochio", clues: pinnochioClues });
+            constraints.supported.push("pinnochio");
+        }
+        if (variantEnabled(puzzle, "average")) {
+            var averageMarks = {};
+            Object.keys(puzzle.pu_q.wall || {}).forEach(function(edge) {
+                var endpoints = edge.split(",").map(Number);
+                if (endpoints.length !== 2 || !puzzle.point[endpoints[0]] || !puzzle.point[endpoints[1]]) return;
+                var firstPoint = puzzle.point[endpoints[0]], secondPoint = puzzle.point[endpoints[1]];
+                var middleX = (firstPoint.x + secondPoint.x) / 2, middleY = (firstPoint.y + secondPoint.y) / 2;
+                var nearest = null, nearestDistance = Infinity;
+                Object.keys(activeCells).forEach(function(cellKeyText) {
+                    var center = puzzle.point[cellKeyText];
+                    if (!center) return;
+                    var distance = Math.pow(center.x - middleX, 2) + Math.pow(center.y - middleY, 2);
+                    if (distance < nearestDistance) { nearestDistance = distance; nearest = Number(cellKeyText); }
+                });
+                if (nearest !== null) averageMarks[nearest + ":" +
+                    (Math.abs(firstPoint.x - secondPoint.x) > Math.abs(firstPoint.y - secondPoint.y) ? "horizontal" : "vertical")] = true;
+            });
+            for (var averageRow = 0; averageRow < SIZE; averageRow++) {
+                for (var averageCol = 0; averageCol < SIZE; averageCol++) {
+                    [["horizontal", [0, -1], [0, 1]], ["vertical", [-1, 0], [1, 0]]].forEach(function(data) {
+                        var firstRow = averageRow + data[1][0], firstCol = averageCol + data[1][1];
+                        var secondRow = averageRow + data[2][0], secondCol = averageCol + data[2][1];
+                        if (firstRow < 0 || firstCol < 0 || secondRow >= SIZE || secondCol >= SIZE) return;
+                        var averageKey = cellKey(puzzle, averageRow, averageCol);
+                        constraints.cellRelations.push({ relation: "average", center: { row: averageRow, col: averageCol },
+                            ends: [{ row: firstRow, col: firstCol }, { row: secondRow, col: secondCol }],
+                            marked: !!averageMarks[averageKey + ":" + data[0]] });
+                    });
+                }
+            }
+            constraints.supported.push("average");
         }
 
         var mainDiagonal = [];
@@ -460,11 +716,252 @@ var SudokuSolver = (function() {
             addGridPairs(constraints.nonConsecutive, [[0, 1], [1, 0]]);
             constraints.supported.push("non consecutive");
         }
+        if (variantEnabled(puzzle, "symmetricunequal")) {
+            for (var symmetricRow = 0; symmetricRow < SIZE; symmetricRow++) {
+                for (var symmetricCol = 0; symmetricCol < SIZE; symmetricCol++) {
+                    var oppositeRow = SIZE - 1 - symmetricRow;
+                    var oppositeCol = SIZE - 1 - symmetricCol;
+                    if (symmetricRow * SIZE + symmetricCol < oppositeRow * SIZE + oppositeCol) {
+                        constraints.symmetricUnequal.push([
+                            { row: symmetricRow, col: symmetricCol },
+                            { row: oppositeRow, col: oppositeCol }
+                        ]);
+                    }
+                }
+            }
+            constraints.supported.push("symmetricunequal");
+        }
+        if (variantEnabled(puzzle, "mirror")) {
+            var mirrorBoxHeight = SIZE === 6 ? 2 : 3;
+            var mirrorBoxWidth = SIZE / mirrorBoxHeight;
+            for (var mirrorRow = 0; mirrorRow < mirrorBoxHeight; mirrorRow++) {
+                for (var mirrorCol = 0; mirrorCol < mirrorBoxWidth; mirrorCol++) {
+                    constraints.cloneGroups.push([
+                        { row: mirrorRow, col: mirrorCol },
+                        { row: mirrorRow, col: SIZE - 1 - mirrorCol },
+                        { row: SIZE - 1 - mirrorRow, col: mirrorCol },
+                        { row: SIZE - 1 - mirrorRow, col: SIZE - 1 - mirrorCol }
+                    ]);
+                }
+            }
+            constraints.supported.push("mirror");
+        }
+        if (variantEnabled(puzzle, "coded")) {
+            var codeCells = {};
+            for (var codedRow = 0; codedRow < SIZE; codedRow++) {
+                for (var codedCol = 0; codedCol < SIZE; codedCol++) {
+                    var codedKey = cellKey(puzzle, codedRow, codedCol);
+                    var codedCorner = 4 * (codedKey + puzzle.nx0 * puzzle.ny0);
+                    var codedEntry = puzzle.pu_q.numberS &&
+                        (puzzle.pu_q.numberS[codedCorner] || puzzle.pu_q.numberS[4 * codedKey]);
+                    if (!codedEntry || codedEntry[0] === undefined || codedEntry[0] === "") continue;
+                    var code = String(codedEntry[0]).trim().toUpperCase();
+                    (codeCells[code] || (codeCells[code] = [])).push({ row: codedRow, col: codedCol });
+                }
+            }
+            constraints.codedGroups.push({ groups: Object.keys(codeCells).map(function(code) { return codeCells[code]; }) });
+            constraints.supported.push("coded");
+        }
+        if (variantEnabled(puzzle, "pencilmarks")) {
+            for (var pencilRow = 0; pencilRow < SIZE; pencilRow++) {
+                for (var pencilCol = 0; pencilCol < SIZE; pencilCol++) {
+                    var pencilEntry = puzzle.pu_q.number[cellKey(puzzle, pencilRow, pencilCol)];
+                    if (!pencilEntry || pencilEntry[2] !== "7" || !Array.isArray(pencilEntry[0])) continue;
+                    var allowed = pencilEntry[0].map(function(enabled, index) { return enabled === 1 ? index + 1 : 0; })
+                        .filter(Boolean);
+                    if (allowed.length) constraints.pencilmarkCells.push({ cell: { row: pencilRow, col: pencilCol }, allowed: allowed });
+                }
+            }
+            constraints.supported.push("pencilmarks");
+        }
+        if (variantEnabled(puzzle, "diagonallynonconsecutive")) {
+            addGridPairs(constraints.diagonalNonConsecutive, [[1, -1], [1, 1]]);
+            constraints.supported.push("diagonallynonconsecutive");
+        }
+        if (variantEnabled(puzzle, "noevenneighbours")) {
+            addGridPairs(constraints.noEvenNeighbours, [[0, 1], [1, -1], [1, 0], [1, 1]]);
+            constraints.supported.push("noevenneighbours");
+        }
+        if (variantEnabled(puzzle, "nothreeinarow")) {
+            for (var tripleIndex = 0; tripleIndex < SIZE; tripleIndex++) {
+                for (var tripleOffset = 0; tripleOffset <= SIZE - 3; tripleOffset++) {
+                    constraints.noThreeInRow.push([
+                        { row: tripleIndex, col: tripleOffset },
+                        { row: tripleIndex, col: tripleOffset + 1 },
+                        { row: tripleIndex, col: tripleOffset + 2 }
+                    ], [
+                        { row: tripleOffset, col: tripleIndex },
+                        { row: tripleOffset + 1, col: tripleIndex },
+                        { row: tripleOffset + 2, col: tripleIndex }
+                    ]);
+                }
+            }
+            constraints.supported.push("nothreeinarow");
+        }
+        if (variantEnabled(puzzle, "queen")) {
+            for (var queenRow = 0; queenRow < SIZE; queenRow++) {
+                for (var queenCol = 0; queenCol < SIZE; queenCol++) {
+                    [[1, -1], [1, 1]].forEach(function(offset) {
+                        var row = queenRow + offset[0];
+                        var col = queenCol + offset[1];
+                        while (row < SIZE && col >= 0 && col < SIZE) {
+                            constraints.queenDigits.push([
+                                { row: queenRow, col: queenCol }, { row: row, col: col }
+                            ]);
+                            row += offset[0]; col += offset[1];
+                        }
+                    });
+                }
+            }
+            constraints.supported.push("queen");
+        }
+        if (variantEnabled(puzzle, "touchy")) {
+            for (var touchRow = 0; touchRow < SIZE; touchRow++) {
+                for (var touchCol = 0; touchCol < SIZE; touchCol++) {
+                    var neighbors = [];
+                    for (var rowOffset = -1; rowOffset <= 1; rowOffset++) {
+                        for (var colOffset = -1; colOffset <= 1; colOffset++) {
+                            var neighborRow = touchRow + rowOffset;
+                            var neighborCol = touchCol + colOffset;
+                            if ((rowOffset || colOffset) && neighborRow >= 0 && neighborRow < SIZE &&
+                                neighborCol >= 0 && neighborCol < SIZE) {
+                                neighbors.push({ row: neighborRow, col: neighborCol });
+                            }
+                        }
+                    }
+                    constraints.touchyCells.push({ cell: { row: touchRow, col: touchCol }, neighbors: neighbors });
+                }
+            }
+            constraints.supported.push("touchy");
+        }
+        if (variantEnabled(puzzle, "disjoint")) {
+            var boxHeight = SIZE === 6 ? 2 : 3;
+            var boxWidth = SIZE / boxHeight;
+            for (var positionRow = 0; positionRow < boxHeight; positionRow++) {
+                for (var positionCol = 0; positionCol < boxWidth; positionCol++) {
+                    var disjointGroup = [];
+                    for (var boxRow = 0; boxRow < SIZE / boxHeight; boxRow++) {
+                        for (var boxCol = 0; boxCol < SIZE / boxWidth; boxCol++) {
+                            disjointGroup.push({
+                                row: boxRow * boxHeight + positionRow,
+                                col: boxCol * boxWidth + positionCol
+                            });
+                        }
+                    }
+                    constraints.diagonalAllDifferent.push(disjointGroup);
+                }
+            }
+            constraints.supported.push("disjoint");
+        }
+        if (variantEnabled(puzzle, "windoku") && SIZE === 9) {
+            regionCages.forEach(function(cells) {
+                if (windokuRegionSignatures.indexOf(regionSignature(cells)) !== -1) {
+                    constraints.regionAllDifferent.push(cells);
+                }
+            });
+            constraints.supported.push("windoku");
+        }
 
-        var activeCells = {};
-        (puzzle.centerlist || []).forEach(function(key) {
-            activeCells[key] = true;
+        if (variantEnabled(puzzle, "deficit")) {
+            constraints.baseBoxes = false;
+            Array.prototype.push.apply(constraints.regionAllDifferent, variantRegionCages);
+            constraints.supported.push("deficit");
+        }
+        if (variantEnabled(puzzle, "extraregion")) {
+            Array.prototype.push.apply(constraints.regionAllDifferent, variantRegionCages);
+            constraints.supported.push("extraregion");
+        }
+        if (variantEnabled(puzzle, "surplus")) {
+            constraints.baseBoxes = false;
+            Array.prototype.push.apply(constraints.regionCoverage, variantRegionCages);
+            constraints.supported.push("surplus");
+        }
+        if (variantEnabled(puzzle, "renban") && variantRegionCages.length) {
+            Array.prototype.push.apply(constraints.renbanRegions, variantRegionCages);
+            if (constraints.supported.indexOf("renban") === -1) constraints.supported.push("renban");
+        }
+
+        var shadedCells = [];
+        Object.keys(puzzle.pu_q.surface || {}).forEach(function(key) {
+            if (!puzzle.pu_q.surface[key] || !activeCells[key]) return;
+            var cell = keyToCell(puzzle, Number(key));
+            if (cell) shadedCells.push(cell);
         });
+        if (variantEnabled(puzzle, "alloddalleven")) {
+            var parityBoxes = {};
+            var parityBoxHeight = SIZE === 6 ? 2 : 3;
+            var parityBoxWidth = SIZE / parityBoxHeight;
+            shadedCells.forEach(function(cell) {
+                var boxKey = Math.floor(cell.row / parityBoxHeight) + ":" + Math.floor(cell.col / parityBoxWidth);
+                (parityBoxes[boxKey] || (parityBoxes[boxKey] = [])).push(cell);
+            });
+            Object.keys(parityBoxes).forEach(function(boxKey) {
+                if (parityBoxes[boxKey].length > 1) constraints.shadedParityGroups.push(parityBoxes[boxKey]);
+            });
+            constraints.supported.push("alloddalleven");
+        }
+        function correspondingRegionGroups(components, target) {
+            var byShape = {};
+            components.forEach(function(component) {
+                var minRow = Math.min.apply(null, component.map(function(cell) { return cell.row; }));
+                var minCol = Math.min.apply(null, component.map(function(cell) { return cell.col; }));
+                var normalized = component.map(function(cell) {
+                    return { row: cell.row - minRow, col: cell.col - minCol, cell: cell };
+                }).sort(function(first, second) { return first.row - second.row || first.col - second.col; });
+                var signature = normalized.map(function(item) { return item.row + ":" + item.col; }).join("|");
+                (byShape[signature] || (byShape[signature] = [])).push(normalized);
+            });
+            var valid = components.length > 0;
+            Object.keys(byShape).forEach(function(signature) {
+                var matching = byShape[signature];
+                if (matching.length < 2) {
+                    valid = false;
+                    return;
+                }
+                for (var position = 0; position < matching[0].length; position++) {
+                    target.push(matching.map(function(component) { return component[position].cell; }));
+                }
+            });
+            return valid;
+        }
+
+        if (variantEnabled(puzzle, "clone") || variantEnabled(puzzle, "consecutiveclone")) {
+            var shadedLookup = {};
+            shadedCells.forEach(function(cell) { shadedLookup[cell.row + ":" + cell.col] = cell; });
+            var cloneVisited = {};
+            var cloneComponents = variantRegionCages.slice();
+            if (!cloneComponents.length) {
+                shadedCells.forEach(function(start) {
+                    var startKey = start.row + ":" + start.col;
+                    if (cloneVisited[startKey]) return;
+                    var component = [];
+                    var queue = [start];
+                    cloneVisited[startKey] = true;
+                    while (queue.length) {
+                        var cell = queue.shift();
+                        component.push(cell);
+                        [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function(offset) {
+                            var key = (cell.row + offset[0]) + ":" + (cell.col + offset[1]);
+                            if (shadedLookup[key] && !cloneVisited[key]) {
+                                cloneVisited[key] = true;
+                                queue.push(shadedLookup[key]);
+                            }
+                        });
+                    }
+                    cloneComponents.push(component);
+                });
+            }
+            if (variantEnabled(puzzle, "clone")) {
+                constraints.cloneShapeChecks.push({ valid: correspondingRegionGroups(cloneComponents, constraints.cloneGroups) });
+                constraints.supported.push("clone");
+            }
+            if (variantEnabled(puzzle, "consecutiveclone")) {
+                constraints.cloneShapeChecks.push({
+                    valid: correspondingRegionGroups(cloneComponents, constraints.consecutiveCloneGroups)
+                });
+                constraints.supported.push("consecutiveclone");
+            }
+        }
 
         if (variantEnabled(puzzle, "palindrome")) {
             var adjacency = {};
@@ -518,8 +1015,209 @@ var SudokuSolver = (function() {
         if (constraints.palindromes.length) {
             constraints.supported.push("palindrome");
         }
+        ["renban", "paritylines", "sequence"].forEach(function(variant) {
+            if (!variantEnabled(puzzle, variant)) return;
+            connectedLinePaths(puzzle, 5).forEach(function(path) {
+                constraints.catalogLines.push({ path: path, relation: variant });
+            });
+            constraints.supported.push(variant);
+        });
+        if (variantEnabled(puzzle, "diagonallyconsecutive")) {
+            var markedDiagonalPairs = {};
+            Object.keys(puzzle.pu_q.symbol || {}).forEach(function(key) {
+                var entry = puzzle.pu_q.symbol[key];
+                var point = puzzle.point && puzzle.point[key];
+                if (!entry || entry[1] !== "diagonal_consecutive" || !Array.isArray(entry[0]) || !point) return;
+                var cells = (point.neighbor || []).filter(function(neighbor) { return activeCells[neighbor]; })
+                    .map(function(neighbor) { return keyToCell(puzzle, neighbor); }).filter(Boolean)
+                    .sort(function(first, second) { return first.row - second.row || first.col - second.col; });
+                if (cells.length !== 4) return;
+                var cornerRow = cells[0].row, cornerCol = cells[0].col;
+                if (entry[0][0] === 1) markedDiagonalPairs[cornerRow + ":" + cornerCol + ":left"] = true;
+                if (entry[0][1] === 1) markedDiagonalPairs[cornerRow + ":" + cornerCol + ":right"] = true;
+            });
+            for (var diagonalRow = 0; diagonalRow < SIZE - 1; diagonalRow++) {
+                for (var diagonalCol = 0; diagonalCol < SIZE - 1; diagonalCol++) {
+                    [["left", [{ row: diagonalRow, col: diagonalCol }, { row: diagonalRow + 1, col: diagonalCol + 1 }]],
+                        ["right", [{ row: diagonalRow, col: diagonalCol + 1 }, { row: diagonalRow + 1, col: diagonalCol }]]]
+                        .forEach(function(pair) {
+                            var marked = !!markedDiagonalPairs[diagonalRow + ":" + diagonalCol + ":" + pair[0]];
+                            constraints.edgeRelations.push({ cells: pair[1],
+                                relation: marked ? "diagonalConsecutive" : "notDiagonalConsecutive" });
+                        });
+                }
+            }
+            constraints.supported.push("diagonallyconsecutive");
+        }
+        var quadVariant = ["quadruple", "equalsums", "equaldifferences", "equalproducts", "equalratios",
+            "consecutivequads", "clockfaces", "exclusion", "groupsum"].find(function(name) { return variantEnabled(puzzle, name); });
+        if (quadVariant) {
+            function quadCells(key) {
+                var point = puzzle.point && puzzle.point[key];
+                if (!point || !Array.isArray(point.neighbor)) return [];
+                return point.neighbor.filter(function(neighbor) { return activeCells[neighbor]; })
+                    .map(function(neighbor) { return keyToCell(puzzle, neighbor); }).filter(Boolean)
+                    .sort(function(first, second) { return first.row - second.row || first.col - second.col; });
+            }
+            if (quadVariant === "quadruple" || quadVariant === "exclusion" || quadVariant === "groupsum") {
+                Object.keys(puzzle.pu_q.number || {}).forEach(function(key) {
+                    var cells = quadCells(key);
+                    if (cells.length !== 4) return;
+                    var digits = String(puzzle.pu_q.number[key][0]).split("").map(Number).filter(function(value) {
+                        return value >= 1 && value <= SIZE;
+                    });
+                    var total = parseInt(puzzle.pu_q.number[key][0], 10);
+                    if (quadVariant === "groupsum" && Number.isFinite(total)) {
+                        constraints.quadRelations.push({ cells: cells, relation: quadVariant, total: total });
+                    } else if (digits.length) constraints.quadRelations.push({ cells: cells, relation: quadVariant, digits: digits });
+                });
+            } else {
+                Object.keys(puzzle.pu_q.symbol || {}).forEach(function(key) {
+                    var cells = quadCells(key);
+                    if (cells.length !== 4) return;
+                    if (quadVariant === "clockfaces" && puzzle.pu_q.symbol[key][1] !== "circle_SS") return;
+                    constraints.quadRelations.push({ cells: cells, relation: quadVariant,
+                        kind: puzzle.pu_q.symbol[key] && puzzle.pu_q.symbol[key][0] === 2 ? "black" : "white" });
+                });
+                if (quadVariant === "clockfaces") {
+                    for (var clockRow = 0; clockRow < SIZE - 1; clockRow++) {
+                        for (var clockCol = 0; clockCol < SIZE - 1; clockCol++) {
+                            var clockCells = [
+                                { row: clockRow, col: clockCol }, { row: clockRow, col: clockCol + 1 },
+                                { row: clockRow + 1, col: clockCol }, { row: clockRow + 1, col: clockCol + 1 }
+                            ];
+                            var alreadyMarked = constraints.quadRelations.some(function(clue) {
+                                return clue.relation === "clockfaces" && clue.cells.every(function(cell, index) {
+                                    return cell.row === clockCells[index].row && cell.col === clockCells[index].col;
+                                });
+                            });
+                            if (!alreadyMarked) constraints.quadRelations.push({ cells: clockCells, relation: "clockfaces", kind: "none" });
+                        }
+                    }
+                }
+            }
+            constraints.supported.push(quadVariant);
+        }
+        if (variantEnabled(puzzle, "quadro")) {
+            for (var quadroRow = 0; quadroRow < SIZE - 1; quadroRow++) {
+                for (var quadroCol = 0; quadroCol < SIZE - 1; quadroCol++) {
+                    constraints.quadRelations.push({ relation: "quadro", cells: [
+                        { row: quadroRow, col: quadroCol }, { row: quadroRow, col: quadroCol + 1 },
+                        { row: quadroRow + 1, col: quadroCol }, { row: quadroRow + 1, col: quadroCol + 1 }
+                    ] });
+                }
+            }
+            constraints.supported.push("quadro");
+        }
 
         var symbols = puzzle.pu_q.symbol || {};
+        var directionalVariants = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious",
+            "quadmax", "quadmin", "search9", "sumdetector"].filter(function(name) {
+                return variantEnabled(puzzle, name);
+            });
+        if (directionalVariants.length) {
+            var directionOffsets = [
+                [0, -1], [-1, -1], [-1, 0], [-1, 1],
+                [0, 1], [1, 1], [1, 0], [1, -1]
+            ];
+            function activeArrowDirections(entry) {
+                if (!entry || ["arrow_eight", "arrow_B_G", "arrow_B_B"].indexOf(entry[1]) === -1) return [];
+                if (Array.isArray(entry[0])) {
+                    return entry[0].map(function(enabled, index) { return enabled === 1 ? index : -1; })
+                        .filter(function(index) { return index >= 0; });
+                }
+                var direction = parseInt(entry[0], 10) - 1;
+                return direction >= 0 && direction < 8 ? [direction] : [];
+            }
+            function boardCell(row, col) {
+                return row >= 0 && row < SIZE && col >= 0 && col < SIZE ? { row: row, col: col } : null;
+            }
+            function expectedDirectionalSymbol(variant) {
+                if (variant === "biggestneighbours" || variant === "smallestneighbours" || variant === "sumdetector") return "arrow_eight";
+                if (variant === "quadmax" || variant === "quadmin") return "arrow_B_B";
+                return "arrow_B_G";
+            }
+            directionalVariants.forEach(function(directionalVariant) {
+              Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                if (!entry || entry[1] !== expectedDirectionalSymbol(directionalVariant)) return;
+                var owner = entry[3];
+                if (owner && canonicalVariantName(owner) !== canonicalVariantName(directionalVariant)) return;
+                if (!owner) {
+                    var sameSymbolVariants = directionalVariants.filter(function(variant) {
+                        return expectedDirectionalSymbol(variant) === entry[1];
+                    });
+                    var currentOwner = sameSymbolVariants.find(function(variant) {
+                        return canonicalVariantName(variant) === canonicalVariantName(puzzle.activeSudokuVariant);
+                    }) || sameSymbolVariants[0];
+                    if (currentOwner !== directionalVariant) return;
+                }
+                var directions = activeArrowDirections(entry);
+                if (!directions.length) return;
+                var origin = activeCells[key] ? keyToCell(puzzle, Number(key)) : null;
+                if (origin && directionalVariant !== "quadmax" && directionalVariant !== "quadmin") {
+                    var rays = directions.map(function(direction) {
+                        var offset = directionOffsets[direction];
+                        var ray = [];
+                        for (var distance = 1; distance < SIZE; distance++) {
+                            var rayCell = boardCell(origin.row + offset[0] * distance,
+                                origin.col + offset[1] * distance);
+                            if (!rayCell) break;
+                            ray.push(rayCell);
+                        }
+                        return ray;
+                    }).filter(function(ray) { return ray.length; });
+                    var usesSightline = directionalVariant === "eliminate" ||
+                        directionalVariant === "pointtonext" || directionalVariant === "pointtoprevious";
+                    var targets = usesSightline ? [].concat.apply([], rays) : rays.map(function(ray) { return ray[0]; });
+                    if (!targets.length) return;
+                    var clue = { relation: directionalVariant, origin: origin, targets: targets };
+                    if (directionalVariant === "biggestneighbours" || directionalVariant === "smallestneighbours") {
+                        clue.neighbors = directionOffsets.map(function(offset) {
+                            return boardCell(origin.row + offset[0], origin.col + offset[1]);
+                        }).filter(Boolean);
+                    } else if (directionalVariant === "search9") {
+                        clue.searchDigit = SIZE;
+                        clue.rays = rays;
+                    } else if (directionalVariant === "sumdetector") {
+                        clue.rays = rays;
+                    }
+                    constraints.directionalMarks.push(clue);
+                    return;
+                }
+                if (directionalVariant === "quadmax" || directionalVariant === "quadmin") {
+                    var point = puzzle.point && puzzle.point[key];
+                    var cornerCells = point && (point.neighbor || []).filter(function(neighbor) {
+                        return activeCells[neighbor];
+                    }).map(function(neighbor) { return keyToCell(puzzle, neighbor); }).filter(Boolean);
+                    if (!cornerCells || cornerCells.length !== 4) return;
+                    var minRow = Math.min.apply(null, cornerCells.map(function(cell) { return cell.row; }));
+                    var minCol = Math.min.apply(null, cornerCells.map(function(cell) { return cell.col; }));
+                    var targetOffsets = { 1: [0, 0], 3: [0, 1], 5: [1, 1], 7: [1, 0] };
+                    directions.forEach(function(direction) {
+                        var targetOffset = targetOffsets[direction];
+                        if (!targetOffset) return;
+                        var target = cornerCells.find(function(cell) {
+                            return cell.row === minRow + targetOffset[0] && cell.col === minCol + targetOffset[1];
+                        });
+                        if (target) constraints.directionalMarks.push({
+                            relation: directionalVariant, target: target, cells: cornerCells
+                        });
+                    });
+                }
+              });
+              constraints.supported.push(directionalVariant);
+            });
+            if (directionalVariants.indexOf("sumdetector") !== -1) {
+                var sumDetectorClues = constraints.directionalMarks.filter(function(clue) {
+                    return clue.relation === "sumdetector";
+                });
+                constraints.directionalMarks = constraints.directionalMarks.filter(function(clue) {
+                    return clue.relation !== "sumdetector";
+                });
+                if (sumDetectorClues.length) constraints.sumDetectorGroups.push({ clues: sumDetectorClues });
+            }
+        }
         Object.keys(symbols).forEach(function(key) {
             var entry = symbols[key];
             if (!variantEnabled(puzzle, "odd even") || !entry ||
@@ -577,6 +1275,7 @@ var SudokuSolver = (function() {
         Object.keys(symbols).forEach(function(key) {
             var entry = symbols[key];
             var point = puzzle.point && puzzle.point[key];
+            if (variantEnabled(puzzle, "consecutive") && !variantEnabled(puzzle, "kropki")) return;
             if (!entry || entry[1] !== "circle_SS" || (entry[0] !== 1 && entry[0] !== 2) || !point) {
                 return;
             }
@@ -633,7 +1332,9 @@ var SudokuSolver = (function() {
             var entry = numbers[key];
             var point = puzzle.point && puzzle.point[key];
             var kind = entry && entry[0] !== undefined ? entry[0].toString().toUpperCase() : "";
-            if ((kind !== "V" && kind !== "X") || !point) {
+            var isXV = variantEnabled(puzzle, "xv") && (kind === "V" || kind === "X");
+            var isXIVI = variantEnabled(puzzle, "xivi") && (kind === "VI" || kind === "XI");
+            if ((!isXV && !isXIVI) || !point) {
                 return;
             }
             var cells = (point.neighbor || []).filter(function(neighbor) {
@@ -642,7 +1343,7 @@ var SudokuSolver = (function() {
                 return keyToCell(puzzle, neighbor);
             }).filter(Boolean);
             if (cells.length === 2) {
-                constraints.xv.push({ cells: cells, kind: kind });
+                constraints.xv.push({ cells: cells, kind: kind, family: isXIVI ? "xivi" : "xv" });
             }
         });
 
@@ -675,8 +1376,111 @@ var SudokuSolver = (function() {
                 }
             }
         }
+        if (variantEnabled(puzzle, "xivi")) {
+            var markedXIVIEdges = {};
+            constraints.xv.forEach(function(clue) {
+                if (clue.family !== "xivi") return;
+                var first = clue.cells[0].row * SIZE + clue.cells[0].col;
+                var second = clue.cells[1].row * SIZE + clue.cells[1].col;
+                markedXIVIEdges[Math.min(first, second) + ":" + Math.max(first, second)] = true;
+            });
+            for (var xiviRow = 0; xiviRow < SIZE; xiviRow++) {
+                for (var xiviCol = 0; xiviCol < SIZE; xiviCol++) {
+                    [[xiviRow + 1, xiviCol], [xiviRow, xiviCol + 1]].forEach(function(neighbor) {
+                        if (neighbor[0] >= SIZE || neighbor[1] >= SIZE) return;
+                        var first = xiviRow * SIZE + xiviCol, second = neighbor[0] * SIZE + neighbor[1];
+                        if (!markedXIVIEdges[Math.min(first, second) + ":" + Math.max(first, second)]) {
+                            constraints.xv.push({ cells: [{ row: xiviRow, col: xiviCol },
+                                { row: neighbor[0], col: neighbor[1] }], kind: "none", family: "xivi" });
+                        }
+                    });
+                }
+            }
+        }
         if (constraints.xv.length) {
-            constraints.supported.push("xv");
+            constraints.supported.push(variantEnabled(puzzle, "xivi") ? "xivi" : "xv");
+        }
+        var catalogEdgeVariant = ["difference", "sum", "product", "arithmetic", "greater", "lesser",
+            "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares"].find(function(name) {
+                return variantEnabled(puzzle, name);
+            });
+        if (catalogEdgeVariant) {
+            var catalogMarkedEdges = {};
+            function catalogEdgeCells(key) {
+                var point = puzzle.point && puzzle.point[key];
+                if (!point || !Array.isArray(point.neighbor)) return [];
+                return point.neighbor.filter(function(neighbor) { return activeCells[neighbor]; })
+                    .map(function(neighbor) { return keyToCell(puzzle, neighbor); }).filter(Boolean);
+            }
+            if (["difference", "sum", "product", "arithmetic", "greater", "lesser", "inequality"].indexOf(catalogEdgeVariant) !== -1) {
+                Object.keys(numbers).forEach(function(key) {
+                    var cells = catalogEdgeCells(key);
+                    var target = numbers[key] && parseInt(numbers[key][0], 10);
+                    var text = numbers[key] && String(numbers[key][0]).trim();
+                    if (cells.length === 2 && (Number.isFinite(target) ||
+                        (catalogEdgeVariant === "inequality" && (text === "<" || text === ">")))) {
+                        cells.sort(function(first, second) { return first.row - second.row || first.col - second.col; });
+                        constraints.edgeRelations.push({ cells: cells, relation: catalogEdgeVariant, target: target, sign: text });
+                    }
+                });
+            } else {
+                Object.keys(symbols).forEach(function(key) {
+                    if (catalogEdgeVariant === "consecutive" &&
+                        (!symbols[key] || symbols[key][1] !== "circle_SS" || symbols[key][0] !== 1)) return;
+                    if (catalogEdgeVariant === "xydifference" && (!symbols[key] ||
+                        ["diamond_L", "circle_SS"].indexOf(symbols[key][1]) === -1)) return;
+                    if (catalogEdgeVariant === "perfectsquares" &&
+                        (!symbols[key] || symbols[key][1] !== "circle_SS" || symbols[key][0] !== 1)) return;
+                    var cells = catalogEdgeCells(key);
+                    if (cells.length !== 2) return;
+                    cells.sort(function(first, second) { return first.row - second.row || first.col - second.col; });
+                    var first = cells[0].row * SIZE + cells[0].col;
+                    var second = cells[1].row * SIZE + cells[1].col;
+                    catalogMarkedEdges[Math.min(first, second) + ":" + Math.max(first, second)] = true;
+                    constraints.edgeRelations.push({
+                        cells: cells,
+                        relation: catalogEdgeVariant === "evensumpairs" ? "evenSum" :
+                            catalogEdgeVariant === "oddsumpairs" ? "oddSum" : catalogEdgeVariant,
+                        reference: catalogEdgeVariant === "xydifference" ?
+                            (cells[0].row === cells[1].row ? { row: cells[0].row, col: 0 } :
+                                { row: 0, col: cells[0].col }) : null
+                    });
+                });
+                if (catalogEdgeVariant === "consecutive" && puzzle.consecutiveNegativeConstraint === true) {
+                    for (var catalogRow = 0; catalogRow < SIZE; catalogRow++) {
+                        for (var catalogCol = 0; catalogCol < SIZE; catalogCol++) {
+                            [[catalogRow + 1, catalogCol], [catalogRow, catalogCol + 1]].forEach(function(neighbor) {
+                                if (neighbor[0] >= SIZE || neighbor[1] >= SIZE) return;
+                                var first = catalogRow * SIZE + catalogCol;
+                                var second = neighbor[0] * SIZE + neighbor[1];
+                                if (!catalogMarkedEdges[Math.min(first, second) + ":" + Math.max(first, second)]) {
+                                    constraints.edgeRelations.push({ cells: [
+                                        { row: catalogRow, col: catalogCol },
+                                        { row: neighbor[0], col: neighbor[1] }
+                                    ], relation: "notConsecutive" });
+                                }
+                            });
+                        }
+                    }
+                }
+                if (catalogEdgeVariant === "perfectsquares") {
+                    for (var squareRow = 0; squareRow < SIZE; squareRow++) {
+                        for (var squareCol = 0; squareCol < SIZE; squareCol++) {
+                            [[squareRow + 1, squareCol], [squareRow, squareCol + 1]].forEach(function(neighbor) {
+                                if (neighbor[0] >= SIZE || neighbor[1] >= SIZE) return;
+                                var squareFirst = squareRow * SIZE + squareCol;
+                                var squareSecond = neighbor[0] * SIZE + neighbor[1];
+                                if (!catalogMarkedEdges[Math.min(squareFirst, squareSecond) + ":" + Math.max(squareFirst, squareSecond)]) {
+                                    constraints.edgeRelations.push({ cells: [
+                                        { row: squareRow, col: squareCol }, { row: neighbor[0], col: neighbor[1] }
+                                    ], relation: "notPerfectSquare" });
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+            constraints.supported.push(catalogEdgeVariant);
         }
         if (variantEnabled(puzzle, "skyscraper")) {
             var topSpace = Number(puzzle.space && puzzle.space[0] || 0);
@@ -715,14 +1519,194 @@ var SudokuSolver = (function() {
                 });
                 addSandwich((sandwichStartCol + sandwichIndex) +
                     (sandwichStartRow - 1) * puzzle.nx0, sandwichColumn);
-                addSandwich((sandwichStartCol + sandwichIndex) +
-                    (sandwichStartRow + SIZE) * puzzle.nx0, sandwichColumn);
                 addSandwich((sandwichStartCol - 1) +
-                    (sandwichStartRow + sandwichIndex) * puzzle.nx0, sandwichRow);
-                addSandwich((sandwichStartCol + SIZE) +
                     (sandwichStartRow + sandwichIndex) * puzzle.nx0, sandwichRow);
             }
             constraints.supported.push("sandwich");
+        }
+        var paritySandwichVariant = ["evensandwich", "oddsandwich"].find(function(name) {
+            return variantEnabled(puzzle, name);
+        });
+        if (paritySandwichVariant) {
+            var parityTop = Number(puzzle.space && puzzle.space[0] || 0);
+            var parityLeft = Number(puzzle.space && puzzle.space[2] || 0);
+            var parityStartRow = 2 + parityTop, parityStartCol = 2 + parityLeft;
+            function parityClues(keys) {
+                return keys.map(function(key) { return outsideClueFromEntry(numbers[key]); })
+                    .filter(function(value) { return value !== null; });
+            }
+            for (var parityIndex = 0; parityIndex < SIZE; parityIndex++) {
+                var parityColumn = Array.from({ length: SIZE }, function(_, row) { return { row: row, col: parityIndex }; });
+                var parityRow = Array.from({ length: SIZE }, function(_, col) { return { row: parityIndex, col: col }; });
+                var topParityClues = parityClues([1, 2, 3].map(function(layer) {
+                        return (parityStartCol + parityIndex) + (parityStartRow - layer) * puzzle.nx0;
+                    }));
+                var leftParityClues = parityClues([1, 2, 3].map(function(layer) {
+                        return (parityStartCol - layer) + (parityStartRow + parityIndex) * puzzle.nx0;
+                    }));
+                if (topParityClues.length) constraints.outsideRelations.push({ relation: paritySandwichVariant,
+                    clues: topParityClues, cells: parityColumn });
+                if (leftParityClues.length) constraints.outsideRelations.push({ relation: paritySandwichVariant,
+                    clues: leftParityClues, cells: parityRow });
+            }
+            constraints.supported.push(paritySandwichVariant);
+        }
+        var outsideVariant = ["bust", "xsums", "numberedrooms", "sumframe", "productframe", "edgedifference",
+            "fullrank", "outsideparity", "parityparty", "serbianframe", "median", "descriptivepairs",
+            "maximin", "minimax"].find(function(name) {
+            return variantEnabled(puzzle, name);
+        });
+        if (outsideVariant) {
+            var outsideTop = Number(puzzle.space && puzzle.space[0] || 0);
+            var outsideLeft = Number(puzzle.space && puzzle.space[2] || 0);
+            var outsideStartRow = 2 + outsideTop;
+            var outsideStartCol = 2 + outsideLeft;
+            var outsideBoxHeight = SIZE === 6 ? 2 : 3;
+            var outsideBoxWidth = SIZE / outsideBoxHeight;
+            var fullRankEntries = [];
+            function addOutsideRelation(key, cells, frameLength, axis) {
+                var clue = outsideClueFromEntry(numbers[key]);
+                if (clue === null) return;
+                if (outsideVariant === "fullrank") {
+                    fullRankEntries.push({ rank: clue, cells: cells });
+                    return;
+                }
+                constraints.outsideRelations.push({
+                    relation: outsideVariant,
+                    value: clue,
+                    cells: outsideVariant === "sumframe" ? cells.slice(0, frameLength) : cells,
+                    axis: axis
+                });
+            }
+            for (var outsideIndex = 0; outsideIndex < SIZE; outsideIndex++) {
+                var outsideColumn = Array.from({ length: SIZE }, function(_, row) { return { row: row, col: outsideIndex }; });
+                var outsideRow = Array.from({ length: SIZE }, function(_, col) { return { row: outsideIndex, col: col }; });
+                addOutsideRelation((outsideStartCol + outsideIndex) + (outsideStartRow - 1) * puzzle.nx0,
+                    outsideColumn, outsideBoxHeight, "column");
+                addOutsideRelation((outsideStartCol - 1) + (outsideStartRow + outsideIndex) * puzzle.nx0,
+                    outsideRow, outsideBoxWidth, "row");
+                if (outsideVariant !== "edgedifference") {
+                    addOutsideRelation((outsideStartCol + outsideIndex) + (outsideStartRow + SIZE) * puzzle.nx0,
+                        outsideColumn.slice().reverse(), outsideBoxHeight, "column");
+                    addOutsideRelation((outsideStartCol + SIZE) + (outsideStartRow + outsideIndex) * puzzle.nx0,
+                        outsideRow.slice().reverse(), outsideBoxWidth, "row");
+                }
+            }
+            if (fullRankEntries.length) constraints.fullRankGroups.push(fullRankEntries);
+            constraints.supported.push(outsideVariant);
+        }
+        var unorderedOutsideVariant = ["outside", "outside234"].find(function(name) {
+            return variantEnabled(puzzle, name);
+        });
+        if (unorderedOutsideVariant) {
+            var unorderedTop = Number(puzzle.space && puzzle.space[0] || 0);
+            var unorderedLeft = Number(puzzle.space && puzzle.space[2] || 0);
+            var unorderedStartRow = 2 + unorderedTop;
+            var unorderedStartCol = 2 + unorderedLeft;
+            var unorderedBoxHeight = SIZE === 6 ? 2 : 3;
+            var unorderedBoxWidth = SIZE / unorderedBoxHeight;
+            function unorderedClues(keys) {
+                return keys.map(function(key) { return outsideClueFromEntry(numbers[key]); })
+                    .filter(function(value) { return value !== null; });
+            }
+            function addUnorderedOutside(keys, cells, frameLength) {
+                var clues = unorderedClues(keys);
+                if (!clues.length) return;
+                constraints.outsideRelations.push({ relation: unorderedOutsideVariant, clues: clues,
+                    cells: unorderedOutsideVariant === "outside234" ? cells.slice(1, 4) : cells.slice(0, frameLength) });
+            }
+            for (var unorderedIndex = 0; unorderedIndex < SIZE; unorderedIndex++) {
+                var unorderedColumn = Array.from({ length: SIZE }, function(_, row) { return { row: row, col: unorderedIndex }; });
+                var unorderedRow = Array.from({ length: SIZE }, function(_, col) { return { row: unorderedIndex, col: col }; });
+                addUnorderedOutside([1, 2, 3].map(function(layer) {
+                    return (unorderedStartCol + unorderedIndex) + (unorderedStartRow - layer) * puzzle.nx0;
+                }), unorderedColumn, unorderedBoxHeight);
+                addUnorderedOutside([0, 1, 2].map(function(layer) {
+                    return (unorderedStartCol + unorderedIndex) + (unorderedStartRow + SIZE + layer) * puzzle.nx0;
+                }), unorderedColumn.slice().reverse(), unorderedBoxHeight);
+                addUnorderedOutside([1, 2, 3].map(function(layer) {
+                    return (unorderedStartCol - layer) + (unorderedStartRow + unorderedIndex) * puzzle.nx0;
+                }), unorderedRow, unorderedBoxWidth);
+                addUnorderedOutside([0, 1, 2].map(function(layer) {
+                    return (unorderedStartCol + SIZE + layer) + (unorderedStartRow + unorderedIndex) * puzzle.nx0;
+                }), unorderedRow.slice().reverse(), unorderedBoxWidth);
+            }
+            constraints.supported.push(unorderedOutsideVariant);
+        }
+        var littleKillerVariant = ["little killer", "product little killer"].find(function(name) {
+            return variantEnabled(puzzle, name);
+        });
+        if (littleKillerVariant) {
+            var littleTop = Number(puzzle.space && puzzle.space[0] || 0);
+            var littleLeft = Number(puzzle.space && puzzle.space[2] || 0);
+            var littleStartRow = 2 + littleTop, littleStartCol = 2 + littleLeft;
+            var littleOffsets = [[0, -1], [-1, -1], [-1, 0], [-1, 1],
+                [0, 1], [1, 1], [1, 0], [1, -1]];
+            Object.keys(numbers).forEach(function(key) {
+                var value = outsideClueFromEntry(numbers[key]);
+                var arrow = symbols[key];
+                if (value === null || !arrow || ["arrow_S", "arrow_B_G"].indexOf(arrow[1]) === -1) return;
+                var direction = parseInt(arrow[0], 10) - 1;
+                if (direction < 0 || direction >= littleOffsets.length) return;
+                var absoluteKey = Number(key);
+                var row = Math.floor(absoluteKey / puzzle.nx0) - littleStartRow;
+                var col = absoluteKey % puzzle.nx0 - littleStartCol;
+                var cells = [], offset = littleOffsets[direction];
+                for (var step = 0; step < SIZE * 2 + 4; step++) {
+                    row += offset[0]; col += offset[1];
+                    if (row >= 0 && row < SIZE && col >= 0 && col < SIZE) cells.push({ row: row, col: col });
+                    else if (cells.length) break;
+                }
+                if (cells.length) constraints.outsideRelations.push({ relation: littleKillerVariant,
+                    value: value, cells: cells });
+            });
+            constraints.supported.push(littleKillerVariant);
+        }
+        if (variantEnabled(puzzle, "rossini")) {
+            var rossiniTop = Number(puzzle.space && puzzle.space[0] || 0);
+            var rossiniLeft = Number(puzzle.space && puzzle.space[2] || 0);
+            var rossiniStartRow = 2 + rossiniTop;
+            var rossiniStartCol = 2 + rossiniLeft;
+            function addRossini(key, cells, inwardDirection, outwardDirection) {
+                var entry = symbols[key];
+                var direction = entry && ["arrow_N_B", "arrow_N_W", "arrow_B_G"].indexOf(entry[1]) !== -1 ? parseInt(entry[0], 10) - 1 : -1;
+                constraints.rossiniLines.push({ cells: cells.slice(0, 3),
+                    direction: direction === inwardDirection ? "ascending" :
+                        direction === outwardDirection ? "descending" : "none" });
+            }
+            for (var rossiniIndex = 0; rossiniIndex < SIZE; rossiniIndex++) {
+                var rossiniColumn = Array.from({ length: SIZE }, function(_, row) { return { row: row, col: rossiniIndex }; });
+                var rossiniRow = Array.from({ length: SIZE }, function(_, col) { return { row: rossiniIndex, col: col }; });
+                addRossini((rossiniStartCol + rossiniIndex) + (rossiniStartRow - 1) * puzzle.nx0,
+                    rossiniColumn, 6, 2);
+                addRossini((rossiniStartCol + rossiniIndex) + (rossiniStartRow + SIZE) * puzzle.nx0,
+                    rossiniColumn.slice().reverse(), 2, 6);
+                addRossini((rossiniStartCol - 1) + (rossiniStartRow + rossiniIndex) * puzzle.nx0,
+                    rossiniRow, 4, 0);
+                addRossini((rossiniStartCol + SIZE) + (rossiniStartRow + rossiniIndex) * puzzle.nx0,
+                    rossiniRow.slice().reverse(), 0, 4);
+            }
+            constraints.supported.push("rossini");
+        }
+        var wheelVariant = ["wheel", "squarewheel"].find(function(name) { return variantEnabled(puzzle, name); });
+        if (wheelVariant) {
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                var expected = wheelVariant === "wheel" ? "circle_L" : "square_L";
+                if (!entry || entry[1] !== expected) return;
+                var point = puzzle.point && puzzle.point[key];
+                var cells = point && (point.neighbor || []).filter(function(neighbor) { return activeCells[neighbor]; })
+                    .map(function(neighbor) { return keyToCell(puzzle, neighbor); }).filter(Boolean)
+                    .sort(function(first, second) { return first.row - second.row || first.col - second.col; });
+                var numberEntry = numbers[key];
+                var digits = numberEntry && String(numberEntry[0]).split("").map(Number)
+                    .filter(function(value) { return value >= 1 && value <= SIZE; });
+                if (cells && cells.length === 4 && digits && digits.length === 4) {
+                    constraints.cellRelations.push({ relation: "wheel", digits: digits,
+                        cells: [cells[0], cells[1], cells[3], cells[2]] });
+                }
+            });
+            constraints.supported.push(wheelVariant);
         }
         return constraints;
     }
@@ -803,6 +1787,23 @@ var SudokuSolver = (function() {
     }
 
     function drawAutoCandidates(puzzle) {
+        if (candidateCache.conflict && Array.isArray(candidateCache.conflict.cells)) {
+            puzzle.ctx.save();
+            puzzle.ctx.fillStyle = "rgba(220, 38, 38, 0.24)";
+            puzzle.ctx.strokeStyle = "rgba(185, 28, 28, 0.95)";
+            puzzle.ctx.lineWidth = Math.max(2, puzzle.size * 0.055);
+            candidateCache.conflict.cells.forEach(function(cell) {
+                var point = puzzle.point[cellKey(puzzle, cell.row, cell.col)];
+                if (!point) return;
+                var inset = puzzle.size * 0.08;
+                var side = puzzle.size - inset * 2;
+                puzzle.ctx.fillRect(point.x - puzzle.size / 2 + inset,
+                    point.y - puzzle.size / 2 + inset, side, side);
+                puzzle.ctx.strokeRect(point.x - puzzle.size / 2 + inset,
+                    point.y - puzzle.size / 2 + inset, side, side);
+            });
+            puzzle.ctx.restore();
+        }
         if (!window.SudokuTools || !window.SudokuTools.autoEnabled) {
             return;
         }
@@ -872,7 +1873,11 @@ var SudokuSolver = (function() {
     }
 
     function onPuzzleRedraw(puzzle) {
-        scheduleAutoAnalysis(puzzle);
+        if (window.SudokuTools && window.SudokuTools.autoEnabled) scheduleAutoAnalysis(puzzle);
+        if (window.SudokuTools && window.SudokuTools.solveOnceAutoEnabled &&
+            window.SudokuTools.scheduleSolveOnceCheck) {
+            window.SudokuTools.scheduleSolveOnceCheck(puzzle);
+        }
     }
 
     function startAutoAnalysis(puzzle) {
@@ -882,6 +1887,27 @@ var SudokuSolver = (function() {
         }
         var board = readBoard(puzzle, puzzle.mode && puzzle.mode.qa === "pu_a");
         var constraints = readConstraints(puzzle);
+        var activeVariants = Array.isArray(puzzle.activeSudokuVariants) ?
+            puzzle.activeSudokuVariants : [puzzle.activeSudokuVariant || "classic"];
+        var unsupported = activeVariants.filter(function(variant) {
+            return canonicalVariantName(variant) !== "classic" && !constraints.supported.some(function(supported) {
+                return canonicalVariantName(supported) === canonicalVariantName(variant);
+            });
+        });
+        if (unsupported.length) {
+            cancelCandidateAnalysis();
+            if (window.SudokuTools) {
+                window.SudokuTools.autoEnabled = false;
+                window.SudokuTools.setToolbarState();
+            }
+            var elements = solverLogElements();
+            setSolverStatus(elements, "Unsupported variant");
+            if (elements.output) {
+                elements.output.textContent = "Auto Solver did not start because CSP support is not implemented for: " +
+                    unsupported.join(", ") + ".";
+            }
+            return false;
+        }
         var constraintsSignature = JSON.stringify(constraints);
         var signature = JSON.stringify([board, constraints]);
         if (candidateCache.signature === signature) {
@@ -919,6 +1945,7 @@ var SudokuSolver = (function() {
         candidateCache.constraintsSignature = JSON.stringify(constraints);
         candidateCache.board = board.map(function(row) { return row.slice(); });
         candidateCache.witnesses = [solution.map(function(row) { return row.slice(); })];
+        candidateCache.conflict = null;
         candidateCache.result = {
             valid: true,
             satisfiable: true,
@@ -927,6 +1954,22 @@ var SudokuSolver = (function() {
             forced: solution.map(function(row) { return row.slice(); }),
             witnessSolutions: candidateCache.witnesses
         };
+    }
+
+    /** Prevents native Penpa primitives from being claimed by two variants. */
+    function shouldDiscoverVariant(active, settings, candidate, mode, submode) {
+        active = active || [];
+        if (active.indexOf(candidate) !== -1) return true;
+        return !active.some(function(variant) {
+            if (!variant || variant === "classic" || variant === candidate) return false;
+            var setting = settings && settings[variant];
+            if (!setting || !Array.isArray(setting.modeset)) return false;
+            return setting.modeset.some(function(entryMode, index) {
+                if (entryMode !== mode) return false;
+                return submode === undefined || submode === null ||
+                    String(setting.submodeset && setting.submodeset[index]) === String(submode);
+            });
+        });
     }
 
     return {
@@ -948,7 +1991,9 @@ var SudokuSolver = (function() {
         drawAutoCandidates: drawAutoCandidates,
         cancelCandidateAnalysis: cancelCandidateAnalysis,
         invalidateCandidateAnalysis: invalidateCandidateAnalysis,
-        primeUniqueSolution: primeUniqueSolution
+        primeUniqueSolution: primeUniqueSolution,
+        showConflict: showConflict,
+        shouldDiscoverVariant: shouldDiscoverVariant
     };
 })();
 
@@ -958,6 +2003,10 @@ var SudokuTools = (function() {
     var generatorTimeout = null;
     var generatorActiveRequest = null;
     var generatorPausedRequest = null;
+    var solveOnceTimer = null;
+    var solveOnceWorker = null;
+    var solveOnceSignature = null;
+    var solveOnceGeneration = 0;
 
     function byId(id) {
         return document.getElementById(id);
@@ -972,6 +2021,17 @@ var SudokuTools = (function() {
             autoButton.classList.toggle("auto-solver-active", SudokuTools.autoEnabled);
             autoButton.setAttribute("aria-pressed", SudokuTools.autoEnabled ? "true" : "false");
         }
+        var solveButton = byId("sudoku_solve_once");
+        if (solveButton) {
+            solveButton.classList.toggle("active", SudokuTools.solveOnceAutoEnabled);
+            solveButton.setAttribute("aria-pressed", SudokuTools.solveOnceAutoEnabled ? "true" : "false");
+            if (!SudokuTools.solveOnceAutoEnabled) {
+                solveButton.title = "Auto solution check";
+                solveButton.setAttribute("aria-label", solveButton.title);
+                var solveIcon = solveButton.querySelector("i");
+                if (solveIcon) solveIcon.className = "fa fa-play";
+            }
+        }
         if (logPanel) {
             logPanel.style.display = "block";
         }
@@ -984,11 +2044,11 @@ var SudokuTools = (function() {
 
     function toggleAuto() {
         if (generatorWorker) {
-            pauseGenerator();
+            stopGenerator("Generation stopped.");
             return;
         }
         if (generatorPausedRequest) {
-            resumeGenerator();
+            stopGenerator("Generation stopped.");
             return;
         }
         SudokuTools.autoEnabled = !SudokuTools.autoEnabled;
@@ -996,12 +2056,105 @@ var SudokuTools = (function() {
             SudokuSolver.cancelCandidateAnalysis();
         }
         setToolbarState();
-        if (SudokuTools.autoEnabled && pu) {
-            SudokuSolver.scheduleAutoAnalysis(pu);
-        }
         if (pu) {
             pu.redraw();
         }
+    }
+
+    function stopSolveOnceCheck() {
+        if (solveOnceTimer !== null) clearTimeout(solveOnceTimer);
+        solveOnceTimer = null;
+        if (solveOnceWorker) solveOnceWorker.terminate();
+        solveOnceWorker = null;
+        solveOnceGeneration++;
+        document.body.classList.remove("sudoku-solve-check-running");
+    }
+
+    function scheduleSolveOnceCheck(puzzle, immediate) {
+        if (!SudokuTools.solveOnceAutoEnabled || !puzzle) return;
+        if (solveOnceTimer !== null) clearTimeout(solveOnceTimer);
+        solveOnceTimer = setTimeout(function() {
+            solveOnceTimer = null;
+            runSolveOnceCheck(puzzle);
+        }, immediate ? 0 : 160);
+    }
+
+    function runSolveOnceCheck(puzzle) {
+        if (!SudokuTools.solveOnceAutoEnabled || !SudokuSolver.isClassicSudoku(puzzle)) return;
+        var board = SudokuSolver.readBoard(puzzle, false);
+        var constraints = SudokuSolver.readConstraints(puzzle);
+        var active = Array.isArray(puzzle.activeSudokuVariants) ? puzzle.activeSudokuVariants :
+            [puzzle.activeSudokuVariant || "classic"];
+        var supported = constraints.supported.map(function(name) { return String(name).toLowerCase().replace(/\s+/g, ""); });
+        var unsupported = active.filter(function(name) {
+            var normalized = String(name).toLowerCase().replace(/\s+/g, "");
+            return normalized !== "classic" && supported.indexOf(normalized) === -1;
+        });
+        if (unsupported.length) {
+            generatorLog("Unsupported variant", "Auto solution check is not implemented for: " + unsupported.join(", ") + ".");
+            return;
+        }
+        var signature = JSON.stringify([board, constraints]);
+        if (signature === solveOnceSignature) return;
+        solveOnceSignature = signature;
+        stopSolveOnceCheck();
+        var generation = ++solveOnceGeneration;
+        var button = byId("sudoku_solve_once");
+        var icon = button && button.querySelector("i");
+        if (icon) icon.className = "fa fa-spinner fa-spin";
+        document.body.classList.add("sudoku-solve-check-running");
+        generatorLog("Checking", "Looking for any complete solution after the latest edit…");
+
+        function finish(result) {
+            if (generation !== solveOnceGeneration || !SudokuTools.solveOnceAutoEnabled) return;
+            solveOnceWorker = null;
+            document.body.classList.remove("sudoku-solve-check-running");
+            if (result && result.solved) {
+                SudokuSolver.showConflict(puzzle, null);
+                if (icon) icon.className = "fa fa-check";
+                if (button) button.title = "The grid has at least 1 solution";
+                generatorLog("✓", "The grid has at least 1 solution.");
+            } else {
+                var conflict = result && result.conflict;
+                SudokuSolver.showConflict(puzzle, conflict);
+                if (icon) icon.className = "fa fa-exclamation-triangle";
+                if (button) button.title = "No solution";
+                generatorLog("No solution", result && result.reason ? result.reason : "No complete solution exists.");
+            }
+        }
+        if (typeof Worker === "undefined") {
+            window.setTimeout(function() { finish(SudokuSolver.solve(board, constraints)); }, 0);
+            return;
+        }
+        var checkWorker = new Worker("./js/sudoku_solver_worker.js?v=3.3.28");
+        solveOnceWorker = checkWorker;
+        checkWorker.onmessage = function(event) {
+            if (event.data.type !== "result") return;
+            checkWorker.terminate();
+            if (solveOnceWorker === checkWorker) solveOnceWorker = null;
+            finish(event.data.result);
+        };
+        checkWorker.onerror = function(event) {
+            checkWorker.terminate();
+            if (solveOnceWorker === checkWorker) solveOnceWorker = null;
+            finish({ solved: false, reason: "Solution check stopped: " + (event.message || "worker error") });
+        };
+        checkWorker.postMessage({ type: "solve", board: board, constraints: constraints });
+    }
+
+    function solveOnce() {
+        if (!pu || !SudokuSolver.isClassicSudoku(pu)) {
+            generatorLog("Unsupported grid", "Auto solution check requires a 6x6 or 9x9 Sudoku or square grid.");
+            return;
+        }
+        SudokuTools.solveOnceAutoEnabled = !SudokuTools.solveOnceAutoEnabled;
+        solveOnceSignature = null;
+        if (!SudokuTools.solveOnceAutoEnabled) {
+            stopSolveOnceCheck();
+            SudokuSolver.showConflict(pu, null);
+        }
+        setToolbarState();
+        if (pu) pu.redraw();
     }
 
     function loadTestBoard() {
@@ -1070,9 +2223,9 @@ var SudokuTools = (function() {
         generatePuzzle(request.size, request.variants, request.negative, request.sourcePuzzle, request.seed);
     }
 
-    function pauseWork() {
+    function stopWork() {
         if (generatorWorker) {
-            pauseGenerator();
+            stopGenerator("Generation stopped.");
             return;
         }
         if (SudokuTools.autoEnabled) {
@@ -1080,6 +2233,11 @@ var SudokuTools = (function() {
             SudokuSolver.cancelCandidateAnalysis();
             setToolbarState();
             if (pu) pu.redraw();
+        }
+        if (SudokuTools.solveOnceAutoEnabled) {
+            SudokuTools.solveOnceAutoEnabled = false;
+            stopSolveOnceCheck();
+            setToolbarState();
         }
     }
 
@@ -1233,7 +2391,7 @@ var SudokuTools = (function() {
             }
             return;
         }
-        generatorWorker = new Worker("./js/sudoku_generator_worker.js?v=3.3.15");
+        generatorWorker = new Worker("./js/sudoku_generator_worker.js?v=3.3.28");
         generatorWorker.onmessage = function(event) {
             if (event.data.type === "progress") {
                 generatorLog("Generating", null, event.data.progress);
@@ -1275,20 +2433,34 @@ var SudokuTools = (function() {
     function modeLabel(variant, mode, submode) {
         var labels = {
             sudoku: "Sudoku",
-            symbol: submode === "circle_SS" ? "Kropki Dot" :
+            symbol: submode === "circle_SS" ? (variant === "consecutive" ? "White Dot" : "Kropki Dot") :
                 variant === "odd even" ? "Odd / Even Mark" :
-                    variant === "battenburg" ? "Battenburg Mark" : "Mark",
-            special: submode === "arrows" ? "Arrow" : submode === "thermo" ? "Thermo" : "Special",
+                    variant === "battenburg" ? "Battenburg Mark" :
+                        variant === "little killer" || variant === "product little killer" ? "Arrow" :
+                            variant === "diagonallyconsecutive" ? "Bars" : "Mark",
+            special: submode === "arrows" ? "Arrow" : submode === "thermo" ? "Thermo" :
+                submode === "nobulbthermo" ? "No-bulb Thermo" : "Special",
             line: variant === "palindrome" ? "Palindrome Line" : "Line",
             lineE: "Edge",
             cage: "Cage",
             number: variant === "xv" && submode === "5" ? "XV Clue" :
+                variant === "multiplication" ? "Multiplication Sign" :
+                    variant === "product little killer" ? "Product" : variant === "little killer" ? "Total" :
                 submode === "11" ? "Killer Sum" : variant === "skyscraper" ? "Skyscraper Clue" :
                     variant === "sandwich" ? "Sandwich Clue" : "Clue",
             surface: "Cell",
             combi: "Composite"
         };
         return labels[mode] || mode;
+    }
+
+    function variantLabel(variant) {
+        if (variant === "odd even") return "Odd / Even";
+        if (variant === "anti king") return "Anti King (No touch)";
+        if (variant === "search9") return "Search 9 (Search 6)";
+        return variant.replace(/\s+sudoku$/i, "").replace(/\b\w/g, function(letter) {
+            return letter.toUpperCase();
+        });
     }
 
     function selectedVariant() {
@@ -1323,7 +2495,10 @@ var SudokuTools = (function() {
         }
     }
 
-    var outsideVariants = ["little killer", "sandwich", "skyscraper"];
+    var outsideVariants = ["little killer", "product little killer", "sandwich", "evensandwich", "oddsandwich", "skyscraper",
+        "descriptivepairs", "outside", "outside234", "maximin", "minimax", "bust", "xsums",
+        "numberedrooms", "sumframe", "productframe", "edgedifference", "fullrank", "outsideparity",
+        "parityparty", "serbianframe", "median", "rossini"];
 
     function variantConflict(variant) {
         var variants = activeVariants();
@@ -1411,6 +2586,11 @@ var SudokuTools = (function() {
             return;
         }
         var layers = [pu.pu_q, pu.pu_a];
+        var canDiscover = function(candidate, mode, submode) {
+            return SudokuSolver.shouldDiscoverVariant(
+                activeVariants(), penpa_constraints.setting, candidate, mode, submode
+            );
+        };
         if (hasNativeDiagonalLines(pu) && !hasVariant("diagonal") && !hasVariant("anti diagonal")) {
             addVariant("diagonal");
         }
@@ -1418,21 +2598,26 @@ var SudokuTools = (function() {
             if (!layer) {
                 return;
             }
-            if (layerHas(layer, "arrows")) { addVariant("arrow"); }
-            if (layerHas(layer, "thermo") || layerHas(layer, "nobulbthermo")) { addVariant("thermo"); }
-            if (layerHas(layer, "killercages") || layerHas(layer, "cage")) { addVariant("killer"); }
+            if (layerHas(layer, "arrows") && canDiscover("arrow", "special", "arrows")) { addVariant("arrow"); }
+            if (layerHas(layer, "thermo") &&
+                canDiscover("thermo", "special", "thermo")) { addVariant("thermo"); }
+            if ((layerHas(layer, "killercages") || layerHas(layer, "cage")) &&
+                canDiscover("killer", "cage", "1")) { addVariant("killer"); }
             Object.keys(layer.symbol || {}).forEach(function(key) {
                 var entry = layer.symbol[key];
-                if (entry && entry[1] === "circle_SS" && (entry[0] === 1 || entry[0] === 2)) {
+                if (entry && entry[1] === "circle_SS" && (entry[0] === 1 || entry[0] === 2) &&
+                    canDiscover("kropki", "symbol", "circle_SS")) {
                     addVariant("kropki");
-                } else if (entry && (entry[1] === "circle_L" || entry[1] === "square_L")) {
+                } else if (entry && (entry[1] === "circle_L" || entry[1] === "square_L") &&
+                    canDiscover("odd even", "symbol", "circle_L")) {
                     addVariant("odd even");
-                } else if (entry && entry[1] === "sudokuetc" && entry[0] === 1) {
+                } else if (entry && entry[1] === "sudokuetc" && entry[0] === 1 &&
+                    canDiscover("battenburg", "symbol", "sudokuetc")) {
                     addVariant("battenburg");
                 }
             });
             Object.keys(layer.line || {}).some(function(key) {
-                if (layer.line[key] === 5) {
+                if (layer.line[key] === 5 && canDiscover("palindrome", "line", "2")) {
                     addVariant("palindrome");
                     return true;
                 }
@@ -1441,7 +2626,7 @@ var SudokuTools = (function() {
             Object.keys(layer.number || {}).some(function(key) {
                 var entry = layer.number[key];
                 var value = entry && entry[0] !== undefined ? entry[0].toString().toUpperCase() : "";
-                if (value === "X" || value === "V") {
+                if ((value === "X" || value === "V") && canDiscover("xv", "number", "5")) {
                     addVariant("xv");
                     return true;
                 }
@@ -1472,6 +2657,8 @@ var SudokuTools = (function() {
         if (!pu) return;
         pu.activeSudokuVariant = variant;
         pu.kropki_mode = false;
+        pu.consecutive_mode = false;
+        pu.sudoku_directional_cell_mode = false;
         pu.xv_mode = false;
         pu.odd_even_mode = false;
         pu.battenburg_mode = false;
@@ -1496,6 +2683,23 @@ var SudokuTools = (function() {
         pu.kropkiNegativeConstraint = pu.kropkiNegativeConstraint !== true;
         SudokuSolver.invalidateCandidateAnalysis();
         updateKropkiNegativeControl();
+        pu.redraw();
+    }
+
+    function updateConsecutiveNegativeControl() {
+        var button = byId("sudoku_consecutive_negative");
+        if (!button) return;
+        var enabled = !!(pu && pu.consecutiveNegativeConstraint === true);
+        button.classList.toggle("active", enabled);
+        button.setAttribute("aria-pressed", enabled ? "true" : "false");
+        button.textContent = "Negative Consecutive " + (enabled ? "ON" : "OFF");
+    }
+
+    function toggleConsecutiveNegative() {
+        if (!pu || !hasVariant("consecutive")) return;
+        pu.consecutiveNegativeConstraint = pu.consecutiveNegativeConstraint !== true;
+        SudokuSolver.invalidateCandidateAnalysis();
+        updateConsecutiveNegativeControl();
         pu.redraw();
     }
 
@@ -1552,13 +2756,30 @@ var SudokuTools = (function() {
         }
         pu.activeSudokuVariant = variant || "classic";
         pu.kropki_mode = pu.activeSudokuVariant === "kropki";
-        pu.xv_mode = pu.activeSudokuVariant === "xv";
+        pu.consecutive_mode = pu.activeSudokuVariant === "consecutive";
+        pu.even_sum_pairs_mode = pu.activeSudokuVariant === "evensumpairs";
+        pu.clockfaces_mode = pu.activeSudokuVariant === "clockfaces";
+        pu.trio_mode = pu.activeSudokuVariant === "trio";
+        pu.pencilmarks_mode = pu.activeSudokuVariant === "pencilmarks";
+        pu.diagonal_consecutive_mode = pu.activeSudokuVariant === "diagonallyconsecutive";
+        pu.xv_mode = pu.activeSudokuVariant === "xv" || pu.activeSudokuVariant === "xivi";
         pu.odd_even_mode = pu.activeSudokuVariant === "odd even";
         pu.battenburg_mode = pu.activeSudokuVariant === "battenburg";
+        pu.sudoku_edge_clue_mode = ["difference", "sum", "product", "arithmetic", "greater", "lesser",
+            "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares", "multiplication", "xivi"].indexOf(pu.activeSudokuVariant) !== -1 &&
+            (mode === "number" || mode === "symbol");
+        pu.sudoku_corner_clue_mode = ["quadruple", "equalsums", "equaldifferences", "equalproducts",
+            "equalratios", "consecutivequads", "quadmax", "quadmin", "exclusion", "groupsum", "wheel", "squarewheel"].indexOf(pu.activeSudokuVariant) !== -1 &&
+            (mode === "number" || mode === "symbol");
+        pu.sudoku_directional_cell_mode = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious",
+            "search9", "sumdetector"].indexOf(pu.activeSudokuVariant) !== -1 && mode === "symbol";
+        pu.sudokuSymbolVariantOwner = mode === "symbol" && ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext",
+            "pointtoprevious", "quadmax", "quadmin", "search9", "sumdetector"].indexOf(pu.activeSudokuVariant) !== -1 ?
+            pu.activeSudokuVariant : null;
         if (pu.battenburg_mode) {
             UserSettings.draw_edges = true;
         }
-        if (pu.xv_mode) {
+        if (pu.xv_mode || pu.sudoku_edge_clue_mode || pu.sudoku_corner_clue_mode) {
             UserSettings.draw_edges = true;
         }
         pu.mode_set(mode);
@@ -1568,8 +2789,29 @@ var SudokuTools = (function() {
         pu.type = pu.type_set();
         updateVariantActive();
         updateKropkiNegativeControl();
+        updateConsecutiveNegativeControl();
         updateXVNegativeControl();
         updateBattenburgNegativeControl();
+    }
+
+    function ensureWindokuCages() {
+        if (!pu || puzzleSize(pu) !== 9 || typeof pu.cage_for_selection !== "function") return;
+        var added = Array.isArray(pu.windokuCageSegments) ? pu.windokuCageSegments.slice() : [];
+        [[1, 1], [1, 4], [4, 1], [4, 4]].forEach(function(start) {
+            var cells = [];
+            for (var row = 0; row < 3; row++) {
+                for (var col = 0; col < 3; col++) cells.push(cellKey(pu, start[0] + row, start[1] + col));
+            }
+            var segments = pu.cage_for_selection(cells);
+            segments[0].concat(segments[1]).forEach(function(segment) {
+                if (pu.pu_q.cage[segment] === undefined) {
+                    pu.set_value("cage", segment, 10, null);
+                    added.push(segment);
+                }
+            });
+        });
+        pu.windokuCageSegments = added;
+        if (typeof pu.refreshKillerCages === "function") pu.refreshKillerCages("pu_q");
     }
 
     function renderVariantTools() {
@@ -1605,20 +2847,21 @@ var SudokuTools = (function() {
             group.className = "sudoku-variant-group";
             group.dataset.variant = variant;
             var hasEditingMode = false;
+            var clueModeCount = setting.modeset.filter(function(mode) { return mode !== "sudoku"; }).length;
             for (var i = 0; i < setting.modeset.length; i++) {
                 if (setting.modeset[i] === "sudoku") {
                     continue;
                 }
                 hasEditingMode = true;
                 addVariantModeButton(group, variant, setting.modeset[i],
-                    setting.submodeset[i], setting.styleset[i]);
+                    setting.submodeset[i], setting.styleset[i], clueModeCount > 1);
             }
             if (!hasEditingMode) {
                 var label = document.createElement("button");
                 label.type = "button";
                 label.className = "button sudoku-tool-button sudoku-variant-label";
                 label.dataset.variant = variant;
-                label.textContent = variant.replace(/\b\w/g, function(letter) { return letter.toUpperCase(); });
+                label.textContent = variantLabel(variant);
                 label.title = "This constraint is active and does not need a drawing mode";
                 label.addEventListener("click", function(event) {
                     event.preventDefault();
@@ -1627,28 +2870,33 @@ var SudokuTools = (function() {
                 });
                 group.appendChild(label);
             }
-            if (variant === "kropki" || variant === "xv" || variant === "battenburg") {
+            if (variant === "kropki" || variant === "consecutive" || variant === "xv" || variant === "battenburg") {
                 var negative = document.createElement("button");
                 var isKropki = variant === "kropki";
+                var isConsecutive = variant === "consecutive";
                 var isXV = variant === "xv";
                 negative.id = isKropki ? "sudoku_kropki_negative" :
-                    isXV ? "sudoku_xv_negative" : "sudoku_battenburg_negative";
+                    isConsecutive ? "sudoku_consecutive_negative" :
+                        isXV ? "sudoku_xv_negative" : "sudoku_battenburg_negative";
                 negative.type = "button";
                 negative.className = "button sudoku-tool-button " +
-                    (isKropki ? "sudoku-kropki-negative" : isXV ? "sudoku-xv-negative" :
+                    (isKropki ? "sudoku-kropki-negative" : isConsecutive ? "sudoku-consecutive-negative" : isXV ? "sudoku-xv-negative" :
                         "sudoku-battenburg-negative");
                 negative.title = isKropki ?
                     "Apply the negative Kropki rule to every undotted orthogonal edge" :
+                    isConsecutive ? "Require every unmarked orthogonal edge to be non-consecutive" :
                     isXV ? "Apply the negative XV rule to every unmarked orthogonal edge" :
                         "Forbid checkerboard parity around every unmarked four-cell corner";
                 negative.setAttribute("aria-label", isKropki ?
-                    "Negative Kropki constraint" : isXV ? "Negative XV constraint" :
+                    "Negative Kropki constraint" : isConsecutive ? "Negative Consecutive constraint" : isXV ? "Negative XV constraint" :
                         "Negative Battenburg constraint");
                 negative.addEventListener("click", function(event) {
                     event.preventDefault();
                     event.stopPropagation();
                     if (variant === "kropki") {
                         toggleKropkiNegative();
+                    } else if (variant === "consecutive") {
+                        toggleConsecutiveNegative();
                     } else if (variant === "xv") {
                         toggleXVNegative();
                     } else {
@@ -1675,6 +2923,9 @@ var SudokuTools = (function() {
             if (typeof pu.kropkiNegativeConstraint !== "boolean") {
                 pu.kropkiNegativeConstraint = false;
             }
+            if (typeof pu.consecutiveNegativeConstraint !== "boolean") {
+                pu.consecutiveNegativeConstraint = false;
+            }
             if (typeof pu.xvNegativeConstraint !== "boolean") {
                 pu.xvNegativeConstraint = false;
             }
@@ -1684,18 +2935,19 @@ var SudokuTools = (function() {
         }
         updateVariantActive();
         updateKropkiNegativeControl();
+        updateConsecutiveNegativeControl();
         updateXVNegativeControl();
         updateBattenburgNegativeControl();
     }
 
-    function addVariantModeButton(group, variant, mode, submode, style) {
+    function addVariantModeButton(group, variant, mode, submode, style, showClueType) {
             var button = document.createElement("button");
             button.type = "button";
             button.className = "button sudoku-tool-button sudoku-variant-mode";
             button.dataset.variant = variant;
             button.dataset.mode = mode;
             button.dataset.submode = submode;
-            button.textContent = modeLabel(variant, mode, submode);
+            button.textContent = variantLabel(variant) + (showClueType ? " · " + modeLabel(variant, mode, submode) : "");
             button.addEventListener("click", function(event) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -1723,6 +2975,13 @@ var SudokuTools = (function() {
             deleteEntries(colorLayer && colorLayer.symbol, function(entry) {
                 return entry && entry[1] === "circle_SS" && (entry[0] === 1 || entry[0] === 2);
             });
+        } else if (variant === "consecutive") {
+            deleteEntries(layer.symbol, function(entry) {
+                return entry && entry[1] === "circle_SS" && entry[0] === 1;
+            });
+            deleteEntries(colorLayer && colorLayer.symbol, function(entry) {
+                return entry && entry[1] === "circle_SS" && entry[0] === 1;
+            });
         } else if (variant === "odd even") {
             deleteEntries(layer.symbol, function(entry) {
                 return entry && (entry[1] === "circle_L" || entry[1] === "square_L");
@@ -1737,6 +2996,9 @@ var SudokuTools = (function() {
             deleteEntries(colorLayer && colorLayer.symbol, function(entry) {
                 return entry && entry[1] === "sudokuetc" && entry[0] === 1;
             });
+        } else if (variant === "windoku") {
+            // Windoku owns only its generated window segments; removeVariant()
+            // deletes those without disturbing cages belonging to other variants.
         } else if (outsideVariants.indexOf(variant) !== -1) {
             deleteEntries(layer.number, function(entry, key) {
                 return pu.cellsoutsideFrame && pu.cellsoutsideFrame.includes(Number(key));
@@ -1789,6 +3051,39 @@ var SudokuTools = (function() {
                 colorLayer.killercages = [];
                 colorLayer.cage = {};
             }
+        } else if (penpa_constraints.setting[variant]) {
+            var modes = penpa_constraints.setting[variant].modeset || [];
+            if (modes.indexOf("surface") !== -1) {
+                layer.surface = {};
+                if (colorLayer) colorLayer.surface = {};
+            }
+            if (modes.indexOf("line") !== -1) {
+                deleteEntries(layer.line, function(style) { return style === 5; });
+                deleteEntries(colorLayer && colorLayer.line, function(style) { return style === 5; });
+            }
+            if (modes.indexOf("number") !== -1) {
+                deleteEntries(layer.number, function(entry, key) {
+                    return !(pu.centerlist || []).includes(Number(key)) || !entry || entry[2] !== "1";
+                });
+                deleteEntries(colorLayer && colorLayer.number, function(entry, key) {
+                    return !(pu.centerlist || []).includes(Number(key)) || !entry || entry[2] !== "1";
+                });
+            }
+            if (modes.indexOf("symbol") !== -1) {
+                layer.symbol = {};
+                if (colorLayer) colorLayer.symbol = {};
+            }
+            if (modes.indexOf("cage") !== -1) {
+                layer.cage = {};
+                layer.killercages = [];
+                if (colorLayer) { colorLayer.cage = {}; colorLayer.killercages = []; }
+            }
+            if (modes.indexOf("special") !== -1) {
+                layer.thermo = [];
+                layer.nobulbthermo = [];
+                layer.arrows = [];
+                if (colorLayer) { colorLayer.thermo = []; colorLayer.nobulbthermo = []; colorLayer.arrows = []; }
+            }
         }
     }
 
@@ -1816,17 +3111,26 @@ var SudokuTools = (function() {
         syncDiagonalLines();
         if (variant === "kropki") {
             pu.kropkiNegativeConstraint = false;
+        } else if (variant === "consecutive") {
+            pu.consecutiveNegativeConstraint = false;
         } else if (variant === "xv") {
             pu.xvNegativeConstraint = false;
         } else if (variant === "battenburg") {
             pu.battenburgNegativeConstraint = false;
+        } else if (variant === "windoku" && Array.isArray(pu.windokuCageSegments)) {
+            pu.windokuCageSegments.forEach(function(segment) { delete pu.pu_q.cage[segment]; });
+            pu.windokuCageSegments = [];
+            if (typeof pu.refreshKillerCages === "function") pu.refreshKillerCages("pu_q");
         }
         pu.activeSudokuVariant = "classic";
         pu.kropki_mode = false;
+        pu.consecutive_mode = false;
+        pu.sudoku_directional_cell_mode = false;
         pu.xv_mode = false;
         pu.odd_even_mode = false;
         pu.battenburg_mode = false;
-        if (outsideVariants.indexOf(variant) !== -1) {
+        if (outsideVariants.indexOf(variant) !== -1 ||
+            (penpa_constraints.setting[variant] && penpa_constraints.setting[variant].outside)) {
             shrinkOutsideSpace();
         }
         var select = byId("constraints_settings_opt");
@@ -1840,16 +3144,21 @@ var SudokuTools = (function() {
 
     function resetForNewGrid() {
         SudokuTools.autoEnabled = false;
+        SudokuTools.solveOnceAutoEnabled = false;
+        stopSolveOnceCheck();
         SudokuSolver.cancelCandidateAnalysis();
         SudokuSolver.invalidateCandidateAnalysis();
         if (pu) {
             pu.activeSudokuVariants = ["classic"];
             pu.activeSudokuVariant = "classic";
             pu.kropki_mode = false;
+            pu.consecutive_mode = false;
+            pu.sudoku_directional_cell_mode = false;
             pu.xv_mode = false;
             pu.odd_even_mode = false;
             pu.battenburg_mode = false;
             pu.kropkiNegativeConstraint = false;
+            pu.consecutiveNegativeConstraint = false;
             pu.xvNegativeConstraint = false;
             pu.battenburgNegativeConstraint = false;
         }
@@ -1862,6 +3171,14 @@ var SudokuTools = (function() {
 
     function variantChanged() {
         var variant = selectedVariant();
+        if (variant === "windoku" && puzzleSize(pu) !== 9) {
+            var sizeSelect = byId("constraints_settings_opt");
+            if (sizeSelect) sizeSelect.value = "classic";
+            if (typeof Swal !== "undefined") {
+                Swal.fire({ icon: "warning", title: "Windoku requires 9 × 9", text: "Create or resize the grid to 9 × 9 first." });
+            }
+            return;
+        }
         var conflict = variantConflict(variant);
         if (conflict) {
             var rejectedSelect = byId("constraints_settings_opt");
@@ -1873,12 +3190,11 @@ var SudokuTools = (function() {
             return;
         }
         addVariant(variant);
+        if (pu) pu.activeSudokuVariant = variant;
+        if (variant === "windoku") ensureWindokuCages();
         syncDiagonalLines();
         if (variant !== "classic") {
             UserSettings.panel_shown = false;
-        }
-        if (pu) {
-            pu.activeSudokuVariant = variant;
         }
         SudokuSolver.invalidateCandidateAnalysis();
         renderVariantTools();
@@ -1907,11 +3223,16 @@ var SudokuTools = (function() {
             return;
         }
         initialized = true;
+        window.addEventListener("keydown", guardKeyboardWhileRunning, true);
         var actions = {
             sudoku_reset: function() {
-                if (typeof CreateCheck === "function") {
-                    CreateCheck();
-                }
+                SudokuTools.autoEnabled = false;
+                SudokuSolver.cancelCandidateAnalysis();
+                SudokuSolver.invalidateCandidateAnalysis();
+                SudokuSolver.showConflict(pu, null);
+                var removed = SudokuSolver.clearAutoSolution(pu);
+                setToolbarState();
+                if (!removed && pu) pu.redraw();
             },
             sudoku_undo: function() { pu.undo(); },
             sudoku_redo: function() { pu.redo(); },
@@ -1919,8 +3240,10 @@ var SudokuTools = (function() {
                 UserSettings.panel_shown = !UserSettings.panel_shown;
             },
             sudoku_auto_solver: toggleAuto,
+            sudoku_solve_once: solveOnce,
             sudoku_load_test_board: loadTestBoard,
             sudoku_kropki_negative: toggleKropkiNegative,
+            sudoku_consecutive_negative: toggleConsecutiveNegative,
             sudoku_xv_negative: toggleXVNegative,
             sudoku_battenburg_negative: toggleBattenburgNegative
         };
@@ -1939,6 +3262,7 @@ var SudokuTools = (function() {
 
     return {
         autoEnabled: false,
+        solveOnceAutoEnabled: false,
         init: init,
         setToolbarState: setToolbarState,
         renderVariantTools: renderVariantTools,
@@ -1946,7 +3270,8 @@ var SudokuTools = (function() {
         resetForNewGrid: resetForNewGrid,
         generatePuzzle: generatePuzzle,
         pauseGenerator: pauseGenerator,
-        pauseWork: pauseWork
+        stopWork: stopWork,
+        scheduleSolveOnceCheck: scheduleSolveOnceCheck
     };
 })();
 

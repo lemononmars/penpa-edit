@@ -205,7 +205,7 @@ class Puzzle {
             'deltoidal': 20,
             'penrose': 20
         }; // also defined in general.js
-        this.version = [3, 3, 15]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
+        this.version = [3, 3, 28]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
         this.undoredo_disable = false;
         this.comp = false;
         this.multisolution = false;
@@ -1131,6 +1131,26 @@ class Puzzle {
 
         this.make_frameline();
         this.translate_puzzle_elements(translate_fn);
+        this.remove_outside_clues_after_sudoku_resize();
+    }
+
+    remove_outside_clues_after_sudoku_resize() {
+        if (this.nx !== 9 || this.ny !== 9 || this.space.some(value => Number(value) !== 0)) return;
+        const active = new Set(this.centerlist.map(Number));
+        const anchoredToGrid = (key) => {
+            key = Number(key);
+            if (active.has(key)) return true;
+            const neighbors = this.point[key] && Array.isArray(this.point[key].neighbor) ? this.point[key].neighbor : [];
+            return neighbors.filter(neighbor => active.has(Number(neighbor))).length >= 2;
+        };
+        for (const layerName of ["pu_q", "pu_a", "pu_q_col", "pu_a_col"]) {
+            const layer = this[layerName];
+            for (const feature of ["surface", "number", "symbol"]) {
+                for (const key of Object.keys(layer[feature] || {})) {
+                    if (!anchoredToGrid(key)) delete layer[feature][key];
+                }
+            }
+        }
     }
 
     // Universal function to translate all elements in a puzzle:
@@ -1665,6 +1685,13 @@ class Puzzle {
     number_multi_enabled() {
         let edit_mode = this.mode[this.mode.qa].edit_mode;
         let submode = this.mode[this.mode.qa][edit_mode][0];
+        // Edge and corner clues need one exact point as their cursor. Treating
+        // small-number mode as a cell selection reproduces the old XV bug:
+        // Penpa starts the rectangular/multi-cell lifecycle before the edge is
+        // available to key_number().
+        if (this.xv_mode || this.sudoku_edge_clue_mode || this.sudoku_corner_clue_mode) {
+            return false;
+        }
         return (edit_mode === "number" && !["2", "3", "9"].includes(submode)); // ignore arrow submode
     }
 
@@ -7887,6 +7914,9 @@ class Puzzle {
                 }
                 this.record("symbol", this.cursol);
                 this[this.mode.qa].symbol[this.cursol] = [number, symbolname, submode[1]];
+                if (this.sudokuSymbolVariantOwner) {
+                    this[this.mode.qa].symbol[this.cursol][3] = this.sudokuSymbolVariantOwner;
+                }
                 if (UserSettings.custom_colors_on) {
                     let cc = this.get_customcolor();
                     if (!cc || tinycolor.equals(cc, CustomColor.default_symbol_color(symbolname))) {
@@ -8331,7 +8361,9 @@ class Puzzle {
     key_space(keypressed = 0, shift_key = false, ctrl_key = false) {
         if (this.mode[this.mode.qa].edit_mode === "number") {
             let submode = this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0];
-            if (this.selection.length > 0) {
+            let direct_clue = (this.xv_mode || this.sudoku_edge_clue_mode || this.sudoku_corner_clue_mode) &&
+                this.cursol >= 0 && this.point[this.cursol];
+            if (this.selection.length > 0 || direct_clue) {
                 if (this.selection.length === 1) {
                     let clean_flag = this.check_neighbors(this.selection[0]);
                     if (!clean_flag) {
@@ -8538,7 +8570,9 @@ class Puzzle {
         var number;
         if (this.mode[this.mode.qa].edit_mode === "number") {
             let submode = this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0];
-            if (this.selection.length > 0) {
+            let direct_clue = (this.xv_mode || this.sudoku_edge_clue_mode || this.sudoku_corner_clue_mode) &&
+                this.cursol >= 0 && this.point[this.cursol];
+            if (this.selection.length > 0 || direct_clue) {
                 if (this.selection.length === 1) {
                     let clean_flag = this.check_neighbors(this.selection[0]);
                     if (!clean_flag) {
@@ -8587,7 +8621,7 @@ class Puzzle {
                     } else {
                         if (this[this.mode.qa].number[k] && this[this.mode.qa].number[k][2] != 7) {
                             this.record("number", k, this.undoredo_counter);
-                            number = this[this.mode.qa].number[k][0];
+                            number = String(this[this.mode.qa].number[k][0] || "");
                             if (number) {
                                 if (this[this.mode.qa].number[k][2] === "2") {
                                     if (number.slice(-2, -1) === "_") {
@@ -8598,10 +8632,10 @@ class Puzzle {
                                 } else {
                                     number = number.slice(0, -1);
                                 }
-                                if (number ||
-                                    this[this.mode.qa].number[k][1] === 6 ||
+                                if (number || (!direct_clue &&
+                                    (this[this.mode.qa].number[k][1] === 6 ||
                                     this[this.mode.qa].number[k][1] === 7 ||
-                                    this[this.mode.qa].number[k][1] === 11) {
+                                    this[this.mode.qa].number[k][1] === 11))) {
                                     this[this.mode.qa].number[k][0] = number;
                                 } else {
                                     delete this[this.mode.qa].number[k];
@@ -8686,7 +8720,8 @@ class Puzzle {
 
             // Deal with starting a rectangular selection
             if (e !== null && (this.mouse_mode === "down_left" || this.mouse_mode === "down_right") &&
-                !(this.xv_mode && edit_mode === "number" && String(submode) === "5"))
+                !(this.xv_mode && edit_mode === "number" && String(submode) === "5") &&
+                !this.sudoku_edge_clue_mode && !this.sudoku_corner_clue_mode)
                 this.handle_rect_mousedown(e, ctrl_key, num, obj);
 
             switch (edit_mode) {
@@ -9689,6 +9724,33 @@ class Puzzle {
         return true;
     }
 
+    cycleConsecutiveDot(num) {
+        if (!this.isKropkiEdge(num)) {
+            return false;
+        }
+        let current = this[this.mode.qa].symbol[num];
+        this.undoredo_counter++;
+        if (!current || current[1] !== "circle_SS" || current[0] !== 1) {
+            this.set_value("symbol", num, [1, "circle_SS", 2], null);
+        } else {
+            this.remove_value("symbol", num, true);
+        }
+        return true;
+    }
+
+    cycleClockfaceMark(num) {
+        let current = this[this.mode.qa].symbol[num];
+        this.undoredo_counter++;
+        if (!current || current[1] !== "circle_SS") {
+            this.set_value("symbol", num, [1, "circle_SS", 2], null);
+        } else if (current[0] === 1) {
+            this.set_value("symbol", num, [2, "circle_SS", 2], null);
+        } else {
+            this.remove_value("symbol", num, true);
+        }
+        return true;
+    }
+
     mouse_symbol(x, y, num) {
         if (this.mouse_mode === "down_left") {
             this.cursol = num;
@@ -9699,6 +9761,38 @@ class Puzzle {
             }
             if (this.kropki_mode && this.mode[this.mode.qa].symbol[0] === "circle_SS") {
                 this.cycleKropkiDot(num);
+                this.redraw();
+                return;
+            }
+            if (this.clockfaces_mode && this.mode[this.mode.qa].symbol[0] === "circle_SS") {
+                this.cycleClockfaceMark(num);
+                this.redraw();
+                return;
+            }
+            if (this.consecutive_mode && this.mode[this.mode.qa].symbol[0] === "circle_SS") {
+                this.cycleConsecutiveDot(num);
+                this.redraw();
+                return;
+            }
+            if (this.even_sum_pairs_mode && this.mode[this.mode.qa].symbol[0] === "circle_SS") {
+                this.cycleConsecutiveDot(num);
+                this.redraw();
+                return;
+            }
+            if (this.trio_mode) {
+                let current = this[this.mode.qa].symbol[num];
+                this.undoredo_counter++;
+                if (!current) {
+                    this.set_value("symbol", num, [1, "circle_L", 2], null);
+                } else if (current[1] === "circle_L") {
+                    this.set_value("symbol", num, [1, "square_L", 2], null);
+                } else if (current[1] === "square_L") {
+                    this.set_value("symbol", num, [1, "triup_L", 2], null);
+                } else if (current[1] === "triup_L") {
+                    this.remove_value("symbol", num, true);
+                } else {
+                    this.set_value("symbol", num, [1, "circle_L", 2], null);
+                }
                 this.redraw();
                 return;
             }

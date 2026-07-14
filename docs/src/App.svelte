@@ -1,14 +1,16 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { guideFor } from "./variantRules";
+    import { cspSupportedVariants, directionalShapeVariationValues, installVariationCatalog, noInputVariationValues, outsideVariationValues, scratchGeneratableVariants, variationByValue } from "./variationCatalog";
+    import { markChoiceFor } from "./variantMarks";
 
     type VariantOption = { value: string; label: string; group: string };
+    type VariantTab = "no-input" | "line" | "region" | "outside" | "shape";
 
     let boardHost: HTMLElement;
     let variantHost: HTMLElement;
     let logHost: HTMLElement;
     let legacyControlsHost: HTMLElement;
-    let legacyPanelHost: HTMLElement;
     let variants: VariantOption[] = [];
     let selectedVariant = "classic";
     let layer = "problem";
@@ -22,17 +24,32 @@
     let hoveredVariant: string | null = null;
     let noteMode = "1";
     let variantSearch = "";
+    let variantTab: VariantTab = "no-input";
     let screenshotType: "png" | "jpg" | "svg" = "png";
     let screenshotBorder = false;
     let screenshotName = "Classic";
-    let darkTheme = false;
+    let darkTheme = true;
     let generatorVariants: string[] = ["classic"];
     let generatorNegative = { kropki: false, xv: false, battenburg: false };
     let generatorSource: "new" | "existing" = "new";
     let toolTitle = "Sudoku input";
     let toolDescription = "Click a cell, then type a digit. Use Tab to cycle through available input tools.";
     let ruleTitle = "Classic Sudoku";
+    let ruleVariant = "classic";
     let ruleDescription = "Place each digit exactly once in every row, column, and box.";
+    let toolPanelMode = "Sudoku";
+    type ToolPanelOption = { value: string; label: string; input?: string; action?: "backspace" | "delete"; submode?: string };
+    let toolPanelOptions: ToolPanelOption[] = [];
+    let toolPanelSelected = new Set<string>();
+    let slotColumns: boolean[] = [];
+
+    const variantTabs: Array<{ value: VariantTab; label: string }> = [
+        { value: "no-input", label: "No input" },
+        { value: "line", label: "Line" },
+        { value: "region", label: "Region" },
+        { value: "outside", label: "Outside" },
+        { value: "shape", label: "Shape" }
+    ];
 
     const variantIcons: Record<string, string> = {
         classic: "9",
@@ -50,7 +67,9 @@
         xv: "Ⅹ",
         battenburg: "▦",
         skyscraper: "▥",
-        sandwich: "☰"
+        sandwich: "☰",
+        alloddalleven: "◑",
+        clone: "⧉"
     };
 
     function legacyClick(id: string) {
@@ -72,6 +91,7 @@
         variantMenuOpen = false;
         legacyPress(nextLayer === "solution" ? "pu_a_label" : "pu_q_label");
         if (nextLayer === "modes") queueMicrotask(moveLegacyControls);
+        queueMicrotask(() => { syncState(); syncToolPanel(); });
     }
 
     function chooseNoteMode(mode: "1" | "2" | "3") {
@@ -80,23 +100,188 @@
         queueMicrotask(syncState);
     }
 
-    function visibleVariants() {
-        const query = variantSearch.trim().toLowerCase();
-        return query ? variants.filter((variant) => variant.label.toLowerCase().includes(query) ||
-            variant.value.toLowerCase().includes(query)) : variants;
+    function syncToolPanel() {
+        const pu = (window as any).pu;
+        const mode = pu?.mode?.[pu?.mode?.qa]?.edit_mode || "sudoku";
+        const setting = pu?.mode?.[pu?.mode?.qa]?.[mode] || [];
+        const submode = String(setting[0] || "");
+        const variant = String(pu?.activeSudokuVariant || "classic");
+        const size = Math.max(1, Math.min(9, Number(pu?.ny || 9) -
+            Number(pu?.space?.[0] || 0) - Number(pu?.space?.[1] || 0)));
+        const arrows = ["←", "↖", "↑", "↗", "→", "↘", "↓", "↙"];
+        toolPanelMode = mode === "symbol" ? "Shape" : mode === "combi" ? "Composite" :
+            mode === "number" ? "Number" : "Sudoku";
+        if (mode === "number" && variant === "inequality") {
+            toolPanelOptions = [{ value: "<", label: "<" }, { value: ">", label: ">" }];
+        } else if (mode === "number" && variant === "xv") {
+            toolPanelOptions = [{ value: "V", label: "V" }, { value: "X", label: "X" }];
+        } else if (mode === "number" && variant === "xivi") {
+            toolPanelOptions = [{ value: "VI", label: "VI" }, { value: "XI", label: "XI" }];
+        } else if (mode === "number" && variant === "multiplication") {
+            toolPanelOptions = [{ value: "×", label: "×" }];
+        } else if (mode === "symbol" && (variant === "kropki" || variant === "clockfaces") && submode === "circle_SS") {
+            toolPanelOptions = [
+                { value: "1", label: "White" },
+                { value: "2", label: "Black" }
+            ];
+        } else if (mode === "symbol" && (variant === "consecutive" || variant === "evensumpairs") && submode === "circle_SS") {
+            toolPanelOptions = [{ value: "1", label: "White" }];
+        } else if (mode === "symbol" && variant === "odd even") {
+            toolPanelOptions = [
+                { value: "odd", input: "3", label: "Odd ○", submode: "circle_L" },
+                { value: "even", input: "3", label: "Even □", submode: "square_L" }
+            ];
+        } else if (mode === "symbol" && variant === "trio") {
+            toolPanelOptions = [
+                { value: "trio-low", input: "1", label: "1–3 ○", submode: "circle_L" },
+                { value: "trio-mid", input: "1", label: "4–6 □", submode: "square_L" },
+                { value: "trio-high", input: "1", label: "7–9 △", submode: "triup_L" }
+            ];
+        } else if (mode === "symbol" && variant === "diagonallyconsecutive") {
+            toolPanelOptions = [{ value: "1", label: "Left diagonal" }, { value: "2", label: "Right diagonal" }];
+        } else if (mode === "symbol" && ["eliminate", "quadmax", "quadmin", "little killer", "product little killer"].includes(variant) && /^arrow_/.test(submode)) {
+            toolPanelOptions = [1, 3, 5, 7].map((index) => ({ value: String(index + 1), label: arrows[index] }));
+        } else if (mode === "symbol" && variant === "rossini" && /^arrow_/.test(submode)) {
+            toolPanelOptions = [0, 2, 4, 6].map((index) => ({ value: String(index + 1), label: arrows[index] }));
+        } else if (mode === "symbol" && /^arrow_/.test(submode)) {
+            toolPanelOptions = arrows.map((label, index) => ({ value: String(index + 1), label }));
+        } else if (["symbol", "number", "sudoku"].includes(mode)) {
+            toolPanelOptions = Array.from({ length: mode === "symbol" ? 9 : size }, (_, index) => ({
+                value: String(index + 1), label: String(index + 1)
+            }));
+        } else {
+            toolPanelOptions = [];
+        }
+        if (toolPanelOptions.length) {
+            toolPanelOptions = [...toolPanelOptions,
+                { value: "backspace", label: "⌫", action: "backspace" },
+                { value: "delete", label: "Clear", action: "delete" }];
+        }
+        const entry = pu?.[pu?.mode?.qa]?.symbol?.[pu?.cursol];
+        const selected = new Set<string>();
+        if (mode === "symbol" && entry?.[1] === submode) {
+            if (Array.isArray(entry[0])) entry[0].forEach((enabled: number, index: number) => {
+                if (enabled === 1) selected.add(String(index + 1));
+            });
+            else if (entry[0]) selected.add(String(entry[0]));
+        }
+        if (mode === "symbol" && variant === "odd even" && entry) {
+            if (entry[1] === "circle_L") selected.add("odd");
+            if (entry[1] === "square_L") selected.add("even");
+        }
+        if (mode === "symbol" && variant === "trio" && entry) {
+            if (entry[1] === "circle_L") selected.add("trio-low");
+            if (entry[1] === "square_L") selected.add("trio-mid");
+            if (entry[1] === "triup_L") selected.add("trio-high");
+        }
+        toolPanelSelected = selected;
     }
 
-    function ensureOutsideSpace() {
+    function applyToolPanelOption(option: ToolPanelOption) {
+        const pu = (window as any).pu;
+        if (!pu) return;
+        if (option.submode && pu.mode?.[pu.mode.qa]?.symbol) {
+            pu.subsymbolmode?.(option.submode, true);
+        }
+        if (option.action === "backspace") pu.key_backspace?.();
+        else if (option.action === "delete") pu.key_space?.(46, false, false);
+        else pu.key_number?.(option.input || option.value);
+        pu.redraw?.();
+        queueMicrotask(() => { syncState(); syncToolPanel(); });
+    }
+
+    function useToolPanelOption(event: Event, option: ToolPanelOption) {
+        event.preventDefault();
+        event.stopPropagation();
+        applyToolPanelOption(option);
+    }
+
+    function toolPanelNumberShortcut(event: KeyboardEvent) {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest("input, textarea, select, [contenteditable='true'], .modal, .swal2-container")) return;
+        const match = /^(?:Digit|Numpad)([1-9])$/.exec(event.code);
+        if (!match) return;
+        const option = toolPanelOptions.filter((item) => !item.action)[Number(match[1]) - 1];
+        if (!option) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        applyToolPanelOption(option);
+    }
+
+    function revealAllModes() {
+        const select = document.getElementById("mode_choices") as HTMLSelectElement | null;
+        if (!select) return;
+        Array.from(select.options).forEach((option) => option.selected = true);
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        (window as any).advancecontrol_on?.();
+        queueMicrotask(syncState);
+    }
+
+    function variantInputFamilies(value: string): VariantTab[] {
+        if (noInputVariationValues.has(value)) return ["no-input"];
+        if (directionalShapeVariationValues.has(value)) return ["shape"];
+        const catalog = variationByValue.get(value);
+        const setting = (window as any).penpa_constraints?.setting?.[value];
+        const modes: string[] = setting?.modeset || [];
+        const families = new Set<VariantTab>();
+        if (outsideVariationValues.has(value) || setting?.outside) families.add("outside");
+        if (catalog?.tags?.includes("region") || modes.includes("cage")) families.add("region");
+        if (modes.includes("line") || modes.includes("special")) families.add("line");
+        if (!families.size) {
+            const choice = catalog ? markChoiceFor(catalog) : null;
+            families.add(choice?.position === "none" || value === "classic" ? "no-input" : "shape");
+        }
+        return [...families];
+    }
+
+    function primaryVariantTab(value: string): VariantTab {
+        const families = variantInputFamilies(value);
+        return (["outside", "region", "line", "no-input", "shape"] as VariantTab[])
+            .find((tab) => families.includes(tab)) || "shape";
+    }
+
+    function activeVariantValues() {
+        const pu = (window as any).pu;
+        return Array.isArray(pu?.activeSudokuVariants)
+            ? pu.activeSudokuVariants as string[]
+            : [pu?.activeSudokuVariant || "classic"];
+    }
+
+    function conflictingVariant(value: string) {
+        const restricted = variantInputFamilies(value).filter((family) =>
+            family === "line" || family === "region" || family === "outside"
+        );
+        if (!restricted.length) return null;
+        return activeVariantValues().find((active) => active !== value && active !== "classic" &&
+            variantInputFamilies(active).some((family) => restricted.includes(family))) || null;
+    }
+
+    function unavailableVariant(value: string) {
+        const pu = (window as any).pu;
+        const size = Number(pu?.ny || 0) - Number(pu?.space?.[0] || 0) - Number(pu?.space?.[1] || 0);
+        return value === "windoku" && size !== 9 ? "Windoku requires a 9 × 9 grid" : "";
+    }
+
+    function visibleVariants() {
+        const query = variantSearch.trim().toLowerCase();
+        return variants.filter((variant) => primaryVariantTab(variant.value) === variantTab &&
+            (!query || variant.label.toLowerCase().includes(query) || variant.value.toLowerCase().includes(query)));
+    }
+
+    function ensureOutsideSpace(target = 1, sides = [0, 1, 2, 3]) {
         const pu = (window as any).pu;
         if (!pu?.space || !pu.grid_is_square?.()) return;
         const operations = ["resize_top", "resize_bottom", "resize_left", "resize_right"];
         operations.forEach((operation, index) => {
-            if (Number(pu.space[index] || 0) < 1) pu[operation]?.(1, "white");
+            if (!sides.includes(index)) return;
+            let missing = Math.max(0, target - Number(pu.space[index] || 0));
+            while (missing-- > 0) pu[operation]?.(1, "white");
         });
         window.requestAnimationFrame(fitBoard);
     }
 
     function chooseVariant(value: string) {
+        if (conflictingVariant(value) || unavailableVariant(value)) return;
         selectedVariant = value;
         variantMenuOpen = false;
         const select = document.getElementById("constraints_settings_opt") as HTMLSelectElement | null;
@@ -105,7 +290,38 @@
         select.dispatchEvent(new Event("change", { bubbles: true }));
         variantSearch = "";
         if (select.value === selectedVariant &&
-            ["little killer", "sandwich", "skyscraper"].includes(selectedVariant)) ensureOutsideSpace();
+            (["little killer", "sandwich", "skyscraper"].includes(selectedVariant) ||
+                outsideVariationValues.has(selectedVariant))) {
+            const leftTopOnly = ["sandwich", "edgedifference", "evensandwich", "oddsandwich"].includes(selectedVariant);
+            const layers = ["outside", "outside234", "evensandwich", "oddsandwich"].includes(selectedVariant) ? 3 : 1;
+            ensureOutsideSpace(layers, leftTopOnly ? [0, 2] : [0, 1, 2, 3]);
+        }
+    }
+
+    function readSlotColumns() {
+        const pu = (window as any).pu;
+        const size = Math.max(1, Number(pu?.ny || 9) - Number(pu?.space?.[0] || 0) - Number(pu?.space?.[1] || 0));
+        const startRow = 2 + Number(pu?.space?.[0] || 0);
+        const startCol = 2 + Number(pu?.space?.[2] || 0);
+        slotColumns = Array.from({ length: size }, (_, col) => Array.from({ length: size }, (_, row) =>
+            Boolean(pu?.pu_q?.surface?.[(startCol + col) + (startRow + row) * pu.nx0])).every(Boolean));
+    }
+
+    function toggleSlotColumn(col: number) {
+        const pu = (window as any).pu;
+        if (!pu) return;
+        const size = slotColumns.length;
+        const startRow = 2 + Number(pu.space?.[0] || 0);
+        const startCol = 2 + Number(pu.space?.[2] || 0);
+        const next = !slotColumns[col];
+        pu.undoredo_counter++;
+        for (let row = 0; row < size; row++) {
+            const key = (startCol + col) + (startRow + row) * pu.nx0;
+            if (next) pu.set_value?.("surface", key, 1, null);
+            else pu.remove_surface?.(key);
+        }
+        pu.redraw?.();
+        readSlotColumns();
     }
 
     function updateToolDescription() {
@@ -114,6 +330,7 @@
         const mode = active?.dataset.mode || "sudoku";
         const submode = active?.dataset.submode || "1";
         const guide = guideFor(variant);
+        ruleVariant = variant;
         ruleTitle = guide.title;
         ruleDescription = guide.rule;
         toolTitle = mode === "number" && variant === "killer" ? "Killer sum" : guide.title + " tool";
@@ -180,9 +397,7 @@
         const size = newGridSize;
         const variantsToGenerate = [...generatorVariants];
         const negative = { ...generatorNegative };
-        const supported = new Set(["classic", "diagonal", "anti diagonal", "anti king", "anti knight",
-            "non consecutive", "odd even", "kropki", "xv", "battenburg"]);
-        const unsupported = variantsToGenerate.filter((variant) => !supported.has(variant));
+        const unsupported = variantsToGenerate.filter((variant) => !scratchGeneratableVariants.has(variant));
         if (generatorSource !== "existing" && (unsupported.length || negative.kropki || negative.xv || negative.battenburg ||
             (size === 6 && variantsToGenerate.includes("anti diagonal")))) {
             studioModal = null;
@@ -255,10 +470,35 @@
         if (filename) filename.value = screenshotName || activeVariantFilename();
     }
 
-    function exportScreenshot(openInWindow: boolean) {
+    function downloadScreenshot(target: "problem" | "solution") {
         prepareScreenshot();
-        if (openInWindow) (window as any).saveimage_window?.();
-        else (window as any).saveimage_download?.();
+        const pu = (window as any).pu;
+        const settings = (window as any).UserSettings;
+        const tools = (window as any).SudokuTools;
+        const filename = document.getElementById("saveimagename") as HTMLInputElement | null;
+        const originalName = filename?.value || screenshotName || activeVariantFilename();
+        const originalVisibility = settings?.show_solution;
+        const originalAuto = tools?.autoEnabled;
+        const solutionName = originalName.replace(/(\.(?:png|jpe?g|svg))$/i, "_Sol$1");
+        if (filename) filename.value = target === "solution" ?
+            (solutionName === originalName ? `${originalName}_Sol` : solutionName) : originalName;
+        if (tools) tools.autoEnabled = false;
+        if (settings) settings.show_solution = target === "solution";
+        else pu?.redraw?.();
+        (window as any).saveimage_download?.();
+        if (settings) settings.show_solution = originalVisibility;
+        if (tools) tools.autoEnabled = originalAuto;
+        if (filename) filename.value = originalName;
+        pu?.redraw?.();
+    }
+
+    function exportScreenshot(target: "problem" | "solution" | "both") {
+        if (target === "both") {
+            downloadScreenshot("problem");
+            downloadScreenshot("solution");
+        } else {
+            downloadScreenshot(target);
+        }
         studioModal = null;
     }
 
@@ -274,8 +514,8 @@
             node.classList.remove("is_hidden");
             legacyControlsHost.appendChild(node);
         });
-        const panel = document.getElementById("float-key");
-        if (panel && legacyPanelHost) legacyPanelHost.appendChild(panel);
+        const settings = (window as any).UserSettings;
+        if (settings?.panel_shown) settings.panel_shown = false;
     }
 
     function closeModalFromBackdrop(event: MouseEvent) {
@@ -309,6 +549,7 @@
     }
 
     function syncState() {
+        installVariationCatalog();
         const select = document.getElementById("constraints_settings_opt") as HTMLSelectElement | null;
         if (select?.options.length) {
             variants = Array.from(select.options).map((option) => ({
@@ -326,13 +567,15 @@
         });
         autoEnabled = document.getElementById("sudoku_auto_solver")?.classList.contains("auto-solver-active") || false;
         updateToolDescription();
+        syncToolPanel();
+        if (selectedVariant === "slotmachine") readSlotColumns();
     }
 
     function cycleInputMode(event: KeyboardEvent) {
         const target = event.target as HTMLElement | null;
         if (target?.closest("input, textarea, select, [contenteditable='true'], .modal, .swal2-container")) return;
         if (layer === "solution" && ["KeyZ", "KeyX", "KeyC"].includes(event.code)) {
-            noteMode = event.code === "KeyZ" ? "1" : event.code === "KeyX" ? "2" : "3";
+            noteMode = event.code === "KeyZ" ? "1" : event.code === "KeyX" ? "3" : "2";
         }
         if (event.key !== "Tab" || layer === "solution" || layer === "modes" || studioModal) return;
         const modes = Array.from(variantHost?.querySelectorAll<HTMLButtonElement>(".sudoku-variant-mode") || [])
@@ -353,12 +596,14 @@
         const variantTools = document.getElementById("sudoku-variant-tools");
         const log = document.getElementById("sudoku-solver-log");
         const autoSolver = document.getElementById("sudoku_auto_solver");
+        const solveOnce = document.getElementById("sudoku_solve_once");
         const logHeader = log?.querySelector(".sudoku-solver-log-header");
-        if (!board || !variantTools || !log || !autoSolver || !logHeader || !document.getElementById("canvas")) return false;
+        if (!board || !variantTools || !log || !autoSolver || !solveOnce || !logHeader || !document.getElementById("canvas")) return false;
         boardHost.appendChild(board);
         variantHost.appendChild(variantTools);
         logHost.appendChild(log);
         logHeader.insertBefore(autoSolver, document.getElementById("sudoku-solver-status"));
+        logHeader.insertBefore(solveOnce, document.getElementById("sudoku-solver-status"));
         moveLegacyControls();
         syncState();
         initialized = true;
@@ -371,9 +616,18 @@
     onMount(() => {
         let observer: MutationObserver | undefined;
         let resizeObserver: ResizeObserver | undefined;
+        let syncFrame = 0;
+        const requestSync = () => {
+            if (syncFrame) return;
+            syncFrame = window.requestAnimationFrame(() => {
+                syncFrame = 0;
+                syncState();
+            });
+        };
         const start = () => {
+            installVariationCatalog();
             if (!moveLegacyNodes()) return false;
-            observer = new MutationObserver(syncState);
+            observer = new MutationObserver(requestSync);
             [
                 document.getElementById("constraints_settings_opt"),
                 document.getElementById("sudoku_auto_solver"),
@@ -399,6 +653,8 @@
         if (document.readyState === "complete") begin();
         else window.addEventListener("load", () => window.setTimeout(begin, 0), { once: true });
         document.addEventListener("keydown", cycleInputMode);
+        document.addEventListener("keydown", toolPanelNumberShortcut, true);
+        document.addEventListener("pointerup", requestSync);
         const closeVariantMenu = (event: PointerEvent) => {
             const target = event.target as HTMLElement | null;
             if (!target?.closest(".variant-picker")) variantMenuOpen = false;
@@ -408,7 +664,10 @@
         return () => {
             observer?.disconnect();
             resizeObserver?.disconnect();
+            if (syncFrame) window.cancelAnimationFrame(syncFrame);
             document.removeEventListener("keydown", cycleInputMode);
+            document.removeEventListener("keydown", toolPanelNumberShortcut, true);
+            document.removeEventListener("pointerup", requestSync);
             document.removeEventListener("pointerdown", closeVariantMenu);
         };
     });
@@ -425,21 +684,22 @@
             <section>
                 <h2>Editing layer</h2>
                 <div class="segmented">
-                    <button class:active={layer === "problem"} on:click={() => chooseLayer("problem")}>Problem</button>
-                    <button class:active={layer === "solution"} on:click={() => chooseLayer("solution")}>Note</button>
-                    <button class:active={layer === "modes"} on:click={() => chooseLayer("modes")}>Modes</button>
+                    <button class:active={layer === "problem"} on:click={() => chooseLayer("problem")}><i class="fa fa-pencil" aria-hidden="true"></i>Set</button>
+                    <button class:active={layer === "solution"} on:click={() => chooseLayer("solution")}><i class="fa fa-check" aria-hidden="true"></i>Solve</button>
+                    <button class:active={layer === "modes"} on:click={() => chooseLayer("modes")}><i class="fa fa-sliders" aria-hidden="true"></i>Misc</button>
                 </div>
                 {#if layer === "solution"}
                     <div class="note-modes" aria-label="Note input style">
                         <button class:active={noteMode === "1"} on:click={() => chooseNoteMode("1")}><span>Z</span>Normal</button>
-                        <button class:active={noteMode === "3"} on:click={() => chooseNoteMode("3")}><span>C</span>Center</button>
-                        <button class:active={noteMode === "2"} on:click={() => chooseNoteMode("2")}><span>X</span>Corner</button>
+                        <button class:active={noteMode === "3"} on:click={() => chooseNoteMode("3")}><span>X</span>Center</button>
+                        <button class:active={noteMode === "2"} on:click={() => chooseNoteMode("2")}><span>C</span>Corner</button>
                     </div>
                 {/if}
             </section>
 
-            <section class="variant-picker" class:disabled-section={layer === "solution"} class:hidden-section={layer === "modes"}>
+            <section class="variant-picker" class:hidden-section={layer !== "problem"}>
                 <div class="control-label" id="svelte-variant-label">Add variant</div>
+                <div class="generation-legend"><span class="csp-legend-icon">⬢</span> CSP implemented · ✦ Generates from scratch</div>
                 <div class="variant-search-control">
                     <span class="variant-icon">{variantIcon(selectedVariant)}</span>
                     <input disabled={layer === "solution"} aria-labelledby="svelte-variant-label" aria-expanded={variantMenuOpen}
@@ -449,47 +709,75 @@
                 </div>
                 {#if variantMenuOpen}
                     <div class="variant-menu" role="menu" tabindex="-1" on:mouseleave={() => previewRule(null)}>
+                        <div class="variant-tabs" role="tablist" aria-label="Variant input type">
+                            {#each variantTabs as tab}
+                                <button type="button" role="tab" aria-selected={variantTab === tab.value}
+                                    class:active={variantTab === tab.value} on:click={() => variantTab = tab.value}>
+                                    {tab.label}
+                                </button>
+                            {/each}
+                        </div>
                         {#each [...new Set(visibleVariants().map((variant) => variant.group))] as group}
                             <div class="variant-menu-group">{group}</div>
                             {#each visibleVariants().filter((variant) => variant.group === group) as variant}
+                                {@const conflict = conflictingVariant(variant.value)}
+                                {@const unavailable = unavailableVariant(variant.value)}
                                 <button role="menuitem" class:current={variant.value === selectedVariant}
+                                    disabled={Boolean(conflict || unavailable)}
+                                    title={unavailable || (conflict ? `${guideFor(conflict).title} already uses this input type` : "")}
                                     on:mouseenter={() => previewRule(variant.value)}
                                     on:focus={() => previewRule(variant.value)}
                                     on:click={() => chooseVariant(variant.value)}>
                                     <span class="variant-icon">{variantIcon(variant.value)}</span>
                                     <span>{variant.label}</span>
+                                    <span class="capability-badges">
+                                        {#if cspSupportedVariants.has(variant.value)}
+                                            <span class="csp-badge" title="CSP solver implemented" aria-label="CSP solver implemented">⬢</span>
+                                        {:else}
+                                            <span class="unsupported-badge" title="CSP solver unsupported">CSP ⊘</span>
+                                        {/if}
+                                        {#if scratchGeneratableVariants.has(variant.value)}<span class="generation-badge" title="Can generate from scratch">✦</span>{/if}
+                                    </span>
+                                    {#if conflict}<span class="input-conflict">Used by {guideFor(conflict).title}</span>{/if}
+                                    {#if unavailable}<span class="input-conflict">9 × 9 only</span>{/if}
                                 </button>
                             {/each}
                         {/each}
-                        {#if hoveredVariant}
-                            <div class="variant-rule-preview">
-                                <strong>{guideFor(hoveredVariant).title}</strong>
-                                <span>{guideFor(hoveredVariant).rule}</span>
-                            </div>
-                        {/if}
                     </div>
+                    {#if hoveredVariant}
+                        <div class="variant-rule-preview" role="tooltip">
+                            <strong>{guideFor(hoveredVariant).title}</strong>
+                            <span>{guideFor(hoveredVariant).rule}</span>
+                        </div>
+                    {/if}
                 {/if}
             </section>
 
             <section class="input-modes-section" class:disabled-section={layer === "solution"} class:hidden-section={layer === "modes"}>
                 <h2>Input modes</h2>
                 <div bind:this={variantHost} class="legacy-variant-host"></div>
+                {#if selectedVariant === "slotmachine"}
+                    <div class="slot-column-controls" aria-label="Slot Machine columns">
+                        {#each slotColumns as checked, index}
+                            <label><input type="checkbox" checked={checked} on:change={() => toggleSlotColumn(index)} />Column {index + 1}</label>
+                        {/each}
+                    </div>
+                {/if}
             </section>
 
             <section class="legacy-modes-section" class:hidden-section={layer !== "modes"}>
-                <h2>Mode controls</h2>
+                <div class="modes-heading"><h2>Mode controls</h2><button on:click={revealAllModes}>Reveal all</button></div>
                 <div bind:this={legacyControlsHost} class="legacy-controls-host"></div>
-            </section>
-
-            <section class="legacy-panel-section" class:hidden-section={layer !== "modes"}>
-                <h2>Panel</h2>
-                <div bind:this={legacyPanelHost} class="legacy-panel-host"></div>
             </section>
 
             <section class="tool-help" class:hidden-section={layer === "modes"} aria-live="polite">
                 <div>
                     <span class="help-label">Variant rule</span>
-                    <strong>{ruleTitle}</strong>
+                    <strong>
+                        {#if variationByValue.has(ruleVariant)}
+                            <a class="rule-wiki-link" href={`./variant.html?id=${encodeURIComponent(ruleVariant)}`} target="_blank" rel="noreferrer">{ruleTitle}</a>
+                        {:else}{ruleTitle}{/if}
+                    </strong>
                     <p>{ruleDescription}</p>
                 </div>
                 <div>
@@ -498,6 +786,21 @@
                     <p>{toolDescription}</p>
                 </div>
             </section>
+
+            {#if toolPanelOptions.length}
+                <div class="input-panel-section" aria-label={`${toolPanelMode} input panel section`}>
+                    <span class="help-label">Input · Penpa {toolPanelMode}</span>
+                    <div class="tool-input-panel" aria-label={`${toolPanelMode} input panel`}>
+                        {#each toolPanelOptions as option, index}
+                            <button type="button" class:selected={toolPanelSelected.has(option.value)}
+                                class:panel-action={Boolean(option.action)}
+                                on:pointerdown={(event) => useToolPanelOption(event, option)}>
+                                {option.label}{#if !option.action && index < 9}<kbd>{index + 1}</kbd>{/if}
+                            </button>
+                        {/each}
+                    </div>
+                </div>
+            {/if}
 
         </aside>
 
@@ -511,10 +814,10 @@
                 {#if !initialized}<p class="loading">Preparing Penpa canvas…</p>{/if}
             </div>
             <div class="board-busy-overlay" aria-live="polite" aria-label="CSP is working">
-                <span class="busy-spinner" aria-hidden="true"></span>
+                <span class="busy-pulse" aria-hidden="true"><i></i><i></i><i></i></span>
                 <strong>CSP working…</strong>
                 <small>The board is locked until this run finishes.</small>
-                <button on:click={() => (window as any).SudokuTools?.pauseWork?.()}>Pause</button>
+                <button on:click={() => (window as any).SudokuTools?.stopWork?.()}>Stop</button>
             </div>
         </section>
 
@@ -543,8 +846,8 @@
                                 </div>
                             {/if}
                         </div>
-                        <button on:click={() => legacyClick("sudoku_reset")}><span>↺</span>Reset grid</button>
-                        <div class="action-dropdown align-right">
+                        <button on:click={() => legacyClick("sudoku_reset")}><span>↺</span>Clear solver</button>
+                        <div class="action-dropdown">
                             <button aria-haspopup="menu" aria-expanded={actionMenu === "transform"} on:click={() => toggleActionMenu("transform")}><span>◇</span>Transform <b>⌄</b></button>
                             {#if actionMenu === "transform"}
                                 <div class="action-menu" role="menu">
@@ -624,9 +927,10 @@
                     </div>
                 </div>
                 <label class="modal-field">Filename<input bind:value={screenshotName} /></label>
-                <div class="studio-modal-actions">
-                    <button on:click={() => exportScreenshot(true)}>Open</button>
-                    <button class="primary" on:click={() => exportScreenshot(false)}>Download</button>
+                <div class="studio-modal-actions screenshot-actions">
+                    <button on:click={() => exportScreenshot("problem")}>Download problem</button>
+                    <button on:click={() => exportScreenshot("solution")}>Download solution</button>
+                    <button class="primary" on:click={() => exportScreenshot("both")}>Download both</button>
                 </div>
             {:else}
                 <h2 id="studio-modal-title">About Penpa Sudoku Studio</h2>
@@ -636,6 +940,8 @@
                     <p>Native puzzle drawing, canvas interaction, serialization, and SVG export are powered by Penpa+. This workspace adds the Svelte interface and CSP Sudoku tooling.</p>
                     <strong>Disclaimer</strong>
                     <p>This is an independent working fork. Variant solving remains experimental; always verify generated candidates before publishing a puzzle.</p>
+                    <a href="./variant-wiki.html" target="_blank" rel="noreferrer">Open the variant wiki</a>
+                    <a href="./marks.html">Open the marks &amp; positions reference</a>
                     <a href="https://github.com/lemononmars/penpa-edit" target="_blank" rel="noreferrer">View this project on GitHub ↗</a>
                 </div>
                 <div class="studio-modal-actions">
@@ -681,7 +987,7 @@
     button { font: inherit; }
     button { cursor: pointer; }
     .segmented { display: grid; grid-template-columns: repeat(3, 1fr); }
-    .segmented button { padding: 9px; border: 1px solid #bfc9d4; background: #f7f9fb; }
+    .segmented button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 9px; border: 1px solid #bfc9d4; background: #f7f9fb; }
     .segmented button:first-child { border-radius: 6px 0 0 6px; }
     .segmented button + button { border-left: 0; }
     .segmented button:last-child { border-radius: 0 6px 6px 0; }
@@ -692,6 +998,7 @@
     .note-modes span { font-size: 9px; opacity: .7; }
     button.active { background: #176fae !important; color: white !important; border-color: #176fae !important; }
     .variant-picker { position: relative; z-index: 20; }
+    .generation-legend { margin: -2px 0 6px; color: #6d7a87; font-size: 9px; }
     .variant-search-control {
         display: grid;
         grid-template-columns: 24px 1fr 18px;
@@ -743,9 +1050,34 @@
         letter-spacing: .08em;
         text-transform: uppercase;
     }
+    .variant-tabs {
+        position: sticky;
+        top: -6px;
+        z-index: 3;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 3px;
+        margin: -6px -6px 4px;
+        padding: 6px;
+        border-bottom: 1px solid #dbe2e8;
+        background: #fff;
+    }
+    .variant-menu .variant-tabs button {
+        display: block;
+        min-height: 29px;
+        padding: 4px 3px;
+        border: 1px solid #cbd5de;
+        border-radius: 4px;
+        color: #526271;
+        background: #f7f9fb;
+        text-align: center;
+        font-size: 9px;
+        font-weight: 750;
+    }
+    .variant-menu .variant-tabs button.active { color: #fff; border-color: #176fae; background: #176fae; }
     .variant-menu button {
         display: grid;
-        grid-template-columns: 25px 1fr;
+        grid-template-columns: 25px minmax(0, 1fr) auto auto;
         align-items: center;
         width: 100%;
         min-height: 34px;
@@ -757,16 +1089,35 @@
         text-align: left;
     }
     .variant-menu button:hover, .variant-menu button.current { background: #eaf4fb; color: #0d6099; }
+    .variant-menu > button:disabled { color: #94a0a8; background: #f3f5f6; cursor: not-allowed; }
+    .input-conflict { color: #9b5d2d; font-size: 8px; font-weight: 750; white-space: nowrap; }
+    .generation-badge { color: #bd7b00; font-size: 12px; text-align: right; }
+    .capability-badges { display: inline-flex; align-items: center; justify-content: flex-end; gap: 5px; }
+    .csp-badge, .csp-legend-icon { color: #16805d; font-size: 11px; }
+    .unsupported-badge {
+        padding: 2px 4px;
+        border-radius: 4px;
+        color: #a33c3c;
+        background: #fbe9e9;
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: .03em;
+    }
     .variant-rule-preview {
-        position: sticky;
-        bottom: -6px;
+        position: absolute;
+        top: 54px;
+        left: calc(100% + 8px);
+        z-index: 26;
         display: grid;
         gap: 3px;
-        margin: 6px -6px -6px;
-        padding: 9px 10px;
-        border-top: 1px solid #dbe2e8;
+        width: 220px;
+        box-sizing: border-box;
+        padding: 10px 11px;
+        border: 1px solid #bdc8d3;
+        border-radius: 7px;
         color: #536170;
-        background: #f7fafc;
+        background: #fff;
+        box-shadow: 0 10px 28px rgba(23,34,49,.18);
         font-size: 10px;
         line-height: 1.4;
     }
@@ -780,7 +1131,7 @@
     :global(.svelte-home .board-host #puzzleinfo), :global(.svelte-home .board-host #contestinfo) { display: none; }
     .loading { margin-top: 80px; color: #6d7986; }
     .disabled-section { opacity: .48; }
-    .disabled-section .control-label, .disabled-section h2 { color: #7f8994; }
+    .disabled-section h2 { color: #7f8994; }
     :global(.svelte-home .disabled-section .legacy-variant-host) { pointer-events: none; }
     .action-list { display: grid; gap: 6px; }
     .action-list button { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #c8d1da; border-radius: 6px; background: #f9fbfc; text-align: left; }
@@ -822,17 +1173,17 @@
         overflow: hidden;
     }
     .column,
-    .controls,
     .actions {
         height: 100%;
         min-height: 0;
         overflow: hidden;
     }
+    .controls { height: 100%; min-height: 0; overflow: visible; }
     .controls,
     .actions {
         display: flex;
         grid-column: auto;
-        gap: 9px;
+        gap: 6px;
     }
     section:not(.board-column) {
         padding: 11px;
@@ -841,18 +1192,84 @@
     }
     .input-modes-section { flex: 0 0 auto; min-height: 0; overflow: hidden; }
     .hidden-section { display: none !important; }
-    .legacy-modes-section { flex: 1; min-height: 0; overflow: hidden auto; }
-    .legacy-panel-section { flex: 0 0 290px; min-height: 290px; overflow: auto; }
-    .tool-help { flex: 1; min-height: 0; display: grid; align-content: start; gap: 12px; }
-    .tool-help > div + div { padding-top: 12px; border-top: 1px solid #e2e7eb; }
+    .legacy-modes-section { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden auto; }
+    .tool-help { flex: 1; min-height: 0; display: grid; align-content: start; gap: 8px; }
+    .tool-help > div + div { display: flex; flex: 1; min-height: 0; flex-direction: column; padding-top: 8px; border-top: 1px solid #e2e7eb; }
     .tool-help .help-label { display: block; margin-bottom: 5px; color: #7b8793; font-size: 9px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
     .tool-help strong { display: block; margin-bottom: 6px; color: #263443; font-size: 13px; }
+    .rule-wiki-link { color: inherit; text-decoration: underline; text-decoration-color: #9db6c8; text-underline-offset: 3px; }
+    .rule-wiki-link:hover { color: #176fae; text-decoration-color: currentColor; }
     .tool-help p { margin: 0; color: #667482; font-size: 11px; line-height: 1.5; }
+    .modes-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .modes-heading h2 { margin: 0; }
+    .modes-heading button {
+        min-height: 28px;
+        padding: 3px 9px;
+        border: 1px solid #bdc8d3;
+        border-radius: 5px;
+        color: #176fae;
+        background: #fff;
+        font-size: 10px;
+        font-weight: 700;
+    }
+    .tool-input-panel {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(34px, 1fr));
+        gap: 4px;
+        margin-top: 8px;
+        padding: 6px;
+        border: 1px solid #d7dee5;
+        border-radius: 7px;
+        background: #f8fafc;
+    }
+    .tool-input-panel button {
+        position: relative;
+        min-width: 34px;
+        min-height: 32px;
+        padding: 3px 5px;
+        border: 1px solid #bdc8d3;
+        border-radius: 5px;
+        color: #344353;
+        background: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        touch-action: manipulation;
+    }
+    .tool-input-panel button kbd {
+        position: absolute;
+        right: 2px;
+        bottom: 1px;
+        color: currentColor;
+        font: 7px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+        opacity: .55;
+    }
+    .tool-input-panel button:hover,
+    .tool-input-panel button.selected { color: #fff; border-color: #176fae; background: #176fae; }
+    .tool-input-panel button.panel-action { color: #8a3b3b; font-size: 10px; }
+    .tool-input-panel button.panel-action:hover { color: #fff; border-color: #b94b4b; background: #b94b4b; }
+    .input-panel-section {
+        flex: 0 0 auto;
+        padding: 10px;
+        border: 1px solid #d7dee5;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 1px 5px rgba(23, 34, 49, .06);
+    }
+    .input-panel-section .help-label {
+        display: block;
+        margin-bottom: 5px;
+        color: #536170;
+        font-size: 10px;
+        font-weight: 750;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .input-panel-section .tool-input-panel { margin-top: 0; padding: 0; border: 0; background: transparent; }
 
     /* Svelte-styled Penpa input modes and per-variant icons. */
     :global(.svelte-home .legacy-variant-host .sudoku-variant-tools) {
         align-content: flex-start;
-        gap: 7px;
+        gap: 4px;
     }
     :global(.svelte-home .legacy-variant-host button) {
         min-height: 34px !important;
@@ -1001,7 +1418,7 @@
     }
     :global(.svelte-home .log-host .sudoku-solver-log-header) {
         display: grid;
-        grid-template-columns: 30px minmax(0, 1fr);
+        grid-template-columns: 30px 30px minmax(0, 1fr);
         min-height: 38px;
         box-sizing: border-box;
         align-items: center;
@@ -1011,7 +1428,8 @@
         background: #f4f7f9;
         border-bottom: 1px solid #d9e0e6;
     }
-    :global(.svelte-home .log-host #sudoku_auto_solver) {
+    :global(.svelte-home .log-host #sudoku_auto_solver),
+    :global(.svelte-home .log-host #sudoku_solve_once) {
         width: 30px;
         height: 26px;
         margin: 0;
@@ -1087,25 +1505,30 @@
         background: #176fae;
         font-weight: 700;
     }
-    .busy-spinner {
-        width: 30px;
-        height: 30px;
-        border: 3px solid #c9d8e3;
-        border-top-color: #176fae;
-        border-radius: 50%;
-        animation: busy-spin .8s linear infinite;
+    .busy-pulse { display: inline-flex; align-items: center; gap: 6px; height: 30px; }
+    .busy-pulse i {
+        width: 8px;
+        height: 8px;
+        border-radius: 3px;
+        background: #176fae;
+        animation: busy-pulse 1s ease-in-out infinite;
     }
-    @keyframes busy-spin { to { transform: rotate(360deg); } }
+    .busy-pulse i:nth-child(2) { animation-delay: .13s; }
+    .busy-pulse i:nth-child(3) { animation-delay: .26s; }
+    @keyframes busy-pulse {
+        0%, 70%, 100% { transform: translateY(0) scale(.75); opacity: .45; }
+        35% { transform: translateY(-7px) scale(1); opacity: 1; }
+    }
     .penpa-actions { flex: 1; min-height: 0; overflow: visible; }
     .action-list {
         display: grid;
-        gap: 9px;
+        gap: 6px;
     }
     .action-group {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 6px;
-        padding-bottom: 9px;
+        gap: 4px;
+        padding-bottom: 6px;
         border-bottom: 1px solid #e2e7eb;
     }
     .action-group:last-child { padding-bottom: 0; border-bottom: 0; }
@@ -1125,7 +1548,6 @@
         background: #fff;
         box-shadow: 0 10px 28px rgba(23,34,49,.2);
     }
-    .action-dropdown.align-right .action-menu { right: 0; left: auto; }
     .action-menu button {
         width: 100%;
         min-height: 32px;
@@ -1253,40 +1675,45 @@
         background: rgba(15,24,35,.62);
         backdrop-filter: blur(5px);
     }
-    .legacy-controls-host { display: grid; gap: 14px; }
-    .legacy-panel-host { min-width: 0; min-height: 260px; overflow: auto; }
-    :global(.svelte-home .legacy-panel-host #float-key) {
-        position: static !important;
-        inset: auto !important;
-        display: block !important;
-        width: 100% !important;
-        max-width: 100%;
-        min-height: 255px;
-        box-shadow: none;
-        transform: none !important;
+    .legacy-controls-host { display: grid; gap: 6px; margin-top: 6px; }
+    .slot-column-controls {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+        margin-top: 8px;
     }
-    :global(.svelte-home .legacy-panel-host #close-float-panel) { display: none !important; }
-    :global(.svelte-home .legacy-panel-host #float-key-body) { box-sizing: border-box; width: 100%; min-height: 220px; overflow: visible; }
-    :global(.svelte-home .legacy-panel-host #float-canvas) { max-width: 100%; height: auto; }
+    .slot-column-controls label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 28px;
+        padding: 3px 6px;
+        border: 1px solid #bdc8d3;
+        border-radius: 5px;
+        background: #fff;
+        font-size: 10px;
+        font-weight: 700;
+    }
     :global(.svelte-home .legacy-controls-host #legacy_mode_controls),
     :global(.svelte-home .legacy-controls-host #submode_button),
     :global(.svelte-home .legacy-controls-host #stylemode_button) {
         display: block !important;
-        padding: 9px;
+        padding: 6px;
         border: 1px solid #d7dee5;
         border-radius: 7px;
         color: #263443;
         background: #f8fafc;
-        line-height: 2.5;
+        line-height: 2.1;
     }
+    :global(.svelte-home .legacy-controls-host #tab_selection) { display: none !important; }
     :global(.svelte-home .legacy-controls-host .label_mode) { color: #536170; font-weight: 750; }
-    :global(.svelte-home .legacy-controls-host input[type="radio"]) { position: absolute; opacity: 0; pointer-events: none; }
+    :global(.svelte-home .legacy-controls-host input[type="radio"]) { display: none !important; }
     :global(.svelte-home .legacy-controls-host input[type="radio"] + label) {
         display: inline-flex;
         min-height: 28px;
         box-sizing: border-box;
         align-items: center;
-        margin: 2px;
+        margin: 1px;
         padding: 3px 8px;
         border: 1px solid #bdc8d3;
         border-radius: 5px;
@@ -1304,6 +1731,61 @@
     :global(.svelte-home .legacy-controls-host input[type="radio"]:focus-visible + label) {
         outline: 3px solid rgba(23,111,174,.18);
     }
+    :global(.svelte-home .legacy-controls-host #mode_symbol .nav),
+    :global(.svelte-home .legacy-controls-host #mode_combi .nav) {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        width: auto;
+        height: auto;
+        margin: 2px 0;
+        padding: 0;
+        line-height: 1.2;
+    }
+    :global(.svelte-home .legacy-controls-host #mode_symbol .nav > li),
+    :global(.svelte-home .legacy-controls-host #mode_combi .nav > li) {
+        position: relative;
+        width: auto;
+        height: auto;
+        margin: 0;
+    }
+    :global(.svelte-home .legacy-controls-host #mode_symbol .nav li > span),
+    :global(.svelte-home .legacy-controls-host #mode_combi .nav li > span) {
+        display: inline-flex;
+        box-sizing: border-box;
+        min-height: 28px;
+        align-items: center;
+        padding: 3px 8px;
+        border: 1px solid #bdc8d3;
+        border-radius: 5px;
+        color: #344353;
+        background: #fff;
+        font-size: 10px;
+        line-height: 1.2;
+    }
+    :global(.svelte-home .legacy-controls-host #mode_symbol .nav li ul),
+    :global(.svelte-home .legacy-controls-host #mode_combi .nav li ul) {
+        top: 100%;
+        left: 0;
+        z-index: 80;
+        padding: 4px;
+        border: 1px solid #bdc8d3;
+        border-radius: 6px;
+        background: #f8fafc;
+        box-shadow: 0 7px 18px rgba(23,34,49,.18);
+    }
+    :global(.svelte-home .legacy-controls-host #mode_symbol .nav > li > ul),
+    :global(.svelte-home .legacy-controls-host #mode_combi .nav > li > ul) {
+        margin-top: 1px;
+    }
+    :global(.svelte-home .legacy-controls-host #mode_symbol .nav > li > ul li > ul),
+    :global(.svelte-home .legacy-controls-host #mode_combi .nav > li > ul li > ul) {
+        top: 0;
+        left: calc(100% + 2px);
+        margin: 0;
+    }
+    :global(.svelte-home .legacy-controls-host #mode_symbol .nav li ul li ul::before),
+    :global(.svelte-home .legacy-controls-host #mode_combi .nav li ul li ul::before) { display: none; }
     .studio-modal {
         position: relative;
         box-sizing: border-box;
@@ -1343,6 +1825,8 @@
     .choice-group button:first-child { border-radius: 6px 0 0 6px; }
     .choice-group button:last-child { border-right: 1px solid #bdc8d3; border-radius: 0 6px 6px 0; }
     .studio-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+    .studio-modal-actions.screenshot-actions { flex-wrap: wrap; }
+    .studio-modal-actions.screenshot-actions button { flex: 1 1 125px; }
     .studio-modal-actions button {
         min-width: 90px;
         min-height: 36px;
@@ -1386,9 +1870,21 @@
     .studio-shell.dark .tool-help strong { color: #eef4f8; }
     .studio-shell.dark .tool-help p { color: #bac6cf; }
     .studio-shell.dark .tool-help > div + div { border-color: #40505f; }
+    .studio-shell.dark .modes-heading button,
+    .studio-shell.dark .tool-input-panel button { color: #dce5ec; border-color: #536473; background: #263340; }
+    .studio-shell.dark .tool-input-panel { border-color: #4b5a68; background: #32414f; }
+    .studio-shell.dark .input-panel-section { border-color: #4b5a68; background: #32414f; }
+    .studio-shell.dark .input-panel-section .help-label { color: #b7c5cf; }
+    .studio-shell.dark .slot-column-controls label { color: #dce5ec; border-color: #536473; background: #263340; }
+    .studio-shell.dark .tool-input-panel button:hover,
+    .studio-shell.dark .tool-input-panel button.selected { color: #fff; border-color: #2b8bc7; background: #176fae; }
     .studio-shell.dark .action-group { border-color: #40505f; }
     .studio-shell.dark .variant-rule-preview { color: #c2ced7; border-color: #40505f; background: #263340; }
     .studio-shell.dark .variant-rule-preview strong { color: #eef4f8; }
+    .studio-shell.dark .generation-legend { color: #aebbc5; }
+    .studio-shell.dark .generation-badge { color: #f1bd56; }
+    .studio-shell.dark .csp-badge, .studio-shell.dark .csp-legend-icon { color: #64d3aa; }
+    .studio-shell.dark .unsupported-badge { color: #ffb4b4; background: #542f35; }
     .studio-shell.dark .action-menu { border-color: #4b5a68; background: #263340; }
     .studio-shell.dark .action-menu button:hover { color: #fff; background: #3a4a58; }
     .studio-shell.dark :global(.legacy-controls-host #legacy_mode_controls),
@@ -1408,5 +1904,13 @@
         color: #fff;
         border-color: #2b8bc7;
         background: #176fae;
+    }
+    .studio-shell.dark :global(.legacy-controls-host #mode_symbol .nav li > span),
+    .studio-shell.dark :global(.legacy-controls-host #mode_combi .nav li > span),
+    .studio-shell.dark :global(.legacy-controls-host #mode_symbol .nav li ul),
+    .studio-shell.dark :global(.legacy-controls-host #mode_combi .nav li ul) {
+        color: #dce5ec;
+        border-color: #536473;
+        background: #263340;
     }
 </style>

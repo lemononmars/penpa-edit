@@ -2,8 +2,14 @@
 importScripts("./sudoku_csp.js");
 
 self.onmessage = async function(event) {
-    if (!event.data || event.data.type !== "analyze") return;
+    if (!event.data || (event.data.type !== "analyze" && event.data.type !== "solve")) return;
     try {
+        if (event.data.type === "solve") {
+            self.postMessage({ type: "result", result: SudokuCSP.solve(
+                event.data.board, event.data.constraints
+            ) });
+            return;
+        }
         var result = await SudokuCSP.getCandidatesAsync(
             event.data.board,
             event.data.constraints,

@@ -62,7 +62,7 @@
     <!-- STYLES -->
     <!-- Local styles -->
     <script>
-        var ver = "3.3.15"; // Also defined in class_p.js
+        var ver = "3.3.28"; // Also defined in class_p.js
         let style_sources = [
             "./css/font-awesome.min.css",
             "./css/light_theme.css",
@@ -212,6 +212,7 @@
                         <button id="sudoku_redo" class="button sudoku-tool-button sudoku-toolbar-icon" title="Redo" aria-label="Redo"><i class="fa fa-repeat" aria-hidden="true"></i></button>
                         <button id="sudoku_keypad" class="button sudoku-tool-button sudoku-toolbar-icon" title="Keypad" aria-label="Keypad"><i class="fa fa-keyboard-o" aria-hidden="true"></i></button>
                         <button id="sudoku_auto_solver" class="button sudoku-tool-button sudoku-toolbar-icon" title="Auto Solver" aria-label="Auto Solver" aria-pressed="false"><i class="fa fa-magic" aria-hidden="true"></i></button>
+                        <button id="sudoku_solve_once" class="button sudoku-tool-button sudoku-toolbar-icon" title="Auto solution check" aria-label="Auto solution check" aria-pressed="false"><i class="fa fa-play" aria-hidden="true"></i></button>
                         <button id="sudoku_load_test_board" class="button sudoku-tool-button sudoku-toolbar-icon" title="Load the CSP test board" aria-label="Load Test Board"><i class="fa fa-flask" aria-hidden="true"></i></button>
                         <span id="sudoku-auto-inline-status" class="sudoku-auto-inline-status">Idle</span>
                         <span id="sudoku-variant-tools" class="sudoku-variant-tools" aria-label="Variant modes"></span>
@@ -1838,8 +1839,8 @@
                     </td>
                     <td>
                         <select name="reloadbutton" id="reload_button">
-                            <option value="1" selected="selected" class="lb_generic_on">ON</option>
-                            <option value="2" class="lb_generic_off">OFF</option>
+                            <option value="1" class="lb_generic_on">ON</option>
+                            <option value="2" selected="selected" class="lb_generic_off">OFF</option>
                         </select>
                     </td>
                 </tr>
