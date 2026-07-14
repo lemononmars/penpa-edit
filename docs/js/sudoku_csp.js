@@ -1324,6 +1324,108 @@ var SudokuCSP = (function() {
                 found.sort(function(a, b) { return a - b; });
                 return found.length === expected.length && found.every(function(value, index) { return value === expected[index]; });
             }
+            if (clue.relation === "ascendingstarters" || clue.relation === "ascendingstarterssudoku") {
+                var sum = 0;
+                var prev = 0;
+                var hasZero = false;
+                for (var idx = 0; idx < values.length; idx++) {
+                    var val = values[idx];
+                    if (val === 0) {
+                        hasZero = true;
+                        break;
+                    }
+                    if (val > prev) {
+                        sum += val;
+                        prev = val;
+                    } else {
+                        break;
+                    }
+                }
+                if (!hasZero) {
+                    return sum === clue.value;
+                }
+                return sum <= clue.value;
+            }
+            if (clue.relation === "before9" || clue.relation === "before9sudoku") {
+                // Sum of all digits that appear before 9 in the row/column (left-to-right / top-to-bottom)
+                var b9_idx = values.indexOf(9);
+                if (b9_idx >= 0) {
+                    // 9 is placed: sum everything before it exactly
+                    var b9_sum = 0;
+                    for (var b9_i = 0; b9_i < b9_idx; b9_i++) {
+                        if (!values[b9_i]) return true; // blank before 9 – still possible
+                        b9_sum += values[b9_i];
+                    }
+                    return b9_sum === clue.value;
+                }
+                // 9 not placed yet – check if any position for 9 is consistent with clue
+                // When 9 is at position p, the sum of the p cells before it must equal clue.value
+                for (var b9_p = 0; b9_p < values.length; b9_p++) {
+                    if (values[b9_p] !== 0) continue; // only blank slots can receive 9
+                    var b9_pre = 0, b9_blanks = 0;
+                    for (var b9_j = 0; b9_j < b9_p; b9_j++) {
+                        if (values[b9_j]) b9_pre += values[b9_j];
+                        else b9_blanks++;
+                    }
+                    // blanks in prefix can each be 1-8 (not 9, since 9 is going to b9_p)
+                    if (b9_pre + b9_blanks <= clue.value && b9_pre + b9_blanks * 8 >= clue.value) return true;
+                }
+                return false;
+            }
+            if (clue.relation === "before1after9" || clue.relation === "before1after9sudoku") {
+                // Sum of digits BEFORE 1 OR AFTER 9, reading L→R / T→B.
+                // The rule applies to whichever of {1,9} appears first in the row/col:
+                //   if 1 comes first  → sum all digits before position of 1
+                //   if 9 comes first  → sum all digits after  position of 9
+                var b1a9_i1 = values.indexOf(1);
+                var b1a9_i9 = values.indexOf(9);
+
+                function b1a9_sumSlice(start, end) {
+                    // Inclusive-exclusive slice [start,end); returns {sum, blanks}
+                    var s = 0, bl = 0;
+                    for (var ii = start; ii < end; ii++) {
+                        if (values[ii]) s += values[ii];
+                        else bl++;
+                    }
+                    return { sum: s, blanks: bl };
+                }
+                function b1a9_canEqual(s, bl) {
+                    if (bl === 0) return s === clue.value;
+                    return s + bl <= clue.value && s + bl * 8 >= clue.value;
+                }
+
+                if (b1a9_i1 >= 0 && b1a9_i9 >= 0) {
+                    // Both placed: check whichever comes first
+                    if (b1a9_i1 < b1a9_i9) {
+                        var r1 = b1a9_sumSlice(0, b1a9_i1);
+                        return b1a9_canEqual(r1.sum, r1.blanks);
+                    } else {
+                        var r9 = b1a9_sumSlice(b1a9_i9 + 1, values.length);
+                        return b1a9_canEqual(r9.sum, r9.blanks);
+                    }
+                }
+                // At least one of {1,9} is not placed – enumerate candidate positions
+                var b1a9_possible = false;
+                var p1_range = b1a9_i1 >= 0 ? [b1a9_i1] : values.map(function(_, ii) { return ii; }).filter(function(ii) { return values[ii] === 0; });
+                var p9_range = b1a9_i9 >= 0 ? [b1a9_i9] : values.map(function(_, ii) { return ii; }).filter(function(ii) { return values[ii] === 0; });
+                for (var pi = 0; pi < p1_range.length && !b1a9_possible; pi++) {
+                    var pos1 = p1_range[pi];
+                    for (var qi = 0; qi < p9_range.length && !b1a9_possible; qi++) {
+                        var pos9 = p9_range[qi];
+                        if (pos1 === pos9) continue;
+                        if (pos1 < pos9) {
+                            // 1 comes first: sum before pos1
+                            var r = b1a9_sumSlice(0, pos1);
+                            if (b1a9_canEqual(r.sum, r.blanks)) b1a9_possible = true;
+                        } else {
+                            // 9 comes first: sum after pos9
+                            var r = b1a9_sumSlice(pos9 + 1, values.length);
+                            if (b1a9_canEqual(r.sum, r.blanks)) b1a9_possible = true;
+                        }
+                    }
+                }
+                return b1a9_possible;
+            }
             return true;
         }
     });
@@ -1650,6 +1752,67 @@ var SudokuCSP = (function() {
                 }
             }
             return true;
+        }
+    });
+
+    // Almost Palindrome: exactly one mismatched pair across the whole line
+    registerConstraint("almostPalindromes", {
+        validatePartial: function(board, path) {
+            var mismatches = 0;
+            var half = Math.floor(path.length / 2);
+            for (var i = 0; i < half; i++) {
+                var a = cellValue(board, path[i]);
+                var b = cellValue(board, path[path.length - 1 - i]);
+                if (a && b && a !== b) {
+                    mismatches++;
+                    if (mismatches > 1) return false;
+                }
+            }
+            return true;
+        },
+        validateComplete: function(board, path) {
+            var mismatches = 0;
+            var half = Math.floor(path.length / 2);
+            for (var i = 0; i < half; i++) {
+                var a = cellValue(board, path[i]);
+                var b = cellValue(board, path[path.length - 1 - i]);
+                if (a !== b) mismatches++;
+            }
+            return mismatches === 1;
+        }
+    });
+
+    // Anti-Consecutive: explicitly marked edges must NOT be consecutive
+    registerConstraint("antiConsecutive", {
+        validatePartial: function(board, pair) {
+            var a = cellValue(board, pair[0]);
+            var b = cellValue(board, pair[1]);
+            return !a || !b || Math.abs(a - b) !== 1;
+        }
+    });
+
+    // Average Arrows: circle = arithmetic mean of shaft digits
+    registerConstraint("averageArrows", {
+        validatePartial: function(board, arrow) {
+            var circle = cellValue(board, arrow.circle);
+            var shaftValues = arrow.shaft.map(function(cell) { return cellValue(board, cell); });
+            var assigned = shaftValues.filter(Boolean);
+            var blanks = shaftValues.length - assigned.length;
+            var total = assigned.reduce(function(s, v) { return s + v; }, 0);
+            var n = shaftValues.length;
+            if (circle) {
+                // circle * n must equal total of shaft (mean relationship)
+                // With blanks: total + blanks*1 <= circle*n <= total + blanks*SIZE
+                var target = circle * n;
+                return total <= target && total + blanks * SIZE >= target && (blanks > 0 || total === target);
+            }
+            // Circle unknown: at least one integer from 1..SIZE could work
+            if (blanks === shaftValues.length) return true; // no info yet
+            for (var c = 1; c <= SIZE; c++) {
+                var t = c * n;
+                if (total <= t && total + blanks * SIZE >= t) return true;
+            }
+            return false;
         }
     });
 

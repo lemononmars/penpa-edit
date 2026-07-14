@@ -3,39 +3,7 @@ import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const markConfigPath = resolve(process.cwd(), "variations/_markConfig.json");
 
-function variantMarkEditor() {
-  return {
-    name: "variant-mark-editor",
-    configureServer(server) {
-      server.middlewares.use("/__variant-marks", (request, response, next) => {
-        if (request.method === "GET") {
-          response.setHeader("Content-Type", "application/json");
-          response.end(readFileSync(markConfigPath, "utf8"));
-          return;
-        }
-        if (request.method !== "PUT") return next();
-        let body = "";
-        request.on("data", (chunk) => { body += chunk; });
-        request.on("end", () => {
-          try {
-            const parsed = JSON.parse(body);
-            if (parsed?.version !== 1 || !parsed.overrides || Array.isArray(parsed.overrides)) {
-              throw new Error("Expected a version 1 mark configuration.");
-            }
-            writeFileSync(markConfigPath, JSON.stringify(parsed, null, 2) + "\n", "utf8");
-            response.statusCode = 204;
-            response.end();
-          } catch (error) {
-            response.statusCode = 400;
-            response.end(error instanceof Error ? error.message : "Invalid mark configuration.");
-          }
-        });
-      });
-    }
-  };
-}
 
 function variantDetailPages() {
   const removed = new Set(["hex", "parquet", "tightfit", "ninedragons", "battleship", "odd", "even",
@@ -68,7 +36,7 @@ function variantDetailPages() {
 
 export default defineConfig({
   root: "docs",
-  plugins: [variantMarkEditor(), variantDetailPages(), svelte({ preprocess: vitePreprocess() })],
+  plugins: [variantDetailPages(), svelte({ preprocess: vitePreprocess() })],
   build: {
     outDir: "../dist",
     emptyOutDir: true,
@@ -76,8 +44,7 @@ export default defineConfig({
       input: {
         main: resolve(process.cwd(), "docs/index.html"),
         "variant-wiki": resolve(process.cwd(), "docs/variant-wiki.html"),
-        variant: resolve(process.cwd(), "docs/variant.html"),
-        marks: resolve(process.cwd(), "docs/marks.html")
+        variant: resolve(process.cwd(), "docs/variant.html")
       }
     }
   },

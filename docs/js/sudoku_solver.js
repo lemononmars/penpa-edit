@@ -30,20 +30,6 @@ var SudokuSolver = (function() {
         }
     }
 
-    function guardKeyboardWhileRunning(event) {
-        if (!document.body.classList.contains("sudoku-solver-running")) return;
-        if (event.code === "Space") {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            stopWork();
-            return;
-        }
-        var target = event.target;
-        if (target && target.closest && target.closest("input, textarea, select, [contenteditable='true']")) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-    }
-
     function puzzleSize(puzzle) {
         if (!puzzle) return SIZE;
         var horizontalSpace = Number(puzzle.space && puzzle.space[2] || 0) +
@@ -471,6 +457,9 @@ var SudokuSolver = (function() {
             rossiniLines: [],
             cellRelations: [],
             palindromes: [],
+            almostPalindromes: [],
+            antiConsecutive: [],
+            averageArrows: [],
             kropki: [],
             xv: [],
             battenburg: [],
@@ -506,11 +495,18 @@ var SudokuSolver = (function() {
         for (var a = 0; a < arrows.length; a++) {
             var arrowCells = pathToCells(puzzle, arrows[a]);
             if (arrowCells.length > 1) {
-                constraints.arrows.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
+                if (variantEnabled(puzzle, "averagearrowssudoku")) {
+                    constraints.averageArrows.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
+                } else {
+                    constraints.arrows.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
+                }
             }
         }
         if (constraints.arrows.length) {
             constraints.supported.push("arrow");
+        }
+        if (constraints.averageArrows.length) {
+            constraints.supported.push("averagearrowssudoku");
         }
 
         var activeCells = {};
@@ -716,6 +712,7 @@ var SudokuSolver = (function() {
             addGridPairs(constraints.nonConsecutive, [[0, 1], [1, 0]]);
             constraints.supported.push("non consecutive");
         }
+
         if (variantEnabled(puzzle, "symmetricunequal")) {
             for (var symmetricRow = 0; symmetricRow < SIZE; symmetricRow++) {
                 for (var symmetricCol = 0; symmetricCol < SIZE; symmetricCol++) {
@@ -1014,6 +1011,15 @@ var SudokuSolver = (function() {
         }
         if (constraints.palindromes.length) {
             constraints.supported.push("palindrome");
+        }
+        if (variantEnabled(puzzle, "almostpalindromesudoku")) {
+            // Reuse line-5 detection but push into almostPalindromes array
+            connectedLinePaths(puzzle, 5).forEach(function(path) {
+                if (path.length > 1) constraints.almostPalindromes.push(path);
+            });
+            if (constraints.almostPalindromes.length) {
+                constraints.supported.push("almostpalindromesudoku");
+            }
         }
         ["renban", "paritylines", "sequence"].forEach(function(variant) {
             if (!variantEnabled(puzzle, variant)) return;
@@ -1482,6 +1488,24 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push(catalogEdgeVariant);
         }
+        if (variantEnabled(puzzle, "anticonsecutivesudoku")) {
+            // X-marked edges: cells on either side must NOT be consecutive
+            // The X symbol is number entry "X" between two active cells
+            Object.keys(numbers).forEach(function(key) {
+                var entry = numbers[key];
+                if (!entry || String(entry[0]).trim().toUpperCase() !== "X") return;
+                var point = puzzle.point && puzzle.point[key];
+                if (!point) return;
+                var cells = (point.neighbor || []).filter(function(neighbor) { return activeCells[neighbor]; })
+                    .map(function(neighbor) { return keyToCell(puzzle, neighbor); }).filter(Boolean);
+                if (cells.length === 2) {
+                    constraints.antiConsecutive.push([cells[0], cells[1]]);
+                }
+            });
+            if (constraints.antiConsecutive.length) {
+                constraints.supported.push("anticonsecutivesudoku");
+            }
+        }
         if (variantEnabled(puzzle, "skyscraper")) {
             var topSpace = Number(puzzle.space && puzzle.space[0] || 0);
             var leftSpace = Number(puzzle.space && puzzle.space[2] || 0);
@@ -1553,7 +1577,8 @@ var SudokuSolver = (function() {
         }
         var outsideVariant = ["bust", "xsums", "numberedrooms", "sumframe", "productframe", "edgedifference",
             "fullrank", "outsideparity", "parityparty", "serbianframe", "median", "descriptivepairs",
-            "maximin", "minimax"].find(function(name) {
+            "maximin", "minimax", "ascendingstarters", "ascendingstarterssudoku", "before9sudoku", "before9",
+            "before1after9sudoku", "before1after9"].find(function(name) {
             return variantEnabled(puzzle, name);
         });
         if (outsideVariant) {
@@ -2427,7 +2452,7 @@ var SudokuTools = (function() {
         });
         generatorTimeout = setTimeout(function() {
             stopGenerator("Generator stopped at the 60-second safety limit.");
-        }, AUTO_RUN_LIMIT_MS);
+        }, SudokuSolver.AUTO_RUN_LIMIT_MS);
     }
 
     function modeLabel(variant, mode, submode) {
@@ -3215,6 +3240,20 @@ var SudokuTools = (function() {
         if (pu) {
             pu.redraw();
         }
+    }
+
+    function guardKeyboardWhileRunning(event) {
+        if (!document.body.classList.contains("sudoku-solver-running")) return;
+        if (event.code === "Space") {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            stopWork();
+            return;
+        }
+        var target = event.target;
+        if (target && target.closest && target.closest("input, textarea, select, [contenteditable='true']")) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
     }
 
     function init() {

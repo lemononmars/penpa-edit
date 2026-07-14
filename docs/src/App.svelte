@@ -759,7 +759,7 @@
                 {#if selectedVariant === "slotmachine"}
                     <div class="slot-column-controls" aria-label="Slot Machine columns">
                         {#each slotColumns as checked, index}
-                            <label><input type="checkbox" checked={checked} on:change={() => toggleSlotColumn(index)} />Column {index + 1}</label>
+                            <label for="slot-column-{index}"><input id="slot-column-{index}" type="checkbox" checked={checked} on:change={() => toggleSlotColumn(index)} />Column {index + 1}</label>
                         {/each}
                     </div>
                 {/if}
@@ -926,7 +926,7 @@
                         <button class:active={screenshotBorder} on:click={() => screenshotBorder = true}>Yes</button>
                     </div>
                 </div>
-                <label class="modal-field">Filename<input bind:value={screenshotName} /></label>
+                <label for="screenshot-name-input" class="modal-field">Filename<input id="screenshot-name-input" bind:value={screenshotName} /></label>
                 <div class="studio-modal-actions screenshot-actions">
                     <button on:click={() => exportScreenshot("problem")}>Download problem</button>
                     <button on:click={() => exportScreenshot("solution")}>Download solution</button>
@@ -941,7 +941,6 @@
                     <strong>Disclaimer</strong>
                     <p>This is an independent working fork. Variant solving remains experimental; always verify generated candidates before publishing a puzzle.</p>
                     <a href="./variant-wiki.html" target="_blank" rel="noreferrer">Open the variant wiki</a>
-                    <a href="./marks.html">Open the marks &amp; positions reference</a>
                     <a href="https://github.com/lemononmars/penpa-edit" target="_blank" rel="noreferrer">View this project on GitHub ↗</a>
                 </div>
                 <div class="studio-modal-actions">

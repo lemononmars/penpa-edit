@@ -955,6 +955,7 @@ test("normalizes anti-king, anti-knight, and non-consecutive global pairs", func
     assert.equal(constraints.supported.includes("non consecutive"), true);
 });
 
+
 test("reads palindrome paths from foreground line segments", function() {
     const puzzle = {
         nx0: 13,
@@ -1350,7 +1351,8 @@ test("validates the new outside, edge, region, shape, and corner rules", functio
             { relation: "outsideparity", value: 2, cells: row },
             { relation: "parityparty", value: 12, cells: row },
             { relation: "serbianframe", value: 7, cells: row, axis: "row" },
-            { relation: "median", value: 4, cells: row }
+            { relation: "median", value: 4, cells: row },
+            { relation: "ascendingstarters", value: 5, cells: row }
         ],
         fullRankGroups: [[
             { rank: 5, cells: row },
@@ -1393,6 +1395,16 @@ test("validates the new outside, edge, region, shape, and corner rules", functio
     assert.equal(SudokuCSP.solve(solved, {
         quadRelations: [{ ...constraints.quadRelations[2], kind: "none" }]
     }).solved, false, "Clock Faces applies its negative rule");
+    assert.equal(SudokuCSP.solve(solved, {
+        outsideRelations: [{ relation: "ascendingstarters", value: 6, cells: row }]
+    }).solved, false, "Ascending Starters rejects invalid clue sum");
+
+    assert.equal(SudokuCSP.solve(solved, {
+        outsideRelations: [{ relation: "before9", value: 33, cells: row }]
+    }).solved, true, "Before 9 accepts valid sum");
+    assert.equal(SudokuCSP.solve(solved, {
+        outsideRelations: [{ relation: "before9", value: 34, cells: row }]
+    }).solved, false, "Before 9 rejects invalid sum");
 });
 
 test("normalizes the next catalog batch into concrete CSP constraints", function() {
@@ -1411,7 +1423,7 @@ test("normalizes the next catalog batch into concrete CSP constraints", function
     }
 
     ["productframe", "edgedifference", "fullrank", "outsideparity", "parityparty",
-        "serbianframe", "median"].forEach(function(variant) {
+        "serbianframe", "median", "ascendingstarterssudoku"].forEach(function(variant) {
         const constraints = SudokuSolver.readConstraints(puzzleFor(variant, { number: { 15: [4, 1, "1"] } }));
         assert.equal(constraints.supported.includes(variant), true);
         assert.equal(variant === "fullrank" ? constraints.fullRankGroups.length : constraints.outsideRelations.length, 1);

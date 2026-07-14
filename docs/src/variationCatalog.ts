@@ -3,6 +3,10 @@ type RawVariation = {
     name: string;
     rules: Record<string, string>;
     tags?: string[];
+    wikiOnly?: boolean;
+    isDuplicate?: boolean;
+    duplicateOf?: string;
+    notImplementable?: boolean;
 };
 
 export type Variation = RawVariation & {
@@ -13,6 +17,7 @@ export type Variation = RawVariation & {
     cspSupported: boolean;
 };
 
+import scrapedVariants from "../../sudoku_variants.json";
 const modules = import.meta.glob(["../../variations/*.json", "!../../variations/_*.json"], { eager: true, import: "default" }) as Record<string, RawVariation>;
 
 const aliases: Record<string, string> = {
@@ -57,7 +62,8 @@ export const cspSupportedVariants = new Set([
     "little killer", "product little killer", "descriptivepairs", "outside", "outside234",
     "maximin", "minimax", "diagonallyconsecutive", "multiplication",
     "evensandwich", "oddsandwich", "clock", "xivi", "slotmachine", "wheel", "squarewheel",
-    "pinnochio", "sumdetector"
+    "pinnochio", "sumdetector", "ascendingstarterssudoku", "before9sudoku", "before1after9sudoku",
+    "almostpalindromesudoku", "anticonsecutivesudoku", "averagearrowssudoku"
 ]);
 
 export const noInputVariationValues = new Set([
@@ -71,7 +77,7 @@ export const directionalShapeVariationValues = new Set([
 const removedVariationValues = new Set([
     "hex", "parquet", "tightfit", "ninedragons", "battleship", "odd", "even",
     "kropkipairs", "sudokurve", "inclusion", "multidiagonal", "search6",
-    "substitution", "alphabet", "halfsquares"
+    "substitution", "alphabet", "halfsquares", "notouchsudoku"
 ]);
 
 function stripRulePreamble(rule: string) {
@@ -83,7 +89,7 @@ function preferredRule(rules: Record<string, string>) {
     return stripRulePreamble(rules["9x9"] || rules["6x6"] || Object.values(rules)[0] || "");
 }
 
-export const variations: Variation[] = Object.values(modules).map((item) => {
+const existingVariations: Variation[] = Object.values(modules).map((item) => {
     const value = aliases[item.id] || item.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
     return {
         ...item,
@@ -95,7 +101,78 @@ export const variations: Variation[] = Object.values(modules).map((item) => {
         scratchGeneratable: scratchGeneratableVariants.has(value),
         cspSupported: cspSupportedVariants.has(value)
     };
-}).filter((item, index, all) => !removedVariationValues.has(item.value) &&
+});
+
+const normalize = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "").replace(/sudoku$/i, "");
+const existingNormalized = new Map(existingVariations.map(v => [normalize(v.name), v]));
+
+const generatedIds = new Set(existingVariations.map(v => v.id));
+const addedScraped = new Set<string>();
+
+const nonStandardTitles = new Set([
+    "% Sudoku",
+    "3D Sudoku",
+    "Capsules Sudoku",
+    "Double Sudoku",
+    "Easy As Sudoku",
+    "Expanded Sudoku",
+    "Figure Sum Sudoku",
+    "Figures Sudoku",
+    "Flip-flop classics Sudoku",
+    "Futoshiki (Iso, Sudoku)",
+    "Half-mosaic Sudoku",
+    "Halved Squares Sudoku",
+    "Japanese Sums Sudoku",
+    "Matryoshka Sudoku",
+    "Minesweeper (Sudoku)",
+    "Multi Sudoku",
+    "Overlapping Sudoku",
+    "Overlapping Irregular Sudoku",
+    "Parquet Sudoku",
+    "Prague star Sudoku",
+    "Scattered Sudoku",
+    "Set Double Block Sudoku",
+    "Snowflake Sudoku",
+    "Sudoku (Battleships)",
+    "Tight Fit Sudoku",
+    "Toroidal Sudoku",
+    "Total Blackout Sudoku",
+    "Triomino Sudoku",
+    "Irregular Builder Sudoku",
+    "0 to 9 Sudoku"
+]);
+
+const mappedScraped: Variation[] = (scrapedVariants as any[])
+    .filter((item) => {
+        const normTitle = normalize(item.title);
+        if (existingNormalized.has(normTitle)) return false;
+        if (addedScraped.has(normTitle)) return false;
+        addedScraped.add(normTitle);
+        return true;
+    })
+    .map((item) => {
+        const id = item.title.toLowerCase().replace(/[^a-z0-9]/g, "");
+        generatedIds.add(id);
+        const value = id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+        const notImplementable = nonStandardTitles.has(item.title);
+        
+        return {
+            id,
+            name: item.title,
+            rules: { "9x9": item.instruction },
+            value,
+            rule: item.instruction,
+            existing: false,
+            scratchGeneratable: false,
+            cspSupported: cspSupportedVariants.has(value),
+            wikiOnly: value !== "ascendingstarterssudoku" && value !== "before9sudoku" && value !== "before1after9sudoku"
+                && value !== "almostpalindromesudoku" && value !== "anticonsecutivesudoku" && value !== "averagearrowssudoku",
+            notImplementable
+        };
+    });
+
+export const variations: Variation[] = [...existingVariations, ...mappedScraped]
+    .filter((item, index, all) => !removedVariationValues.has(item.value) &&
         all.findIndex((candidate) => candidate.value === item.value) === index)
     .sort((first, second) => first.name.localeCompare(second.name));
 
@@ -158,9 +235,22 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (["bust", "xsums", "numberedrooms", "sumframe", "productframe", "edgedifference", "fullrank",
-        "outsideparity", "parityparty", "serbianframe", "median"].includes(variation.value)) {
+        "outsideparity", "parityparty", "serbianframe", "median", "ascendingstarterssudoku",
+        "before9sudoku", "before1after9sudoku"].includes(variation.value)) {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
+    }
+    if (variation.value === "almostpalindromesudoku") {
+        add("line", "5", 2, ["mo_line_lb", "sub_line2_lb", "li_line2"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "anticonsecutivesudoku") {
+        add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "averagearrowssudoku") {
+        add("special", "arrow", "", ["mo_special_lb", "sub_specialarrow_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "rossini") {
         add("symbol", "arrow_N_B", 2, ["mo_symbol_lb", "ms3", "li_arrow_N"]);
@@ -305,6 +395,7 @@ export function installVariationCatalog() {
         element instanceof HTMLOptGroupElement && element.label === "Variation catalog"
     ).forEach((element) => element.remove());
     variations.forEach((variation) => {
+        if (variation.wikiOnly) return;
         if (!constraints.setting[variation.value]) constraints.setting[variation.value] = genericSetting(variation);
         constraints.setting[variation.value].outside = outsideVariationValues.has(variation.value);
         if (!constraints.options.sudoku.includes(variation.value)) constraints.options.sudoku.push(variation.value);
@@ -323,3 +414,5 @@ export function installVariationCatalog() {
     if (unsupportedGroup.children.length && !unsupportedGroup.parentElement) select.appendChild(unsupportedGroup);
     select.dataset.variationCatalog = "ready";
 }
+
+

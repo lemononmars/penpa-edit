@@ -321,7 +321,9 @@ export function solverTestCasesFor(variation: Variation) {
         sumdetector: `test("every arrow uses the same n", () => {\n  const group = sumDetectorGroupWithTwoArrows();\n  assert.equal(solve(boardWhereBothArrowsUseN(2), { sumDetectorGroups: [group] }).solved, true);\n  assert.equal(solve(boardWhereArrowsNeedDifferentN(), { sumDetectorGroups: [group] }).solved, false);\n});`,
         windoku: `test("four generated cages become extra regions", () => {\n  const constraints = readConstraints(windokuPuzzleWithGeneratedCages());\n  assert.equal(constraints.regionAllDifferent.length, 4);\n  assert.equal(constraints.regionAllDifferent.every(region => region.length === 9), true);\n});`,
         creasing: `test("a no-bulb thermo is only a Creasing line", () => {\n  const constraints = readConstraints(creasingPuzzle([[r1c1, r1c2, r1c3]]));\n  assert.equal(constraints.catalogLines[0].relation, "creasing");\n  assert.equal(constraints.thermos.length, 0);\n});`,
-        rossini: `test("Rossini reads a cardinal thin-black arrow", () => {\n  const constraints = readConstraints(rossiniPuzzle({ top1: "down" }, "arrow_N_B"));\n  assert.equal(constraints.rossiniLines[0].direction, "ascending");\n  assert.equal(constraints.rossiniLines.slice(1).every(clue => clue.direction === "none"), true);\n});`
+        rossini: `test("Rossini reads a cardinal thin-black arrow", () => {\n  const constraints = readConstraints(rossiniPuzzle({ top1: "down" }, "arrow_N_B"));\n  assert.equal(constraints.rossiniLines[0].direction, "ascending");\n  assert.equal(constraints.rossiniLines.slice(1).every(clue => clue.direction === "none"), true);\n});`,
+        ascendingstarterssudoku: `test("5 satisfies an outside ascending starter sum clue", () => {\n  const board = boardWith({ r1c1: 5, r1c2: 3, r1c3: 4 });\n  const clue = { relation: "ascendingstarters", cells: rowCells(1), value: 5 };\n  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);\n  assert.equal(solve(board, { outsideRelations: [{ ...clue, value: 6 }] }).solved, false);\n});`,
+        before9sudoku: `test("16 satisfies an outside sum before 9 clue", () => {\n  const board = boardWith({ r1c1: 3, r1c2: 5, r1c3: 8, r1c4: 9 });\n  const clue = { relation: "before9", cells: rowCells(1), value: 16 };\n  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);\n  assert.equal(solve(board, { outsideRelations: [{ ...clue, value: 17 }] }).solved, false);\n});`
     };
     if (cases[variation.value]) return cases[variation.value];
     if (!variation.cspSupported) return `test.todo("${variation.name}: add a concrete solver fixture before enabling CSP support");`;
@@ -344,13 +346,16 @@ export function cspApproachFor(variation: Variation) {
 
 /** Explains why a backlog item cannot be safely inferred by the generic CSP families. */
 export function automaticBlockerFor(variation: Variation) {
+    if ((variation as any).notImplementable) {
+        return "This variant requires a non-standard grid size, overlapping boards, split cells, or custom layout. It is not implementable on a standard 9x9 board and is kept for wiki reference only.";
+    }
     const text = `${variation.name} ${variation.rule}`.toLowerCase();
     const choice = markChoiceFor(variation);
     if (choice.position === "multiple" || choice.mark === "multiple") {
         return `${variation.name} combines multiple clue meanings or orientations, so the parser cannot identify one unambiguous Penpa object automatically.`;
     }
     if (variation.tags?.includes("outside") || /outside (?:the )?grid/.test(text)) {
-        return `${variation.name} needs a dedicated outside-clue reader that maps each margin clue to the correct sightline and validates incomplete lines.`;
+        return `${variation.name} requires a custom sightline extractor (e.g., diagonal sightlines) or a dedicated outside-clue validator tailored to its sequence/clue matching rule.`;
     }
     if (/all possible|every unmarked|all such/.test(text)) {
         return `${variation.name} has a negative/converse rule; automatic support must enumerate every eligible unmarked location without confusing marks owned by another variant.`;
