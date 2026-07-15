@@ -1633,7 +1633,7 @@ var SudokuSolver = (function() {
                     if ((catalogEdgeVariant === "xydifference" || catalogEdgeVariant === "primesums" || catalogEdgeVariant === "twodigitprimenumbers" || catalogEdgeVariant === "fives") && (!symbols[key] ||
                         ["diamond_L", "diamond_SS", "circle_SS"].indexOf(symbols[key][1]) === -1)) return;
                     if (catalogEdgeVariant === "perfectsquares" &&
-                        (!symbols[key] || symbols[key][1] !== "diamond_SS" || symbols[key][0] !== 1)) return;
+                        (!symbols[key] || ["diamond_SS", "circle_SS"].indexOf(symbols[key][1]) === -1 || symbols[key][0] !== 1)) return;
                     var cells = catalogEdgeCells(key);
                     if (cells.length !== 2) return;
                     cells.sort(function(first, second) { return first.row - second.row || first.col - second.col; });
