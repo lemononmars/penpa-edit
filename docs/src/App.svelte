@@ -2,13 +2,11 @@
   import { onMount } from "svelte";
   import { guideFor } from "./variantRules";
   import {
-    cspSupportedVariants,
-    directionalShapeVariationValues,
     installVariationCatalog,
-    noInputVariationValues,
     outsideVariationValues,
     scratchGeneratableVariants,
     variationByValue,
+    variantMetadata,
   } from "./variationCatalog";
   import { markChoiceFor } from "./variantMarks";
 
@@ -78,26 +76,7 @@
     { value: "shape", label: "Shape" },
   ];
 
-  const variantIcons: Record<string, string> = {
-    classic: "9",
-    "odd even": "◐",
-    diagonal: "╳",
-    "anti diagonal": "⨯",
-    "anti king": "♔",
-    "anti knight": "♞",
-    "non consecutive": "↮",
-    arrow: "➜",
-    thermo: "♨",
-    killer: "Σ",
-    kropki: "●",
-    palindrome: "↔",
-    xv: "Ⅹ",
-    battenburg: "▦",
-    skyscraper: "▥",
-    sandwich: "☰",
-    alloddalleven: "◑",
-    clone: "⧉",
-  };
+  const variantIcons: Record<string, string> = variantMetadata.icons;
 
   function legacyClick(id: string) {
     document.getElementById(id)?.click();
@@ -106,7 +85,10 @@
 
   function toggleMobilePanelPosition() {
     mobilePanelPosition = mobilePanelPosition === "above" ? "below" : "above";
-    window.localStorage.setItem("penpa-mobile-input-panel-position", mobilePanelPosition);
+    window.localStorage.setItem(
+      "penpa-mobile-input-panel-position",
+      mobilePanelPosition,
+    );
     queueMicrotask(fitBoard);
   }
 
@@ -162,7 +144,10 @@
           : mode === "number"
             ? "Number"
             : "Sudoku";
-    if (mode === "number" && (variant === "inequality" || variant === "blocksumrelations")) {
+    if (
+      mode === "number" &&
+      (variant === "inequality" || variant === "blocksumrelations")
+    ) {
       toolPanelOptions = [
         { value: "<", label: "<" },
         { value: "^", label: "^" },
@@ -181,7 +166,11 @@
       ];
     } else if (mode === "number" && variant === "multiplication") {
       toolPanelOptions = [{ value: "×", label: "×" }];
-    } else if (mode === "symbol" && variant === "detection" && /^arrow_/.test(submode)) {
+    } else if (
+      mode === "symbol" &&
+      ["detection", "little killer", "product little killer", "bouncing x-sums", "czech outsider", "framediagonal"].includes(variant) &&
+      /^arrow_/.test(submode)
+    ) {
       toolPanelOptions = [1, 3, 5, 7].map((index) => ({
         value: String(index + 1),
         label: arrows[index],
@@ -197,7 +186,7 @@
       ];
     } else if (
       mode === "symbol" &&
-      (variant === "consecutive" || variant === "evensumpairs") &&
+      (variant === "consecutive" || variant === "evensumpairs" || variant === "fadedkropki") &&
       submode === "circle_SS"
     ) {
       toolPanelOptions = [{ value: "1", label: "White" }];
@@ -208,6 +197,7 @@
         "perfectsquares",
         "primesums",
         "twodigitprimenumbers",
+        "fives",
       ].includes(variant) &&
       submode === "diamond_SS"
     ) {
@@ -229,7 +219,10 @@
         { value: "trio-mid", input: "3", label: "4–6 □", submode: "square_L" },
         { value: "trio-high", input: "3", label: "7–9 △", submode: "triup_L" },
       ];
-    } else if (mode === "symbol" && variant === "diagonallyconsecutive") {
+    } else if (
+      mode === "symbol" &&
+      ["diagonallyconsecutive", "diagonal sum is nine", "diagonal tens"].includes(variant)
+    ) {
       toolPanelOptions = [
         { value: "1", label: "Left diagonal" },
         { value: "2", label: "Right diagonal" },
@@ -360,9 +353,8 @@
   }
 
   function variantInputFamilies(value: string): VariantTab[] {
-    if (noInputVariationValues.has(value)) return ["no-input"];
-    if (directionalShapeVariationValues.has(value)) return ["shape"];
     const catalog = variationByValue.get(value);
+    if (catalog?.inputType.categories.length) return catalog.inputType.categories;
     const setting = (window as any).penpa_constraints?.setting?.[value];
     const modes: string[] = setting?.modeset || [];
     const families = new Set<VariantTab>();
@@ -1019,7 +1011,9 @@
   }
 
   onMount(() => {
-    const savedPanelPosition = window.localStorage.getItem("penpa-mobile-input-panel-position");
+    const savedPanelPosition = window.localStorage.getItem(
+      "penpa-mobile-input-panel-position",
+    );
     if (savedPanelPosition === "above" || savedPanelPosition === "below") {
       mobilePanelPosition = savedPanelPosition;
     }
@@ -1106,10 +1100,10 @@
 </script>
 
 <svelte:head>
-  <title>Penpa Sudoku Studio</title>
+  <title>Sudotoku</title>
   <meta
     name="description"
-    content="A reactive Sudoku setting and CSP solving workspace powered by Penpa."
+    content="A Sudoku setter and solver powered by Penpa+."
   />
 </svelte:head>
 
@@ -1211,10 +1205,6 @@
           class:hidden-section={layer !== "problem"}
         >
           <div class="control-label" id="svelte-variant-label">Add variant</div>
-          <div class="generation-legend">
-            <span class="csp-legend-icon">⬢</span> CSP implemented · ✦ Generates
-            from scratch
-          </div>
           <div class="variant-search-control">
             <span class="variant-icon">{variantIcon(selectedVariant)}</span>
             <input
@@ -1274,7 +1264,7 @@
                     >
                     <span>{variant.label}</span>
                     <span class="capability-badges">
-                      {#if cspSupportedVariants.has(variant.value)}
+                      {#if variationByValue.get(variant.value)?.status === "available"}
                         <span
                           class="csp-badge"
                           title="CSP solver implemented"
@@ -1283,13 +1273,9 @@
                       {:else}
                         <span
                           class="unsupported-badge"
-                          title="CSP solver unsupported">CSP ⊘</span
+                          title="Planned">Planned</span
                         >
                       {/if}
-                      {#if scratchGeneratableVariants.has(variant.value)}<span
-                          class="generation-badge"
-                          title="Can generate from scratch">✦</span
-                        >{/if}
                     </span>
                     {#if conflict}<span class="input-conflict"
                         >Used by {guideFor(conflict).title}</span
@@ -1437,7 +1423,10 @@
             Move {mobilePanelPosition === "above" ? "below" : "above"}
           </button>
         </div>
-        <div class="tool-input-panel" aria-label={`${toolPanelMode} mobile input panel`}>
+        <div
+          class="tool-input-panel"
+          aria-label={`${toolPanelMode} mobile input panel`}
+        >
           {#each toolPanelOptions as option, index}
             <button
               type="button"
@@ -1445,7 +1434,9 @@
               class:panel-action={Boolean(option.action)}
               on:pointerdown={(event) => useToolPanelOption(event, option)}
             >
-              {option.label}{#if !option.action && index < 9}<kbd>{index + 1}</kbd>{/if}
+              {option.label}{#if !option.action && index < 9}<kbd
+                  >{index + 1}</kbd
+                >{/if}
             </button>
           {/each}
         </div>
@@ -1613,7 +1604,7 @@
               class="info-action"
               title="About this editor"
               aria-label="About this editor"
-              on:click={() => (studioModal = "info")}><span>ⓘ</span></button
+              on:click={() => (studioModal = "info")}><span>ⓘ</span>About</button
             >
           </div>
         </div>
@@ -1653,17 +1644,12 @@
           <button class="primary" on:click={createGrid}>Create grid</button>
         </div>
       {:else if studioModal === "confirm-generate"}
-        <h2 id="studio-modal-title">Generate from the current variants?</h2>
+        <h2 id="studio-modal-title">Generate {generatorSource === "existing"? "from existing clues":"from the blank grid"}</h2>
         <p>
-          {generatorSource === "existing"
-            ? "The current givens and clues will seed the completed grid before pruning."
-            : "A fresh completed grid will be constructed."} The {newGridSize} ×
-          {newGridSize}
-          {generatorVariants
-            .filter((variant) => variant !== "classic")
-            .join(" + ") || "Classic"} puzzle uses 180° rotational symmetry, and
-          every clue-pair removal is checked by the CSP for a unique solution.
-        </p>
+          {generatorVariants.length == 0? "This will be a Classic Sudoku.":
+            generatorVariants.length == 1? "This will be " + generatorVariants.join() + " Sudoku":
+            "This will be " + generatorVariants.join(", ") + " Sudoku"}
+          </p>
         <div class="studio-modal-actions">
           <button on:click={() => (studioModal = null)}>Cancel</button>
           <button class="primary" on:click={confirmGenerator}>Generate</button>
@@ -1677,10 +1663,6 @@
             <button
               class:active={screenshotType === "png"}
               on:click={() => (screenshotType = "png")}>PNG</button
-            >
-            <button
-              class:active={screenshotType === "jpg"}
-              on:click={() => (screenshotType = "jpg")}>JPG</button
             >
             <button
               class:active={screenshotType === "svg"}
@@ -1719,26 +1701,48 @@
           >
         </div>
       {:else}
-        <h2 id="studio-modal-title">About Penpa Sudoku Studio</h2>
+        <h2 id="studio-modal-title">About Sudotoku</h2>
         <p>
-          This editor builds on Penpa+, created and maintained by the Penpa
-          community and its contributors.
+          Sudotoku (Sudoku + Toku (解く = to solve)) is a Sudoku setter and
+          solver powered by Penpa+ and AI. Feel free to use this to create and
+          share your own puzzles!
         </p>
         <div class="info-copy">
           <strong>Credits</strong>
           <p>
-            Native puzzle drawing, canvas interaction, serialization, and SVG
-            export are powered by Penpa+. This workspace adds the Svelte
-            interface and CSP Sudoku tooling.
+            <a
+              href="https://swaroopg92.github.io/penpa-edit/"
+              target="_blank"
+              rel="noreferrer">Penpa+</a
+            > for the amazing puzzle editor.
           </p>
-          <strong>Disclaimer</strong>
           <p>
-            This is an independent working fork. Variant solving remains
-            experimental; always verify generated candidates before publishing a
-            puzzle.
+            <a
+              href="https://semiexp.net/apps/sudoku-editor/index.html"
+              target="_blank"
+              rel="noreferrer">Sudoku Editor Plus</a
+            >
+            for CSP solver inspiration. This website uses a vibecoded CSP implementation,
+            but I hope to learn to integrate
           </p>
-          <a href="./variant-wiki.html" target="_blank" rel="noreferrer"
-            >Open the variant wiki</a
+          <p>
+            <a
+              href="https://github.com/semiexp/cspuz_core"
+              target="_blank"
+              rel="noreferrer">cspuz_core</a
+            > someday.
+          </p>
+          <p>
+            <a
+              href="https://logic-puzzles.ropeko.ch/php/db/search.php"
+              target="_blank"
+              rel="noreferrer">Logic Puzzles</a
+            > for the variant database!
+          </p>
+          <p>Codex for making this ambitious project possible.</p>
+
+          <a href="./list" target="_blank" rel="noreferrer"
+            >See list of variants ↗</a
           >
           <a
             href="https://github.com/lemononmars/penpa-edit"
@@ -1748,7 +1752,7 @@
         </div>
         <div class="studio-modal-actions">
           <button class="primary" on:click={() => (studioModal = null)}
-            >Done</button
+            >Back to setting Sudoku</button
           >
         </div>
       {/if}
