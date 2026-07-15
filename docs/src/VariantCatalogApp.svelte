@@ -3,7 +3,7 @@
     import { cspSupportedVariants, variations } from "./variationCatalog";
     import {
         automaticBlockerFor, cspApproachFor, cspConstraintFunctionFor,
-        inputModesFor, solverTestCasesFor
+        inputModesFor, solverTestCasesFor, markChoiceFor, positions, penpaMarks
     } from "./variantMarks";
 
     export let page: "variants" | "detail" = "variants";
@@ -24,6 +24,15 @@
 
     const detailId = document.body.dataset.variantId || new URLSearchParams(window.location.search).get("id") || "classic";
     const detailVariation = variations.find((variation) => variation.value === detailId);
+
+    function formatInputType(variation: any) {
+        const choice = markChoiceFor(variation);
+        if (choice.position === "none") return "None";
+        if (choice.position === "multiple") return "Multiple / manual";
+        const pos = positions.find(p => p.id === choice.position)?.name;
+        const mark = penpaMarks.find(m => m.id === choice.mark)?.name;
+        return `${pos} · ${mark}`;
+    }
 
     $: normalizedQuery = query.trim().toLowerCase();
     $: filteredVariations = variations.filter((variation) => {
@@ -139,6 +148,8 @@
                     <tr>
                         <th>Variant</th>
                         <th>Rule</th>
+                        <th>Tags</th>
+                        <th>Input Type</th>
                         <th>CSP</th>
                         <th>Implementation</th>
                     </tr>
@@ -149,6 +160,16 @@
                         <tr>
                             <th scope="row"><a class="variant-link" href={`./variant.html?id=${encodeURIComponent(variation.value)}`}><strong>{variation.name}</strong></a><code>{variation.value}</code></th>
                             <td class="rule">{variation.rule}</td>
+                            <td>
+                                {#if variation.tags}
+                                    <div class="tags-list">
+                                        {#each variation.tags as tag}
+                                            <span class="tag">{tag}</span>
+                                        {/each}
+                                    </div>
+                                {/if}
+                            </td>
+                            <td class="input-type">{formatInputType(variation)}</td>
                             <td>
                                 {#if implemented}
                                     <span class="status implemented">Implemented</span>
@@ -206,6 +227,9 @@
     tbody tr:hover td, tbody tr:hover th { background-color: #f1f7f7; }
     td.rule { min-width: 320px; max-width: 520px; color: #465d68; }
     td.approach { min-width: 260px; color: #516871; }
+    td.input-type { color: #516871; }
+    .tags-list { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tag { display: inline-block; padding: 2px 6px; color: #267f95; background: #eaf3f5; border: 1px solid #c7d4d6; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
     code { display: block; margin-top: 4px; color: #75878e; font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; font-weight: 500; }
     .status { display: inline-flex; align-items: center; width: max-content; padding: 3px 7px; border-radius: 999px; white-space: nowrap; font-size: 10px; font-weight: 750; }
     .status.implemented { color: #176245; background: #dff2e9; }
@@ -319,6 +343,14 @@
     }
     :global(html.dark) td.approach {
         color: #aebdca !important;
+    }
+    :global(html.dark) td.input-type {
+        color: #aebdca !important;
+    }
+    :global(html.dark) .tag {
+        color: #8c9ba5 !important;
+        background: #1b2630 !important;
+        border-color: #40505f !important;
     }
     :global(html.dark) code {
         color: #8c9ba5 !important;
