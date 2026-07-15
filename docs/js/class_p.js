@@ -367,6 +367,10 @@ class Puzzle {
             // Add multicolor data
             if (this.mode[mode].multicolor === undefined)
                 this.mode[mode].multicolor = ["", 1];
+
+            // Sudoku input mode was added after older puzzle URLs were created.
+            if (!Array.isArray(this.mode[mode].sudoku))
+                this.mode[mode].sudoku = ["1", mode === 'pu_a' ? 9 : 1];
         }
 
         for (let mode of ['pu_q', 'pu_q_col', 'pu_a', 'pu_a_col']) {
@@ -9784,15 +9788,15 @@ class Puzzle {
                 let current = this[this.mode.qa].symbol[num];
                 this.undoredo_counter++;
                 if (!current) {
-                    this.set_value("symbol", num, [1, "circle_L", 2], null);
+                    this.set_value("symbol", num, [3, "circle_L", 2], null);
                 } else if (current[1] === "circle_L") {
-                    this.set_value("symbol", num, [1, "square_L", 2], null);
+                    this.set_value("symbol", num, [3, "square_L", 2], null);
                 } else if (current[1] === "square_L") {
-                    this.set_value("symbol", num, [1, "triup_L", 2], null);
+                    this.set_value("symbol", num, [3, "triup_L", 2], null);
                 } else if (current[1] === "triup_L") {
                     this.remove_value("symbol", num, true);
                 } else {
-                    this.set_value("symbol", num, [1, "circle_L", 2], null);
+                    this.set_value("symbol", num, [3, "circle_L", 2], null);
                 }
                 this.redraw();
                 return;

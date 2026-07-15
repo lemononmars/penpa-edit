@@ -1,0 +1,9 @@
+{
+  "id": "clonedstrands",
+  "name": "Cloned Strands",
+  "rules": {
+    "6x6": "Every marked strand has exactly the same sequence of digits. A digit may repeat on a strand.",
+    "9x9": "Every marked strand has exactly the same sequence of digits. A digit may repeat on a strand."
+  },
+  "tags": ["line"]
+}

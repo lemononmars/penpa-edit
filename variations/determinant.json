@@ -1,0 +1,9 @@
+{
+  "id": "determinant",
+  "name": "Determinant",
+  "rules": {
+    "6x6": "A circled clue at a four-cell intersection gives a×d−b×c for the surrounding 2×2 matrix.",
+    "9x9": "A circled clue at a four-cell intersection gives a×d−b×c for the surrounding 2×2 matrix."
+  },
+  "tags": ["math"]
+}

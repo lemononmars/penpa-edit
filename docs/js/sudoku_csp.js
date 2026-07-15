@@ -1010,6 +1010,16 @@ var SudokuCSP = (function() {
                 case "evenSum": return sum % 2 === 0;
                 case "oddSum": return sum % 2 === 1;
                 case "inequality": return clue.sign === "<" ? first < second : first > second;
+                case "divisor": return clue.target > 0 && (first * 10 + second) % clue.target === 0;
+                case "eitheror": return first === clue.target || second === clue.target;
+                case "blocksumrelations":
+                    var groupValues = (clue.groups || []).map(function(group) {
+                        var values = group.map(function(cell) { return cellValue(board, cell); });
+                        return values.some(function(value) { return !value; }) ? null :
+                            values.reduce(function(total, value) { return total + value; }, 0);
+                    });
+                    return groupValues.indexOf(null) !== -1 ||
+                        (clue.sign === "<" ? groupValues[0] < groupValues[1] : groupValues[0] > groupValues[1]);
                 case "xydifference":
                     var reference = cellValue(board, clue.reference);
                     return !reference || difference === reference;
@@ -1018,16 +1028,16 @@ var SudokuCSP = (function() {
                     return !reference || difference !== reference;
                 case "perfectsquares": return [16, 25, 36, 49, 64, 81].indexOf(first * 10 + second) !== -1;
                 case "notPerfectSquare": return [16, 25, 36, 49, 64, 81].indexOf(first * 10 + second) === -1;
-                case "primesumssudoku":
+                case "primesums":
                     var sum = first + second;
                     return [2, 3, 5, 7, 11, 13, 17].indexOf(sum) !== -1;
-                case "notPrimesumssudoku":
+                case "notPrimesums":
                     var sum = first + second;
                     return [2, 3, 5, 7, 11, 13, 17].indexOf(sum) === -1;
-                case "twodigitprimenumberssudoku":
+                case "twodigitprimenumbers":
                     var val = first * 10 + second;
                     return [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97].indexOf(val) !== -1;
-                case "notTwodigitprimenumberssudoku":
+                case "notTwodigitprimenumbers":
                     var val = first * 10 + second;
                     return [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97].indexOf(val) === -1;
                 case "diagonalConsecutive": return difference === 1;
@@ -1102,6 +1112,24 @@ var SudokuCSP = (function() {
                         if (sum > origin) return false;
                     }
                     return false;
+                });
+            }
+            if (relation === "detection") {
+                if (!origin) return true;
+                var markedRays = {};
+                (clue.rays || []).forEach(function(ray) {
+                    if (ray.length) markedRays[ray[0].row + ":" + ray[0].col] = true;
+                });
+                return (clue.allDiagonalRays || []).every(function(ray) {
+                    if (!ray.length) return true;
+                    var marked = !!markedRays[ray[0].row + ":" + ray[0].col];
+                    var hasMatch = false, hasBlank = false;
+                    ray.forEach(function(cell) {
+                        var value = cellValue(board, cell);
+                        if (!value) hasBlank = true;
+                        else if (value === origin) hasMatch = true;
+                    });
+                    return marked ? hasMatch || hasBlank : !hasMatch;
                 });
             }
             return true;
@@ -1327,19 +1355,24 @@ var SudokuCSP = (function() {
                     (productBlanks > 0 || littleProduct === clue.value);
             }
             if (clue.relation === "evensandwich" || clue.relation === "oddsandwich") {
-                if (values.some(function(value) { return !value; })) return true;
                 var parity = clue.relation === "evensandwich" ? 0 : 1;
                 var found = [];
                 for (var sandwichIndex = 1; sandwichIndex < values.length - 1; sandwichIndex++) {
-                    if (values[sandwichIndex - 1] % 2 === parity && values[sandwichIndex + 1] % 2 === parity) {
+                    if (values[sandwichIndex - 1] && values[sandwichIndex] && values[sandwichIndex + 1] &&
+                        values[sandwichIndex - 1] % 2 === parity && values[sandwichIndex + 1] % 2 === parity) {
                         found.push(values[sandwichIndex]);
                     }
                 }
                 var expected = (clue.clues || []).slice().sort(function(a, b) { return a - b; });
                 found.sort(function(a, b) { return a - b; });
-                return found.length === expected.length && found.every(function(value, index) { return value === expected[index]; });
+                for (var foundIndex = 0; foundIndex < found.length; foundIndex++) {
+                    var expectedIndex = expected.indexOf(found[foundIndex]);
+                    if (expectedIndex < 0) return false;
+                    expected.splice(expectedIndex, 1);
+                }
+                return values.some(function(value) { return !value; }) || expected.length === 0;
             }
-            if (clue.relation === "ascendingstarters" || clue.relation === "ascendingstarterssudoku") {
+            if (clue.relation === "ascendingstarters") {
                 var sum = 0;
                 var prev = 0;
                 var hasZero = false;
@@ -1361,7 +1394,7 @@ var SudokuCSP = (function() {
                 }
                 return sum <= clue.value;
             }
-            if (clue.relation === "before9" || clue.relation === "before9sudoku") {
+            if (clue.relation === "before9") {
                 // Sum of all digits that appear before 9 in the row/column (left-to-right / top-to-bottom)
                 var b9_idx = values.indexOf(9);
                 if (b9_idx >= 0) {
@@ -1387,7 +1420,22 @@ var SudokuCSP = (function() {
                 }
                 return false;
             }
-            if (clue.relation === "before1after9" || clue.relation === "before1after9sudoku") {
+            if (clue.relation === "before1" || clue.relation === "after9") {
+                var marker = clue.relation === "before1" ? 1 : 9;
+                var markerIndex = values.indexOf(marker);
+                if (markerIndex < 0) return true;
+                var segmentStart = clue.relation === "before1" ? 0 : markerIndex + 1;
+                var segmentEnd = clue.relation === "before1" ? markerIndex : values.length;
+                var segmentSum = 0, segmentBlanks = 0;
+                for (var segmentIndex = segmentStart; segmentIndex < segmentEnd; segmentIndex++) {
+                    if (values[segmentIndex]) segmentSum += values[segmentIndex];
+                    else segmentBlanks++;
+                }
+                if (!segmentBlanks) return segmentSum === clue.value;
+                return segmentSum + segmentBlanks <= clue.value &&
+                    segmentSum + segmentBlanks * SIZE >= clue.value;
+            }
+            if (clue.relation === "before1after9") {
                 // Sum of digits BEFORE 1 OR AFTER 9, reading L→R / T→B.
                 // The rule applies to whichever of {1,9} appears first in the row/col:
                 //   if 1 comes first  → sum all digits before position of 1
@@ -1447,9 +1495,19 @@ var SudokuCSP = (function() {
 
     registerConstraint("fullRankGroups", {
         validatePartial: function(board, lines) {
-            return lines.every(function(line) {
-                var leadingDigit = cellValue(board, line.cells[0]);
-                return !leadingDigit || leadingDigit === line.rank;
+            var rankedLines = lines.filter(function(line) { return line.rank !== null && line.rank !== undefined; });
+            if (rankedLines.some(function(line) {
+                return !Number.isInteger(line.rank) || line.rank < 1 || line.rank > lines.length;
+            })) return false;
+            var values = lines.map(function(line) {
+                var digits = line.cells.map(function(cell) { return cellValue(board, cell); });
+                return digits.some(function(value) { return !value; }) ? null : Number(digits.join(""));
+            });
+            if (values.some(function(value) { return value === null; })) return true;
+            var ordered = values.slice().sort(function(first, second) { return first - second; });
+            return rankedLines.every(function(line) {
+                var index = lines.indexOf(line);
+                return values[index] === ordered[line.rank - 1];
             });
         }
     });
@@ -1490,6 +1548,26 @@ var SudokuCSP = (function() {
                     resultDigits.some(function(value) { return !value; })) return true;
                 var product = factors.reduce(function(total, value) { return total * value; }, 1);
                 return Number(resultDigits.join("")) === product;
+            }
+            if (clue.relation === "clonedstrands") {
+                var strands = clue.strands || [];
+                if (!strands.length || strands.some(function(strand) { return strand.length !== strands[0].length; })) return false;
+                for (var strandIndex = 1; strandIndex < strands.length; strandIndex++) {
+                    for (var strandCell = 0; strandCell < strands[0].length; strandCell++) {
+                        var referenceValue = cellValue(board, strands[0][strandCell]);
+                        var strandValue = cellValue(board, strands[strandIndex][strandCell]);
+                        if (referenceValue && strandValue && referenceValue !== strandValue) return false;
+                    }
+                }
+                return true;
+            }
+            if (clue.relation === "codedpairs") {
+                var pairValues = (clue.pairs || []).map(function(pair) {
+                    var values = pair.map(function(cell) { return cellValue(board, cell); });
+                    return values.some(function(value) { return !value; }) ? null : values.slice().sort().join(":");
+                });
+                var completePairs = pairValues.filter(function(value) { return value !== null; });
+                return completePairs.length < 2 || completePairs.every(function(value) { return value === completePairs[0]; });
             }
             if (clue.relation === "multipledivisor") {
                 var values = clue.groups.map(function(group) {
@@ -1576,6 +1654,22 @@ var SudokuCSP = (function() {
                 }
                 return increasing || decreasing;
             }
+            if (clue.relation === "alternatingstripes") {
+                if (new Set(assigned).size !== assigned.length) return false;
+                for (var stripeIndex = 1; stripeIndex < values.length - 1; stripeIndex++) {
+                    if (!values[stripeIndex - 1] || !values[stripeIndex] || !values[stripeIndex + 1]) continue;
+                    var firstStep = values[stripeIndex] - values[stripeIndex - 1];
+                    var secondStep = values[stripeIndex + 1] - values[stripeIndex];
+                    if (!firstStep || !secondStep || firstStep * secondStep >= 0) return false;
+                }
+                return true;
+            }
+            if (clue.relation === "between") {
+                if (values.length < 3 || !values[0] || !values[values.length - 1]) return true;
+                var low = Math.min(values[0], values[values.length - 1]);
+                var high = Math.max(values[0], values[values.length - 1]);
+                return values.slice(1, -1).every(function(value) { return !value || (value > low && value < high); });
+            }
             return true;
         },
         validateComplete: function(board, clue) {
@@ -1616,6 +1710,12 @@ var SudokuCSP = (function() {
                 var groupOpen = values.length - assigned.length;
                 return groupSum <= clue.total && groupSum + groupOpen * SIZE >= clue.total &&
                     (groupOpen > 0 || groupSum === clue.total);
+            }
+            if (clue.relation === "crosssums") {
+                return assigned.length < 4 || values[0] + values[3] === values[1] + values[2];
+            }
+            if (clue.relation === "determinant") {
+                return assigned.length < 4 || values[0] * values[3] - values[1] * values[2] === clue.total;
             }
             if (clue.relation === "clockfaces") {
                 if (assigned.length < 4) return true;

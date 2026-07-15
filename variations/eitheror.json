@@ -1,0 +1,9 @@
+{
+  "id": "eitheror",
+  "name": "Either Or",
+  "rules": {
+    "6x6": "A circled digit between two cells appears in one of those two cells.",
+    "9x9": "A circled digit between two cells appears in one of those two cells."
+  },
+  "tags": ["neighbour"]
+}

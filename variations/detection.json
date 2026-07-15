@@ -1,0 +1,9 @@
+{
+  "id": "detection",
+  "name": "Detection",
+  "rules": {
+    "6x6": "A diagonal arrow in a cell containing N points toward another N on that diagonal sightline. All possible arrows are drawn.",
+    "9x9": "A diagonal arrow in a cell containing N points toward another N on that diagonal sightline. All possible arrows are drawn."
+  },
+  "tags": ["direction"]
+}

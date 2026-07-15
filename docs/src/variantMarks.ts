@@ -73,7 +73,7 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     }
     if (variation.value === "coded") return { position: "corner", mark: "text" };
     if (variation.value === "pencilmarks") return { position: "center", mark: "text" };
-    if (["xydifference", "primesumssudoku", "twodigitprimenumberssudoku"].includes(variation.value)) return { position: "edge", mark: "diamond" };
+    if (["xydifference", "primesums", "twodigitprimenumbers"].includes(variation.value)) return { position: "edge", mark: "diamond" };
     if (variation.value === "xivi") return { position: "edge", mark: "text" };
     if (variation.value === "clock") return { position: "center", mark: "cage" };
     if (variation.value === "slotmachine") return { position: "center", mark: "surface" };
@@ -139,8 +139,8 @@ export function inputModesFor(variation: Variation) {
         creasing: ["Special · no-bulb thermo", "Draw each monotonic line with the no-bulb thermo tool."],
         diagonallyconsecutive: ["Shape · paired bars", "Toggle the left and right diagonal bars at each intersection."],
         multiplication: ["Cage", "Number · edge", "Draw each cage; multiplication signs may be placed manually on its internal edges."]
-        ,evensandwich: ["Number · normal", "Enter every sandwiched digit in one of the three top or left margin layers; a line with no clues is unrestricted."],
-        oddsandwich: ["Number · normal", "Enter every sandwiched digit in one of the three top or left margin layers; a line with no clues is unrestricted."],
+        ,evensandwich: ["Number · normal", "Enter every sandwiched digit in one of the three top or left margin layers; leave all three blank to require no sandwiched digit."],
+        oddsandwich: ["Number · normal", "Enter every sandwiched digit in one of the three top or left margin layers; leave all three blank to require no sandwiched digit."],
         rossini: ["Shape · thin black arrow", "Place cardinal arrows in the margin. Diagonal arrows are unavailable."],
         windoku: ["Cage", "On a 9 × 9 grid, four 3 × 3 cages are created automatically at r2c2, r2c5, r5c2, and r5c5."],
         clock: ["Cage", "Draw a cage around each horizontal group of four clock digits; other cage shapes are ignored."],
@@ -148,7 +148,18 @@ export function inputModesFor(variation: Variation) {
         slotmachine: ["Input-mode column checkboxes", "Toggle columns in the Input Modes section; the editor paints each selected column."],
         wheel: ["Number · Tapa", "Shape · large circle", "Place four clue digits and a large circle at the same four-cell intersection."],
         pinnochio: ["Surface", "Number · normal", "Shade every clue cell, then enter its displayed digit; exactly one must be false."],
-        sumdetector: ["Shape · eight-direction arrow", "At each origin, toggle every direction containing the required prefix sum."]
+        sumdetector: ["Shape · eight-direction arrow", "At each origin, toggle every direction containing the required prefix sum."],
+        extraregion: ["Surface", "Shade each extra region as one orthogonally connected group of cells."],
+        alternatingstripes: ["Line · normal", "Draw every alternating stripe as a normal line."],
+        between: ["Line · normal", "Shape · large white circle", "Draw the line and place a white circle on each endpoint."],
+        blocksumrelations: ["Number · edge", "Place <, ^, >, or v between the two block slices being compared."],
+        clonedstrands: ["Line · normal", "Draw the equal strands as normal lines of the same length."],
+        codedpairs: ["Cage", "Number · Killer", "Cage each pair and give matching pairs the same code."],
+        crosssums: ["Shape · cross", "Place a cross at each four-cell intersection."],
+        detection: ["Shape · eight-direction arrow", "Place only the diagonal arrows that detect the origin digit."],
+        determinant: ["Number · circled corner", "Enter the determinant at the four-cell intersection."],
+        divisor: ["Number · circled edge", "Enter the divisor between the two adjacent cells."],
+        eitheror: ["Number · circled edge", "Enter the value that must occur in either adjacent cell."]
     };
     if (dedicated[variation.value]) return dedicated[variation.value];
     const choice = markChoiceFor(variation);
@@ -166,14 +177,14 @@ export function cspConstraintFunctionFor(variation: Variation) {
         productframe: `validatePartial(board, clue) {\n  const values = clue.cells.slice(0, 3).map(cellValue);\n  const product = values.filter(Boolean).reduce((total, value) => total * value, 1);\n  return product <= clue.value && clue.value % product === 0 && (values.some(value => !value) || product === clue.value);\n}`,
         rossini: `validatePartial(board, clue) {\n  const [a, b, c] = clue.cells.map(cellValue);\n  if (!a || !b || !c) return true;\n  const ascending = a < b && b < c, descending = a > b && b > c;\n  return clue.direction === "ascending" ? ascending : clue.direction === "descending" ? descending : !ascending && !descending;\n}`,
         edgedifference: `validatePartial(board, clue) {\n  const first = cellValue(board, clue.cells[0]);\n  const last = cellValue(board, clue.cells.at(-1));\n  return !first || !last || Math.abs(first - last) === clue.value;\n}`,
-        fullrank: `validatePartial(board, lines) {\n  return lines.every(line => {\n    const leadingDigit = cellValue(board, line.cells[0]);\n    return !leadingDigit || leadingDigit === line.rank;\n  });\n}`,
+        fullrank: `validatePartial(board, lines) {\n  const numbers = lines.map(line => line.cells.map(cellValue).join(""));\n  if (numbers.some(number => number.includes("0"))) return true;\n  const ordered = numbers.slice().sort((a, b) => Number(a) - Number(b));\n  return lines.every((line, index) => line.rank == null || numbers[index] === ordered[line.rank - 1]);\n}`,
         outsideparity: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue), prefix = values.slice(0, clue.value).filter(Boolean);\n  return prefix.every(value => value % 2 === prefix[0] % 2)\n    && (!values[clue.value] || !prefix.length || values[clue.value] % 2 !== prefix[0] % 2);\n}`,
         parityparty: `validatePartial(board, clue) {\n  return prefixThroughFirstParityCanSum(board, clue.cells, 0, clue.value)\n    || prefixThroughFirstParityCanSum(board, clue.cells, 1, clue.value);\n}`,
         serbianframe: `validatePartial(board, clue) {\n  const indexes = clue.axis === "row" ? [1, 2] : [2, 3];\n  const values = indexes.map(index => cellValue(board, clue.cells[index]));\n  return values.some(value => !value) || values[0] + values[1] === clue.value;\n}`,
         median: `validatePartial(board, clue) {\n  const values = clue.cells.slice(0, 3).map(cellValue);\n  return values.some(value => !value) || values.sort((a, b) => a - b)[1] === clue.value;\n}`,
         xydifference: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue), reference = cellValue(board, clue.reference);\n  return !a || !b || !reference || Math.abs(a - b) === reference;\n}`,
-        primesumssudoku: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const sum = a + b;\n  const isPrime = [2, 3, 5, 7, 11, 13, 17].includes(sum);\n  return clue.marked ? isPrime : !isPrime;\n}`,
-        twodigitprimenumberssudoku: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const value = 10 * a + b;\n  const isPrime = [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97].includes(value);\n  return clue.marked ? isPrime : !isPrime;\n}`,
+        primesums: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const sum = a + b;\n  const isPrime = [2, 3, 5, 7, 11, 13, 17].includes(sum);\n  return clue.marked ? isPrime : !isPrime;\n}`,
+        twodigitprimenumbers: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const value = 10 * a + b;\n  const isPrime = [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97].includes(value);\n  return clue.marked ? isPrime : !isPrime;\n}`,
         average: `validatePartial(board, clue) {\n  const center = cellValue(board, clue.center), ends = clue.ends.map(cellValue);\n  if (!center || ends.some(value => !value)) return true;\n  return clue.marked === (center * 2 === ends[0] + ends[1]);\n}`,
         fortress: `validatePartial(board, clue) {\n  const shaded = cellValue(board, clue.shaded), unshaded = cellValue(board, clue.unshaded);\n  return !shaded || !unshaded || shaded > unshaded;\n}`,
         inequality: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  return !a || !b || (clue.sign === "<" ? a < b : a > b);\n}`,
@@ -210,7 +221,17 @@ export function cspConstraintFunctionFor(variation: Variation) {
         slotmachine: `validatePartial(board, clue) {\n  return clue.columns.slice(1).every(column => someCyclicShiftMatchesAssignedDigits(board, clue.columns[0], column));\n}`,
         wheel: `validatePartial(board, clue) {\n  return someRotationMatchesAssignedDigits(board, clue.cells, clue.digits);\n}`,
         pinnochio: `validatePartial(board, clue) {\n  const comparisons = clue.clues.map(item => !cellValue(board, item.cell) ? "open"\n    : cellValue(board, item.cell) === item.value ? "true" : "false");\n  return comparisons.filter(value => value === "false").length <= 1\n    && (comparisons.includes("false") || comparisons.includes("open"));\n}`,
-        sumdetector: `validatePartial(board, group) {\n  return range(1, board.length).some(n => group.clues.every(clue =>\n    clue.rays.every(ray => firstNDigitsCanSumTo(board, ray, n, cellValue(board, clue.origin)))));\n}`
+        sumdetector: `validatePartial(board, group) {\n  return range(1, board.length).some(n => group.clues.every(clue =>\n    clue.rays.every(ray => firstNDigitsCanSumTo(board, ray, n, cellValue(board, clue.origin)))));\n}`,
+        alternatingstripes: `validatePartial(board, path) {\n  const values = path.map(cellValue);\n  return assignedDigitsAreDistinct(values) && everyAssignedTripleAlternates(values);\n}`,
+        between: `validatePartial(board, path) {\n  const values = path.map(cellValue), low = Math.min(values[0], values.at(-1)), high = Math.max(values[0], values.at(-1));\n  return !values[0] || !values.at(-1) || values.slice(1, -1).every(value => !value || (value > low && value < high));\n}`,
+        blocksumrelations: `validatePartial(board, clue) {\n  const sums = clue.groups.map(group => group.map(cellValue));\n  return sums.some(incomplete) || compare(sums[0].sum(), clue.sign, sums[1].sum());\n}`,
+        clonedstrands: `validatePartial(board, clue) {\n  return clue.strands.every(path => path.length === clue.strands[0].length)\n    && correspondingAssignedDigitsAgree(board, clue.strands);\n}`,
+        codedpairs: `validatePartial(board, clue) {\n  const signatures = clue.pairs.map(pair => pair.map(cellValue).filter(Boolean).sort().join(","));\n  return signatures.some(signature => signature.split(",").length < 2) || signatures.every(signature => signature === signatures[0]);\n}`,
+        crosssums: `validatePartial(board, clue) {\n  const [tl, tr, bl, br] = clue.cells.map(cellValue);\n  return [tl, tr, bl, br].some(value => !value) || tl + br === tr + bl;\n}`,
+        detection: `validatePartial(board, clue) {\n  const digit = cellValue(board, clue.origin);\n  return !digit || clue.rays.every(ray => rayCanContain(board, ray, digit))\n    && clue.unmarkedRays.every(ray => !rayContains(board, ray, digit));\n}`,
+        determinant: `validatePartial(board, clue) {\n  const [tl, tr, bl, br] = clue.cells.map(cellValue);\n  return [tl, tr, bl, br].some(value => !value) || tl * br - tr * bl === clue.total;\n}`,
+        divisor: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  return !a || !b || (10 * a + b) % clue.target === 0;\n}`,
+        eitheror: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  return !a || !b || a === clue.target || b === clue.target;\n}`
     };
     if (implementations[variation.value]) return implementations[variation.value];
 
@@ -314,16 +335,16 @@ export function cspConstraintFunctionFor(variation: Variation) {
 /** Executable-style regression examples displayed on every variant detail page. */
 export function solverTestCasesFor(variation: Variation) {
     const cases: Record<string, string> = {
-        fullrank: `test("rank 1 starts with 1", () => {\n  const clue = { rank: 1, cells: rowCells(1) };\n  assert.equal(solve(boardWith({ r1c1: 1 }), { fullRankGroups: [[clue]] }).solved, true);\n  assert.equal(solve(boardWith({ r1c1: 2 }), { fullRankGroups: [[clue]] }).solved, false);\n});`,
-        evensandwich: `test("2,4,6 satisfies an outside 4 clue", () => {\n  const board = boardWith({ r1c1: 2, r1c2: 4, r1c3: 6 });\n  const clue = { relation: "evensandwich", cells: rowCells(1), clues: [4] };\n  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);\n  assert.equal(readConstraints(puzzleWithNoOutsideClues("evensandwich")).outsideRelations.length, 0);\n});`,
+        fullrank: `test("ranks complete n-digit numbers", () => {\n  const lines = [\n    { rank: 1, cells: rowCells(1) },\n    { rank: 2, cells: rowCells(2) }\n  ];\n  assert.equal(solve(boardWithRows("123456789", "234567891"), { fullRankGroups: [lines] }).solved, true);\n});`,
+        evensandwich: `test("2,4,6 satisfies an outside 4 clue", () => {\n  const board = boardWith({ r1c1: 2, r1c2: 4, r1c3: 6 });\n  const clue = { relation: "evensandwich", cells: rowCells(1), clues: [4] };\n  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);\n  assert.equal(readConstraints(puzzleWithNoOutsideClues("evensandwich")).outsideRelations.every(clue => clue.clues.length === 0), true);\n});`,
         coded: `test("Coded reads the upper-left numberS corner", () => {\n  const constraints = readConstraints(codedPuzzle({ r1c1: "A", r1c2: "A", r2c1: "B" }));\n  assert.deepEqual(constraints.codedGroups[0].groups, [[r1c1, r1c2], [r2c1]]);\n});`,
         pencilmarks: `test("one Pencilmark remains a candidate clue", () => {\n  const clue = { cell: r1c1, allowed: [4] };\n  assert.equal(solve(boardWith({ r1c1: 4 }), { pencilmarkCells: [clue] }).solved, true);\n  assert.equal(solve(boardWith({ r1c1: 5 }), { pencilmarkCells: [clue] }).solved, false);\n});`,
         sumdetector: `test("every arrow uses the same n", () => {\n  const group = sumDetectorGroupWithTwoArrows();\n  assert.equal(solve(boardWhereBothArrowsUseN(2), { sumDetectorGroups: [group] }).solved, true);\n  assert.equal(solve(boardWhereArrowsNeedDifferentN(), { sumDetectorGroups: [group] }).solved, false);\n});`,
         windoku: `test("four generated cages become extra regions", () => {\n  const constraints = readConstraints(windokuPuzzleWithGeneratedCages());\n  assert.equal(constraints.regionAllDifferent.length, 4);\n  assert.equal(constraints.regionAllDifferent.every(region => region.length === 9), true);\n});`,
         creasing: `test("a no-bulb thermo is only a Creasing line", () => {\n  const constraints = readConstraints(creasingPuzzle([[r1c1, r1c2, r1c3]]));\n  assert.equal(constraints.catalogLines[0].relation, "creasing");\n  assert.equal(constraints.thermos.length, 0);\n});`,
         rossini: `test("Rossini reads a cardinal thin-black arrow", () => {\n  const constraints = readConstraints(rossiniPuzzle({ top1: "down" }, "arrow_N_B"));\n  assert.equal(constraints.rossiniLines[0].direction, "ascending");\n  assert.equal(constraints.rossiniLines.slice(1).every(clue => clue.direction === "none"), true);\n});`,
-        ascendingstarterssudoku: `test("5 satisfies an outside ascending starter sum clue", () => {\n  const board = boardWith({ r1c1: 5, r1c2: 3, r1c3: 4 });\n  const clue = { relation: "ascendingstarters", cells: rowCells(1), value: 5 };\n  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);\n  assert.equal(solve(board, { outsideRelations: [{ ...clue, value: 6 }] }).solved, false);\n});`,
-        before9sudoku: `test("16 satisfies an outside sum before 9 clue", () => {\n  const board = boardWith({ r1c1: 3, r1c2: 5, r1c3: 8, r1c4: 9 });\n  const clue = { relation: "before9", cells: rowCells(1), value: 16 };\n  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);\n  assert.equal(solve(board, { outsideRelations: [{ ...clue, value: 17 }] }).solved, false);\n});`
+        ascendingstarters: `test("5 satisfies an outside ascending starter sum clue", () => {\n  const board = boardWith({ r1c1: 5, r1c2: 3, r1c3: 4 });\n  const clue = { relation: "ascendingstarters", cells: rowCells(1), value: 5 };\n  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);\n  assert.equal(solve(board, { outsideRelations: [{ ...clue, value: 6 }] }).solved, false);\n});`,
+        before9: `test("16 satisfies an outside sum before 9 clue", () => {\n  const board = boardWith({ r1c1: 3, r1c2: 5, r1c3: 8, r1c4: 9 });\n  const clue = { relation: "before9", cells: rowCells(1), value: 16 };\n  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);\n  assert.equal(solve(board, { outsideRelations: [{ ...clue, value: 17 }] }).solved, false);\n});`
     };
     if (cases[variation.value]) return cases[variation.value];
     if (!variation.cspSupported) return `test.todo("${variation.name}: add a concrete solver fixture before enabling CSP support");`;

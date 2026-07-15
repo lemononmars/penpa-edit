@@ -1,0 +1,9 @@
+{
+  "id": "codedpairs",
+  "name": "Coded Pairs",
+  "rules": {
+    "6x6": "Two-cell cages marked with the same letter contain the same pair of digits in either order.",
+    "9x9": "Two-cell cages marked with the same letter contain the same pair of digits in either order."
+  },
+  "tags": ["region"]
+}

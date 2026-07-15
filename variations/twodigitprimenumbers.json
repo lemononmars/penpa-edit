@@ -1,6 +1,6 @@
 {
-  "id": "twodigitprimenumberssudoku",
-  "name": "Two-Digit Prime Numbers Sudoku",
+  "id": "twodigitprimenumbers",
+  "name": "Two-Digit Prime Numbers",
   "rules": {
     "9x9": "Apply classic sudoku rules. Adjacent cells in the indicated direction (left-to-right or top-to-bottom) containing a two-digit prime number are marked with a diamond. All possible diamonds are marked."
   }

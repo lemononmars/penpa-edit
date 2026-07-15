@@ -30,6 +30,12 @@ const aliases: Record<string, string> = {
     oddeven: "odd even"
 };
 
+const scrapedAliases: Record<string, string> = {
+    elimination: "eliminate",
+    disjointgroups: "disjoint",
+    extraregions: "extraregion"
+};
+
 const existing = new Set([
     "classic", "odd even", "diagonal", "anti diagonal", "anti king", "anti knight",
     "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv",
@@ -63,9 +69,11 @@ export const cspSupportedVariants = new Set([
     "little killer", "product little killer", "descriptivepairs", "outside", "outside234",
     "maximin", "minimax", "diagonallyconsecutive", "multiplication",
     "evensandwich", "oddsandwich", "clock", "xivi", "slotmachine",
-    "pinnochio", "sumdetector", "ascendingstarterssudoku", "before9sudoku", "before1after9sudoku",
-    "almostpalindromesudoku", "anticonsecutivesudoku", "averagearrowssudoku",
-    "primesumssudoku", "twodigitprimenumberssudoku"
+    "pinnochio", "sumdetector", "ascendingstarters", "before9", "before1after9",
+    "almostpalindrome", "anticonsecutive", "averagearrows",
+    "primesums", "twodigitprimenumbers",
+    "alternatingstripes", "between", "blocksumrelations", "clonedstrands", "codedpairs",
+    "crosssums", "detection", "determinant", "divisor", "eitheror"
 ]);
 
 export const noInputVariationValues = new Set([
@@ -79,7 +87,10 @@ export const directionalShapeVariationValues = new Set([
 const removedVariationValues = new Set([
     "hex", "parquet", "tightfit", "ninedragons", "battleship", "odd", "even",
     "kropkipairs", "sudokurve", "inclusion", "multidiagonal", "search6",
-    "substitution", "alphabet", "halfsquares", "notouchsudoku", "squarewheel"
+    "substitution", "alphabet", "halfsquares", "notouch", "squarewheel",
+    "battenburglittlekiller", "clonefortress", "consecutivepairs", "diagonalirregular", "frame",
+    "greaterordifference", "greaterorsum", "greaterthanandkiller", "irregularalternatingstripes",
+    "killerlittlekiller", "oddevenandkiller", "parity", "renbankiller", "searchnine", "sequences", "wheels"
 ]);
 
 function stripRulePreamble(rule: string) {
@@ -95,7 +106,7 @@ const existingVariations: Variation[] = Object.values(modules).map((item) => {
     const value = aliases[item.id] || item.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
     return {
         ...item,
-        name: value === "anti king" ? "Anti King (No touch)" : item.name.replace(/\s+Sudoku$/i, ""),
+        name: value === "anti king" ? "Anti King (No touch)" : item.name.replace(/\s+Sudoku\b/gi, "").trim(),
         rules: Object.fromEntries(Object.entries(item.rules).map(([size, rule]) => [size, stripRulePreamble(rule)])),
         value,
         rule: preferredRule(item.rules),
@@ -147,28 +158,28 @@ const nonStandardTitles = new Set([
 const mappedScraped: Variation[] = (scrapedVariants as any[])
     .filter((item) => {
         const normTitle = normalize(item.title);
+        if (scrapedAliases[normTitle]) return false;
         if (existingNormalized.has(normTitle)) return false;
         if (addedScraped.has(normTitle)) return false;
         addedScraped.add(normTitle);
         return true;
     })
     .map((item) => {
-        const id = item.title.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const id = normalize(item.title);
         generatedIds.add(id);
-        const value = id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+        const value = id;
         const notImplementable = nonStandardTitles.has(item.title);
         
         return {
             id,
-            name: item.title,
+            name: item.title.replace(/\s+Sudoku\b/gi, "").trim(),
             rules: { "9x9": item.instruction },
             value,
             rule: item.instruction,
             existing: false,
             scratchGeneratable: false,
             cspSupported: cspSupportedVariants.has(value),
-            wikiOnly: value !== "ascendingstarterssudoku" && value !== "before9sudoku" && value !== "before1after9sudoku"
-                && value !== "almostpalindromesudoku" && value !== "anticonsecutivesudoku" && value !== "averagearrowssudoku",
+            wikiOnly: !cspSupportedVariants.has(value),
             notImplementable
         };
     });
@@ -179,6 +190,10 @@ export const variations: Variation[] = [...existingVariations, ...mappedScraped]
     .sort((first, second) => first.name.localeCompare(second.name));
 
 export const variationByValue = new Map(variations.map((item) => [item.value, item]));
+Object.entries(scrapedAliases).forEach(([alias, canonical]) => {
+    const target = variationByValue.get(canonical);
+    if (target) variationByValue.set(alias, target);
+});
 export const outsideVariationValues = new Set(variations.filter((item) =>
     item.value !== "xydifference" && (item.tags?.includes("outside") || /outside the grid/i.test(item.rule))
 ).map((item) => item.value));
@@ -196,6 +211,44 @@ function genericSetting(variation: Variation) {
 
     if (noInputVariationValues.has(variation.value)) {
         return { show, modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "extraregion") {
+        add("surface", "", 1, ["mo_surface_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (["alternatingstripes", "clonedstrands"].includes(variation.value)) {
+        add("line", "1", 2, ["mo_line_lb", "sub_line1_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "between") {
+        add("line", "1", 2, ["mo_line_lb", "sub_line1_lb"]);
+        add("symbol", "circle_L", 2, ["mo_symbol_lb", "ms1", "ms1_circle", "li_circle_L"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "blocksumrelations") {
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "codedpairs") {
+        add("cage", "1", 10, ["mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb"]);
+        add("number", "3", 1, ["mo_number_lb", "sub_number3_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "crosssums") {
+        add("symbol", "cross", 2, ["mo_symbol_lb", "ms1", "li_cross"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "detection") {
+        add("symbol", "arrow_eight", 2, ["mo_symbol_lb", "ms3", "li_arrow_eight"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "determinant") {
+        add("number", "4", 6, ["mo_number_lb", "sub_number4_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "divisor" || variation.value === "eitheror") {
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (directionalShapeVariationValues.has(variation.value)) {
         if (variation.value === "sumdetector") {
@@ -223,8 +276,12 @@ function genericSetting(variation: Variation) {
         add("number", "7", 1, ["mo_number_lb", "sub_number7_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (variation.value === "quadruple" || variation.value === "exclusion" || variation.value === "groupsum") {
-        add("number", "4", 1, ["mo_number_lb", "sub_number4_lb"]);
+    if (variation.value === "quadruple" || variation.value === "exclusion") {
+        add("number", "4", 6, ["mo_number_lb", "sub_number4_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "groupsum") {
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "stretchedthermo") {
@@ -237,20 +294,20 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (["bust", "xsums", "numberedrooms", "sumframe", "productframe", "edgedifference", "fullrank",
-        "outsideparity", "parityparty", "serbianframe", "median", "ascendingstarterssudoku",
-        "before9sudoku", "before1after9sudoku"].includes(variation.value)) {
+        "outsideparity", "parityparty", "serbianframe", "median", "ascendingstarters",
+        "before9", "before1after9"].includes(variation.value)) {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
-    if (variation.value === "almostpalindromesudoku") {
+    if (variation.value === "almostpalindrome") {
         add("line", "5", 2, ["mo_line_lb", "sub_line2_lb", "li_line2"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (variation.value === "anticonsecutivesudoku") {
+    if (variation.value === "anticonsecutive") {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (variation.value === "averagearrowssudoku") {
+    if (variation.value === "averagearrows") {
         add("special", "arrow", "", ["mo_special_lb", "sub_specialarrow_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
@@ -266,7 +323,7 @@ function genericSetting(variation: Variation) {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["inequality", "xydifference", "perfectsquares", "primesumssudoku", "twodigitprimenumberssudoku"].includes(variation.value)) {
+    if (["inequality", "xydifference", "perfectsquares", "primesums", "twodigitprimenumbers"].includes(variation.value)) {
         add(variation.value === "inequality" ? "number" : "symbol",
             variation.value === "inequality" ? "5" : "diamond_SS",
             variation.value === "inequality" ? 6 : 2,
@@ -414,5 +471,3 @@ export function installVariationCatalog() {
     if (unsupportedGroup.children.length && !unsupportedGroup.parentElement) select.appendChild(unsupportedGroup);
     select.dataset.variationCatalog = "ready";
 }
-
-

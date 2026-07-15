@@ -26,7 +26,7 @@ test("caps each automatic CSP analysis run at 60 seconds", function() {
 test("shared Penpa primitives stay owned by the selected variant", function() {
     const settings = {
         renban: { modeset: ["sudoku", "line", "cage"], submodeset: ["1", "2", "1"] },
-        extraregion: { modeset: ["sudoku", "cage"], submodeset: ["1", "1"] },
+        extraregion: { modeset: ["sudoku", "surface"], submodeset: ["1", ""] },
         palindrome: { modeset: ["sudoku", "line"], submodeset: ["1", "2"] },
         killer: { modeset: ["sudoku", "cage", "number"], submodeset: ["1", "1", "11"] }
     };
@@ -36,7 +36,7 @@ test("shared Penpa primitives stay owned by the selected variant", function() {
     ), false);
     assert.equal(SudokuSolver.shouldDiscoverVariant(
         ["classic", "extraregion"], settings, "killer", "cage", "1"
-    ), false);
+    ), true);
     assert.equal(SudokuSolver.shouldDiscoverVariant(
         ["classic"], settings, "palindrome", "line", "2"
     ), true);
@@ -129,6 +129,41 @@ test("solves a classic Sudoku without changing its givens", function() {
     );
     assert.equal(puzzle[0][0], 5);
     assert.equal(puzzle[0][2], 0);
+});
+
+test("applies a solution to a legacy puzzle mode without Sudoku settings", function() {
+    const puzzle = {
+        nx0: 13,
+        space: [0, 0, 0, 0],
+        mode: {
+            qa: "pu_q",
+            pu_q: { edit_mode: "surface" },
+            pu_a: { edit_mode: "surface" }
+        },
+        pu_q: { number: {} },
+        pu_a: { number: {} },
+        undoredo_counter: 0,
+        mode_qa: function(mode) { this.mode.qa = mode; },
+        set_value: function(type, key, value) { this[this.mode.qa][type][key] = value; },
+        redraw: function() {}
+    };
+
+    const solution = boardFromString(
+        "534678912" +
+        "672195348" +
+        "198342567" +
+        "859761423" +
+        "426853791" +
+        "713924856" +
+        "961537284" +
+        "287419635" +
+        "345286179"
+    );
+    const changed = SudokuSolver.applySolution(puzzle, solution);
+
+    assert.equal(changed, 81);
+    assert.deepEqual(puzzle.mode.pu_a.sudoku, ["1", 9]);
+    assert.deepEqual(puzzle.pu_a.number[28], ["5", 9, "1"]);
 });
 
 test("rejects conflicting givens", function() {
@@ -1355,8 +1390,8 @@ test("validates the new outside, edge, region, shape, and corner rules", functio
             { relation: "ascendingstarters", value: 5, cells: row }
         ],
         fullRankGroups: [[
-            { rank: 5, cells: row },
-            { rank: 6, cells: Array.from({ length: 9 }, (_, col) => ({ row: 1, col })) }
+            { rank: 1, cells: row },
+            { rank: 2, cells: Array.from({ length: 9 }, (_, col) => ({ row: 1, col })) }
         ]],
         rossiniLines: [
             { direction: "ascending", cells: [{ row: 0, col: 1 }, { row: 0, col: 2 }, { row: 0, col: 3 }] },
@@ -1418,15 +1453,16 @@ test("normalizes the next catalog batch into concrete CSP constraints", function
             activeSudokuVariant: variant,
             centerlist,
             point,
-            pu_q: { number: {}, numberS: {}, symbol: {}, wall: {}, killercages: [], ...pu_q }
+            pu_q: { number: {}, numberS: {}, symbol: {}, surface: {}, wall: {}, killercages: [], ...pu_q }
         };
     }
 
     ["productframe", "edgedifference", "fullrank", "outsideparity", "parityparty",
-        "serbianframe", "median", "ascendingstarterssudoku"].forEach(function(variant) {
+        "serbianframe", "median", "ascendingstarters"].forEach(function(variant) {
         const constraints = SudokuSolver.readConstraints(puzzleFor(variant, { number: { 15: [4, 1, "1"] } }));
         assert.equal(constraints.supported.includes(variant), true);
         assert.equal(variant === "fullrank" ? constraints.fullRankGroups.length : constraints.outsideRelations.length, 1);
+        if (variant === "fullrank") assert.equal(constraints.fullRankGroups[0].length, 36);
     });
 
     const edgePoint = { 200: { neighbor: [28, 29] } };
@@ -1481,7 +1517,7 @@ test("normalizes the next catalog batch into concrete CSP constraints", function
     assert.equal(clockFaces.quadRelations.filter((clue) => clue.kind === "white").length, 1);
     assert.equal(clockFaces.quadRelations.filter((clue) => clue.kind === "none").length, 63);
 
-    const fortress = SudokuSolver.readConstraints(puzzleFor("fortress", { killercages: [[28]] }));
+    const fortress = SudokuSolver.readConstraints(puzzleFor("fortress", { surface: { 28: 1 } }));
     assert.equal(fortress.cellRelations.filter((clue) => clue.relation === "fortress").length, 2);
 });
 
@@ -1591,8 +1627,16 @@ test("validates parity sandwiches, clocks, XIVI, slots, wheels, Pinnochio, and S
         { relation: "evensandwich", cells: firstRow, clues: [7] },
         { relation: "oddsandwich", cells: firstRow, clues: [8] }
     ] }).solved, true);
-    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [] }).solved, true,
-        "blank parity-sandwich margins leave the sightline unrestricted");
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "evensandwich", cells: firstRow, clues: [] }
+    ] }).solved, false, "a blank margin forbids sandwiched digits");
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "before1", value: 42, cells: firstRow },
+        { relation: "after9", value: 3, cells: firstRow }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "after9", value: 4, cells: firstRow }
+    ] }).solved, false);
 
     assert.equal(SudokuCSP.solve(solved, { cellRelations: [
         { relation: "clock", cells: [3, 4, 5, 6].map((col) => ({ row: 1, col })) },
@@ -1618,7 +1662,7 @@ test("validates parity sandwiches, clocks, XIVI, slots, wheels, Pinnochio, and S
     ] }] }).solved, false, "Sum Detector rejects arrows that individually require n=3 and n=2");
 });
 
-test("normalizes a supplied Even Sandwich margin clue without constraining blank sightlines", function() {
+test("normalizes supplied and blank Even Sandwich sightlines", function() {
     const nx0 = 16;
     const start = 5;
     const centerlist = Array.from({ length: 9 }, (_, row) =>
@@ -1631,17 +1675,116 @@ test("normalizes a supplied Even Sandwich margin clue without constraining blank
         }, numberS: {}, symbol: {}, surface: {}, killercages: [] }
     };
     const constraints = SudokuSolver.readConstraints(puzzle);
-    assert.equal(constraints.outsideRelations.length, 1);
-    assert.deepEqual(constraints.outsideRelations[0].clues, [4]);
-    assert.equal(SudokuCSP.solve(SudokuSolver.readBoard(puzzle, false), constraints).solved, true);
+    assert.equal(constraints.outsideRelations.length, 18);
+    assert.deepEqual(constraints.outsideRelations.filter((clue) => clue.clues.length).map((clue) => clue.clues), [[4]]);
 });
 
-test("Full Rank rejects a rank whose leading digit differs", function() {
-    const board = Array.from({ length: 9 }, () => Array(9).fill(0));
-    board[0][0] = 2;
-    assert.equal(SudokuCSP.solve(board, { fullRankGroups: [[{
-        rank: 1, cells: Array.from({ length: 9 }, (_, col) => ({ row: 0, col }))
-    }]] }).solved, false);
+test("reads Fortress shading and the two Before 1 After 9 margin layers", function() {
+    const nx0 = 15;
+    const centerlist = Array.from({ length: 9 }, (_, row) =>
+        Array.from({ length: 9 }, (__, col) => 4 + col + (4 + row) * nx0)).flat();
+    const fortress = SudokuSolver.readConstraints({
+        nx0, ny0: 15, space: [2, 0, 2, 0], activeSudokuVariant: "fortress", centerlist, point: {},
+        pu_q: { number: {}, numberS: {}, symbol: {}, surface: { 64: 1 }, killercages: [] }
+    });
+    assert.equal(fortress.cellRelations.filter((clue) => clue.relation === "fortress").length, 2);
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+    assert.equal(SudokuCSP.solve(solved, fortress).solved, false,
+        "the shaded r1c1 is not larger than its unshaded r2c1 neighbor");
+
+    const outside = SudokuSolver.readConstraints({
+        nx0, ny0: 15, space: [2, 0, 2, 0], activeSudokuVariant: "before1after9", centerlist, point: {},
+        pu_q: { number: {
+            49: [3, 1, "1"], 63: [3, 1, "1"],
+            34: [42, 1, "1"], 62: [42, 1, "1"]
+        }, numberS: {}, symbol: {}, surface: {}, killercages: [] }
+    });
+    assert.deepEqual(outside.outsideRelations.map((clue) => [clue.relation, clue.value]),
+        [["after9", 3], ["after9", 3], ["before1", 42], ["before1", 42]]);
+});
+
+test("Extra Region reads orthogonally connected shading and ignores cages", function() {
+    const puzzle = {
+        nx: 9, ny: 9, nx0: 13, space: [0, 0, 0, 0],
+        activeSudokuVariants: ["classic", "extraregions"],
+        centerlist: [28, 29, 56], point: {},
+        refreshKillerCages: function() { return [[28, 29, 56]]; },
+        pu_q: { line: {}, number: {}, numberS: {}, symbol: {}, surface: { 28: 1, 29: 1, 56: 1 } }
+    };
+
+    const constraints = SudokuSolver.readConstraints(puzzle);
+    assert.deepEqual(constraints.regionAllDifferent.map(function(region) {
+        return region.map(function(cell) { return [cell.row, cell.col]; });
+    }), [[[0, 0], [0, 1]], [[2, 2]]]);
+    assert.equal(constraints.killers.length, 0);
+});
+
+test("validates the new line, pair, cross, detector, and edge relations", function() {
+    const solution = boardFromString(
+        "534678912" +
+        "672195348" +
+        "198342567" +
+        "859761423" +
+        "426853791" +
+        "713924856" +
+        "961537284" +
+        "287419635" +
+        "345286179"
+    );
+    const cell = function(row, col) { return { row: row, col: col }; };
+    const crossCells = [cell(0, 0), cell(0, 1), cell(1, 0), cell(0, 2)];
+    const constraints = {
+        catalogLines: [
+            { relation: "alternatingstripes", path: [cell(0, 0), cell(0, 1), cell(0, 2)] },
+            { relation: "between", path: [cell(0, 0), cell(0, 2), cell(0, 1)] }
+        ],
+        cellRelations: [
+            { relation: "clonedstrands", strands: [[cell(0, 0), cell(0, 1)], [cell(1, 5), cell(1, 6)]] },
+            { relation: "codedpairs", pairs: [[cell(0, 0), cell(0, 1)], [cell(1, 5), cell(1, 6)]] }
+        ],
+        quadRelations: [
+            { relation: "crosssums", cells: crossCells },
+            { relation: "determinant", cells: crossCells, total: 2 }
+        ],
+        directionalMarks: [{
+            relation: "detection", origin: cell(0, 0),
+            rays: [[cell(1, 5)]],
+            allDiagonalRays: [[cell(1, 5)], [cell(0, 1)]]
+        }],
+        edgeRelations: [
+            { relation: "divisor", cells: [cell(0, 0), cell(0, 1)], target: 53 },
+            { relation: "eitheror", cells: [cell(0, 0), cell(0, 1)], target: 3 },
+            { relation: "blocksumrelations", groups: [[cell(0, 0), cell(0, 1)], [cell(1, 0), cell(1, 1)]], sign: "<", cells: [cell(0, 0), cell(0, 1)] }
+        ]
+    };
+
+    assert.equal(SudokuCSP.solve(solution, constraints).solved, true);
+    assert.equal(SudokuCSP.solve(solution, {
+        catalogLines: [{ relation: "alternatingstripes", path: [cell(0, 0), cell(0, 1), cell(0, 7)] }]
+    }).solved, false);
+    assert.equal(SudokuCSP.solve(solution, {
+        edgeRelations: [{ relation: "eitheror", cells: [cell(0, 0), cell(0, 1)], target: 9 }]
+    }).solved, false);
+});
+
+test("Full Rank compares complete n-digit row and column numbers", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+    const first = Array.from({ length: 9 }, (_, col) => ({ row: 0, col }));
+    const second = Array.from({ length: 9 }, (_, col) => ({ row: 1, col }));
+    assert.equal(SudokuCSP.solve(solved, { fullRankGroups: [[
+        { rank: 1, cells: first }, { rank: 2, cells: second }
+    ]] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { fullRankGroups: [[
+        { rank: 2, cells: first }, { rank: 1, cells: second }
+    ]] }).solved, false);
 });
 
 test("supports registering new CSP constraint handlers", function() {
