@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { cspSupportedVariants, variations } from "./variationCatalog";
     import {
         automaticBlockerFor, cspApproachFor, cspConstraintFunctionFor,
@@ -9,6 +10,18 @@
 
     let query = "";
     let status = "all";
+    let darkTheme = false;
+
+    onMount(() => {
+        const cookies = document.cookie.split(";");
+        const themeCookie = cookies.find(c => c.trim().startsWith("color_theme="));
+        if (themeCookie) {
+            const val = themeCookie.split("=")[1];
+            darkTheme = val === "1";
+        }
+        document.documentElement.classList.toggle("dark", darkTheme);
+    });
+
     const detailId = document.body.dataset.variantId || new URLSearchParams(window.location.search).get("id") || "classic";
     const detailVariation = variations.find((variation) => variation.value === detailId);
 
@@ -225,5 +238,123 @@
         .hero > p:last-of-type { font-size: 16px; }
         input { width: 100%; }
         .toolbar label:first-child { width: 100%; }
+    }
+
+    /* Dark Mode styles matching homepage */
+    :global(html.dark) {
+        color: #dde6ed !important;
+        background: #17202a !important;
+    }
+    :global(html.dark) .site-header {
+        background: #111a24 !important;
+        border-bottom: 1px solid #1c2836 !important;
+    }
+    :global(html.dark) h1 {
+        color: #eef4f8 !important;
+    }
+    :global(html.dark) .hero > p:last-of-type {
+        color: #aebdca !important;
+    }
+    :global(html.dark) .summary span {
+        color: #dde6ed !important;
+        border-color: #40505f !important;
+        background: #263340 !important;
+    }
+    :global(html.dark) .summary strong {
+        color: #e5b858 !important;
+    }
+    :global(html.dark) .notes > div {
+        border-left-color: #176fae !important;
+        background: #263340 !important;
+        box-shadow: 0 8px 25px rgba(0,0,0,.3) !important;
+    }
+    :global(html.dark) .notes h2 {
+        color: #dde6ed !important;
+    }
+    :global(html.dark) .notes p {
+        color: #aebdca !important;
+    }
+    :global(html.dark) .toolbar {
+        border-color: #40505f !important;
+        background: rgba(38,51,64,.95) !important;
+        box-shadow: 0 5px 18px rgba(0,0,0,.25) !important;
+    }
+    :global(html.dark) label {
+        color: #aebdca !important;
+    }
+    :global(html.dark) input, :global(html.dark) select {
+        color: #d5dfe7 !important;
+        border-color: #465563 !important;
+        background: #1f2b35 !important;
+    }
+    :global(html.dark) input:focus, :global(html.dark) select:focus {
+        border-color: #176fae !important;
+        outline: 3px solid rgba(23,111,174,.15) !important;
+    }
+    :global(html.dark) .result-count {
+        color: #8c9ba5 !important;
+    }
+    :global(html.dark) .table-wrap {
+        border-color: #40505f !important;
+        background: #263340 !important;
+        box-shadow: 0 12px 34px rgba(0,0,0,.3) !important;
+    }
+    :global(html.dark) th, :global(html.dark) td {
+        border-right-color: #40505f !important;
+        border-bottom-color: #3b4b5a !important;
+    }
+    :global(html.dark) thead th {
+        color: #eef4f8 !important;
+        background: #1b2630 !important;
+    }
+    :global(html.dark) tbody th {
+        color: #dde6ed !important;
+        background: #232f3b !important;
+    }
+    :global(html.dark) tbody tr:hover td, :global(html.dark) tbody tr:hover th {
+        background-color: #2b3a4a !important;
+    }
+    :global(html.dark) td.rule {
+        color: #dde6ed !important;
+    }
+    :global(html.dark) td.approach {
+        color: #aebdca !important;
+    }
+    :global(html.dark) code {
+        color: #8c9ba5 !important;
+    }
+    :global(html.dark) .variant-link {
+        color: #2b8bc7 !important;
+    }
+    :global(html.dark) .variant-detail h2 {
+        color: #dde6ed !important;
+    }
+    :global(html.dark) .variant-detail > section {
+        border-color: #40505f !important;
+        background: #263340 !important;
+        box-shadow: 0 8px 25px rgba(0,0,0,.3) !important;
+    }
+    :global(html.dark) .rule-card {
+        border-top-color: #40505f !important;
+    }
+    :global(html.dark) .rule-card p, :global(html.dark) .variant-detail section > p {
+        color: #dde6ed !important;
+    }
+    :global(html.dark) .variant-detail ul {
+        color: #dde6ed !important;
+    }
+    :global(html.dark) .variant-detail pre {
+        background: #111a24 !important;
+    }
+    :global(html.dark) .variant-detail .blocker {
+        color: #ffb4b4 !important;
+        background: #542f35 !important;
+    }
+    :global(html.dark) footer {
+        color: #8c9ba5 !important;
+        background: #1b2630 !important;
+    }
+    :global(html.dark) .back-link {
+        color: #2b8bc7 !important;
     }
 </style>

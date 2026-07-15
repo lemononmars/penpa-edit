@@ -211,8 +211,8 @@
                         <button id="sudoku_undo" class="button sudoku-tool-button sudoku-toolbar-icon" title="Undo" aria-label="Undo"><i class="fa fa-undo" aria-hidden="true"></i></button>
                         <button id="sudoku_redo" class="button sudoku-tool-button sudoku-toolbar-icon" title="Redo" aria-label="Redo"><i class="fa fa-repeat" aria-hidden="true"></i></button>
                         <button id="sudoku_keypad" class="button sudoku-tool-button sudoku-toolbar-icon" title="Keypad" aria-label="Keypad"><i class="fa fa-keyboard-o" aria-hidden="true"></i></button>
-                        <button id="sudoku_auto_solver" class="button sudoku-tool-button sudoku-toolbar-icon" title="Auto Solver" aria-label="Auto Solver" aria-pressed="false"><i class="fa fa-magic" aria-hidden="true"></i></button>
-                        <button id="sudoku_solve_once" class="button sudoku-tool-button sudoku-toolbar-icon" title="Auto solution check" aria-label="Auto solution check" aria-pressed="false"><i class="fa fa-play" aria-hidden="true"></i></button>
+                        <button id="sudoku_auto_solver" class="button sudoku-tool-button sudoku-toolbar-icon" title="Auto Solver" aria-label="Auto Solver" aria-pressed="false"><i class="fa fa-refresh" aria-hidden="true"></i> OFF</button>
+                        <button id="sudoku_solve_once" class="button sudoku-tool-button sudoku-toolbar-icon" title="Solve" aria-label="Solve" aria-pressed="false"><i class="fa fa-magic" aria-hidden="true"></i> Solve</button>
                         <button id="sudoku_load_test_board" class="button sudoku-tool-button sudoku-toolbar-icon" title="Load the CSP test board" aria-label="Load Test Board"><i class="fa fa-flask" aria-hidden="true"></i></button>
                         <span id="sudoku-auto-inline-status" class="sudoku-auto-inline-status">Idle</span>
                         <span id="sudoku-variant-tools" class="sudoku-variant-tools" aria-label="Variant modes"></span>
@@ -1202,55 +1202,38 @@
 <div id="modal-save" class="modal">
     <div id="modal-save-content">
         <h3 class="modal-header" id="savetitle">Share Puzzle</h3>
-        <h5 class="modal-subheader" id="saveinfo_lb">Puzzle Information</h5>
         <div id="modal-save-info">
-            <span class="DM"><span id="save1_lb">Title:</span><input type="text"
+            <span><span id="save1_lb">Title:</span><input type="text"
                                                                      placeholder="e.g. Thermo Sudoku or Yajilin"
                                                                      value="" id="saveinfotitle" class="right"
                                                                      onchange="update_title()"></span>
             <br>
-            <span class="DM"><span id="save2_lb">Author:</span><input type="text" placeholder="Puzzle creator name"
+            <span><span id="save2_lb">Author:</span><input type="text" placeholder="Puzzle creator name"
                                                                       value="" id="saveinfoauthor"
                                                                       onchange="update_title()"></span>
             <br>
-            <span class="DM"><span id="save3_lb">Rules:</span><textarea class="text_area" rows="1" cols="10"
+            <span><span id="save3_lb">Rules:</span><textarea class="text_area" rows="1" cols="10"
                                                                         placeholder="e.g. Classic sudoku rules."
                                                                         value="" id="saveinforules"></textarea></span>
-            <br>
-            <input type="button" id="saveinfogenre" value="Select Genre/Tags (Optional)"/>
-            <br>
-            <span class="DM">
-                <span id="source_lb">Source:</span>
-                <span id="sourcewarning">* If you are not the author of the puzzle, please specify the source URL</span>
-                <input type="text" placeholder="https://example.com" id="saveinfosource"></span>
         </div>
-        <h5 class="modal-subheader" id="generate_lb">Generate URL</h5>
         <div class="modal-save-inset">
-            <label class="label_nb" for="save_undo" id="save_undo_lb">Save Undo/Redo (History)</label>
-            <input type="checkbox" name="save_undo" id="save_undo"><br/>
             <label class="label_nb" for="auto_shorten_chk" id="auto_shorten_chk_lb">Automatically Shorten with
                 TinyURL</label>
             <input type="checkbox" name="auto_shorten_chk" id="auto_shorten_chk"/>
+            <br>
+            <label class="label_nb" for="verify_uniqueness_chk" id="verify_uniqueness_chk_lb">Verify uniqueness</label>
+            <input type="checkbox" name="verify_uniqueness_chk" id="verify_uniqueness_chk" checked="checked"/>
         </div>
         <div class="nb_button">
-            <input type="button" id="address_edit" value="Editing URL"/>
-            <input type="button" id="address_solve" value="Solving URL"/>
-            <input type="button" id="address_clone" value="Clone URL"/>
-            <!--For Competitive Solving-->
-            <input type="button" id="address_comp" value="Contest-Mode URL"/>
-            <input type="button" id="expansion_replay" value="Replay URL" style="display:none;"/> <br/>
-            <input type="button" id="expansion" value="URL with Answer Check / Advanced Options"/>
+            <button type="button" id="address_edit"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Editing URL</button>
+            <button type="button" id="address_solve"><i class="fa fa-play-circle" aria-hidden="true"></i> Solving URL</button>
         </div>
         <div id="modal-save-body1">
             <textarea class="text_area" readonly rows="1" cols="50" id="savetextarea"></textarea>
-            <span class="DM">Filename:<input type="text" placeholder="sample.txt" id="savetextname"></span>
         </div>
         <div class="nb_button">
-            <input type="button" id="closeBtn_save1" value="Copy"/>
-            <input type="button" id="closeBtn_save2" value="Download"/>
-            <input type="button" id="closeBtn_save3" value="Open" onclick="savetext_window();"/>
-            <input type="button" id="closeBtn_save6" value="Shorten" onclick="shorturl_tab();"/>
-            <input type="button" id="closeBtn_save4" value="Close"/>
+            <button type="button" id="closeBtn_save1"><i class="fa fa-copy" aria-hidden="true"></i> Copy</button>
+            <button type="button" id="closeBtn_save4"><i class="fa fa-external-link" aria-hidden="true"></i> Open</button>
         </div>
     </div>
 </div>

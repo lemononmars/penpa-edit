@@ -16,6 +16,14 @@ function trans_text(button_text, label_text, placeholder) {
                 } else {
                     element.innerHTML = '<i class="fa fa-cog"></i>';
                 }
+            } else if (key === 'address_edit') {
+                element.innerHTML = '<i class="fa fa-pencil-square-o"></i> ' + text;
+            } else if (key === 'address_solve') {
+                element.innerHTML = '<i class="fa fa-play-circle"></i> ' + text;
+            } else if (key === 'closeBtn_save1') {
+                element.innerHTML = '<i class="fa fa-copy"></i> ' + text;
+            } else if (key === 'closeBtn_save4') {
+                element.innerHTML = '<i class="fa fa-external-link"></i> ' + text;
             } else {
                 element.innerHTML = text;
             }
@@ -151,7 +159,7 @@ function trans() {
         "closeBtn_save1": {JP: "コピー", EN: "Copy", ZH: "复制"},
         "closeBtn_save2": {JP: "ダウンロード", EN: "Download", ZH: "下载"},
         "closeBtn_save3": {JP: "開く", EN: "Open", ZH: "打开"},
-        "closeBtn_save4": {JP: "キャンセル", EN: "Cancel", ZH: "取消"},
+        "closeBtn_save4": {JP: "開く", EN: "Open", ZH: "打开"},
         "solution_open": {JP: "解答判定", EN: "Answer descision", ZH: "答案判断"},
         "closeBtn_save5": {
             JP: "解答判定付き出題用アドレスを出力",

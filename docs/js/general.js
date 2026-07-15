@@ -1443,8 +1443,10 @@ function set_input_patterns() {
         'savetextname'
     ].forEach(inputID => {
         var inputBox = document.getElementById(inputID);
-        inputBox.setAttribute('pattern', filename_input_pattern);
-        inputBox.setAttribute('title', PenpaText.get('file_save_filename_title'))
+        if (inputBox) {
+            inputBox.setAttribute('pattern', filename_input_pattern);
+            inputBox.setAttribute('title', PenpaText.get('file_save_filename_title'))
+        }
     });
 }
 
@@ -1540,7 +1542,18 @@ function saveimage_window() {
     }
 }
 
+function generateTitle() {
+    if (!pu) return "Sudoku";
+    var active = Array.isArray(pu.activeSudokuVariants)
+        ? pu.activeSudokuVariants.filter(v => v !== "classic")
+        : [];
+    if (active.length === 0) return "Classic Sudoku";
+    var formatted = active.map(v => v.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")).join(" ");
+    return formatted + " Sudoku";
+}
+
 function savetext() {
+    document.getElementById("saveinfotitle").value = generateTitle();
     document.getElementById("modal-save").style.display = 'block';
     document.getElementById("savetextarea").value = "";
 }
@@ -1591,8 +1604,98 @@ function savetext_edit() {
 }
 
 function savetext_solve() {
-    var text = pu.maketext_solve();
-    update_textarea(text);
+    const verifyUniqueness = document.getElementById("verify_uniqueness_chk")?.checked;
+    if (!verifyUniqueness) {
+        var text = pu.maketext_solve();
+        update_textarea(text);
+        return;
+    }
+    const pu = window.pu;
+    const SudokuSolver = window.SudokuSolver;
+    const SudokuCSP = window.SudokuCSP;
+    if (!pu || !SudokuSolver || !SudokuCSP) {
+        alert("Solver is not loaded.");
+        return;
+    }
+    if (!SudokuSolver.isClassicSudoku(pu)) {
+        const msg = "The solver only supports 6x6 or 9x9 Sudoku or square grids. Uniqueness cannot be verified.";
+        if (typeof Swal !== "undefined") {
+            Swal.fire({ icon: "warning", title: "Cannot Share", text: msg });
+        } else {
+            alert(msg);
+        }
+        return;
+    }
+    try {
+        const board = SudokuSolver.readBoard(pu, false);
+        const constraints = SudokuSolver.readConstraints(pu);
+        const problem = SudokuCSP.createProblem(board, constraints);
+        const solutions = problem.enumerateAnswers(2);
+        if (solutions.length === 0) {
+            const msg = "The puzzle has no solution.";
+            if (typeof Swal !== "undefined") {
+                Swal.fire({ icon: "warning", title: "Cannot Share", text: msg });
+            } else {
+                alert(msg);
+            }
+            return;
+        }
+        if (solutions.length > 1) {
+            const msg = "The puzzle does not have a unique solution (multiple solutions found).";
+            if (typeof Swal !== "undefined") {
+                Swal.fire({ icon: "warning", title: "Cannot Share", text: msg });
+            } else {
+                alert(msg);
+            }
+            return;
+        }
+        const solution = solutions[0];
+        const original_pu_a = JSON.parse(JSON.stringify(pu.pu_a));
+        pu.pu_a = {
+            number: {},
+            symbol: {},
+            line: {},
+            freeline: {},
+            edge: {},
+            freeedge: {},
+            wall: {},
+            polygon: []
+        };
+        const size = SudokuSolver.puzzleSize(pu);
+        for (let row = 0; row < size; row++) {
+            for (let col = 0; col < size; col++) {
+                const key = SudokuSolver.cellKey(pu, row, col);
+                const digit = solution[row][col];
+                pu.pu_a.number[key] = [digit.toString(), 9, "1"];
+            }
+        }
+        const checkboxes = ["sol_surface_exact", "sol_surface", "sol_number", "sol_loopline_exact", "sol_loopline", "sol_ignoreloopline", "sol_loopedge_exact", "sol_loopedge", "sol_ignoreborder", "sol_wall", "sol_square", "sol_circle", "sol_cross", "sol_line", "sol_arrow", "sol_combination"];
+        const original_checkbox_states = {};
+        checkboxes.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                original_checkbox_states[id] = el.checked;
+                el.checked = (id === "sol_number");
+            }
+        });
+        const text = pu.maketext_solve_solution();
+        update_textarea(text);
+        checkboxes.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.checked = original_checkbox_states[id];
+            }
+        });
+        pu.pu_a = original_pu_a;
+        pu.redraw();
+    } catch (e) {
+        const msg = "Solver error: " + e.message;
+        if (typeof Swal !== "undefined") {
+            Swal.fire({ icon: "error", title: "Cannot Share", text: msg });
+        } else {
+            alert(msg);
+        }
+    }
 }
 
 function savetext_clone() {
@@ -1685,8 +1788,16 @@ function savetext_copy() {
         document.execCommand("copy");
     }
 
-    // This needs to go after the copy takes place or else some browsers will not allow the copy.
-    infoMsg('<h2 class="info">' + PenpaText.get('copied_success') + '</h2>');
+    const btn = document.getElementById("closeBtn_save1");
+    if (btn) {
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fa fa-check"></i> Copied!';
+        btn.classList.add("copy-success");
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove("copy-success");
+        }, 2000);
+    }
 }
 
 /**
@@ -2700,6 +2811,20 @@ async function load(urlParam, type = 'url', origurl = null) {
     pu.undoredo_counter++;
 
     // Make any backwards compatibility updates to the data we need for format changes
+    if (paramArray.variants) {
+        try {
+            var decoded = decodeURIComponent(paramArray.variants).split(",");
+            if (decoded.length) {
+                if (decoded.indexOf("classic") === -1) {
+                    decoded.unshift("classic");
+                }
+                pu.activeSudokuVariants = decoded;
+                pu.activeSudokuVariant = decoded[decoded.length - 1];
+            }
+        } catch (e) {
+            console.error("Failed to parse variants parameter", e);
+        }
+    }
     pu.load_compat_fixes();
     SudokuTools.init();
 }

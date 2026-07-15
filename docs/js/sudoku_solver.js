@@ -26,7 +26,7 @@ var SudokuSolver = (function() {
             button.title = running ? "Abort Auto Solver" : "Auto Solver";
             button.setAttribute("aria-label", button.title);
             var icon = button.querySelector("i");
-            if (icon) icon.className = running ? "fa fa-stop" : "fa fa-magic";
+            if (icon) icon.className = "fa fa-refresh";
         }
     }
 
@@ -2115,17 +2115,14 @@ var SudokuTools = (function() {
             autoButton.classList.toggle("active", SudokuTools.autoEnabled);
             autoButton.classList.toggle("auto-solver-active", SudokuTools.autoEnabled);
             autoButton.setAttribute("aria-pressed", SudokuTools.autoEnabled ? "true" : "false");
+            autoButton.innerHTML = '<i class="fa fa-refresh" aria-hidden="true"></i> ' + (SudokuTools.autoEnabled ? "ON" : "OFF");
         }
         var solveButton = byId("sudoku_solve_once");
         if (solveButton) {
-            solveButton.classList.toggle("active", SudokuTools.solveOnceAutoEnabled);
-            solveButton.setAttribute("aria-pressed", SudokuTools.solveOnceAutoEnabled ? "true" : "false");
-            if (!SudokuTools.solveOnceAutoEnabled) {
-                solveButton.title = "Auto solution check";
-                solveButton.setAttribute("aria-label", solveButton.title);
-                var solveIcon = solveButton.querySelector("i");
-                if (solveIcon) solveIcon.className = "fa fa-play";
-            }
+            solveButton.title = "Solve";
+            solveButton.setAttribute("aria-label", solveButton.title);
+            solveButton.innerHTML = '<i class="fa fa-magic" aria-hidden="true"></i> Solve';
+            solveButton.style.display = SudokuTools.autoEnabled ? "none" : "";
         }
         if (logPanel) {
             logPanel.style.display = "block";
@@ -2239,17 +2236,36 @@ var SudokuTools = (function() {
 
     function solveOnce() {
         if (!pu || !SudokuSolver.isClassicSudoku(pu)) {
-            generatorLog("Unsupported grid", "Auto solution check requires a 6x6 or 9x9 Sudoku or square grid.");
+            const msg = "Auto solution check requires a 6x6 or 9x9 Sudoku or square grid.";
+            generatorLog("Unsupported grid", msg);
+            if (typeof Swal !== "undefined") {
+                Swal.fire({ icon: "warning", title: "Unsupported Grid", text: msg });
+            } else {
+                alert(msg);
+            }
             return;
         }
-        SudokuTools.solveOnceAutoEnabled = !SudokuTools.solveOnceAutoEnabled;
-        solveOnceSignature = null;
-        if (!SudokuTools.solveOnceAutoEnabled) {
-            stopSolveOnceCheck();
-            SudokuSolver.showConflict(pu, null);
+        var board = SudokuSolver.readBoard(pu, false);
+        var constraints = SudokuSolver.readConstraints(pu);
+        generatorLog("Solving", "Solving the puzzle...");
+        try {
+            var result = SudokuSolver.solve(board, constraints);
+            if (result && result.solved) {
+                SudokuSolver.applySolution(pu, result.solution);
+                pu.redraw();
+                generatorLog("Solved", "Puzzle solved successfully.");
+            } else {
+                const msg = result && result.reason ? result.reason : "No complete solution exists for the current grid.";
+                generatorLog("No solution", msg);
+                if (typeof Swal !== "undefined") {
+                    Swal.fire({ icon: "warning", title: "No Solution", text: msg });
+                } else {
+                    alert(msg);
+                }
+            }
+        } catch (e) {
+            generatorLog("Error", "Solver error: " + e.message);
         }
-        setToolbarState();
-        if (pu) pu.redraw();
     }
 
     function loadTestBoard() {
@@ -2287,7 +2303,7 @@ var SudokuTools = (function() {
             button.title = "Auto Solver";
             button.setAttribute("aria-label", button.title);
             var icon = button.querySelector("i");
-            if (icon) icon.className = "fa fa-magic";
+            if (icon) icon.className = "fa fa-refresh";
         }
         if (message) generatorLog("Stopped", message);
     }
@@ -2307,7 +2323,7 @@ var SudokuTools = (function() {
             button.title = "Resume generation";
             button.setAttribute("aria-label", button.title);
             var icon = button.querySelector("i");
-            if (icon) icon.className = "fa fa-play";
+            if (icon) icon.className = "fa fa-refresh";
         }
     }
 
@@ -2458,7 +2474,7 @@ var SudokuTools = (function() {
             generatorButton.title = "Pause generation";
             generatorButton.setAttribute("aria-label", generatorButton.title);
             var generatorIcon = generatorButton.querySelector("i");
-            if (generatorIcon) generatorIcon.className = "fa fa-pause";
+            if (generatorIcon) generatorIcon.className = "fa fa-refresh";
         }
         generatorLog("Generating", "[" + new Date().toLocaleTimeString() + "] Building a " +
             label + " puzzle with 180° rotational symmetry, then proving uniqueness with CSP.\n",

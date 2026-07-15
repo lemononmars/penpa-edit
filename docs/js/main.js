@@ -1383,6 +1383,10 @@ onload = function() {
                 e.preventDefault();
                 break;
             case "closeBtn_save4":
+                const url = document.getElementById("savetextarea").value;
+                if (url) {
+                    window.open(url, "_blank", "noopener");
+                }
                 document.getElementById('modal-save').style.display = 'none';
                 e.preventDefault();
                 break;

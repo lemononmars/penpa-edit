@@ -29,7 +29,11 @@
     let screenshotBorder = false;
     let screenshotName = "Classic";
     let darkTheme = true;
-    let mobileActiveTab: "none" | "controls" | "actions" = "none";
+    let mobileActiveTab: "none" | "controls" | "actions" | "solver" = "none";
+    let solverRunning = false;
+    let lastLogLine = "Idle";
+    let fullLogContent = "";
+    let fullLogExpanded = false;
     let generatorVariants: string[] = ["classic"];
     let generatorNegative = { kropki: false, xv: false, battenburg: false };
     let generatorSource: "new" | "existing" = "new";
@@ -440,15 +444,44 @@
     }
 
     function transform(id: string) {
-        actionMenu = null;
         legacyPress(id);
         window.requestAnimationFrame(fitBoard);
+    }
+
+    function verifyUniqueSolution() {
+        const pu = (window as any).pu;
+        const SudokuSolver = (window as any).SudokuSolver;
+        const SudokuCSP = (window as any).SudokuCSP;
+        if (!pu || !SudokuSolver || !SudokuCSP) {
+            return { success: false, msg: "Solver is not loaded." };
+        }
+        if (!SudokuSolver.isClassicSudoku(pu)) {
+            return { success: false, msg: "The solver only supports 6x6 or 9x9 Sudoku or square grids. Uniqueness cannot be verified." };
+        }
+        try {
+            const board = SudokuSolver.readBoard(pu, false);
+            const constraints = SudokuSolver.readConstraints(pu);
+            const problem = SudokuCSP.createProblem(board, constraints);
+            const solutions = problem.enumerateAnswers(2);
+            if (solutions.length === 0) {
+                return { success: false, msg: "The puzzle has no solution." };
+            }
+            if (solutions.length > 1) {
+                return { success: false, msg: "The puzzle does not have a unique solution (multiple solutions found)." };
+            }
+            return { success: true, solution: solutions[0] };
+        } catch (e: any) {
+            return { success: false, msg: "Solver error: " + e.message };
+        }
     }
 
     function duplicateUrl(forPenpa: boolean) {
         const pu = (window as any).pu;
         if (!pu?.maketext_duplicate) return;
-        const generated = pu.maketext_duplicate() as string;
+        let generated = pu.maketext_duplicate() as string;
+        if (Array.isArray(pu.activeSudokuVariants) && pu.activeSudokuVariants.length) {
+            generated += "&variants=" + encodeURIComponent(pu.activeSudokuVariants.join(","));
+        }
         const hash = generated.includes("#") ? generated.slice(generated.indexOf("#")) : "";
         const target = forPenpa
             ? `https://swaroopg92.github.io/penpa-edit/${hash}`
@@ -512,6 +545,22 @@
     }
 
     function exportScreenshot(target: "problem" | "solution" | "both") {
+        if (target === "solution" || target === "both") {
+            const res = verifyUniqueSolution();
+            if (!res.success) {
+                if ((window as any).Swal) {
+                    (window as any).Swal.fire({ icon: "warning", title: "Cannot Download Solution", text: res.msg });
+                } else {
+                    alert(res.msg);
+                }
+                return;
+            }
+            const pu = (window as any).pu;
+            const SudokuSolver = (window as any).SudokuSolver;
+            if (pu && SudokuSolver) {
+                SudokuSolver.applySolution(pu, res.solution);
+            }
+        }
         if (target === "both") {
             downloadScreenshot("problem");
             downloadScreenshot("solution");
@@ -523,6 +572,11 @@
 
     function toggleTheme() {
         darkTheme = !darkTheme;
+        document.documentElement.classList.toggle("dark", darkTheme);
+        const settings = (window as any).UserSettings;
+        if (settings) {
+            settings.color_theme = darkTheme ? 1 : 0;
+        }
     }
 
     function moveLegacyControls() {
@@ -585,6 +639,13 @@
             if (button.disabled !== (layer === "solution")) button.disabled = layer === "solution";
         });
         autoEnabled = document.getElementById("sudoku_auto_solver")?.classList.contains("auto-solver-active") || false;
+        solverRunning = document.body.classList.contains("sudoku-solver-running") || document.body.classList.contains("sudoku-solve-check-running");
+        const logOutput = document.getElementById("sudoku-solver-log-output");
+        if (logOutput) {
+            fullLogContent = logOutput.textContent || "";
+            const lines = fullLogContent.trim().split("\n").filter(Boolean);
+            lastLogLine = lines[lines.length - 1] || "Idle";
+        }
         updateToolDescription();
         syncToolPanel();
         if (selectedVariant === "slotmachine") readSlotColumns();
@@ -646,6 +707,15 @@
         const start = () => {
             installVariationCatalog();
             if (!moveLegacyNodes()) return false;
+            const settings = (window as any).UserSettings;
+            if (settings) {
+                if (settings.color_theme === 1) {
+                    darkTheme = true;
+                } else if (settings.color_theme === 0) {
+                    darkTheme = false;
+                }
+            }
+            document.documentElement.classList.toggle("dark", darkTheme);
             observer = new MutationObserver(requestSync);
             [
                 document.getElementById("constraints_settings_opt"),
@@ -678,7 +748,7 @@
             const target = event.target as HTMLElement | null;
             if (!target?.closest(".variant-picker")) variantMenuOpen = false;
             if (!target?.closest(".action-dropdown")) actionMenu = null;
-            if (!target?.closest(".controls-top-drawer, .penpa-actions, .log-host, .mobile-header")) {
+            if (!target?.closest(".controls-top-drawer, .penpa-actions, .log-host, .mobile-header, .column.actions, .mobile-solver")) {
                 mobileActiveTab = "none";
             }
         };
@@ -702,12 +772,28 @@
 
 <div class="studio-shell" class:ready={initialized} class:dark={darkTheme}>
     <div class="mobile-header">
-        <button type="button" class:active={mobileActiveTab === "controls"} on:click={() => mobileActiveTab = mobileActiveTab === "controls" ? "none" : "controls"}>
-            🔧 Rules & Controls
-        </button>
-        <button type="button" class:active={mobileActiveTab === "actions"} on:click={() => mobileActiveTab = mobileActiveTab === "actions" ? "none" : "actions"}>
-            📊 Solver & Actions
-        </button>
+        <div class="mobile-header-row">
+            <button type="button" class:active={mobileActiveTab === "controls"} on:click={() => mobileActiveTab = mobileActiveTab === "controls" ? "none" : "controls"}>
+                🔧 Rules & Controls
+            </button>
+            <button type="button" class:active={mobileActiveTab === "actions"} on:click={() => mobileActiveTab = mobileActiveTab === "actions" ? "none" : "actions"}>
+                📊 Actions
+            </button>
+        </div>
+        <div class="mobile-header-row solver-row">
+            <button type="button" class="solver-btn" class:active={autoEnabled} on:click={() => legacyClick("sudoku_auto_solver")}>
+                <i class="fa fa-refresh" aria-hidden="true"></i> {autoEnabled ? "ON" : "OFF"}
+            </button>
+            {#if !autoEnabled}
+            <button type="button" class="solver-btn" on:click={() => legacyClick("sudoku_solve_once")}>
+                <i class="fa fa-magic" aria-hidden="true"></i> Solve
+            </button>
+            {/if}
+            <div class="solver-status">
+                <span class="status-indicator" class:running={solverRunning}></span>
+                <span class="log-text">{lastLogLine}</span>
+            </div>
+        </div>
     </div>
     <main class="studio-grid">
         <aside class="column controls" aria-label="Puzzle controls">
@@ -877,9 +963,9 @@
                         <div class="action-dropdown">
                             <button aria-haspopup="menu" aria-expanded={actionMenu === "new-grid"} on:click={() => toggleActionMenu("new-grid")}><span>▦</span>New grid <b>⌄</b></button>
                             {#if actionMenu === "new-grid"}
-                                <div class="action-menu" role="menu">
-                                    <button role="menuitem" on:click={() => requestNewGrid(6)}>6 × 6 Sudoku</button>
-                                    <button role="menuitem" on:click={() => requestNewGrid(9)}>9 × 9 Sudoku</button>
+                                <div class="action-menu compact-menu" role="menu">
+                                    <button role="menuitem" on:click={() => requestNewGrid(6)}>6 × 6</button>
+                                    <button role="menuitem" on:click={() => requestNewGrid(9)}>9 × 9</button>
                                 </div>
                             {/if}
                         </div>
@@ -892,15 +978,15 @@
                                 </div>
                             {/if}
                         </div>
-                        <button on:click={() => legacyClick("sudoku_reset")}><span>↺</span>Clear solver</button>
+                        <button on:click={() => legacyClick("sudoku_reset")}><span>↺</span>Clear mark</button>
                         <div class="action-dropdown">
                             <button aria-haspopup="menu" aria-expanded={actionMenu === "transform"} on:click={() => toggleActionMenu("transform")}><span>◇</span>Transform <b>⌄</b></button>
                             {#if actionMenu === "transform"}
-                                <div class="action-menu" role="menu">
-                                    <button role="menuitem" on:click={() => transform("rt_left")}>↶ Rotate left</button>
-                                    <button role="menuitem" on:click={() => transform("rt_right")}>↷ Rotate right</button>
-                                    <button role="menuitem" on:click={() => transform("rt_LR")}>↔ Flip horizontal</button>
-                                    <button role="menuitem" on:click={() => transform("rt_UD")}>↕ Flip vertical</button>
+                                <div class="action-menu transform-menu" role="menu">
+                                    <button role="menuitem" on:click={() => transform("rt_left")} title="Rotate left">↶</button>
+                                    <button role="menuitem" on:click={() => transform("rt_right")} title="Rotate right">↷</button>
+                                    <button role="menuitem" on:click={() => transform("rt_LR")} title="Flip horizontal">↔</button>
+                                    <button role="menuitem" on:click={() => transform("rt_UD")} title="Flip vertical">↕</button>
                                 </div>
                             {/if}
                         </div>
@@ -926,7 +1012,6 @@
                     <div class="action-group final-actions">
                         <button on:click={() => legacyClick("sudoku_undo")}><span>↶</span>Undo</button>
                         <button on:click={() => legacyClick("sudoku_redo")}><span>↷</span>Redo</button>
-                        <button title="Populate with example grid" on:click={() => legacyClick("sudoku_load_test_board")}><span>⚗</span>Example grid</button>
                         <button class="info-action" title="About this editor" aria-label="About this editor" on:click={() => studioModal = "info"}><span>ⓘ</span></button>
                     </div>
                 </div>
@@ -1179,8 +1264,8 @@
     .disabled-section h2 { color: #7f8994; }
     :global(.svelte-home .disabled-section .legacy-variant-host) { pointer-events: none; }
     .action-list { display: grid; gap: 6px; }
-    .action-list button { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #c8d1da; border-radius: 6px; background: #f9fbfc; text-align: left; }
-    .action-list button span { width: 22px; text-align: center; color: #176fae; font-size: 17px; }
+    .action-list button:not([role="menuitem"]) { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #c8d1da; border-radius: 6px; background: #f9fbfc; text-align: left; }
+    .action-list button:not([role="menuitem"]) span { width: 22px; text-align: center; color: #176fae; font-size: 17px; }
     .log-host { padding: 0 !important; overflow: hidden; }
     :global(.svelte-home .log-host .sudoku-solver-log) { width: 100%; margin: 0; border: 0; box-shadow: none; }
     @media (max-width: 1050px) {
@@ -1425,17 +1510,7 @@
         transition: transform .12s ease-out;
     }
     .zoom-controls {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 5;
-        display: grid;
-        grid-template-columns: 32px 56px 32px;
-        border: 1px solid #c3ced8;
-        border-radius: 7px;
-        overflow: hidden;
-        background: rgba(255,255,255,.94);
-        box-shadow: 0 2px 8px rgba(23,34,49,.12);
+        display: none !important;
     }
     .zoom-controls button {
         height: 32px;
@@ -1463,7 +1538,8 @@
     }
     :global(.svelte-home .log-host .sudoku-solver-log-header) {
         display: grid;
-        grid-template-columns: 30px 30px minmax(0, 1fr);
+        grid-template-columns: auto auto minmax(0, 1fr);
+        gap: 6px;
         min-height: 38px;
         box-sizing: border-box;
         align-items: center;
@@ -1475,10 +1551,9 @@
     }
     :global(.svelte-home .log-host #sudoku_auto_solver),
     :global(.svelte-home .log-host #sudoku_solve_once) {
-        width: 30px;
         height: 26px;
         margin: 0;
-        padding: 0;
+        padding: 0 8px;
         border: 1px solid #bfcad4;
         border-radius: 5px;
         color: #176fae;
@@ -1603,7 +1678,7 @@
         white-space: nowrap;
     }
     .action-menu button:hover { color: #0d6099; background: #eaf4fb; }
-    .action-list button {
+    .action-list button:not([role="menuitem"]) {
         min-width: 0;
         min-height: 38px;
         gap: 6px;
@@ -1612,7 +1687,7 @@
         font-size: 11px;
         white-space: nowrap;
     }
-    .action-list button span { width: 17px; flex: 0 0 17px; }
+    .action-list button:not([role="menuitem"]) span { width: 17px; flex: 0 0 17px; }
     .final-actions .info-action { grid-column: 3; justify-content: center; }
     .info-copy { display: grid; gap: 6px; }
     .info-copy strong { color: #263443; font-size: 12px; }
@@ -1903,7 +1978,7 @@
     .studio-shell.dark .board-busy-overlay small { color: #b8c5cf; }
     .studio-shell.dark :global(.board-host #puzzle-container) { background: #1b2630; }
     .studio-shell.dark h2, .studio-shell.dark .control-label { color: #aebdca; }
-    .studio-shell.dark .action-list button { color: #e1e8ee; border-color: #4b5a68; background: #32414f; }
+    .studio-shell.dark .action-list button:not([role="menuitem"]) { color: #e1e8ee; border-color: #4b5a68; background: #32414f; }
     .studio-shell.dark :global(.log-host .sudoku-solver-log) { color: #dce6ef; border-color: #40505f; background: #263340; }
     .studio-shell.dark :global(.log-host .sudoku-solver-log-header) { color: #eef4f8; border-color: #40505f; background: #2e3d4a; }
     .studio-shell.dark :global(#sudoku-solver-status) { color: #b8c5cf; }
@@ -1931,7 +2006,8 @@
     .studio-shell.dark .csp-badge, .studio-shell.dark .csp-legend-icon { color: #64d3aa; }
     .studio-shell.dark .unsupported-badge { color: #ffb4b4; background: #542f35; }
     .studio-shell.dark .action-menu { border-color: #4b5a68; background: #263340; }
-    .studio-shell.dark .action-menu button:hover { color: #fff; background: #3a4a58; }
+    .studio-shell.dark .action-menu button { color: #dde6ed !important; }
+    .studio-shell.dark .action-menu button:hover { color: #fff !important; background: #3a4a58 !important; }
     .studio-shell.dark :global(.legacy-controls-host #legacy_mode_controls),
     .studio-shell.dark :global(.legacy-controls-host #submode_button),
     .studio-shell.dark :global(.legacy-controls-host #stylemode_button) {
@@ -1965,20 +2041,18 @@
     @media (max-width: 768px) {
         .mobile-header {
             display: flex;
-            justify-content: space-around;
-            align-items: center;
+            flex-direction: column;
             background: #202b36;
             padding: 8px;
             gap: 8px;
             width: 100%;
-            height: 48px;
+            height: auto;
             box-sizing: border-box;
             border-bottom: 1px solid #10161c;
             flex-shrink: 0;
             z-index: 101;
         }
         .mobile-header button {
-            flex: 1;
             padding: 6px 12px;
             font-size: 12px;
             font-weight: 700;
@@ -2059,7 +2133,7 @@
             flex-shrink: 0;
             background: #ffffff;
             border-top: 1px solid #d7dee5;
-            padding: 8px;
+            padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 12px)) 8px;
             box-sizing: border-box;
             gap: 6px;
         }
@@ -2123,5 +2197,358 @@
         .input-panel-section .help-label {
             display: none;
         }
+        .mobile-header-row {
+            display: flex;
+            width: 100%;
+            gap: 8px;
+        }
+        .mobile-header-row button {
+            flex: 1;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid #344353;
+            border-radius: 6px;
+            color: #bdc8d3;
+            background: #2a3744;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .mobile-header-row button.active {
+            background: #176fae;
+            color: #fff;
+            border-color: #176fae;
+        }
+        .mobile-header-row.solver-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+            padding: 4px 6px;
+            background: #1a242f;
+            border-radius: 6px;
+        }
+        .studio-shell.dark .mobile-header-row.solver-row {
+            background: #1b2630;
+        }
+        .solver-btn {
+            flex: 0 0 auto !important;
+            padding: 4px 8px !important;
+            font-size: 10px !important;
+            min-height: 28px !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid #344353;
+            border-radius: 6px;
+            color: #bdc8d3;
+            background: #2a3744;
+            cursor: pointer;
+        }
+        .solver-btn.active {
+            background: #176fae !important;
+            color: #fff !important;
+            border-color: #176fae !important;
+        }
+        .solver-status {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0 6px;
+            min-width: 0;
+        }
+        .solver-status .status-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #7f8c98;
+            box-shadow: 0 0 0 2px rgba(127,140,152,.13);
+            flex-shrink: 0;
+        }
+        .solver-status .status-indicator.running {
+            background: #48c78e;
+            box-shadow: 0 0 0 2px rgba(72,199,142,.16);
+        }
+        .solver-status .log-text {
+            color: #bdc8d3;
+            font-size: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .log-host {
+            display: none !important;
+        }
+        .mobile-hidden {
+            display: none !important;
+        }
+    }
+
+    :global(.svelte-home .log-host #sudoku_auto_solver),
+    :global(.svelte-home .log-host #sudoku_solve_once) {
+        width: auto !important;
+        padding: 0 8px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        white-space: nowrap !important;
+    }
+
+    .mobile-solver {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 10px;
+    }
+    .mobile-solver-toggle {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .mobile-solver-toggle button {
+        min-height: 38px;
+        padding: 8px;
+        border: 1px solid #bfcad4;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 13px;
+        background: #f7f9fb;
+        color: #263443;
+    }
+    .mobile-solver-toggle button.active {
+        background: #176fae;
+        color: white;
+        border-color: #176fae;
+    }
+    .mobile-solver-log {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 6px;
+    }
+    .last-log-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid #d4dbe3;
+        border-radius: 6px;
+        background: #fff;
+    }
+    .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #7f8c98;
+        box-shadow: 0 0 0 3px rgba(127,140,152,.13);
+        flex-shrink: 0;
+    }
+    .status-indicator.running {
+        background: #48c78e;
+        box-shadow: 0 0 0 3px rgba(72,199,142,.16);
+    }
+    .log-text {
+        flex: 1;
+        font-size: 11px;
+        color: #435160;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .expand-btn {
+        min-height: 24px;
+        padding: 2px 8px;
+        font-size: 10px;
+        font-weight: 700;
+        border: 1px solid #bfcad4;
+        border-radius: 4px;
+        background: #f7f9fb;
+        color: #176fae;
+    }
+    .full-log-box {
+        margin: 6px 0 0 0;
+        padding: 8px;
+        border: 1px solid #e0e5ea;
+        border-radius: 6px;
+        background: #fff;
+        font-size: 10px;
+        max-height: 150px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        color: #435160;
+    }
+
+    .studio-shell.dark .last-log-line {
+        background: #1f2b35;
+        border-color: #465563;
+    }
+    .studio-shell.dark .log-text {
+        color: #d5dfe7;
+    }
+    .studio-shell.dark .full-log-box {
+        background: #1f2b35;
+        border-color: #465563;
+        color: #d5dfe7;
+    }
+    .studio-shell.dark .mobile-solver-toggle button {
+        background: #263340;
+        border-color: #536473;
+        color: #dce5ec;
+    }
+    .studio-shell.dark .mobile-solver-toggle button.active {
+        background: #176fae;
+        border-color: #176fae;
+        color: white;
+    }
+    .studio-shell.dark .expand-btn {
+        background: #263340;
+        border-color: #536473;
+        color: #42a5e8;
+    }
+
+    /* Modal light theme overrides */
+    :global(html:not(.dark) #modal-save-content),
+    :global(html:not(.dark) #modal-save2-content),
+    :global(html:not(.dark) #modal-save-tag-content),
+    :global(html:not(.dark) #modal-replay-content),
+    :global(html:not(.dark) #modal-input-content),
+    :global(html:not(.dark) #modal-load-content) {
+        border-color: #cbd5df !important;
+        color: #1d2633 !important;
+        background: #ffffff !important;
+    }
+    :global(html:not(.dark) .modal .nb_button input[type="button"]),
+    :global(html:not(.dark) .modal .nb_button button) {
+        border-color: #bfcad4 !important;
+        color: #263443 !important;
+        background: #ffffff !important;
+    }
+    :global(html:not(.dark) .modal .nb_button input[type="button"]:hover),
+    :global(html:not(.dark) .modal .nb_button button:hover) {
+        border-color: #176fae !important;
+        color: #0d6099 !important;
+        background: #eaf4fb !important;
+    }
+    :global(html:not(.dark) .modal input[type="text"]),
+    :global(html:not(.dark) .modal textarea),
+    :global(html:not(.dark) .modal select) {
+        border-color: #bdc8d3 !important;
+        color: #263443 !important;
+        background: #fbfcfd !important;
+    }
+    :global(html:not(.dark) .modal .modal-subheader) {
+        color: #536170 !important;
+    }
+    :global(html:not(.dark) .modal .label_nb),
+    :global(html:not(.dark) .modal label) {
+        color: #263443 !important;
+    }
+
+    /* Modal dark theme overrides */
+    :global(html.dark .modal-content),
+    :global(html.dark #modal-save-content),
+    :global(html.dark #modal-save2-content),
+    :global(html.dark #modal-save-tag-content),
+    :global(html.dark #modal-replay-content),
+    :global(html.dark #modal-input-content),
+    :global(html.dark #modal-load-content) {
+        border-color: #40505f !important;
+        color: #dde6ed !important;
+        background: #263340 !important;
+    }
+    :global(html.dark .modal .nb_button input[type="button"]),
+    :global(html.dark .modal .nb_button button) {
+        border-color: #536473 !important;
+        color: #dce5ec !important;
+        background: #263340 !important;
+    }
+    :global(html.dark .modal .nb_button input[type="button"]:hover),
+    :global(html.dark .modal .nb_button button:hover) {
+        border-color: #2b8bc7 !important;
+        color: #fff !important;
+        background: #176fae !important;
+    }
+    :global(html.dark .modal input[type="text"]),
+    :global(html.dark .modal textarea),
+    :global(html.dark .modal select) {
+        border-color: #465563 !important;
+        color: #d5dfe7 !important;
+        background: #1f2b35 !important;
+    }
+    :global(html.dark .modal .modal-subheader) {
+        color: #aebdca !important;
+    }
+    
+    .action-menu.transform-menu {
+        grid-template-columns: repeat(4, 1fr) !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+    .action-menu.transform-menu button {
+        text-align: center !important;
+        font-size: 16px !important;
+        padding: 6px !important;
+    }
+    .action-menu.compact-menu {
+        grid-template-columns: repeat(2, 1fr) !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+    .action-menu.compact-menu button {
+        text-align: center !important;
+        font-size: 12px !important;
+        padding: 6px !important;
+    }
+
+    :global(.modal .nb_button button.copy-success) {
+        border-color: #2ec866 !important;
+        color: #fff !important;
+        background: #23a950 !important;
+    }
+
+    .studio-shell.dark .variant-search-control {
+        border-color: #465563 !important;
+        color: #d5dfe7 !important;
+        background: #1f2b35 !important;
+    }
+    .studio-shell.dark .variant-search-control input {
+        color: #d5dfe7 !important;
+    }
+    .studio-shell.dark .variant-menu {
+        border-color: #4b5a68 !important;
+        background: #263340 !important;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .4) !important;
+    }
+    .studio-shell.dark .variant-tabs {
+        border-bottom-color: #40505f !important;
+        background: #263340 !important;
+    }
+    .studio-shell.dark .variant-tabs button {
+        border-color: #536473 !important;
+        color: #dce5ec !important;
+        background: #263340 !important;
+    }
+    .studio-shell.dark .variant-tabs button.active {
+        background: #176fae !important;
+        border-color: #176fae !important;
+        color: #fff !important;
+    }
+    .studio-shell.dark .variant-menu button[role="menuitem"] {
+        color: #dce5ec !important;
+        background: transparent !important;
+    }
+    .studio-shell.dark .variant-menu button[role="menuitem"]:hover {
+        background: #32414f !important;
+        color: #fff !important;
+    }
+    .studio-shell.dark .variant-menu button[role="menuitem"].current {
+        background: #176fae !important;
+        color: #fff !important;
+    }
+    .studio-shell.dark .variant-rule-preview {
+        border-color: #4b5a68 !important;
+        background: #263340 !important;
+        color: #c2ced7 !important;
     }
 </style>

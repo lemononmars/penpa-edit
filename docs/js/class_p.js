@@ -1971,7 +1971,8 @@ class Puzzle {
         text += "," + "Author: " + authorinfo.replace(/,/g, '%2C');
 
         // Puzzle Source
-        text += "," + document.getElementById("saveinfosource").value;
+        let sourceEl = document.getElementById("saveinfosource");
+        text += "," + (sourceEl ? sourceEl.value : "");
 
         // Puzzle Rules
         let ruleinfo = document.getElementById("saveinforules").value;
@@ -2080,7 +2081,7 @@ class Puzzle {
         text += JSON.stringify(this.space) + "\n";
         text += JSON.stringify(this.mode) + "\n";
 
-        if (document.getElementById("save_undo").checked === false) {
+        if (true) {
             var qr = this.pu_q.command_redo.__a;
             var qu = this.pu_q.command_undo.__a;
             var ar = this.pu_a.command_redo.__a;
@@ -2098,7 +2099,7 @@ class Puzzle {
         text += JSON.stringify(this.pu_q) + "\n";
         text += JSON.stringify(this.pu_a) + "\n";
 
-        if (document.getElementById("save_undo").checked === false) {
+        if (true) {
             this.pu_q.command_redo.__a = qr;
             this.pu_q.command_undo.__a = qu;
             this.pu_a.command_redo.__a = ar;
@@ -2109,7 +2110,7 @@ class Puzzle {
         text += this.__export_solcheck_shared();
         text += this.__export_version_shared();
 
-        if (document.getElementById("save_undo").checked === false) {
+        if (true) {
             qr = this.pu_q_col.command_redo.__a;
             qu = this.pu_q_col.command_undo.__a;
             ar = this.pu_a_col.command_redo.__a;
@@ -2123,7 +2124,7 @@ class Puzzle {
         text += JSON.stringify(this.pu_q_col) + "\n";
         text += JSON.stringify(this.pu_a_col) + "\n";
 
-        if (document.getElementById("save_undo").checked === false) {
+        if (true) {
             this.pu_q_col.command_redo.__a = qr;
             this.pu_q_col.command_undo.__a = qu;
             this.pu_a_col.command_redo.__a = ar;
