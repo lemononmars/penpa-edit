@@ -1013,8 +1013,23 @@ var SudokuCSP = (function() {
                 case "xydifference":
                     var reference = cellValue(board, clue.reference);
                     return !reference || difference === reference;
+                case "notXydifference":
+                    var reference = cellValue(board, clue.reference);
+                    return !reference || difference !== reference;
                 case "perfectsquares": return [16, 25, 36, 49, 64, 81].indexOf(first * 10 + second) !== -1;
                 case "notPerfectSquare": return [16, 25, 36, 49, 64, 81].indexOf(first * 10 + second) === -1;
+                case "primesumssudoku":
+                    var sum = first + second;
+                    return [2, 3, 5, 7, 11, 13, 17].indexOf(sum) !== -1;
+                case "notPrimesumssudoku":
+                    var sum = first + second;
+                    return [2, 3, 5, 7, 11, 13, 17].indexOf(sum) === -1;
+                case "twodigitprimenumberssudoku":
+                    var val = first * 10 + second;
+                    return [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97].indexOf(val) !== -1;
+                case "notTwodigitprimenumberssudoku":
+                    var val = first * 10 + second;
+                    return [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97].indexOf(val) === -1;
                 case "diagonalConsecutive": return difference === 1;
                 case "notDiagonalConsecutive": return difference !== 1;
                 case "arithmetic":

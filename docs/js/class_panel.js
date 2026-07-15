@@ -359,7 +359,14 @@ class Panel {
                     break;
             }
         } else {
-            this.fkb.style.display = "none";
+            this.nxf = 4;
+            this.nyf = 3;
+            this.sizef = 36;
+            this.canvas_size_setting(65);
+            this.fkb.style.paddingTop = "0px";
+            this.fkb.style.display = "block";
+            this.fkm.style.display = "none";
+            this.ctxf.clearRect(0, 0, this.canvasf.width, this.canvasf.height);
         }
     }
 

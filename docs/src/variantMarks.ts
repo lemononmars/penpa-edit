@@ -73,11 +73,11 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     }
     if (variation.value === "coded") return { position: "corner", mark: "text" };
     if (variation.value === "pencilmarks") return { position: "center", mark: "text" };
-    if (variation.value === "xydifference") return { position: "edge", mark: "diamond" };
+    if (["xydifference", "primesumssudoku", "twodigitprimenumberssudoku"].includes(variation.value)) return { position: "edge", mark: "diamond" };
     if (variation.value === "xivi") return { position: "edge", mark: "text" };
     if (variation.value === "clock") return { position: "center", mark: "cage" };
     if (variation.value === "slotmachine") return { position: "center", mark: "surface" };
-    if (["wheel", "squarewheel", "pinnochio", "little killer", "product little killer"].includes(variation.value)) {
+    if (["wheel", "pinnochio", "little killer", "product little killer"].includes(variation.value)) {
         return { position: "multiple", mark: "multiple" };
     }
     if (["productkiller", "solokiller"].includes(variation.value)) return { position: "center", mark: "cage" };
@@ -147,7 +147,6 @@ export function inputModesFor(variation: Variation) {
         xivi: ["Number · edge", "Place VI on every adjacent pair summing to 6 and XI on every pair summing to 11."],
         slotmachine: ["Input-mode column checkboxes", "Toggle columns in the Input Modes section; the editor paints each selected column."],
         wheel: ["Number · Tapa", "Shape · large circle", "Place four clue digits and a large circle at the same four-cell intersection."],
-        squarewheel: ["Number · Tapa", "Shape · large square", "Place four clue digits and a large square at the same four-cell intersection."],
         pinnochio: ["Surface", "Number · normal", "Shade every clue cell, then enter its displayed digit; exactly one must be false."],
         sumdetector: ["Shape · eight-direction arrow", "At each origin, toggle every direction containing the required prefix sum."]
     };
@@ -173,6 +172,8 @@ export function cspConstraintFunctionFor(variation: Variation) {
         serbianframe: `validatePartial(board, clue) {\n  const indexes = clue.axis === "row" ? [1, 2] : [2, 3];\n  const values = indexes.map(index => cellValue(board, clue.cells[index]));\n  return values.some(value => !value) || values[0] + values[1] === clue.value;\n}`,
         median: `validatePartial(board, clue) {\n  const values = clue.cells.slice(0, 3).map(cellValue);\n  return values.some(value => !value) || values.sort((a, b) => a - b)[1] === clue.value;\n}`,
         xydifference: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue), reference = cellValue(board, clue.reference);\n  return !a || !b || !reference || Math.abs(a - b) === reference;\n}`,
+        primesumssudoku: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const sum = a + b;\n  const isPrime = [2, 3, 5, 7, 11, 13, 17].includes(sum);\n  return clue.marked ? isPrime : !isPrime;\n}`,
+        twodigitprimenumberssudoku: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const value = 10 * a + b;\n  const isPrime = [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97].includes(value);\n  return clue.marked ? isPrime : !isPrime;\n}`,
         average: `validatePartial(board, clue) {\n  const center = cellValue(board, clue.center), ends = clue.ends.map(cellValue);\n  if (!center || ends.some(value => !value)) return true;\n  return clue.marked === (center * 2 === ends[0] + ends[1]);\n}`,
         fortress: `validatePartial(board, clue) {\n  const shaded = cellValue(board, clue.shaded), unshaded = cellValue(board, clue.unshaded);\n  return !shaded || !unshaded || shaded > unshaded;\n}`,
         inequality: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  return !a || !b || (clue.sign === "<" ? a < b : a > b);\n}`,
@@ -208,7 +209,6 @@ export function cspConstraintFunctionFor(variation: Variation) {
         xivi: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const sum = a + b;\n  return clue.kind === "VI" ? sum === 6 : clue.kind === "XI" ? sum === 11 : sum !== 6 && sum !== 11;\n}`,
         slotmachine: `validatePartial(board, clue) {\n  return clue.columns.slice(1).every(column => someCyclicShiftMatchesAssignedDigits(board, clue.columns[0], column));\n}`,
         wheel: `validatePartial(board, clue) {\n  return someRotationMatchesAssignedDigits(board, clue.cells, clue.digits);\n}`,
-        squarewheel: `validatePartial(board, clue) {\n  return someRotationMatchesAssignedDigits(board, clue.cells, clue.digits);\n}`,
         pinnochio: `validatePartial(board, clue) {\n  const comparisons = clue.clues.map(item => !cellValue(board, item.cell) ? "open"\n    : cellValue(board, item.cell) === item.value ? "true" : "false");\n  return comparisons.filter(value => value === "false").length <= 1\n    && (comparisons.includes("false") || comparisons.includes("open"));\n}`,
         sumdetector: `validatePartial(board, group) {\n  return range(1, board.length).some(n => group.clues.every(clue =>\n    clue.rays.every(ray => firstNDigitsCanSumTo(board, ray, n, cellValue(board, clue.origin)))));\n}`
     };

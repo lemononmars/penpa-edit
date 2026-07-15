@@ -29,6 +29,7 @@
     let screenshotBorder = false;
     let screenshotName = "Classic";
     let darkTheme = true;
+    let mobileActiveTab: "none" | "controls" | "actions" = "none";
     let generatorVariants: string[] = ["classic"];
     let generatorNegative = { kropki: false, xv: false, battenburg: false };
     let generatorSource: "new" | "existing" = "new";
@@ -112,7 +113,12 @@
         toolPanelMode = mode === "symbol" ? "Shape" : mode === "combi" ? "Composite" :
             mode === "number" ? "Number" : "Sudoku";
         if (mode === "number" && variant === "inequality") {
-            toolPanelOptions = [{ value: "<", label: "<" }, { value: ">", label: ">" }];
+            toolPanelOptions = [
+                { value: "<", label: "<" },
+                { value: ">", label: ">" },
+                { value: "^", label: "▲ (^)" },
+                { value: "v", label: "▼ (v)" }
+            ];
         } else if (mode === "number" && variant === "xv") {
             toolPanelOptions = [{ value: "V", label: "V" }, { value: "X", label: "X" }];
         } else if (mode === "number" && variant === "xivi") {
@@ -126,6 +132,10 @@
             ];
         } else if (mode === "symbol" && (variant === "consecutive" || variant === "evensumpairs") && submode === "circle_SS") {
             toolPanelOptions = [{ value: "1", label: "White" }];
+        } else if (mode === "symbol" && ["xydifference", "perfectsquares", "primesumssudoku", "twodigitprimenumberssudoku"].includes(variant) && submode === "diamond_SS") {
+            toolPanelOptions = [{ value: "1", label: "Diamond" }];
+        } else if (mode === "symbol" && variant === "battenburg" && submode === "sudokuetc") {
+            toolPanelOptions = [{ value: "1", label: "Battenburg" }];
         } else if (mode === "symbol" && variant === "odd even") {
             toolPanelOptions = [
                 { value: "odd", input: "3", label: "Odd ○", submode: "circle_L" },
@@ -185,7 +195,12 @@
         }
         if (option.action === "backspace") pu.key_backspace?.();
         else if (option.action === "delete") pu.key_space?.(46, false, false);
-        else pu.key_number?.(option.input || option.value);
+        else {
+            const inputStr = option.input || option.value;
+            for (const char of inputStr) {
+                pu.key_number?.(char);
+            }
+        }
         pu.redraw?.();
         queueMicrotask(() => { syncState(); syncToolPanel(); });
     }
@@ -264,7 +279,8 @@
 
     function visibleVariants() {
         const query = variantSearch.trim().toLowerCase();
-        return variants.filter((variant) => primaryVariantTab(variant.value) === variantTab &&
+        return variants.filter((variant) =>
+            (!query ? primaryVariantTab(variant.value) === variantTab : true) &&
             (!query || variant.label.toLowerCase().includes(query) || variant.value.toLowerCase().includes(query)));
     }
 
@@ -292,8 +308,11 @@
         if (select.value === selectedVariant &&
             (["little killer", "sandwich", "skyscraper"].includes(selectedVariant) ||
                 outsideVariationValues.has(selectedVariant))) {
-            const leftTopOnly = ["sandwich", "edgedifference", "evensandwich", "oddsandwich"].includes(selectedVariant);
-            const layers = ["outside", "outside234", "evensandwich", "oddsandwich"].includes(selectedVariant) ? 3 : 1;
+            const leftTopOnly = ["sandwich", "edgedifference", "evensandwich", "oddsandwich", "before9sudoku", "before1after9sudoku"].includes(selectedVariant);
+            let layers = ["outside", "outside234", "evensandwich", "oddsandwich"].includes(selectedVariant) ? 3 : 1;
+            if (selectedVariant === "before1after9sudoku") {
+                layers = 2;
+            }
             ensureOutsideSpace(layers, leftTopOnly ? [0, 2] : [0, 1, 2, 3]);
         }
     }
@@ -659,6 +678,9 @@
             const target = event.target as HTMLElement | null;
             if (!target?.closest(".variant-picker")) variantMenuOpen = false;
             if (!target?.closest(".action-dropdown")) actionMenu = null;
+            if (!target?.closest(".controls-top-drawer, .penpa-actions, .log-host, .mobile-header")) {
+                mobileActiveTab = "none";
+            }
         };
         document.addEventListener("pointerdown", closeVariantMenu);
         return () => {
@@ -679,8 +701,17 @@
 </svelte:head>
 
 <div class="studio-shell" class:ready={initialized} class:dark={darkTheme}>
+    <div class="mobile-header">
+        <button type="button" class:active={mobileActiveTab === "controls"} on:click={() => mobileActiveTab = mobileActiveTab === "controls" ? "none" : "controls"}>
+            🔧 Rules & Controls
+        </button>
+        <button type="button" class:active={mobileActiveTab === "actions"} on:click={() => mobileActiveTab = mobileActiveTab === "actions" ? "none" : "actions"}>
+            📊 Solver & Actions
+        </button>
+    </div>
     <main class="studio-grid">
         <aside class="column controls" aria-label="Puzzle controls">
+            <div class="controls-top-drawer" class:open={mobileActiveTab === 'controls'}>
             <section>
                 <h2>Editing layer</h2>
                 <div class="segmented">
@@ -753,6 +784,43 @@
                 {/if}
             </section>
 
+                {#if layer === "problem"}
+                    <section class="tool-help" class:hidden-section={layer === "modes"} aria-live="polite">
+                        <div>
+                            <span class="help-label">Variant rule</span>
+                            <strong>
+                                {#if variationByValue.has(ruleVariant)}
+                                    <a class="rule-wiki-link" href={`./variant.html?id=${encodeURIComponent(ruleVariant)}`} target="_blank" rel="noreferrer">{ruleTitle}</a>
+                                {:else}{ruleTitle}{/if}
+                            </strong>
+                            <p>{ruleDescription}</p>
+                        </div>
+                    </section>
+                {:else}
+                    <section class="tool-help" class:hidden-section={layer === "modes"} aria-live="polite">
+                        <div>
+                            <span class="help-label">Variant rule</span>
+                            <strong>
+                                {#if variationByValue.has(ruleVariant)}
+                                    <a class="rule-wiki-link" href={`./variant.html?id=${encodeURIComponent(ruleVariant)}`} target="_blank" rel="noreferrer">{ruleTitle}</a>
+                                {:else}{ruleTitle}{/if}
+                            </strong>
+                            <p>{ruleDescription}</p>
+                        </div>
+                        <div>
+                            <span class="help-label">Tool usage</span>
+                            <strong>{toolTitle}</strong>
+                            <p>{toolDescription}</p>
+                        </div>
+                    </section>
+                {/if}
+
+                <section class="legacy-modes-section" class:hidden-section={layer !== "modes"}>
+                    <div class="modes-heading"><h2>Mode controls</h2><button type="button" on:click={revealAllModes}>Reveal all</button></div>
+                    <div bind:this={legacyControlsHost} class="legacy-controls-host"></div>
+                </section>
+            </div>
+
             <section class="input-modes-section" class:disabled-section={layer === "solution"} class:hidden-section={layer === "modes"}>
                 <h2>Input modes</h2>
                 <div bind:this={variantHost} class="legacy-variant-host"></div>
@@ -763,28 +831,6 @@
                         {/each}
                     </div>
                 {/if}
-            </section>
-
-            <section class="legacy-modes-section" class:hidden-section={layer !== "modes"}>
-                <div class="modes-heading"><h2>Mode controls</h2><button on:click={revealAllModes}>Reveal all</button></div>
-                <div bind:this={legacyControlsHost} class="legacy-controls-host"></div>
-            </section>
-
-            <section class="tool-help" class:hidden-section={layer === "modes"} aria-live="polite">
-                <div>
-                    <span class="help-label">Variant rule</span>
-                    <strong>
-                        {#if variationByValue.has(ruleVariant)}
-                            <a class="rule-wiki-link" href={`./variant.html?id=${encodeURIComponent(ruleVariant)}`} target="_blank" rel="noreferrer">{ruleTitle}</a>
-                        {:else}{ruleTitle}{/if}
-                    </strong>
-                    <p>{ruleDescription}</p>
-                </div>
-                <div>
-                    <span class="help-label">Tool usage</span>
-                    <strong>{toolTitle}</strong>
-                    <p>{toolDescription}</p>
-                </div>
             </section>
 
             {#if toolPanelOptions.length}
@@ -821,7 +867,7 @@
             </div>
         </section>
 
-        <aside class="column actions" aria-label="Solver and Penpa controls">
+        <aside class="column actions" class:open={mobileActiveTab === 'actions'} aria-label="Solver and Penpa controls">
             <section bind:this={logHost} class="log-host"></section>
 
             <section class="penpa-actions">
@@ -1911,5 +1957,171 @@
         color: #dce5ec;
         border-color: #536473;
         background: #263340;
+    }
+    .mobile-header {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-header {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: #202b36;
+            padding: 8px;
+            gap: 8px;
+            width: 100%;
+            height: 48px;
+            box-sizing: border-box;
+            border-bottom: 1px solid #10161c;
+            flex-shrink: 0;
+            z-index: 101;
+        }
+        .mobile-header button {
+            flex: 1;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid #344353;
+            border-radius: 6px;
+            color: #bdc8d3;
+            background: #2a3744;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .mobile-header button.active {
+            background: #176fae;
+            color: #fff;
+            border-color: #176fae;
+        }
+        .studio-shell {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+        .studio-grid {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 48px);
+            padding: 0;
+            gap: 0;
+            overflow: hidden;
+            position: relative;
+        }
+        .board-column {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            height: 100%;
+            order: 2;
+            overflow: auto;
+            position: relative;
+            background: #f8fafc;
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .controls-top-drawer {
+            display: none;
+        }
+        .controls-top-drawer.open {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-bottom: 2px solid #bdc8d3;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 12px;
+            z-index: 100;
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+        .studio-shell.dark .controls-top-drawer.open {
+            background: #263340;
+            border-color: #40505f;
+        }
+        
+        .column.controls {
+            display: flex;
+            flex-direction: column;
+            height: auto;
+            width: 100%;
+            order: 3;
+            flex-shrink: 0;
+            background: #ffffff;
+            border-top: 1px solid #d7dee5;
+            padding: 8px;
+            box-sizing: border-box;
+            gap: 6px;
+        }
+        .studio-shell.dark .column.controls {
+            background: #263340;
+            border-top-color: #40505f;
+        }
+        
+        .column.actions {
+            display: none;
+        }
+        .column.actions.open {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-bottom: 2px solid #bdc8d3;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 12px;
+            z-index: 100;
+            max-height: 65vh;
+            overflow-y: auto;
+            height: auto;
+        }
+        .studio-shell.dark .column.actions.open {
+            background: #263340;
+            border-color: #40505f;
+        }
+
+        .input-modes-section {
+            padding: 4px !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        .input-modes-section h2 {
+            display: none;
+        }
+        :global(.svelte-home .legacy-variant-host .sudoku-variant-tools) {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            padding: 2px 0 !important;
+            width: 100% !important;
+        }
+        :global(.svelte-home .legacy-variant-host button) {
+            flex-shrink: 0 !important;
+        }
+        .input-panel-section {
+            padding: 6px !important;
+            box-shadow: none !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 6px !important;
+        }
+        .studio-shell.dark .input-panel-section {
+            border-color: #4b5a68 !important;
+        }
+        .input-panel-section .help-label {
+            display: none;
+        }
     }
 </style>

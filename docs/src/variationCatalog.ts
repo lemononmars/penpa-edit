@@ -38,7 +38,8 @@ const existing = new Set([
 
 export const scratchGeneratableVariants = new Set([
     "classic", "diagonal", "anti diagonal", "anti king", "anti knight",
-    "non consecutive", "odd even", "kropki", "xv", "battenburg"
+    "non consecutive", "odd even", "kropki", "xv", "battenburg",
+    "disjoint", "queen", "mirror", "symmetricunequal"
 ]);
 
 export const cspSupportedVariants = new Set([
@@ -46,7 +47,7 @@ export const cspSupportedVariants = new Set([
     "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv",
     "battenburg", "skyscraper", "sandwich",
     "diagonallynonconsecutive", "noevenneighbours", "nothreeinarow",
-    "queen", "touchy", "disjoint", "windoku", "deficit", "extraregion", "surplus",
+    "queen", "touchy", "disjoint", "windoku", "extraregion",
     "difference", "sum", "product", "arithmetic", "greater", "lesser", "consecutive",
     "evensumpairs", "oddsumpairs",
     "renban", "consecutiveclone", "paritylines", "creasing", "sequence",
@@ -61,9 +62,10 @@ export const cspSupportedVariants = new Set([
     "trio", "perfectsquares", "clockfaces", "exclusion", "groupsum",
     "little killer", "product little killer", "descriptivepairs", "outside", "outside234",
     "maximin", "minimax", "diagonallyconsecutive", "multiplication",
-    "evensandwich", "oddsandwich", "clock", "xivi", "slotmachine", "wheel", "squarewheel",
+    "evensandwich", "oddsandwich", "clock", "xivi", "slotmachine",
     "pinnochio", "sumdetector", "ascendingstarterssudoku", "before9sudoku", "before1after9sudoku",
-    "almostpalindromesudoku", "anticonsecutivesudoku", "averagearrowssudoku"
+    "almostpalindromesudoku", "anticonsecutivesudoku", "averagearrowssudoku",
+    "primesumssudoku", "twodigitprimenumberssudoku"
 ]);
 
 export const noInputVariationValues = new Set([
@@ -77,7 +79,7 @@ export const directionalShapeVariationValues = new Set([
 const removedVariationValues = new Set([
     "hex", "parquet", "tightfit", "ninedragons", "battleship", "odd", "even",
     "kropkipairs", "sudokurve", "inclusion", "multidiagonal", "search6",
-    "substitution", "alphabet", "halfsquares", "notouchsudoku"
+    "substitution", "alphabet", "halfsquares", "notouchsudoku", "squarewheel"
 ]);
 
 function stripRulePreamble(rule: string) {
@@ -261,16 +263,15 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "fortress") {
-        add("cage", "1", 10, ["mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb"]);
+        add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["inequality", "xydifference", "perfectsquares"].includes(variation.value)) {
+    if (["inequality", "xydifference", "perfectsquares", "primesumssudoku", "twodigitprimenumberssudoku"].includes(variation.value)) {
         add(variation.value === "inequality" ? "number" : "symbol",
-            variation.value === "inequality" ? "5" : variation.value === "xydifference" ? "diamond_L" : "circle_SS",
+            variation.value === "inequality" ? "5" : "diamond_SS",
             variation.value === "inequality" ? 6 : 2,
             variation.value === "inequality" ? ["mo_number_lb", "sub_number5_lb"] :
-                variation.value === "xydifference" ? ["mo_symbol_lb", "ms1", "li_diamond"] :
-                    ["mo_symbol_lb", "ms1", "ms1_circle", "li_circle_SS"]);
+                ["mo_symbol_lb", "ms1", "li_diamond"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "trio") {
@@ -324,10 +325,9 @@ function genericSetting(variation: Variation) {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (variation.value === "wheel" || variation.value === "squarewheel") {
+    if (variation.value === "wheel") {
         add("number", "4", 1, ["mo_number_lb", "sub_number4_lb"]);
-        add("symbol", variation.value === "wheel" ? "circle_L" : "square_L", 2,
-            ["mo_symbol_lb", "ms1", variation.value === "wheel" ? "li_circle_L" : "li_square_L"]);
+        add("symbol", "circle_L", 2, ["mo_symbol_lb", "ms1", "li_circle_L"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "pinnochio") {

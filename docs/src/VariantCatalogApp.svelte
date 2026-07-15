@@ -128,7 +128,6 @@
                         <th>Rule</th>
                         <th>CSP</th>
                         <th>Implementation</th>
-                        <th>Automatic blocker</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -147,7 +146,6 @@
                                 {/if}
                             </td>
                             <td class="approach">{cspApproachFor(variation)}</td>
-                            <td class="approach">{implemented ? "—" : automaticBlockerFor(variation)}</td>
                         </tr>
                     {/each}
                 </tbody>

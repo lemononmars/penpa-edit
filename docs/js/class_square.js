@@ -2211,9 +2211,18 @@ class Puzzle_square extends Puzzle {
                 break;
             case "diagonal_consecutive":
                 ctx.setLineDash([]);
-                ctx.fillStyle = ccolor || Color.BLACK;
-                if (num[0] === 1) this.draw_rectbar(ctx, x - 0.13 * pu.size, y, 0.07, 0.34, 4, 45);
-                if (num[1] === 1) this.draw_rectbar(ctx, x + 0.13 * pu.size, y, 0.07, 0.34, 4, 45);
+                ctx.strokeStyle = ccolor || Color.BLACK;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                if (num[0] === 1) {
+                    ctx.moveTo(x - 0.25 * pu.size, y - 0.25 * pu.size);
+                    ctx.lineTo(x + 0.25 * pu.size, y + 0.25 * pu.size);
+                }
+                if (num[1] === 1) {
+                    ctx.moveTo(x - 0.25 * pu.size, y + 0.25 * pu.size);
+                    ctx.lineTo(x + 0.25 * pu.size, y - 0.25 * pu.size);
+                }
+                ctx.stroke();
                 break;
             //number
             case "inequality":

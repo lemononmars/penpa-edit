@@ -417,7 +417,7 @@ const UserSettings = {
         return this._shorten_links;
     },
 
-    _panel_shown: false,
+    _panel_shown: true,
     set panel_shown(newValue) {
         if (newValue === undefined) { newValue = false; }
         this._panel_shown = newValue;
