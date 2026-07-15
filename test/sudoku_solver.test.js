@@ -1805,3 +1805,239 @@ test("supports registering new CSP constraint handlers", function() {
     assert.equal(SudokuCSP.registeredConstraints().includes("testAllowedDigits"), true);
     assert.deepEqual(result.candidates[0][0], [2, 4]);
 });
+
+test("validates new variants: bouncing x-sums, czech outsider, diagonal sum is nine, diagonal tens, disparity, distances", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+
+    // 1. bouncing x-sums
+    // First cell is r0c0 = 5. The bouncing diagonal path of length 5 starting at r0c0 going (1,1):
+    // r0c0 (5) -> r1c1 (7) -> r2c2 (8) -> r3c3 (7) -> r4c4 (5).
+    // Sum is 5+7+8+7+5 = 32.
+    // If we specify a bouncing x-sums clue of 32 at r0c0 going (1,1):
+    const bouncingClue = { relation: "bouncing x-sums", value: 32, cells: [
+        { row: 0, col: 0 }, { row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }, { row: 4, col: 4 }
+    ] };
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [bouncingClue] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [{ ...bouncingClue, value: 33 }] }).solved, false);
+
+    // 2. czech outsider
+    // The diagonal has cells: r0c0 (5), r1c1 (7), r2c2 (8).
+    // If the outside clue is 578:
+    const czechClue = { relation: "czech outsider", value: 578, cells: [
+        { row: 0, col: 0 }, { row: 1, col: 1 }, { row: 2, col: 2 }
+    ] };
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [czechClue] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [{ ...czechClue, value: 55 }] }).solved, false); // needs two 5s
+
+    // 3. diagonal sum is nine / diagonal tens
+    // Diagonal pair: r0c1 (3) and r1c2 (2) -> sum is 5 (not 9 or 10).
+    // Diagonal pair: r0c1 (3) and r1c0 (6) -> sum is 9.
+    // Diagonal pair: r1c1 (7) and r2c0 (1) -> sum is 8 (not 9 or 10).
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "notDiagonalSumIsNine", cells: [{ row: 0, col: 1 }, { row: 1, col: 2 }] },
+        { relation: "diagonalSumIsNine", cells: [{ row: 0, col: 1 }, { row: 1, col: 0 }] }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "diagonalSumIsNine", cells: [{ row: 0, col: 1 }, { row: 1, col: 2 }] }
+    ] }).solved, false);
+
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "notDiagonalTens", cells: [{ row: 0, col: 1 }, { row: 1, col: 2 }] }
+    ] }).solved, true);
+    // r0c0 (5) and r1c1 (7) -> sum is 12 (not 10).
+    // r1c1 (7) and r2c2 (8) -> sum is 15 (not 10).
+    // Let's find a pair summing to 10: r0c4 (7) and r1c5 (3) -> sum is 10.
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "diagonalTens", cells: [{ row: 0, col: 4 }, { row: 1, col: 5 }] }
+    ] }).solved, true);
+
+    // 4. disparity
+    // Check if disparity works
+    assert.equal(SudokuCSP.registeredConstraints().includes("disparity"), true);
+    // If we place 1 and 2 (opposite parity):
+    assert.equal(SudokuCSP.solve([[1, 2, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]], {
+        disparity: [[{ row: 0, col: 0 }, { row: 0, col: 1 }]]
+    }).solved, true);
+    // If we place 1 and 3 (same parity):
+    assert.equal(SudokuCSP.solve([[1, 3, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]], {
+        disparity: [[{ row: 0, col: 0 }, { row: 0, col: 1 }]]
+    }).solved, false);
+
+    // 5. distances
+    // First row: 5 3 4 6 7 8 9 1 2.
+    // Clue "3-7:2" (3 is at index 1, 7 is at index 4, distance is 4-1 = 3).
+    // Clue "5-9:6" (5 is at index 0, 9 is at index 6, distance is 6-0 = 6).
+    const row = Array.from({ length: 9 }, (_, col) => ({ row: 0, col }));
+    const distanceClue = { relation: "distances", value: { x: 5, y: 9, z: 6 }, cells: row };
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [distanceClue] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [{ ...distanceClue, value: { x: 5, y: 9, z: 5 } }] }).solved, false);
+});
+
+test("validates new variants: faded kropki, first seen odd/even, max ascending, fives, frame-diagonal, odd labyrinth, even passage, equal sum line, german whispers, factor lines", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+
+    // 1. faded kropki
+    // r0c0 (5) and r0c1 (3): not consecutive and not 1:2 ratio.
+    // r0c1 (3) and r0c2 (4): consecutive.
+    // r0c2 (4) and r0c3 (6): not consecutive, but 1:2 ratio? No (4 and 6). Wait, r1c2 (2) and r2c2 (8)? No.
+    // Let's find 1:2 ratio: r0c1 (3) and r0c5 (8)? No. r0c1 (3) and r1c1 (7)? No.
+    // Let's find any 1:2 ratio in solved: r0c0 (5), r0c3 (6), r0c7 (1), r0c8 (2) -> r0c7 (1) and r0c8 (2) have 1:2 ratio.
+    assert.equal(SudokuCSP.solve(solved, { fadedKropki: [
+        { cells: [{ row: 0, col: 1 }, { row: 0, col: 2 }], kind: "white" },
+        { cells: [{ row: 0, col: 7 }, { row: 0, col: 8 }], kind: "white" }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { fadedKropki: [
+        { cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }], kind: "white" }
+    ] }).solved, false);
+
+    // 2. first seen odd/even
+    // Row 0: 5 3 4 6 7 8 9 1 2.
+    // First odd is 5 (at index 0). Clue is 5.
+    // First even is 4 (at index 2). Clue is 4.
+    const row0 = Array.from({ length: 9 }, (_, col) => ({ row: 0, col }));
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "firstseenoddeven", value: 5, cells: row0 },
+        { relation: "firstseenoddeven", value: 4, cells: row0 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "firstseenoddeven", value: 3, cells: row0 }
+    ] }).solved, false);
+
+    // 3. max ascending
+    // Row 0: 5 3 4 6 7 8 9 1 2.
+    // Strictly increasing runs:
+    // [5], [3, 4, 6, 7, 8, 9] (length 6), [1, 2] (length 2).
+    // Longest is 6.
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "maxascending", value: 6, cells: row0 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "maxascending", value: 5, cells: row0 }
+    ] }).solved, false);
+
+    // 4. fives
+    // r0c0 (5) and r0c1 (3): sum = 8, diff = 2.
+    // r0c1 (3) and r0c2 (4): sum = 7, diff = 1.
+    // Let's find a pair summing to 5 or differing by 5:
+    // r0c0 (5) and r1c0 (6): diff = 1, sum = 11.
+    // r0c1 (3) and r0c2 (4): sum = 7.
+    // r0c1 (3) and r1c1 (7): diff = 4.
+    // r0c2 (4) and r0c8 (2) -> not adjacent.
+    // r0c6 (9) and r0c7 (1) -> diff = 8.
+    // Let's find a sum/diff 5 pair: r0c0 (5) and r0c2 (4) -> not adjacent.
+    // r0c1 (3) and r0c0 (5) -> diff 2.
+    // What about r0c1 (3) and r0c2 (4)?
+    // What about r0c6 (9) and r1c6 (3)? No.
+    // What about r0c0 (5) and r0c7 (1) -> no.
+    // Let's look at r0c8 (2) and r1c8 (8) -> diff 6.
+    // Let's find a pair manually:
+    // r0c1 is 3, r1c1 is 7.
+    // r0c2 is 4, r0c3 is 6.
+    // r0c3 is 6, r0c4 is 7.
+    // r0c4 is 7, r0c5 is 8.
+    // r0c5 is 8, r0c6 is 9.
+    // r0c7 is 1, r0c8 is 2.
+    // r1c0 is 6, r1c1 is 7.
+    // r1c1 is 7, r1c2 is 2 -> diff is 5! Yes!
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "fives", cells: [{ row: 1, col: 1 }, { row: 1, col: 2 }], marked: true }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "fives", cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }], marked: true }
+    ] }).solved, false);
+
+    // 5. frame-diagonal
+    // cells: r0c0 (5), r1c1 (7), r2c2 (8) -> sum of first 3 is 20.
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "framediagonal", value: 20, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }] }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "framediagonal", value: 21, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }] }
+    ] }).solved, false);
+
+    // 6. odd labyrinth & even passage
+    // oddLabyrinth connectivity check.
+    // Let's use a 3x3 board where we have odd path:
+    // [ [1, 2, 3],
+    //   [4, 5, 6],
+    //   [7, 8, 9] ]
+    // odd cells path from (0,0) to (2,2):
+    // 1 (0,0) -> 5 (1,1)? No, path must be orthogonal.
+    // Orthogonal: 1 (0,0) -> no adjacent odd cell because (0,1) is 2, (1,0) is 4.
+    // So no orthogonal odd path.
+    // Let's construct a small valid 2x2 board:
+    // [ [1, 3],
+    //   [2, 5] ]
+    // Odd path from (0,0) to (1,1): 1 -> 3 -> 5. Valid.
+    assert.equal(SudokuCSP.solve([[1, 3], [2, 5]], { oddLabyrinth: [true], baseBoxes: false }).solved, true);
+    assert.equal(SudokuCSP.solve([[1, 2], [4, 5]], { oddLabyrinth: [true], baseBoxes: false }).solved, false);
+
+    // even passage
+    // [ [2, 1],
+    //   [4, 3] ] -> even path from (0,0) to (1,1): 2 -> 4? Wait, (1,1) is 3 (odd). So invalid.
+    // [ [2, 4],
+    //   [1, 6] ] -> even path from (0,0) to (1,1): 2 -> 4 -> 6. Valid.
+    assert.equal(SudokuCSP.solve([[2, 4], [1, 6]], { evenPassage: [true], baseBoxes: false }).solved, true);
+    assert.equal(SudokuCSP.solve([[2, 1], [1, 6]], { evenPassage: [true], baseBoxes: false }).solved, false);
+
+    // 7. equal sum line
+    // path: (0,0) [5] and (0,1) [3] (in box 0, sum 8) and (0,3) [6] and (0,4) [7]? No.
+    // Let's check 3x3 boxes in solved:
+    // Box 0: r0c0 (5), r0c1 (3) -> sum 8.
+    // Box 1: r0c3 (6), r0c4 (7) -> sum 13.
+    // Let's find segments that sum to the same total:
+    // Box 0: r0c0 (5), r0c1 (3) -> sum 8.
+    // Box 1: r0c3 (6), r0c7 (1)? No, (0,7) is in Box 2.
+    // Box 1: r0c3 (6), r1c3 (1), r1c4 (9)? No.
+    // Let's construct a simple 4x4 board test. Box size is 2x2.
+    // [ [1, 2, 3, 4],
+    //   [3, 4, 1, 2],
+    //   [2, 1, 4, 3],
+    //   [4, 3, 2, 1] ]
+    // Path: (0,0) [1] and (0,1) [2] (in Box 0, sum 3) and (0,2) [3] (in Box 1, sum 3).
+    // Sums: Box 0 segment = 1+2 = 3, Box 1 segment = 3. Both sum to 3. Valid!
+    const board4 = [[1, 2, 3, 4], [3, 4, 1, 2], [2, 1, 4, 3], [4, 3, 2, 1]];
+    assert.equal(SudokuCSP.solve(board4, { catalogLines: [
+        { relation: "equalsumline", path: [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 2 }] }
+    ], baseBoxes: false }).solved, true);
+    // If we make path (0,0) and (0,1) and (0,3) [4]: Box 0 sum = 3, Box 1 sum = 4. Invalid!
+    assert.equal(SudokuCSP.solve(board4, { catalogLines: [
+        { relation: "equalsumline", path: [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 3 }] }
+    ], baseBoxes: false }).solved, false);
+
+    // 8. german whispers
+    // diff >= 5
+    // path: r0c0 (5) and r0c7 (1) -> not adjacent.
+    // r0c0 (5) and r1c0 (6) -> diff 1.
+    // Let's find adjacent cells with diff >= 5:
+    // r0c7 (1) and r0c6 (9) -> diff 8. Valid.
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "germanwhispers", path: [{ row: 0, col: 6 }, { row: 0, col: 7 }] }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "germanwhispers", path: [{ row: 0, col: 0 }, { row: 0, col: 1 }] }
+    ] }).solved, false);
+
+    // 9. factor lines
+    // factor or multiple
+    // r0c1 (3) and r0c2 (4) -> not.
+    // r0c1 (3) and r0c6 (9) -> not adjacent.
+    // r0c6 (9) and r0c7 (1) -> 9 is multiple of 1. Valid.
+    // r0c7 (1) and r0c8 (2) -> 2 is multiple of 1. Valid.
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "factorlines", path: [{ row: 0, col: 6 }, { row: 0, col: 7 }, { row: 0, col: 8 }] }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "factorlines", path: [{ row: 0, col: 0 }, { row: 0, col: 1 }] }
+    ] }).solved, false);
+});
+
+

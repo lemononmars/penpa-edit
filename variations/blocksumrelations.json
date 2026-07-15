@@ -1,9 +1,0 @@
-{
-  "id": "blocksumrelations",
-  "name": "Block Sum Relations",
-  "rules": {
-    "6x6": "Each inequality sign between boxes compares the sums of the corresponding rows or columns on its two sides.",
-    "9x9": "Each inequality sign between boxes compares the sums of the corresponding rows or columns on its two sides."
-  },
-  "tags": ["math"]
-}

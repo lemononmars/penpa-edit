@@ -1,7 +1,0 @@
-{
-  "id": "primesums",
-  "name": "Prime Sums",
-  "rules": {
-    "9x9": "Apply classic sudoku rules. Horizontally and vertically adjacent cells containing digits whose sum is a prime number are marked with a diamond. All possible diamonds are marked."
-  }
-}

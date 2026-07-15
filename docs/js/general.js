@@ -126,7 +126,7 @@ function add_constraints() {
     constraints.innerHTML = "";
     let implemented = penpa_constraints.implemented_sudoku || ["classic"];
     let orderedGroups = [
-        { label: "Implemented", variants: implemented },
+        { label: "Available", variants: implemented },
         {
             label: "Planned",
             variants: penpa_constraints.options.sudoku.filter(function(variant) {

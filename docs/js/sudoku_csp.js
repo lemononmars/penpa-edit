@@ -6,7 +6,7 @@ var SudokuCSP = (function() {
 
     function cloneBoard(board) {
         var requestedSize = board && board.length;
-        if (requestedSize === 6 || requestedSize === 9) {
+        if (requestedSize) {
             SIZE = requestedSize;
             ALL_DIGITS = (1 << (SIZE + 1)) - 2;
             if (helpers) {
@@ -937,6 +937,14 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("disparity", {
+        validatePartial: function(board, pair) {
+            var first = cellValue(board, pair[0]);
+            var second = cellValue(board, pair[1]);
+            return !first || !second || (first % 2) !== (second % 2);
+        }
+    });
+
     registerConstraint("nonConsecutive", {
         validatePartial: function(board, pair) {
             var first = cellValue(board, pair[0]);
@@ -1000,6 +1008,8 @@ var SudokuCSP = (function() {
             var difference = Math.abs(first - second);
             var product = first * second;
             switch (clue.relation) {
+                case "fives": return sum === 5 || difference === 5;
+                case "notFives": return sum !== 5 && difference !== 5;
                 case "difference": return difference === clue.target;
                 case "sum": return sum === clue.target;
                 case "product": return product === clue.target;
@@ -1042,6 +1052,10 @@ var SudokuCSP = (function() {
                     return [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97].indexOf(val) === -1;
                 case "diagonalConsecutive": return difference === 1;
                 case "notDiagonalConsecutive": return difference !== 1;
+                case "diagonalSumIsNine": return sum === 9;
+                case "notDiagonalSumIsNine": return sum !== 9;
+                case "diagonalTens": return sum === 10;
+                case "notDiagonalTens": return sum !== 10;
                 case "arithmetic":
                     return sum === clue.target || difference === clue.target || product === clue.target ||
                         (first % second === 0 && first / second === clue.target) ||
@@ -1260,11 +1274,127 @@ var SudokuCSP = (function() {
                 var blanks = prefix.filter(function(value) { return !value; }).length;
                 return sum <= clue.value && sum + blanks * SIZE >= clue.value && (blanks > 0 || sum === clue.value);
             }
-            if (clue.relation === "sumframe") {
+            if (clue.relation === "bouncing x-sums") {
+                var count = values[0];
+                if (!count || count > values.length) return !count;
+                var prefix = values.slice(0, count);
+                var sum = prefix.reduce(function(total, value) { return total + value; }, 0);
+                var blanks = prefix.filter(function(value) { return !value; }).length;
+                return sum <= clue.value && sum + blanks * SIZE >= clue.value && (blanks > 0 || sum === clue.value);
+            }
+            if (clue.relation === "czech outsider") {
+                var digits = String(clue.value).split("").map(Number).filter(function(d) { return d >= 1 && d <= SIZE; });
+                var counts = {};
+                digits.forEach(function(d) { counts[d] = (counts[d] || 0) + 1; });
+                var blanks = values.filter(function(v) { return !v; }).length;
+                for (var d in counts) {
+                    var targetCount = counts[d];
+                    var currentCount = values.filter(function(v) { return v === Number(d); }).length;
+                    if (currentCount + blanks < targetCount) return false;
+                    if (blanks === 0 && currentCount < targetCount) return false;
+                }
+                return true;
+            }
+            if (clue.relation === "distances") {
+                var x = clue.value.x;
+                var y = clue.value.y;
+                var z = clue.value.z;
+                var idxX = values.indexOf(x);
+                var idxY = values.indexOf(y);
+                if (idxX !== -1 && idxY !== -1) {
+                    if (idxX >= idxY) return false;
+                    return idxY - idxX === z;
+                }
+                if (idxX !== -1 && idxY === -1) {
+                    var expectedIdxY = idxX + z;
+                    if (expectedIdxY >= values.length) return false;
+                    var valAtExpected = values[expectedIdxY];
+                    return !valAtExpected || valAtExpected === y;
+                }
+                if (idxY !== -1 && idxX === -1) {
+                    var expectedIdxX = idxY - z;
+                    if (expectedIdxX < 0) return false;
+                    var valAtExpected = values[expectedIdxX];
+                    return !valAtExpected || valAtExpected === x;
+                }
+                if (idxX === -1 && idxY === -1) {
+                    var possible = false;
+                    for (var i = 0; i < values.length - z; i++) {
+                        if ((!values[i] || values[i] === x) && (!values[i + z] || values[i + z] === y)) {
+                            possible = true;
+                            break;
+                        }
+                    }
+                    return possible;
+                }
+                return true;
+            }
+            if (clue.relation === "sumframe" || clue.relation === "framediagonal") {
                 var frameSum = values.reduce(function(total, value) { return total + value; }, 0);
                 var frameBlanks = values.filter(function(value) { return !value; }).length;
                 return frameSum <= clue.value && frameSum + frameBlanks * SIZE >= clue.value &&
                     (frameBlanks > 0 || frameSum === clue.value);
+            }
+            if (clue.relation === "firstseenoddeven") {
+                var isOddClue = (clue.value % 2) !== 0;
+                for (var i = 0; i < values.length; i++) {
+                    var v = values[i];
+                    if (!v) break;
+                    var isOddVal = (v % 2) !== 0;
+                    if (isOddVal === isOddClue) {
+                        return v === clue.value;
+                    }
+                }
+                var idxOfClue = values.indexOf(clue.value);
+                if (idxOfClue !== -1) {
+                    for (var i = 0; i < idxOfClue; i++) {
+                        if (values[i] && ((values[i] % 2) !== 0) === isOddClue) {
+                            return false;
+                        }
+                    }
+                } else {
+                    var hasMatchingParity = values.some(function(v) { return v && ((v % 2) !== 0) === isOddClue; });
+                    if (hasMatchingParity) return false;
+                    var noBlanks = values.every(function(v) { return v; });
+                    if (noBlanks) return false;
+                }
+                return true;
+            }
+            if (clue.relation === "maxascending") {
+                var maxGuaranteed = 0;
+                var currentGuaranteed = 0;
+                for (var i = 0; i < values.length; i++) {
+                    if (i === 0 || (values[i] && values[i-1] && values[i] > values[i-1])) {
+                        if (values[i]) {
+                            currentGuaranteed++;
+                        } else {
+                            currentGuaranteed = 0;
+                        }
+                    } else {
+                        if (currentGuaranteed > maxGuaranteed) maxGuaranteed = currentGuaranteed;
+                        currentGuaranteed = values[i] ? 1 : 0;
+                    }
+                }
+                if (currentGuaranteed > maxGuaranteed) maxGuaranteed = currentGuaranteed;
+                if (maxGuaranteed > clue.value) return false;
+
+                var maxPossible = 0;
+                var currentPossible = 0;
+                for (var i = 0; i < values.length; i++) {
+                    if (i === 0 || !values[i] || !values[i-1] || values[i] > values[i-1]) {
+                        currentPossible++;
+                    } else {
+                        if (currentPossible > maxPossible) maxPossible = currentPossible;
+                        currentPossible = 1;
+                    }
+                }
+                if (currentPossible > maxPossible) maxPossible = currentPossible;
+                if (maxPossible < clue.value) return false;
+
+                if (values.every(function(v) { return v; })) {
+                    return maxGuaranteed === clue.value;
+                }
+                return true;
             }
             if (clue.relation === "bust") {
                 if (clue.value < 1 || clue.value > values.length) return false;
@@ -1670,6 +1800,46 @@ var SudokuCSP = (function() {
                 var high = Math.max(values[0], values[values.length - 1]);
                 return values.slice(1, -1).every(function(value) { return !value || (value > low && value < high); });
             }
+            if (clue.relation === "equalsumline") {
+                var groups = {};
+                clue.path.forEach(function(cell) {
+                    var box = boxIndex(cell.row, cell.col, board.length);
+                    (groups[box] || (groups[box] = [])).push(cell);
+                });
+                var minPossible = -Infinity, maxPossible = Infinity;
+                var keys = Object.keys(groups);
+                for (var kIdx = 0; kIdx < keys.length; kIdx++) {
+                    var box = keys[kIdx];
+                    var cells = groups[box];
+                    var sum = 0, blanks = 0;
+                    cells.forEach(function(cell) {
+                        var val = cellValue(board, cell);
+                        if (val) sum += val;
+                        else blanks++;
+                    });
+                    var minS = sum + blanks * 1;
+                    var maxS = sum + blanks * board.length;
+                    if (blanks === 0) {
+                        minS = sum;
+                        maxS = sum;
+                    }
+                    if (minS > minPossible) minPossible = minS;
+                    if (maxS < maxPossible) maxPossible = maxS;
+                }
+                return minPossible <= maxPossible;
+            }
+            if (clue.relation === "germanwhispers") {
+                for (var i = 0; i < values.length - 1; i++) {
+                    if (values[i] && values[i+1] && Math.abs(values[i] - values[i+1]) < 5) return false;
+                }
+                return true;
+            }
+            if (clue.relation === "factorlines") {
+                for (var i = 0; i < values.length - 1; i++) {
+                    if (values[i] && values[i+1] && values[i] % values[i+1] !== 0 && values[i+1] % values[i] !== 0) return false;
+                }
+                return true;
+            }
             return true;
         },
         validateComplete: function(board, clue) {
@@ -1994,6 +2164,107 @@ var SudokuCSP = (function() {
                 }
             }
             return false;
+        }
+    });
+
+    function fadedKropkiAllows(first, second, kind) {
+        var consecutive = Math.abs(first - second) === 1;
+        var double = first === 2 * second || second === 2 * first;
+        if (kind === "white") {
+            return consecutive || double;
+        }
+        return !consecutive && !double;
+    }
+
+    registerConstraint("fadedKropki", {
+        validatePartial: function(board, dot) {
+            var first = cellValue(board, dot.cells[0]);
+            var second = cellValue(board, dot.cells[1]);
+            if (first && second) {
+                return fadedKropkiAllows(first, second, dot.kind);
+            }
+            var known = first || second;
+            if (!known) {
+                return true;
+            }
+            for (var candidate = 1; candidate <= SIZE; candidate++) {
+                if (candidate !== known && fadedKropkiAllows(known, candidate, dot.kind)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    });
+
+    function hasOddPath(board, size) {
+        var start = { row: 0, col: 0 };
+        var end = { row: size - 1, col: size - 1 };
+        var visited = Array.from({ length: size }, function() { return new Uint8Array(size); });
+        var startVal = cellValue(board, start);
+        if (startVal !== 0 && (startVal % 2) === 0) return false;
+        var endVal = cellValue(board, end);
+        if (endVal !== 0 && (endVal % 2) === 0) return false;
+
+        var queue = [start];
+        visited[0][0] = 1;
+        var head = 0;
+        var dr = [-1, 1, 0, 0], dc = [0, 0, -1, 1];
+        while (head < queue.length) {
+            var curr = queue[head++];
+            if (curr.row === end.row && curr.col === end.col) return true;
+            for (var i = 0; i < 4; i++) {
+                var nr = curr.row + dr[i], nc = curr.col + dc[i];
+                if (nr >= 0 && nr < size && nc >= 0 && nc < size && !visited[nr][nc]) {
+                    var val = cellValue(board, { row: nr, col: nc });
+                    if (val === 0 || (val % 2) !== 0) {
+                        visited[nr][nc] = 1;
+                        queue.push({ row: nr, col: nc });
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    function hasEvenPath(board, size) {
+        var start = { row: 0, col: 0 };
+        var end = { row: size - 1, col: size - 1 };
+        var visited = Array.from({ length: size }, function() { return new Uint8Array(size); });
+        var startVal = cellValue(board, start);
+        if (startVal !== 0 && (startVal % 2) !== 0) return false;
+        var endVal = cellValue(board, end);
+        if (endVal !== 0 && (endVal % 2) !== 0) return false;
+
+        var queue = [start];
+        visited[0][0] = 1;
+        var head = 0;
+        var dr = [-1, 1, 0, 0], dc = [0, 0, -1, 1];
+        while (head < queue.length) {
+            var curr = queue[head++];
+            if (curr.row === end.row && curr.col === end.col) return true;
+            for (var i = 0; i < 4; i++) {
+                var nr = curr.row + dr[i], nc = curr.col + dc[i];
+                if (nr >= 0 && nr < size && nc >= 0 && nc < size && !visited[nr][nc]) {
+                    var val = cellValue(board, { row: nr, col: nc });
+                    if (val === 0 || (val % 2) === 0) {
+                        visited[nr][nc] = 1;
+                        queue.push({ row: nr, col: nc });
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    registerConstraint("oddLabyrinth", {
+        validatePartial: function(board) {
+            return hasOddPath(board, SIZE);
+        }
+    });
+
+    registerConstraint("evenPassage", {
+        validatePartial: function(board) {
+            return hasEvenPath(board, SIZE);
         }
     });
 

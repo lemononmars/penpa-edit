@@ -1,9 +1,0 @@
-{
-  "id": "alternatingstripes",
-  "name": "Alternating Stripes",
-  "rules": {
-    "6x6": "Along each line, digits alternate between being larger and smaller than their immediate neighbours. Digits do not repeat on a line.",
-    "9x9": "Along each line, digits alternate between being larger and smaller than their immediate neighbours. Digits do not repeat on a line."
-  },
-  "tags": ["line"]
-}

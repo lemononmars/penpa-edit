@@ -1,9 +1,0 @@
-{
-  "id": "crosssums",
-  "name": "Cross Sums",
-  "rules": {
-    "6x6": "At every marked four-cell intersection, the two diagonal pairs have equal sums. All such intersections are marked.",
-    "9x9": "At every marked four-cell intersection, the two diagonal pairs have equal sums. All such intersections are marked."
-  },
-  "tags": ["math"]
-}
