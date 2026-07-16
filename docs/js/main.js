@@ -2164,6 +2164,9 @@ onload = function() {
     document.getElementById("theme_mode_opt").onchange = function() {
         UserSettings.color_theme = this.value;
     }
+    document.getElementById("primary_color_opt").onchange = function() {
+        UserSettings.primary_color = this.value;
+    }
 
     // Toggle responsiveness
     document.getElementById("responsive_settings_opt").onchange = function() {

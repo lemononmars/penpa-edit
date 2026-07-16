@@ -346,6 +346,36 @@ const UserSettings = {
         return this._color_theme;
     },
 
+    _primary_color: "blue",
+    set primary_color(newValue) {
+        if (!newValue || ["blue", "green", "orange", "pink", "grey"].indexOf(newValue) === -1) {
+            newValue = "blue";
+        }
+        if (this._primary_color === newValue) {
+            return;
+        }
+
+        const oldClass = "theme-" + this._primary_color;
+        const newClass = "theme-" + newValue;
+
+        this._primary_color = newValue;
+
+        let el = document.getElementById("primary_color_opt");
+        if (el) {
+            el.value = newValue;
+        }
+
+        document.documentElement.classList.remove(oldClass);
+        if (newValue !== "blue") {
+            document.documentElement.classList.add(newClass);
+        }
+
+        this.attemptSave();
+    },
+    get primary_color() {
+        return this._primary_color;
+    },
+
     _displaysize: 38,
     set displaysize(newValue) {
         var valueInt = newValue ? parseInt(newValue, 10) : 38;
@@ -469,6 +499,7 @@ const UserSettings = {
         'check_pencil_marks',
         'app_language',
         'color_theme',
+        'primary_color',
         'conflict_detection',
         'custom_colors_on',
         'ignore_line_style',
