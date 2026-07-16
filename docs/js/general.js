@@ -71,8 +71,9 @@ function set_default_sudoku_board_options() {
     UserSettings.gridtype = "sudoku";
     UserSettings.displaysize = 38;
     document.getElementById("gridtype").value = "sudoku";
-    document.getElementById("nb_size1").value = 9;
-    document.getElementById("nb_size2").value = 9;
+    var size = Number(UserSettings.start_grid_size || 9);
+    document.getElementById("nb_size1").value = size;
+    document.getElementById("nb_size2").value = size;
     document.getElementById("nb_size3").value = 38;
     document.getElementById("nb_space1").value = 0;
     document.getElementById("nb_space2").value = 0;
@@ -118,6 +119,14 @@ function create() {
 
     pu.redraw();
     SudokuTools.init();
+    if (UserSettings.start_grid_type === "generated") {
+        var size = Number(UserSettings.start_grid_size || 9);
+        window.setTimeout(function() {
+            if (typeof SudokuTools !== "undefined" && typeof SudokuTools.generatePuzzle === "function") {
+                SudokuTools.generatePuzzle(size, ["classic"], null, null);
+            }
+        }, 50);
+    }
 }
 
 function add_constraints() {

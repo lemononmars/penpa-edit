@@ -761,6 +761,9 @@ onload = function() {
         }
 
         if (key === "Tab" || key === "Enter") {
+            if (key === "Tab") {
+                e.preventDefault();
+            }
             let user_choices = UserSettings.tab_settings;
             if (user_choices.length !== 0) {
                 if (previous_length != user_choices.length) {
@@ -2192,6 +2195,39 @@ onload = function() {
         UserSettings.secondcolor = this.value;
     }
 
+    // Adding on change events for general settings
+    // Theme Setting
+    document.getElementById("theme_mode_opt").onchange = function() {
+        UserSettings.color_theme = this.value;
+    }
+
+    // Toggle responsiveness
+    document.getElementById("responsive_settings_opt").onchange = function() {
+        UserSettings.responsive_mode = this.value;
+    }
+
+    // Custom Color Setting
+    document.getElementById("custom_color_opt").onchange = function() {
+        UserSettings.custom_colors_on = (parseInt(this.value, 10) === 2);
+    }
+
+    // Save Setting
+    document.getElementById("mousemiddle_settings_opt").onchange = function() {
+        UserSettings.mousemiddle_button = this.value;
+    }
+
+    document.getElementById("language_opt").onchange = function() {
+        UserSettings.app_language = this.value;
+    }
+
+    document.getElementById("starbattle_settings_opt").onchange = function() {
+        UserSettings.starbattle_dots = this.value;
+    }
+
+    document.getElementById("secondcolor_settings_opt").onchange = function() {
+        UserSettings.secondcolor = this.value;
+    }
+
     document.getElementById("sudoku_settings_normal_opt").onchange = function() {
         UserSettings.sudoku_normal_size = this.value;
     }
@@ -2214,6 +2250,14 @@ onload = function() {
 
     document.getElementById("auto_save_history_opt").onchange = function() {
         UserSettings.auto_save_history = this.value;
+    }
+
+    document.getElementById("start_grid_size_opt").onchange = function() {
+        UserSettings.start_grid_size = this.value;
+    }
+
+    document.getElementById("start_grid_type_opt").onchange = function() {
+        UserSettings.start_grid_type = this.value;
     }
 
     $(document).ready(function() {

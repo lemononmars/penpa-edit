@@ -5,7 +5,7 @@ type RawVariation = {
     status: "available" | "planned" | "infeasible" | "hidden";
     scratchGeneratable: boolean;
     inputType: {
-        categories: Array<"no-input" | "line" | "region" | "outside" | "shape">;
+        categories: Array<"no-input" | "line" | "region" | "outside" | "shape" | "cell" | "edge" | "intersection">;
         instructions: string[];
     };
     tags: string[];
@@ -41,14 +41,78 @@ function preferredRule(rules: Record<string, string>) {
     return stripRulePreamble(rules["9x9"] || rules["6x6"] || Object.values(rules)[0] || "");
 }
 
+function getMarkPosition(value: string, tags: string[], rule: string, name: string): "no-input" | "line" | "region" | "outside" | "cell" | "edge" | "intersection" {
+    const text = `${name} ${rule}`.toLowerCase();
+    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "touchy"].includes(value)) {
+        return "no-input";
+    }
+    if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector"].includes(value)) {
+        return "cell";
+    }
+    if (["quadmax", "quadmin"].includes(value)) {
+        return "intersection";
+    }
+    if (value === "coded") return "intersection";
+    if (value === "pencilmarks") return "cell";
+    if (["xydifference", "primesums", "twodigitprimenumbers"].includes(value)) return "edge";
+    if (value === "xivi") return "edge";
+    if (value === "clock") return "cell";
+    if (value === "slotmachine") return "cell";
+    if (["wheel", "little killer", "product little killer", "bouncing x-sums", "czech outsider"].includes(value)) {
+        return "outside";
+    }
+    if (["diagonal sum is nine", "diagonal tens"].includes(value)) {
+        return "intersection";
+    }
+    if (value === "distances") {
+        return "outside";
+    }
+    if (["productkiller", "solokiller"].includes(value)) return "cell";
+    if (value === "consecutive" || value === "evensumpairs") {
+        return "edge";
+    }
+    if (tags?.includes("region")) return "region";
+    if (tags?.includes("outside") || /outside (?:the )?grid|outside clue/.test(text)) {
+        return "outside";
+    }
+    if (/thermometer|thermo/.test(text)) return "cell";
+    if (/arrow/.test(text)) return "cell";
+    if (/cage|outlined region/.test(text)) return "cell";
+    if (/line|path|renban|palindrome/.test(text)) return "cell";
+    if (/between|average/.test(text)) {
+        if (/bar/.test(text)) return "edge";
+        if (/circle|dot/.test(text)) return "edge";
+        return "edge";
+    }
+    if (/intersection|four cells|2x2 area/.test(text)) return "intersection";
+    if (/shaded|colou?red|painted/.test(text)) return "cell";
+    if (/circle|dot/.test(text)) return "cell";
+    if (/square/.test(text)) return "cell";
+    return "cell";
+}
+
 const allVariations: Variation[] = variantMetadata.variants.map((item) => {
     const value = aliases[item.id] || item.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+    const rule = preferredRule(item.rules);
+    const categories = item.inputType.categories.map((c) => {
+        if (c === "shape") {
+            const pos = getMarkPosition(value, item.tags, rule, item.name);
+            if (pos === "edge") return "edge";
+            if (pos === "intersection") return "intersection";
+            return "cell";
+        }
+        return c;
+    }) as any;
     return {
         ...item,
         name: value === "anti king" ? "Anti King (No touch)" : item.name.replace(/\s+Sudoku\b/gi, "").trim(),
         rules: Object.fromEntries(Object.entries(item.rules).map(([size, rule]) => [size, stripRulePreamble(rule)])),
         value,
-        rule: preferredRule(item.rules)
+        rule,
+        inputType: {
+            ...item.inputType,
+            categories
+        }
     };
 });
 
@@ -195,7 +259,7 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "rossini") {
-        add("symbol", "arrow_N_B", 2, ["mo_symbol_lb", "ms3", "li_arrow_N"]);
+        add("symbol", "arrow_N_G", 2, ["mo_symbol_lb", "ms3", "li_arrow_N"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
     if (variation.value === "average") {
@@ -227,12 +291,20 @@ function genericSetting(variation: Variation) {
         add("symbol", "circle_SS", 2, ["mo_symbol_lb", "ms1", "ms1_circle", "li_circle_SS"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["little killer", "product little killer", "bouncing x-sums", "czech outsider", "framediagonal"].includes(variation.value)) {
+    if (["little killer", "product little killer", "bouncing x-sums", "czech outsider", "framediagonal", "pointingdifferents"].includes(variation.value)) {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
         add("symbol", "arrow_eight", 2, ["mo_symbol_lb", "ms3", "li_arrow_eight"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
-    if (["descriptivepairs", "outside", "outside234", "maximin", "minimax", "distances"].includes(variation.value)) {
+    if (variation.value === "descriptivepairs") {
+        add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
+    }
+    if (["distances", "missingdigit"].includes(variation.value)) {
+        add("number", "8", 1, ["mo_number_lb", "sub_number8_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
+    }
+    if (["outside", "outside234", "maximin", "minimax", "innerframesum", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers"].includes(variation.value)) {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
@@ -270,11 +342,7 @@ function genericSetting(variation: Variation) {
         add("symbol", "circle_L", 2, ["mo_symbol_lb", "ms1", "li_circle_L"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (variation.value === "pinnochio") {
-        add("surface", "", 1, ["mo_surface_lb"]);
-        add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
-        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
-    }
+
 
     if (variation.value === "alloddalleven") {
         add("surface", "", 1, ["mo_surface_lb"]);

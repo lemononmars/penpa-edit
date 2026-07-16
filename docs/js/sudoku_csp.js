@@ -1619,6 +1619,150 @@ var SudokuCSP = (function() {
                 }
                 return b1a9_possible;
             }
+            if (clue.relation === "innerframesum") {
+                var inner_sum = 0, inner_blanks = 0;
+                for (var inner_i = 1; inner_i <= 3; inner_i++) {
+                    var val = values[inner_i];
+                    if (val) inner_sum += val;
+                    else inner_blanks++;
+                }
+                return inner_sum <= clue.value && inner_sum + inner_blanks * SIZE >= clue.value && (inner_blanks > 0 || inner_sum === clue.value);
+            }
+            if (clue.relation === "missingdigit") {
+                var digits = String(clue.value).split("").map(Number).filter(function(d) { return d >= 1 && d <= SIZE; });
+                for (var miss_i = 0; miss_i < 3; miss_i++) {
+                    if (digits.indexOf(values[miss_i]) !== -1) return false;
+                }
+                return true;
+            }
+            if (clue.relation === "nextto9") {
+                var digits = String(clue.value).split("").map(Number).filter(function(d) { return d >= 1 && d <= SIZE; });
+                var nine_idx = values.indexOf(9);
+                if (nine_idx >= 0) {
+                    var neighborCells = [];
+                    if (nine_idx > 0) neighborCells.push(values[nine_idx - 1]);
+                    if (nine_idx < values.length - 1) neighborCells.push(values[nine_idx + 1]);
+                    
+                    var filledNeighbors = neighborCells.filter(Boolean);
+                    for (var i = 0; i < filledNeighbors.length; i++) {
+                        if (digits.indexOf(filledNeighbors[i]) === -1) return false;
+                    }
+                    
+                    var uniqueFilled = [];
+                    filledNeighbors.forEach(function(x) { if (uniqueFilled.indexOf(x) === -1) uniqueFilled.push(x); });
+                    if (uniqueFilled.length > digits.length) return false;
+                    
+                    if (filledNeighbors.length === neighborCells.length) {
+                        if (neighborCells.length !== digits.length) return false;
+                        for (var i = 0; i < digits.length; i++) {
+                            if (neighborCells.indexOf(digits[i]) === -1) return false;
+                        }
+                    }
+                    return true;
+                }
+                for (var nine_p = 0; nine_p < values.length; nine_p++) {
+                    if (values[nine_p] !== 0) continue;
+                    var neighborCells = [];
+                    if (nine_p > 0) neighborCells.push(values[nine_p - 1]);
+                    if (nine_p < values.length - 1) neighborCells.push(values[nine_p + 1]);
+                    if (neighborCells.length < digits.length) continue;
+                    
+                    var filledNeighbors = neighborCells.filter(Boolean);
+                    var ok = true;
+                    for (var i = 0; i < filledNeighbors.length; i++) {
+                        if (digits.indexOf(filledNeighbors[i]) === -1) { ok = false; break; }
+                    }
+                    if (!ok) continue;
+                    
+                    var uniqueFilled = [];
+                    filledNeighbors.forEach(function(x) { if (uniqueFilled.indexOf(x) === -1) uniqueFilled.push(x); });
+                    if (uniqueFilled.length > digits.length) continue;
+                    
+                    if (filledNeighbors.length === neighborCells.length) {
+                        if (neighborCells.length !== digits.length) continue;
+                        var matchAll = true;
+                        for (var i = 0; i < digits.length; i++) {
+                            if (neighborCells.indexOf(digits[i]) === -1) { matchAll = false; break; }
+                        }
+                        if (!matchAll) continue;
+                    }
+                    return true;
+                }
+                return false;
+            }
+            if (clue.relation === "outsideconsecutive") {
+                var min_consec = 0;
+                var max_consec = 0;
+                for (var c_i = 0; c_i < values.length - 1; c_i++) {
+                    var a = values[c_i];
+                    var b = values[c_i + 1];
+                    if (a && b) {
+                        if (Math.abs(a - b) === 1) {
+                            min_consec++;
+                            max_consec++;
+                        }
+                    } else {
+                        max_consec++;
+                    }
+                }
+                return clue.value >= min_consec && clue.value <= max_consec;
+            }
+            if (clue.relation === "outsidegreaterthan") {
+                var min_greater = 0;
+                var max_greater = 0;
+                for (var g_i = 0; g_i < values.length - 1; g_i++) {
+                    var a = values[g_i];
+                    var b = values[g_i + 1];
+                    if (a && b) {
+                        if (a > b) {
+                            min_greater++;
+                            max_greater++;
+                        }
+                    } else {
+                        max_greater++;
+                    }
+                }
+                return clue.value >= min_greater && clue.value <= max_greater;
+            }
+            if (clue.relation === "outsidekiller") {
+                var possible = false;
+                for (var k_i = 0; k_i < values.length - 1; k_i++) {
+                    var a = values[k_i];
+                    var b = values[k_i + 1];
+                    if (a && b) {
+                        if (a + b === clue.value) { possible = true; break; }
+                    } else if (a || b) {
+                        var val = a || b;
+                        var needed = clue.value - val;
+                        if (needed >= 1 && needed <= SIZE && needed !== val) { possible = true; break; }
+                    } else {
+                        var minSum = 1 + 2;
+                        var maxSum = SIZE + (SIZE - 1);
+                        if (clue.value >= minSum && clue.value <= maxSum) { possible = true; break; }
+                    }
+                }
+                return possible;
+            }
+            if (clue.relation === "parityskyscrapers") {
+                if (values.indexOf(0) >= 0) return true;
+                var visible = [];
+                var maxVal = 0;
+                for (var p_i = 0; p_i < values.length; p_i++) {
+                    var val = values[p_i];
+                    if (val > maxVal) {
+                        visible.push(val);
+                        maxVal = val;
+                    }
+                }
+                var oddCount = visible.filter(function(v) { return v % 2 !== 0; }).length;
+                var evenCount = visible.filter(function(v) { return v % 2 === 0; }).length;
+                return clue.value === oddCount || clue.value === evenCount;
+            }
+            if (clue.relation === "pointingdifferents") {
+                var uniqueVals = new Set(values.filter(Boolean));
+                var blanks = values.filter(function(v) { return !v; }).length;
+                return uniqueVals.size <= clue.value && uniqueVals.size + blanks >= clue.value;
+            }
             return true;
         }
     });

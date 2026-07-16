@@ -1587,11 +1587,17 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
     });
 
     ["little killer", "product little killer"].forEach(function(variant) {
-        const constraints = SudokuSolver.readConstraints(puzzle(variant, { pu_q: {
-            number: { 14: [50, 1, "1"] }, symbol: { 14: [6, "arrow_B_G", 2] }
-        } }));
-        assert.equal(constraints.outsideRelations[0].relation, variant);
-        assert.deepEqual(constraints.outsideRelations[0].cells.slice(0, 2), [{ row: 0, col: 0 }, { row: 1, col: 1 }]);
+        [
+            [6, "arrow_B_G", 2],
+            [[0, 0, 0, 0, 0, 1, 0, 0], "arrow_eight", 2]
+        ].forEach(function(arrow) {
+            const constraints = SudokuSolver.readConstraints(puzzle(variant, { pu_q: {
+                number: { 14: [50, 1, "1"] }, symbol: { 14: arrow }
+            } }));
+            assert.equal(constraints.outsideRelations[0].relation, variant);
+            assert.deepEqual(constraints.outsideRelations[0].cells.slice(0, 2),
+                [{ row: 0, col: 0 }, { row: 1, col: 1 }]);
+        });
     });
 
     const creasing = SudokuSolver.readConstraints(puzzle("creasing", {
@@ -2040,4 +2046,80 @@ test("validates new variants: faded kropki, first seen odd/even, max ascending, 
     ] }).solved, false);
 });
 
-
+test("validates new variants: inner frame sum, missing digit, next to 9, outside consecutive, outside greater than, outside killer, parity skyscrapers, pointing differents", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+    const firstRow = Array.from({ length: 9 }, (_, col) => ({ row: 0, col }));
+    const secondRow = Array.from({ length: 9 }, (_, col) => ({ row: 1, col }));
+    
+    // 1. inner frame sum: cells 2,3,4 of firstRow (3, 4, 6) sum to 13
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "innerframesum", cells: firstRow, value: 13 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "innerframesum", cells: firstRow, value: 14 }
+    ] }).solved, false);
+    
+    // 2. missing digit: 7 and 8 are missing from first three cells of firstRow (5, 3, 4)
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "missingdigit", cells: firstRow, value: 78 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "missingdigit", cells: firstRow, value: 75 }
+    ] }).solved, false);
+    
+    // 3. next to 9: in firstRow, 9 is at index 6. Immediate neighbors are 8 and 1.
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "nextto9", cells: firstRow, value: 18 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "nextto9", cells: firstRow, value: 19 }
+    ] }).solved, false);
+    
+    // 4. outside consecutive: in secondRow (6,7,2,1,9,5,3,4,8), consecutive adjacent pairs are (6,7), (2,1), (3,4). Count = 3.
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "outsideconsecutive", cells: secondRow, value: 3 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "outsideconsecutive", cells: secondRow, value: 4 }
+    ] }).solved, false);
+    
+    // 5. outside greater than: in secondRow (6,7,2,1,9,5,3,4,8), pairs where cells[i] > cells[i+1] are (7,2), (2,1), (9,5), (5,3). Count = 4.
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "outsidegreaterthan", cells: secondRow, value: 4 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "outsidegreaterthan", cells: secondRow, value: 3 }
+    ] }).solved, false);
+    
+    // 6. outside killer: in secondRow, adjacent pairs sum to 13 (6+7), 9 (7+2), 3 (2+1), 10 (1+9), 14 (9+5), 8 (5+3), 7 (3+4), 12 (4+8).
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "outsidekiller", cells: secondRow, value: 13 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "outsidekiller", cells: secondRow, value: 20 }
+    ] }).solved, false);
+    
+    // 7. parity skyscrapers: in secondRow (6,7,2,1,9,5,3,4,8), visible skyscrapers from left are 6, 7, 9. Odd visible = 2 (7, 9). Even visible = 1 (6).
+    // Clue can be either 2 (odd visible count) or 1 (even visible count)
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "parityskyscrapers", cells: secondRow, value: 2 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "parityskyscrapers", cells: secondRow, value: 1 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "parityskyscrapers", cells: secondRow, value: 3 }
+    ] }).solved, false);
+    
+    // 8. pointing differents: distinct values in firstRow = 9.
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "pointingdifferents", cells: firstRow, value: 9 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "pointingdifferents", cells: firstRow, value: 8 }
+    ] }).solved, false);
+});

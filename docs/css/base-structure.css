@@ -744,8 +744,16 @@ body textarea {
     align-items: stretch;
 }
 
+.sudoku-variant-title {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 8px;
+    border: 1px solid var(--greyLight);
+    border-radius: 4px 0 0 4px;
+    font-weight: bold;
+}
+
 .sudoku-variant-group .sudoku-variant-mode,
-.sudoku-variant-group .sudoku-variant-label,
 .sudoku-variant-group .sudoku-kropki-negative,
 .sudoku-variant-group .sudoku-xv-negative {
     border-top-right-radius: 0;

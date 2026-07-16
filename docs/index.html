@@ -18,21 +18,27 @@
         }
     </style>
     <!-- HTML Meta Tags -->
-    <title>Penpa+</title>
-    <meta name="description" content="Web application to create and solve Sudokus and Puzzles.">
+    <title>Sudotoku</title>
+    <meta name="description" content="A Sudoku setter and solver powered by Penpa+.">
     <!-- Facebook Meta Tags -->
     <meta property="og:url" content="https://swaroopg92.github.io/penpa-edit/">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Penpa+">
-    <meta property="og:description" content="Web application to create and solve Sudokus and Puzzles.">
-    <meta property="og:image" content="https://github.com/swaroopg92/penpa-edit/blob/master/docs/css/images/logo.png">
+    <meta property="og:site_name" content="Sudotoku">
+    <meta property="og:title" content="Sudotoku">
+    <meta property="og:description" content="A Sudoku setter and solver powered by Penpa+.">
+    <meta property="og:image" content="https://swaroopg92.github.io/penpa-edit/app-icon.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:image:alt" content="Sudotoku app icon">
     <!-- Twitter Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:card" content="summary">
     <meta property="twitter:domain" content="swaroopg92.github.io">
     <meta property="twitter:url" content="https://swaroopg92.github.io/penpa-edit/">
-    <meta name="twitter:title" content="Penpa+">
-    <meta name="twitter:description" content="Web application to create and solve Sudokus and Puzzles.">
-    <meta name="twitter:image" content="https://github.com/swaroopg92/penpa-edit/blob/master/docs/css/images/logo.png">
+    <meta name="twitter:title" content="Sudotoku">
+    <meta name="twitter:description" content="A Sudoku setter and solver powered by Penpa+.">
+    <meta name="twitter:image" content="https://swaroopg92.github.io/penpa-edit/app-icon.png">
+    <meta name="twitter:image:alt" content="Sudotoku app icon">
     <!-- HTML other tags -->
     <meta charset="utf-8"/>
     <meta name="robots" content="nofollow"/>
@@ -40,7 +46,7 @@
     <meta name="keywords" content="grid editor, pencil puzzle editor, logic puzzle solving, sudoku editor">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="./favicon.svg"/>
-    <link rel="apple-touch-icon" href="./css/images/logo.png"/>
+    <link rel="apple-touch-icon" href="./app-icon.png"/>
     <!-- Google Tag Manager -->
     <script>
         (function(w, d, s, l, i) {
@@ -1874,6 +1880,31 @@
                         <select name="enable_shortcuts" id="enable_shortcuts_opt">
                             <option value="1" selected="selected" class="lb_generic_on">ON</option>
                             <option value="2" class="lb_generic_off">OFF</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th colspan="2" class="modal-subheader" id="lb_settings_initial_grid">Initial Grid Settings</th>
+                </tr>
+                <tr>
+                    <td>
+                        <label id="lb_settings_start_grid_size">Starting Grid Size:</label>
+                    </td>
+                    <td>
+                        <select name="start_grid_size" id="start_grid_size_opt">
+                            <option value="9" selected="selected">9x9</option>
+                            <option value="6">6x6</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label id="lb_settings_start_grid_type">Starting Grid Type:</label>
+                    </td>
+                    <td>
+                        <select name="start_grid_type" id="start_grid_type_opt">
+                            <option value="blank" selected="selected">Blank Grid</option>
+                            <option value="generated">Generated Grid</option>
                         </select>
                     </td>
                 </tr>

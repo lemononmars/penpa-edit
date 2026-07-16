@@ -28,7 +28,10 @@
   "scrapedAliases": {
     "elimination": "eliminate",
     "disjointgroups": "disjoint",
-    "extraregions": "extraregion"
+    "extraregions": "extraregion",
+    "min-max": "minimax",
+    "minmax": "minimax",
+    "renban": "renbanregion"
   },
   "guides": {
     "classic": {
@@ -200,6 +203,56 @@
       "title": "Factor Lines",
       "rule": "Adjacent digits along the line must be factors or multiples of each other.",
       "usage": "Draw lines through cells."
+    },
+    "inner frame sum": {
+      "title": "Inner Frame Sum",
+      "rule": "Outside clues indicate the sum of the 2nd, 3rd, and 4th cells in that row or column in that direction.",
+      "usage": "Place number clues outside the grid."
+    },
+    "missing digit": {
+      "title": "Missing Digit",
+      "rule": "Outside clues indicate the digit that is missing from the first three cells in that row or column in that direction.",
+      "usage": "Place number clues outside the grid."
+    },
+    "next to 9": {
+      "title": "Next to 9",
+      "rule": "Outside clues indicate the sum of the immediate neighbors of the digit 9 in that row or column.",
+      "usage": "Place number clues outside the grid."
+    },
+    "outside consecutive": {
+      "title": "Outside Consecutive",
+      "rule": "Outside clues indicate the count of consecutive adjacent pairs in that row or column.",
+      "usage": "Place number clues outside the grid."
+    },
+    "outside greater than": {
+      "title": "Outside Greater Than",
+      "rule": "Outside clues indicate the count of neighboring cells in that row or column that contain a digit greater than their neighbor in that direction.",
+      "usage": "Place number clues outside the grid."
+    },
+    "outside killer": {
+      "title": "Outside Killer",
+      "rule": "Outside clues indicate the sum of at least one pair of neighboring cells in that row or column.",
+      "usage": "Place number clues outside the grid."
+    },
+    "parity skyscrapers": {
+      "title": "Parity Sky Scrapers",
+      "rule": "Outside clues indicate whether an odd or even number of skyscrapers are visible in that direction.",
+      "usage": "Place number clues outside the grid."
+    },
+    "pointing differents": {
+      "title": "Pointing Differents",
+      "rule": "Outside clues indicate the count of distinct digits along the diagonal starting in that direction.",
+      "usage": "Place diagonal arrow symbols outside the grid, and enter the count digits."
+    },
+    "renbanline": {
+      "title": "Renban (line)",
+      "rule": "Digits along each line must form a set of consecutive digits in any order.",
+      "usage": "Draw lines through cells."
+    },
+    "renbanregion": {
+      "title": "Renban (region)",
+      "rule": "Digits in each marked region must form a set of consecutive digits in any order.",
+      "usage": "Draw cages around cells."
     }
   },
   "icons": {
@@ -3148,7 +3201,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Numbers outside the grid represents sum of 2nd, 3rd and 4th digit in the corresponding direction."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -3819,23 +3872,6 @@
     },
     {
       "otherNames": "",
-      "id": "minmax",
-      "name": "Min-Max",
-      "rules": {
-        "9x9": "Apply classic sudoku rules. Each number outside the grid is the sum of the highest and lowest digit in the first three cells in the corresponding row or column."
-      },
-      "status": "planned",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "outside"
-        ],
-        "instructions": []
-      },
-      "tags": []
-    },
-    {
-      "otherNames": "",
       "id": "minesweeper",
       "name": "Minesweeper (Sudoku)",
       "rules": {
@@ -3900,7 +3936,7 @@
       "rules": {
         "9x9": "Place a digit from 0-9 in each empty cell. Digits in a row, column and 3x3 box must be different. The clues outside the grid indicate the digit that is not included in the corresponding row/column."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -4047,7 +4083,7 @@
       "rules": {
         "9x9": "Apply Classic Sudoku rules. Additionally, clues outside the grid indicate the digits that sit next to 9 in that row or column. These clues are given in increasing order."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -4125,7 +4161,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       }
@@ -4184,7 +4220,7 @@
       "scratchGeneratable": true,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       }
@@ -4654,7 +4690,7 @@
       "rules": {
         "9x9": "Follow classic sudoku rules. Numbers outside the grid tells the count of consecutive adjacent pairs in the particular row / column."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -4671,7 +4707,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. The signs outside the grid indicate how many inequality signs should be placed between neighbouring cells in the corresponding direction."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -4688,7 +4724,7 @@
       "rules": {
         "9x9": "Apply Classic Sudoku rules.\nAdditionally, the clues outside the grid indicate the sum of at least one pair of neighboring cells in that row or column."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -4806,7 +4842,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "line"
         ],
         "instructions": []
       }
@@ -4910,7 +4946,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Each digit represents the height of a building. The clues outside the grid indicate whether an odd (O) or even (E) number of buildings is visible from the corresponding direction. A taller building will hide any shorter buildings behind it."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -4998,8 +5034,8 @@
       }
     },
     {
-      "id": "pinnochio",
-      "name": "Pinnochio",
+      "id": "pinocchio",
+      "name": "Pinocchio",
       "rules": {
         "6x6": "Place a digit from 1 to 6 into each empty cell in the grid so that each digit appears exactly once in each row, column and 2x3 outlined box. Exactly one of the highlighted digits is a pinnochio and is incorrect.",
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. Exactly one of the highlighted digits is a pinnochio and is incorrect."
@@ -5009,32 +5045,10 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region",
-          "shape"
-        ],
-        "instructions": [
-          "Surface",
-          "Number · normal",
-          "Shade every clue cell, then enter its displayed digit; exactly one must be false."
-        ]
-      }
-    },
-    {
-      "otherNames": "",
-      "id": "pinocchio",
-      "name": "Pinocchio",
-      "rules": {
-        "9x9": "Apply classic sudoku rules. Three digits are written in a different layout. Two of these digits are correct, while the third one is incorrect."
-      },
-      "status": "planned",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
-      },
-      "tags": []
+      }
     },
     {
       "otherNames": "",
@@ -5149,7 +5163,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Numbers outside the grid indicate the number of different numbers placed in the cells in the corresponding diagonal direction."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -5583,11 +5597,31 @@
       "tags": []
     },
     {
-      "id": "renban",
-      "name": "Renban",
+      "id": "renbanline",
+      "name": "Renban (line)",
       "rules": {
-        "6x6": "Place a digit from 1 to 6 into each empty cell in the grid so that each digit appears exactly once in each row, column and 2x3 outlined box. Each marked region (or line) contains a set of consecutive digits. Digits do not repeat within a region (or line).",
-        "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. Each marked region (or line) contains a set of consecutive digits. Digits do not repeat within a region (or line)."
+        "6x6": "Place a digit from 1 to 6 into each empty cell in the grid so that each digit appears exactly once in each row, column and 2x3 outlined box. Each marked line contains a set of consecutive digits. Digits do not repeat within a line.",
+        "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. Each marked line contains a set of consecutive digits. Digits do not repeat within a line."
+      },
+      "tags": [
+        "consecutive",
+        "line"
+      ],
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "line"
+        ],
+        "instructions": []
+      }
+    },
+    {
+      "id": "renbanregion",
+      "name": "Renban (region)",
+      "rules": {
+        "6x6": "Place a digit from 1 to 6 into each empty cell in the grid so that each digit appears exactly once in each row, column and 2x3 outlined box. Each marked region contains a set of consecutive digits. Digits do not repeat within a region.",
+        "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. Each marked region contains a set of consecutive digits. Digits do not repeat within a region."
       },
       "tags": [
         "consecutive",
@@ -5858,7 +5892,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "line"
         ],
         "instructions": []
       }
@@ -6005,23 +6039,6 @@
       }
     },
     {
-      "otherNames": "Skyscraper Sudoku",
-      "id": "skyscrapers",
-      "name": "Skyscrapers",
-      "rules": {
-        "9x9": "Apply classic sudoku rules. Each digit represents the height of a building. The clues outside the grid indicate the number of buildings visible from the corresponding direction. A taller building will hide any shorter buildings behind it."
-      },
-      "status": "planned",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "outside"
-        ],
-        "instructions": []
-      },
-      "tags": []
-    },
-    {
       "otherNames": "",
       "id": "skyscrapersonarrows",
       "name": "Skyscrapers on arrows",
@@ -6108,8 +6125,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape",
-          "line"
+          "shape"
         ],
         "instructions": [
           "Shape · eight-direction arrow",
@@ -6475,8 +6491,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape",
-          "line"
+          "shape"
         ],
         "instructions": [
           "Shape · eight-direction arrow",
@@ -6968,7 +6983,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       }
@@ -7465,6 +7480,168 @@
         "instructions": []
       },
       "tags": []
+    },
+    {
+      "id": "antiking",
+      "name": "Anti King",
+      "rules": {
+        "9x9": "Apply classic sudoku rules. Equal digits may not be a chess king move apart."
+      },
+      "tags": [
+        "classiclookalike"
+      ],
+      "status": "available",
+      "scratchGeneratable": true,
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      }
+    },
+    {
+      "id": "innerframesum",
+      "name": "Inner Frame Sum",
+      "rules": {
+        "9x9": "Apply classic sudoku rules. Outside clues indicate the sum of the 2nd, 3rd, and 4th cells in that row or column in that direction."
+      },
+      "tags": [
+        "outside"
+      ],
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": []
+      }
+    },
+    {
+      "id": "missingdigit",
+      "name": "Missing Digit",
+      "rules": {
+        "9x9": "Apply classic sudoku rules. Outside clues indicate the digit that is missing from the first three cells in that row or column in that direction."
+      },
+      "tags": [
+        "outside"
+      ],
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": []
+      }
+    },
+    {
+      "id": "nextto9",
+      "name": "Next to 9",
+      "rules": {
+        "9x9": "Apply classic sudoku rules. Outside clues indicate the sum of the immediate neighbors of the digit 9 in that row or column."
+      },
+      "tags": [
+        "outside"
+      ],
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": []
+      }
+    },
+    {
+      "id": "outsideconsecutive",
+      "name": "Outside Consecutive",
+      "rules": {
+        "9x9": "Apply classic sudoku rules. Outside clues indicate the count of consecutive adjacent pairs in that row or column."
+      },
+      "tags": [
+        "outside"
+      ],
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": []
+      }
+    },
+    {
+      "id": "outsidegreaterthan",
+      "name": "Outside Greater Than",
+      "rules": {
+        "9x9": "Apply classic sudoku rules. Outside clues indicate the count of neighboring cells in that row or column that contain a digit greater than their neighbor in that direction."
+      },
+      "tags": [
+        "outside"
+      ],
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": []
+      }
+    },
+    {
+      "id": "outsidekiller",
+      "name": "Outside Killer",
+      "rules": {
+        "9x9": "Apply classic sudoku rules. Outside clues indicate the sum of at least one pair of neighboring cells in that row or column."
+      },
+      "tags": [
+        "outside"
+      ],
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": []
+      }
+    },
+    {
+      "id": "parityskyscrapers",
+      "name": "Parity Sky Scrapers",
+      "rules": {
+        "9x9": "Apply classic sudoku rules. Outside clues indicate whether an odd or even number of skyscrapers are visible in that direction."
+      },
+      "tags": [
+        "outside"
+      ],
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": []
+      }
+    },
+    {
+      "id": "pointingdifferents",
+      "name": "Pointing Differents",
+      "rules": {
+        "9x9": "Apply classic sudoku rules. Outside clues indicate the count of distinct digits along the diagonal starting in that direction."
+      },
+      "tags": [
+        "outside"
+      ],
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": []
+      }
     }
   ]
 }
