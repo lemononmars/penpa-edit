@@ -1073,6 +1073,9 @@
       if (!moveLegacyNodes()) return false;
       const settings = (window as any).UserSettings;
       if (settings) {
+        if (settings.primary_color && settings.primary_color !== "blue") {
+          document.documentElement.classList.add("theme-" + settings.primary_color);
+        }
         if (settings.color_theme === 1) {
           darkTheme = true;
         } else if (settings.color_theme === 0) {
@@ -1960,9 +1963,9 @@
     opacity: 0.7;
   }
   button.active {
-    background: #176fae !important;
+    background: var(--primary-color) !important;
     color: white !important;
-    border-color: #176fae !important;
+    border-color: var(--primary-color) !important;
   }
   .variant-picker {
     position: relative;
@@ -1989,8 +1992,8 @@
     text-align: left;
   }
   .variant-search-control:focus-within {
-    border-color: #176fae;
-    box-shadow: 0 0 0 3px rgba(23, 111, 174, 0.12);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.12);
   }
   .variant-search-control input {
     width: 100%;
@@ -2067,8 +2070,8 @@
   }
   .variant-menu .variant-tabs button.active {
     color: #fff;
-    border-color: #176fae;
-    background: #176fae;
+    border-color: var(--primary-color);
+    background: var(--primary-color);
   }
   .variant-menu button {
     display: grid;
@@ -2085,8 +2088,8 @@
   }
   .variant-menu button:hover,
   .variant-menu button.current {
-    background: #eaf4fb;
-    color: #0d6099;
+    background: var(--primary-color-light);
+    color: var(--primary-color-dark);
   }
   .variant-menu > button:disabled {
     color: #94a0a8;
@@ -2218,7 +2221,7 @@
   .action-list button:not([role="menuitem"]) span {
     width: 22px;
     text-align: center;
-    color: #176fae;
+    color: var(--primary-color);
     font-size: 17px;
   }
   .log-host {
@@ -2376,7 +2379,7 @@
     text-underline-offset: 3px;
   }
   .rule-wiki-link:hover {
-    color: #176fae;
+    color: var(--primary-color);
     text-decoration-color: currentColor;
   }
   .tool-help p {
@@ -2399,7 +2402,7 @@
     padding: 3px 9px;
     border: 1px solid #bdc8d3;
     border-radius: 5px;
-    color: #176fae;
+    color: var(--primary-color);
     background: #fff;
     font-size: 10px;
     font-weight: 700;
@@ -2442,8 +2445,8 @@
   .tool-input-panel button:hover,
   .tool-input-panel button.selected {
     color: #fff;
-    border-color: #176fae;
-    background: #176fae;
+    border-color: var(--primary-color);
+    background: var(--primary-color);
   }
   .tool-input-panel button.panel-action {
     color: #8a3b3b;
@@ -2513,13 +2516,13 @@
     white-space: nowrap;
   }
   :global(.svelte-home .legacy-variant-host button:hover) {
-    border-color: #176fae !important;
+    border-color: var(--primary-color) !important;
     background: #eef7fd !important;
   }
   :global(.svelte-home .legacy-variant-host button.active) {
     color: #fff !important;
-    border-color: #176fae !important;
-    background: #176fae !important;
+    border-color: var(--primary-color) !important;
+    background: var(--primary-color) !important;
   }
   :global(.svelte-home .sudoku-variant-group) {
     --variant-icon: "◇";
@@ -2573,7 +2576,7 @@
   :global(.svelte-home .sudoku-variant-group .sudoku-variant-title::before) {
     content: var(--variant-icon);
     margin-right: 6px;
-    color: #176fae;
+    color: var(--primary-color);
     font-size: 15px;
   }
   :global(.svelte-home .sudoku-variant-tools > .sudoku-variant-mode::before) {
@@ -2694,13 +2697,13 @@
     padding: 0 8px;
     border: 1px solid #bfcad4;
     border-radius: 5px;
-    color: #176fae;
+    color: var(--primary-color);
     background: #fff;
   }
   :global(.svelte-home .log-host #sudoku_auto_solver.active) {
     color: #fff;
-    border-color: #176fae;
-    background: #176fae;
+    border-color: var(--primary-color);
+    background: var(--primary-color);
   }
   :global(.svelte-home #sudoku-solver-status) {
     display: inline-flex;
@@ -2777,10 +2780,10 @@
     min-width: 96px;
     min-height: 34px;
     margin-top: 4px;
-    border: 1px solid #176fae;
+    border: 1px solid var(--primary-color);
     border-radius: 6px;
     color: #fff;
-    background: #176fae;
+    background: var(--primary-color);
     font-weight: 700;
   }
   .busy-pulse {
@@ -2793,7 +2796,7 @@
     width: 8px;
     height: 8px;
     border-radius: 3px;
-    background: #176fae;
+    background: var(--primary-color);
     animation: busy-pulse 1s ease-in-out infinite;
   }
   .busy-pulse i:nth-child(2) {
@@ -2869,8 +2872,8 @@
     white-space: nowrap;
   }
   .action-menu button:hover {
-    color: #0d6099;
-    background: #eaf4fb;
+    color: var(--primary-color-dark);
+    background: var(--primary-color-light);
   }
   .action-list button:not([role="menuitem"]) {
     min-width: 0;
@@ -2901,7 +2904,7 @@
     margin: 0 0 8px;
   }
   .info-copy a {
-    color: #176fae;
+    color: var(--primary-color);
     font-weight: 700;
     text-decoration: none;
   }
@@ -2967,9 +2970,9 @@
   }
   :global(.svelte-home .modal .nb_button input[type="button"]:hover),
   :global(.svelte-home .modal .nb_button button:hover) {
-    border-color: #176fae;
-    color: #0d6099;
-    background: #eaf4fb;
+    border-color: var(--primary-color);
+    color: var(--primary-color-dark);
+    background: var(--primary-color-light);
   }
   :global(.svelte-home .modal input[type="text"]),
   :global(.svelte-home .modal input[type="number"]),
@@ -2986,8 +2989,8 @@
   :global(.svelte-home .modal input:focus),
   :global(.svelte-home .modal textarea:focus),
   :global(.svelte-home .modal select:focus) {
-    border-color: #176fae;
-    outline: 3px solid rgba(23, 111, 174, 0.13);
+    border-color: var(--primary-color);
+    outline: 3px solid rgba(var(--primary-color-rgb), 0.13);
   }
   :global(.svelte-home .modal-subheader) {
     padding: 7px 9px;
@@ -3070,8 +3073,8 @@
       .svelte-home .legacy-controls-host input[type="radio"]:checked + label
     ) {
     color: #fff;
-    border-color: #176fae;
-    background: #176fae;
+    border-color: var(--primary-color);
+    background: var(--primary-color);
   }
   :global(
       .svelte-home
@@ -3079,7 +3082,7 @@
         input[type="radio"]:focus-visible
         + label
     ) {
-    outline: 3px solid rgba(23, 111, 174, 0.18);
+    outline: 3px solid rgba(var(--primary-color-rgb), 0.18);
   }
   :global(.svelte-home .legacy-controls-host #mode_symbol .nav),
   :global(.svelte-home .legacy-controls-host #mode_combi .nav) {
@@ -3240,8 +3243,8 @@
   }
   .studio-modal-actions button.primary {
     color: #fff;
-    border-color: #176fae;
-    background: #176fae;
+    border-color: var(--primary-color);
+    background: var(--primary-color);
   }
   :global(.svelte-home .swal2-container) {
     z-index: 1300;
@@ -3397,7 +3400,7 @@
   .studio-shell.dark .tool-input-panel button.selected {
     color: #fff;
     border-color: #2b8bc7;
-    background: #176fae;
+    background: var(--primary-color);
   }
   .studio-shell.dark .action-group {
     border-color: #40505f;
@@ -3455,7 +3458,7 @@
     :global(.legacy-controls-host input[type="radio"]:checked + label) {
     color: #fff;
     border-color: #2b8bc7;
-    background: #176fae;
+    background: var(--primary-color);
   }
   .studio-shell.dark :global(.legacy-controls-host #mode_symbol .nav li > span),
   .studio-shell.dark :global(.legacy-controls-host #mode_combi .nav li > span),
@@ -3497,9 +3500,9 @@
         color 0.2s;
     }
     .mobile-header button.active {
-      background: #176fae;
+      background: var(--primary-color);
       color: #fff;
-      border-color: #176fae;
+      border-color: var(--primary-color);
     }
     .studio-shell {
       display: flex;
@@ -3675,7 +3678,7 @@
       padding: 4px 9px;
       border: 1px solid #bdc8d3;
       border-radius: 5px;
-      color: #176fae;
+      color: var(--primary-color);
       background: #fff;
       font-size: 10px;
       font-weight: 700;
@@ -3718,9 +3721,9 @@
         color 0.2s;
     }
     .mobile-header-row button.active {
-      background: #176fae;
+      background: var(--primary-color);
       color: #fff;
-      border-color: #176fae;
+      border-color: var(--primary-color);
     }
     .mobile-header-row.solver-row {
       display: flex;
@@ -3749,9 +3752,9 @@
       cursor: pointer;
     }
     .solver-btn.active {
-      background: #176fae !important;
+      background: var(--primary-color) !important;
       color: #fff !important;
-      border-color: #176fae !important;
+      border-color: var(--primary-color) !important;
     }
     .solver-status {
       flex: 1;
@@ -3820,9 +3823,9 @@
     color: #263443;
   }
   .mobile-solver-toggle button.active {
-    background: #176fae;
+    background: var(--primary-color);
     color: white;
-    border-color: #176fae;
+    border-color: var(--primary-color);
   }
   .mobile-solver-log {
     display: flex;
@@ -3867,7 +3870,7 @@
     border: 1px solid #bfcad4;
     border-radius: 4px;
     background: #f7f9fb;
-    color: #176fae;
+    color: var(--primary-color);
   }
   .full-log-box {
     margin: 6px 0 0 0;
@@ -3900,8 +3903,8 @@
     color: #dce5ec;
   }
   .studio-shell.dark .mobile-solver-toggle button.active {
-    background: #176fae;
-    border-color: #176fae;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
     color: white;
   }
   .studio-shell.dark .expand-btn {
@@ -3929,9 +3932,9 @@
   }
   :global(html:not(.dark) .modal .nb_button input[type="button"]:hover),
   :global(html:not(.dark) .modal .nb_button button:hover) {
-    border-color: #176fae !important;
-    color: #0d6099 !important;
-    background: #eaf4fb !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color-dark) !important;
+    background: var(--primary-color-light) !important;
   }
   :global(html:not(.dark) .modal input[type="text"]),
   :global(html:not(.dark) .modal textarea),
@@ -3970,7 +3973,7 @@
   :global(html.dark .modal .nb_button button:hover) {
     border-color: #2b8bc7 !important;
     color: #fff !important;
-    background: #176fae !important;
+    background: var(--primary-color) !important;
   }
   :global(html.dark .modal input[type="text"]),
   :global(html.dark .modal textarea),
@@ -4033,8 +4036,8 @@
     background: #263340 !important;
   }
   .studio-shell.dark .variant-tabs button.active {
-    background: #176fae !important;
-    border-color: #176fae !important;
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
     color: #fff !important;
   }
   .studio-shell.dark .variant-menu button[role="menuitem"] {
@@ -4046,7 +4049,7 @@
     color: #fff !important;
   }
   .studio-shell.dark .variant-menu button[role="menuitem"].current {
-    background: #176fae !important;
+    background: var(--primary-color) !important;
     color: #fff !important;
   }
   .studio-shell.dark .variant-rule-preview {

@@ -217,3 +217,39 @@ i { font-style: italic; }
   margin-top: 40px;
   font-style: italic;
 }
+
+:root {
+  /* Default to Blue */
+  --primary-color: #176fae;
+  --primary-color-dark: #0d6099;
+  --primary-color-light: #eaf4fb;
+  --primary-color-rgb: 23, 111, 174;
+}
+
+html.theme-green {
+  --primary-color: #208020;
+  --primary-color-dark: #166016;
+  --primary-color-light: #e8f4e8;
+  --primary-color-rgb: 32, 128, 32;
+}
+
+html.theme-orange {
+  --primary-color: #e67300;
+  --primary-color-dark: #b35900;
+  --primary-color-light: #fcece0;
+  --primary-color-rgb: 230, 115, 0;
+}
+
+html.theme-pink {
+  --primary-color: #d147a3;
+  --primary-color-dark: #a32b7a;
+  --primary-color-light: #fae8f4;
+  --primary-color-rgb: 209, 71, 163;
+}
+
+html.theme-grey {
+  --primary-color: #66707a;
+  --primary-color-dark: #4d555c;
+  --primary-color-light: #eff1f2;
+  --primary-color-rgb: 102, 112, 122;
+}
