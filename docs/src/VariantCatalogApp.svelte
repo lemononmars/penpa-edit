@@ -23,7 +23,7 @@
     );
     if (themeCookie) {
       const val = themeCookie.split("=")[1];
-      darkTheme = val === "1";
+      darkTheme = val === "2";
     }
     document.documentElement.classList.toggle("dark", darkTheme);
   });

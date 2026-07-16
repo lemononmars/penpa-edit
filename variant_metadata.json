@@ -1,6 +1,7 @@
 {
   "version": 2,
   "aliases": {
+    "antiking": "anti king",
     "antidiagonal": "anti diagonal",
     "antiknight": "anti knight",
     "battenburg": "battenburg",
@@ -159,8 +160,8 @@
     },
     "distances": {
       "title": "Distances",
-      "rule": "Outside clues are of the form 'X-Y:Z', which indicates that digit X comes before digit Y and the distance between them is exactly Z cells.",
-      "usage": "Click an outside clue cell and type its X-Y:Z clue (e.g. 2-5:3)."
+      "rule": "Clues outside the grid indicate the distance (in steps) between the digits in the corresponding row or column. Digits must be placed in order of appearance.",
+      "usage": "Click an outside clue cell and type its X-Y:Z clue (e.g. 2-5:4)."
     },
     "faded kropki": {
       "title": "Faded Kropki",
@@ -459,8 +460,8 @@
           "line"
         ],
         "instructions": [
-          "Line · normal",
-          "Draw every alternating stripe as a normal line."
+          "Line · diagonal · grey",
+          "Draw every alternating stripe as a grey diagonal-style line."
         ]
       }
     },
@@ -2779,11 +2780,11 @@
       "rules": {
         "9x9": "Apply classic sudoku rules.\nA circle marked at the intersection of a 2×2 block of cells indicates that numbers placed in these cells are either all odd or all even. A square marked at the intersection of a 2×2 block of cells indicates that exactly two numbers placed in these cells are odd, and exactly two numbers are even."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       },
@@ -3192,11 +3193,11 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. For each pair of adjacent boxes, the inequality relationship between three pairs of numbers across the box boundary is the same."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       },
@@ -3944,7 +3945,7 @@
       "rules": {
         "9x9": "Place a digit from 0-9 in each empty cell. Digits in a row, column and 3x3 box must be different. The clues outside the grid indicate the digit that is not included in the corresponding row/column."
       },
-      "status": "available",
+      "status": "planned",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -4195,23 +4196,7 @@
         "instructions": []
       }
     },
-    {
-      "otherNames": "Untouchable Sudoku",
-      "id": "notouch",
-      "name": "No Touch",
-      "rules": {
-        "9x9": "Apply classic sudoku rules. Equal digits must not touch each other diagonally."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "shape"
-        ],
-        "instructions": []
-      },
-      "tags": []
-    },
+
     {
       "id": "nonconsecutive",
       "name": "Nonconsecutive",
@@ -4572,11 +4557,11 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. If a circle is given between two adjacent cells, then the difference in those cells must be 1 or 2. Not all circles are given; adjacent cells without a circle may contain either consecutive digits, digits whose difference is 2 or other non-consecutive digits."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -5053,9 +5038,12 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "no-input"
+          "cell"
         ],
-        "instructions": []
+        "instructions": [
+          "Number · normal · style 0",
+          "Enter every highlighted candidate digit directly in its cell."
+        ]
       }
     },
     {
@@ -5220,9 +5208,9 @@
       "id": "positionsums",
       "name": "Position Sums",
       "rules": {
-        "9x9": "Apply classic sudoku rules. External clues give information relating to the first two digits (called A and B) in the corresponding row or column. Clues next to the grid give the sum of A and B. Clues in the grey band further outside the grid give the sum of the digits in positions A and B."
+        "9x9": "Apply classic sudoku rule. External clues give information relating to the first two digits (called A and B) in the corresponding row or column. Clues next to the grid give the sum of A and B. Clues in the grey band further outside the grid give the sum of the digits in positions A and B."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -5318,7 +5306,11 @@
         "categories": [
           "outside"
         ],
-        "instructions": []
+        "instructions": [
+          "Number · M",
+          "Arrow · Eight directions",
+          "Enter each product in the outside margin and place an arrow in the same cell to set its direction."
+        ]
       }
     },
     {
@@ -5382,7 +5374,7 @@
           "shape"
         ],
         "instructions": [
-          "Number · normal",
+          "Number · M",
           "Shape · diagonal arrow",
           "Place the product and its arrow on the same outside cell."
         ]
@@ -5743,11 +5735,11 @@
       "rules": {
         "9x9": "The sum of four cells adjacent to a grey one is the same in the whole grid."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6606,7 +6598,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Additionally, the clues outside the grid indicate all numbers placed in the corresponding direction that are the sum of the numbers placed in the two neighbouring cells in that direction, e.g. 132. If a number is not clued outside the grid, then it must not be the sum of its two neighbours in that direction."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6640,7 +6632,7 @@
       "rules": {
         "9x9": "Place a number from 1-9 in each empty cell in the grid such that each row, column and marked 3×3 box contains each number exactly once. Each number represents the height of a building. The clues outside the grid indicate the sum of buildings visible from the corresponding direction. A taller building will hide any shorter buildings behind it."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6768,11 +6760,11 @@
       "rules": {
         "9x9": "Apply Classic Sudoku rules.\nAdditionally, if a gray bar is given between two adjacent cells, then the two digits in those cells sum to ten or eleven. If a gray bar is not given, the two digits cannot sum to ten or eleven."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -6785,11 +6777,11 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Number between a pair of adjacent cell indicates the number of the tens position of the product of the numbers placed in these cells (e.g. if 3 and 4 are placed in the cells, their product is 12 and the clue would be 1)."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -7056,7 +7048,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Each row is divided into 3 parts. The 1st part is a 4-digit number, the 2nd part (shaded) is a 3-digit number and the 3rd part is a 2-digit number. The sum of these three numbers is given outside the grid in the corresponding row. Not all outside clues may be given."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -7136,15 +7128,15 @@
     {
       "otherNames": "",
       "id": "uniquerectangles",
-      "name": "Unique rectangles",
+      "name": "Unique Rectangles",
       "rules": {
         "9x9": "Follow classic sudoku rules. If any four cells in the grid lays in exactly two rows and two columns, there should be more than two different digits in them."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       },
@@ -7354,7 +7346,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Clues outside the grid indicate the exact average of the first X digits seen from that side, where X is the first digit from that side."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [

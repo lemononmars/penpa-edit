@@ -7901,6 +7901,13 @@ class Puzzle {
         } else if (edit_mode === "symbol") {
             if (str_num.indexOf(key) != -1) {
                 const symbolname = this.mode[this.mode.qa].symbol[0];
+                if (this.activeSudokuVariant === "teneleven" && symbolname === "bars_G" && this.isKropkiEdge(this.cursol)) {
+                    const edgeCells = this.point[this.cursol].neighbor
+                        .filter((cell) => this.centerlist.includes(cell));
+                    // The bar follows the shared edge: vertical between cells in
+                    // the same row, horizontal between cells in the same column.
+                    key = this.point[edgeCells[0]].y === this.point[edgeCells[1]].y ? "1" : "2";
+                }
                 if (this[this.mode.qa].symbol[this.cursol]) {
                     if (this[this.mode.qa].symbol[this.cursol][0] === parseInt(key, 10) && this[this.mode.qa].symbol[this.cursol][1] === symbolname) {
                         this.key_space(); // Delete if the contents are the same

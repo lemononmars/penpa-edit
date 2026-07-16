@@ -134,7 +134,8 @@ Object.entries(scrapedAliases).forEach(([alias, canonical]) => {
     if (target) variationByValue.set(alias, target);
 });
 export const outsideVariationValues = new Set(variations.filter((item) =>
-    item.value !== "xydifference" && (item.tags?.includes("outside") || /outside the grid/i.test(item.rule))
+    item.value !== "xydifference" && (item.inputType.categories.includes("outside") ||
+        item.tags?.includes("outside") || /outside the grid/i.test(item.rule))
 ).map((item) => item.value));
 
 function genericSetting(variation: Variation) {
@@ -236,7 +237,7 @@ function genericSetting(variation: Variation) {
         if (variation.value === "productkiller") add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["bust", "xsums", "numberedrooms", "sumframe", "productframe", "edgedifference", "fullrank",
+    if (["bust", "xsums", "numberedrooms", "sumframe", "edgedifference", "fullrank",
         "outsideparity", "parityparty", "serbianframe", "median", "ascendingstarters",
         "before9", "before1after9"].includes(variation.value)) {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
@@ -291,8 +292,10 @@ function genericSetting(variation: Variation) {
         add("symbol", "circle_SS", 2, ["mo_symbol_lb", "ms1", "ms1_circle", "li_circle_SS"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["little killer", "product little killer", "bouncing x-sums", "czech outsider", "framediagonal", "pointingdifferents"].includes(variation.value)) {
-        add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
+    if (["little killer", "product little killer", "productframe", "bouncing x-sums", "czech outsider", "framediagonal", "pointingdifferents"].includes(variation.value)) {
+        const mediumProduct = variation.value === "product little killer" || variation.value === "productframe";
+        add("number", mediumProduct ? "6" : "1", 1,
+            mediumProduct ? ["mo_number_lb", "sub_number6_lb"] : ["mo_number_lb", "sub_number1_lb"]);
         add("symbol", "arrow_eight", 2, ["mo_symbol_lb", "ms3", "li_arrow_eight"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
@@ -300,7 +303,11 @@ function genericSetting(variation: Variation) {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
-    if (["distances", "missingdigit"].includes(variation.value)) {
+    if (variation.value === "distances") {
+        add("number", "6", 1, ["mo_number_lb", "sub_number6_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
+    }
+    if (variation.value === "missingdigit") {
         add("number", "8", 1, ["mo_number_lb", "sub_number8_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }

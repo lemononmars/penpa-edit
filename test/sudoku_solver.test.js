@@ -1591,14 +1591,132 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
             [6, "arrow_B_G", 2],
             [[0, 0, 0, 0, 0, 1, 0, 0], "arrow_eight", 2]
         ].forEach(function(arrow) {
-            const constraints = SudokuSolver.readConstraints(puzzle(variant, { pu_q: {
-                number: { 14: [50, 1, "1"] }, symbol: { 14: arrow }
-            } }));
-            assert.equal(constraints.outsideRelations[0].relation, variant);
-            assert.deepEqual(constraints.outsideRelations[0].cells.slice(0, 2),
-                [{ row: 0, col: 0 }, { row: 1, col: 1 }]);
+            ["1", "10"].forEach(function(numberMode) {
+                const constraints = SudokuSolver.readConstraints(puzzle(variant, { pu_q: {
+                    number: { 14: [50, 1, numberMode] }, symbol: { 14: arrow }
+                } }));
+                assert.equal(constraints.outsideRelations[0].relation, variant);
+                assert.deepEqual(constraints.outsideRelations[0].cells.slice(0, 2),
+                    [{ row: 0, col: 0 }, { row: 1, col: 1 }]);
+            });
         });
     });
+
+    const uniqueRectangles = SudokuSolver.readConstraints(puzzle("uniquerectangles"));
+    assert.equal(uniqueRectangles.uniqueRectangles.length, 1);
+    assert.equal(uniqueRectangles.supported.includes("uniquerectangles"), true);
+
+    const sumSkyscrapers = SudokuSolver.readConstraints(puzzle("sumskyscrapers", {
+        pu_q: { number: { 15: [35, 1, "10"] } }
+    }));
+    assert.equal(sumSkyscrapers.sumskyscrapers[0].clue, 35);
+    assert.deepEqual(sumSkyscrapers.sumskyscrapers[0].cells.slice(0, 2),
+        [{ row: 0, col: 0 }, { row: 1, col: 0 }]);
+
+    const sumSandwich = SudokuSolver.readConstraints(puzzle("sumsandwich", {
+        pu_q: { number: { 27: [19, 1, "10"] } }
+    }));
+    const leftSumSandwich = sumSandwich.sumsandwiches.find((clue) =>
+        clue.cells[0].row === 0 && clue.cells[0].col === 0 && clue.cells[1].col === 1);
+    assert.deepEqual(leftSumSandwich.sequence, [1, 9]);
+    assert.deepEqual(leftSumSandwich.cells.slice(0, 2),
+        [{ row: 0, col: 0 }, { row: 0, col: 1 }]);
+    assert.equal(sumSandwich.sumsandwiches.length, 36);
+
+    const positionSums = SudokuSolver.readConstraints(puzzle("positionsums", {
+        nx0: 15, inset: 4, space: [2, 0, 2, 0],
+        pu_q: { number: {
+            34: [11, 1, "10"], 49: [8, 1, "10"],
+            62: [10, 1, "10"], 63: [9, 1, "10"]
+        } }
+    }));
+    assert.deepEqual(positionSums.outsideRelations[0], {
+        relation: "positionsums",
+        firstTwoSum: 8,
+        indexedDigitsSum: 11,
+        cells: Array.from({ length: 9 }, (_, row) => ({ row, col: 0 }))
+    });
+    assert.deepEqual(positionSums.outsideRelations[1], {
+        relation: "positionsums",
+        firstTwoSum: 9,
+        indexedDigitsSum: 10,
+        cells: Array.from({ length: 9 }, (_, col) => ({ row: 0, col }))
+    });
+    const positionInnerOnly = SudokuSolver.readConstraints(puzzle("positionsums", {
+        nx0: 15, inset: 4, space: [2, 0, 2, 0], pu_q: { number: { 49: [8, 1, "10"] } }
+    }));
+    assert.equal(positionInnerOnly.outsideRelations[0].firstTwoSum, 8);
+    assert.equal(positionInnerOnly.outsideRelations[0].indexedDigitsSum, null);
+    const positionOuterOnly = SudokuSolver.readConstraints(puzzle("positionsums", {
+        nx0: 15, inset: 4, space: [2, 0, 2, 0], pu_q: { number: { 34: [11, 1, "10"] } }
+    }));
+    assert.equal(positionOuterOnly.outsideRelations[0].firstTwoSum, null);
+    assert.equal(positionOuterOnly.outsideRelations[0].indexedDigitsSum, 11);
+
+    const edgePoint = { 300: { neighbor: [28, 29] } };
+    const differencePair = SudokuSolver.readConstraints(puzzle("oneortwodifferencepairs", {
+        point: edgePoint, pu_q: { symbol: { 300: [1, "circle_SS", 2] } }
+    }));
+    assert.equal(differencePair.edgeRelations[0].relation, "oneortwodifferencepairs");
+    assert.equal(differencePair.kropki.length, 0, "the shared circle is not also parsed as a Kropki dot");
+
+    const tenEleven = SudokuSolver.readConstraints(puzzle("teneleven", {
+        point: edgePoint, pu_q: { symbol: { 300: [1, "bars_G", 2] } }
+    }));
+    assert.equal(tenEleven.edgeRelations.some((clue) => clue.relation === "teneleven"), true);
+    assert.equal(tenEleven.edgeRelations.some((clue) => clue.relation === "notTenEleven"), true);
+
+    const tensProduct = SudokuSolver.readConstraints(puzzle("tenspositionproducts", {
+        point: edgePoint, pu_q: { number: { 300: [2, 6, "5"] } }
+    }));
+    assert.equal(tensProduct.edgeRelations[0].target, 2);
+
+    const distances = SudokuSolver.readConstraints(puzzle("distances", {
+        pu_q: { number: { 15: ["2-5:4", 1, "6"] } }
+    }));
+    assert.deepEqual(distances.outsideRelations[0].value, { x: 2, y: 5, z: 4 });
+
+    const fullOrHalf = SudokuSolver.readConstraints(puzzle("fullorhalf", {
+        point: { 300: { neighbor: [28, 29, 41, 42] } },
+        pu_q: { symbol: { 300: [1, "square_SS", 2] } }
+    }));
+    assert.equal(fullOrHalf.quadRelations[0].kind, "square");
+
+    const sameSum = SudokuSolver.readConstraints(puzzle("samesum", {
+        pu_q: { surface: { 28: 1 } }
+    }));
+    assert.equal(sameSum.sameSumGroups[0][0].length, 2, "a shaded corner cell uses its in-grid neighbours");
+
+    const pinocchio = SudokuSolver.readConstraints(puzzle("pinocchio", {
+        pu_q: { number: { 28: [5, 0, "1"] } }
+    }));
+    assert.equal(pinocchio.cellRelations[0].relation, "pinnochio");
+
+    const xAverage = SudokuSolver.readConstraints(puzzle("xaverage", {
+        pu_q: { number: { 15: [5, 1, "1"] } }
+    }));
+    assert.equal(xAverage.outsideRelations[0].relation, "xaverage");
+
+    const tripleSum = SudokuSolver.readConstraints(puzzle("triplesum", {
+        pu_q: { number: { 27: [6147, 1, "6"] } }
+    }));
+    assert.equal(tripleSum.outsideRelations[0].value, 6147);
+
+    const productFrame = SudokuSolver.readConstraints(puzzle("productframe", {
+        pu_q: { number: { 14: [120, 1, "6"] }, symbol: {
+            14: [[0, 0, 0, 0, 0, 1, 0, 0], "arrow_eight", 2]
+        } }
+    }));
+    assert.equal(productFrame.outsideRelations[0].value, 120);
+    assert.deepEqual(productFrame.outsideRelations[0].cells.slice(0, 3),
+        [{ row: 0, col: 0 }, { row: 1, col: 1 }, { row: 2, col: 2 }]);
+
+    const productLittleKiller = SudokuSolver.readConstraints(puzzle("product little killer", {
+        pu_q: { number: { 14: [120, 1, "6"] }, symbol: {
+            14: [[0, 0, 0, 0, 0, 1, 0, 0], "arrow_eight", 2]
+        } }
+    }));
+    assert.equal(productLittleKiller.outsideRelations[0].value, 120);
 
     const creasing = SudokuSolver.readConstraints(puzzle("creasing", {
         pu_q: { nobulbthermo: [[28, 29, 30]] }
@@ -2215,5 +2333,104 @@ test("validates new variants: position, sum next to nine, wrong outside sum, mul
     
     // 10. tic-tac-toe: central region maps to boxes.
     assert.equal(SudokuCSP.solve(solved, { tictactoe: [true] }).solved, false);
+});
+
+test("validates unique rectangles, sum skyscrapers, sum sandwich, and position sums", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+    const firstRow = Array.from({ length: 9 }, (_, col) => ({ row: 0, col }));
+    const firstColumn = Array.from({ length: 9 }, (_, row) => ({ row, col: 0 }));
+
+    const rectangle = emptyBoard();
+    rectangle[0][0] = 1;
+    rectangle[0][3] = 2;
+    rectangle[3][0] = 2;
+    rectangle[3][3] = 1;
+    assert.equal(SudokuCSP.findConflict(rectangle, { uniqueRectangles: [{}] }).constraint,
+        "uniqueRectangles");
+    rectangle[3][3] = 3;
+    assert.equal(SudokuCSP.findConflict(rectangle, { uniqueRectangles: [{}] }), null);
+
+    assert.equal(SudokuCSP.solve(solved, { sumskyscrapers: [
+        { clue: 35, cells: firstRow }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { sumskyscrapers: [
+        { clue: 34, cells: firstRow }
+    ] }).solved, false);
+
+    assert.equal(SudokuCSP.solve(solved, { sumsandwiches: [
+        { sequence: [9], cells: firstRow }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { sumsandwiches: [
+        { sequence: [], cells: firstRow }
+    ] }).solved, false);
+
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "positionsums", firstTwoSum: 8, indexedDigitsSum: 11, cells: firstRow }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "positionsums", firstTwoSum: 8, indexedDigitsSum: 10, cells: firstRow }
+    ] }).solved, false);
+
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "positionsums", firstTwoSum: 8, indexedDigitsSum: null, cells: firstRow },
+        { relation: "positionsums", firstTwoSum: null, indexedDigitsSum: 11, cells: firstRow }
+    ] }).solved, true, "either Position Sums layer works independently");
+});
+
+test("validates inequality triples, difference pairs, Ten/Eleven, tens products, Full or Half, Same Sum, X-Average, and Triple Sum", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+    const row = Array.from({ length: 9 }, (_, col) => ({ row: 0, col }));
+
+    const triples = emptyBoard();
+    triples[0][2] = 1; triples[0][3] = 4;
+    triples[1][2] = 2; triples[1][3] = 5;
+    triples[2][2] = 3; triples[2][3] = 6;
+    assert.equal(SudokuCSP.findConflict(triples, { inequalityTriples: [{}] }), null);
+    triples[2][2] = 6; triples[2][3] = 3;
+    assert.equal(SudokuCSP.findConflict(triples, { inequalityTriples: [{}] }).constraint, "inequalityTriples");
+
+    const pair = [{ row: 0, col: 0 }, { row: 0, col: 1 }];
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "oneortwodifferencepairs", cells: pair }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "teneleven", cells: [{ row: 0, col: 2 }, { row: 0, col: 3 }] },
+        { relation: "notTenEleven", cells: pair },
+        { relation: "tenspositionproducts", target: 2, cells: [{ row: 0, col: 2 }, { row: 0, col: 3 }] }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "notTenEleven", cells: [{ row: 0, col: 2 }, { row: 0, col: 3 }] }
+    ] }).solved, false);
+
+    assert.equal(SudokuCSP.solve(solved, { quadRelations: [
+        { relation: "fullorhalf", kind: "circle", cells: [
+            { row: 0, col: 1 }, { row: 0, col: 2 }, { row: 1, col: 1 }, { row: 1, col: 2 }
+        ] }
+    ] }).solved, false, "the marked 2x2 mixes parity");
+    assert.equal(SudokuCSP.solve(solved, { quadRelations: [
+        { relation: "fullorhalf", kind: "square", cells: [
+            { row: 0, col: 1 }, { row: 0, col: 2 }, { row: 1, col: 1 }, { row: 1, col: 2 }
+        ] }
+    ] }).solved, true);
+
+    assert.equal(SudokuCSP.solve(solved, { sameSumGroups: [[
+        [{ row: 0, col: 0 }, { row: 0, col: 1 }],
+        [{ row: 1, col: 0 }, { row: 1, col: 2 }]
+    ]] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "xaverage", value: 5, cells: row },
+        { relation: "triplesum", value: 6147, cells: row }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "xaverage", value: 4, cells: row }
+    ] }).solved, false);
 });
 

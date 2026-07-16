@@ -294,7 +294,8 @@ var SudokuSolver = (function() {
     }
 
     function outsideClueFromEntry(entry) {
-        if (!entry || entry[2] !== "1") return null;
+        // entry[2] "1" = normal number, "10" = long (multi-digit) number
+        if (!entry || ["1", "6", "10"].indexOf(entry[2]) === -1) return null;
         var value = parseInt(entry[0], 10);
         return Number.isFinite(value) && value >= 0 ? value : null;
     }
@@ -308,7 +309,8 @@ var SudokuSolver = (function() {
             for (var col = 0; col < SIZE; col++) {
                 var key = cellKey(puzzle, row, col);
                 var problemEntry = puzzle.pu_q.number[key];
-                var pinnochioClue = variantEnabled(puzzle, "pinnochio") && puzzle.pu_q.surface && puzzle.pu_q.surface[key];
+                var pinnochioClue = (variantEnabled(puzzle, "pinocchio") || variantEnabled(puzzle, "pinnochio")) &&
+                    problemEntry && problemEntry[1] === 0;
                 var problemDigit = (variantEnabled(puzzle, "pencilmarks") && problemEntry && problemEntry[2] === "7") || pinnochioClue ?
                     0 : digitFromEntry(problemEntry);
                 board[row][col] = problemDigit ||
@@ -490,6 +492,11 @@ var SudokuSolver = (function() {
             battenburg: [],
             skyscrapers: [],
             sandwiches: [],
+            uniqueRectangles: [],
+            inequalityTriples: [],
+            sumskyscrapers: [],
+            sumsandwiches: [],
+            sameSumGroups: [],
             equalsumlines: [],
             number5isalive: [],
             divisiblebythree: [],
@@ -682,17 +689,18 @@ var SudokuSolver = (function() {
             if (slotColumns.length > 1) constraints.cellRelations.push({ relation: "slotmachine", columns: slotColumns });
             constraints.supported.push("slotmachine");
         }
-        if (variantEnabled(puzzle, "pinnochio")) {
+        if (variantEnabled(puzzle, "pinocchio") || variantEnabled(puzzle, "pinnochio")) {
             var pinnochioClues = [];
-            Object.keys(puzzle.pu_q.surface || {}).forEach(function(key) {
-                if (!puzzle.pu_q.surface[key] || !activeCells[key]) return;
+            Object.keys(puzzle.pu_q.number || {}).forEach(function(key) {
+                if (!activeCells[key]) return;
                 var entry = puzzle.pu_q.number[key];
+                if (!entry || entry[1] !== 0 || entry[2] !== "1") return;
                 var value = digitFromEntry(entry);
                 var cell = keyToCell(puzzle, Number(key));
                 if (value && cell) pinnochioClues.push({ cell: cell, value: value });
             });
             if (pinnochioClues.length) constraints.cellRelations.push({ relation: "pinnochio", clues: pinnochioClues });
-            constraints.supported.push("pinnochio");
+            constraints.supported.push("pinocchio");
         }
         if (variantEnabled(puzzle, "average")) {
             var averageMarks = {};
@@ -1210,7 +1218,7 @@ var SudokuSolver = (function() {
             constraints.supported.push(diagVariant);
         }
         var quadVariant = ["quadruple", "equalsums", "equaldifferences", "equalproducts", "equalratios",
-            "consecutivequads", "clockfaces", "exclusion", "groupsum", "crosssums", "determinant"].find(function(name) { return variantEnabled(puzzle, name); });
+            "consecutivequads", "clockfaces", "exclusion", "groupsum", "crosssums", "determinant", "fullorhalf"].find(function(name) { return variantEnabled(puzzle, name); });
         if (quadVariant) {
             function quadCells(key) {
                 var point = puzzle.point && puzzle.point[key];
@@ -1243,8 +1251,11 @@ var SudokuSolver = (function() {
                     var cells = quadCells(key);
                     if (cells.length !== 4) return;
                     if (quadVariant === "clockfaces" && puzzle.pu_q.symbol[key][1] !== "circle_SS") return;
+                    if (quadVariant === "fullorhalf" && ["circle_SS", "square_SS"].indexOf(puzzle.pu_q.symbol[key][1]) === -1) return;
                     constraints.quadRelations.push({ cells: cells, relation: quadVariant,
-                        kind: puzzle.pu_q.symbol[key] && puzzle.pu_q.symbol[key][0] === 2 ? "black" : "white" });
+                        kind: quadVariant === "fullorhalf" ?
+                            (puzzle.pu_q.symbol[key][1] === "circle_SS" ? "circle" : "square") :
+                            (puzzle.pu_q.symbol[key] && puzzle.pu_q.symbol[key][0] === 2 ? "black" : "white") });
                 });
                 if (quadVariant === "clockfaces") {
                     for (var clockRow = 0; clockRow < SIZE - 1; clockRow++) {
@@ -1450,25 +1461,30 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push("battenburg");
         }
-        Object.keys(symbols).forEach(function(key) {
-            var entry = symbols[key];
-            var point = puzzle.point && puzzle.point[key];
-            if (variantEnabled(puzzle, "consecutive") && !variantEnabled(puzzle, "kropki")) return;
-            if (!entry || entry[1] !== "circle_SS" || (entry[0] !== 1 && entry[0] !== 2) || !point) {
-                return;
-            }
-            var cells = (point.neighbor || []).filter(function(neighbor) {
-                return activeCells[neighbor];
-            }).map(function(neighbor) {
-                return keyToCell(puzzle, neighbor);
-            }).filter(Boolean);
-            if (cells.length === 2) {
-                constraints.kropki.push({
-                    cells: cells,
-                    kind: entry[0] === 2 ? "black" : "white"
-                });
-            }
-        });
+        var circleOwnedByAnotherVariant = ["consecutive", "oneortwodifferencepairs", "fadedkropki", "clockfaces"]
+            .some(function(name) { return variantEnabled(puzzle, name); });
+        // Keep legacy mark-only puzzles discoverable, but do not reinterpret a
+        // circle that belongs to the explicitly selected clue type as Kropki.
+        if (variantEnabled(puzzle, "kropki") || !circleOwnedByAnotherVariant) {
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                var point = puzzle.point && puzzle.point[key];
+                if (!entry || entry[1] !== "circle_SS" || (entry[0] !== 1 && entry[0] !== 2) || !point) {
+                    return;
+                }
+                var cells = (point.neighbor || []).filter(function(neighbor) {
+                    return activeCells[neighbor];
+                }).map(function(neighbor) {
+                    return keyToCell(puzzle, neighbor);
+                }).filter(Boolean);
+                if (cells.length === 2) {
+                    constraints.kropki.push({
+                        cells: cells,
+                        kind: entry[0] === 2 ? "black" : "white"
+                    });
+                }
+            });
+        }
         if (constraints.kropki.length) {
             constraints.supported.push("kropki");
         }
@@ -1625,9 +1641,9 @@ var SudokuSolver = (function() {
         if (constraints.xv.length) {
             constraints.supported.push(variantEnabled(puzzle, "xivi") ? "xivi" : "xv");
         }
-        var catalogEdgeVariant = ["difference", "sum", "product", "arithmetic", "greater", "lesser", "divisor", "multiples", "eitheror", "blocksumrelations",
+        var catalogEdgeVariant = ["difference", "sum", "product", "arithmetic", "greater", "lesser", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts",
             "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares",
-            "primesums", "twodigitprimenumbers", "fives"].find(function(name) {
+            "primesums", "twodigitprimenumbers", "fives", "oneortwodifferencepairs", "teneleven"].find(function(name) {
                 return variantEnabled(puzzle, name);
             });
         if (catalogEdgeVariant) {
@@ -1638,7 +1654,7 @@ var SudokuSolver = (function() {
                 return point.neighbor.filter(function(neighbor) { return activeCells[neighbor]; })
                     .map(function(neighbor) { return keyToCell(puzzle, neighbor); }).filter(Boolean);
             }
-            if (["difference", "sum", "product", "arithmetic", "greater", "lesser", "inequality", "divisor", "multiples", "eitheror", "blocksumrelations"].indexOf(catalogEdgeVariant) !== -1) {
+            if (["difference", "sum", "product", "arithmetic", "greater", "lesser", "inequality", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts"].indexOf(catalogEdgeVariant) !== -1) {
                 Object.keys(numbers).forEach(function(key) {
                     var cells = catalogEdgeCells(key);
                     var target = numbers[key] && parseInt(numbers[key][0], 10);
@@ -1676,6 +1692,10 @@ var SudokuSolver = (function() {
                         ["diamond_L", "diamond_SS", "circle_SS"].indexOf(symbols[key][1]) === -1)) return;
                     if (catalogEdgeVariant === "perfectsquares" &&
                         (!symbols[key] || ["diamond_SS", "circle_SS"].indexOf(symbols[key][1]) === -1 || symbols[key][0] !== 1)) return;
+                    if (catalogEdgeVariant === "oneortwodifferencepairs" &&
+                        (!symbols[key] || symbols[key][1] !== "circle_SS")) return;
+                    if (catalogEdgeVariant === "teneleven" &&
+                        (!symbols[key] || symbols[key][1] !== "bars_G")) return;
                     var cells = catalogEdgeCells(key);
                     if (cells.length !== 2) return;
                     cells.sort(function(first, second) { return first.row - second.row || first.col - second.col; });
@@ -1735,6 +1755,22 @@ var SudokuSolver = (function() {
                                     constraints.edgeRelations.push({ cells: [
                                         { row: fivesRow, col: fivesCol }, { row: neighbor[0], col: neighbor[1] }
                                     ], relation: "notFives" });
+                                }
+                            });
+                        }
+                    }
+                }
+                if (catalogEdgeVariant === "teneleven") {
+                    for (var tenRow = 0; tenRow < SIZE; tenRow++) {
+                        for (var tenCol = 0; tenCol < SIZE; tenCol++) {
+                            [[tenRow + 1, tenCol], [tenRow, tenCol + 1]].forEach(function(neighbor) {
+                                if (neighbor[0] >= SIZE || neighbor[1] >= SIZE) return;
+                                var tenFirst = tenRow * SIZE + tenCol;
+                                var tenSecond = neighbor[0] * SIZE + neighbor[1];
+                                if (!catalogMarkedEdges[Math.min(tenFirst, tenSecond) + ":" + Math.max(tenFirst, tenSecond)]) {
+                                    constraints.edgeRelations.push({ cells: [
+                                        { row: tenRow, col: tenCol }, { row: neighbor[0], col: neighbor[1] }
+                                    ], relation: "notTenEleven" });
                                 }
                             });
                         }
@@ -1857,6 +1893,122 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push("sandwich");
         }
+        if (variantEnabled(puzzle, "uniquerectangles")) {
+            constraints.uniqueRectangles.push({});
+            constraints.supported.push("uniquerectangles");
+        }
+        if (variantEnabled(puzzle, "inequalitytriples")) {
+            constraints.inequalityTriples.push({});
+            constraints.supported.push("inequalitytriples");
+        }
+        if (variantEnabled(puzzle, "samesum")) {
+            var sameSumGroups = [];
+            Object.keys(puzzle.pu_q.surface || {}).forEach(function(key) {
+                if (!puzzle.pu_q.surface[key] || !activeCells[key]) return;
+                var center = keyToCell(puzzle, Number(key));
+                if (!center) return;
+                var neighbors = [[-1, 0], [1, 0], [0, -1], [0, 1]].map(function(offset) {
+                    var row = center.row + offset[0], col = center.col + offset[1];
+                    return row >= 0 && row < SIZE && col >= 0 && col < SIZE ? { row: row, col: col } : null;
+                }).filter(Boolean);
+                if (neighbors.length) sameSumGroups.push(neighbors);
+            });
+            if (sameSumGroups.length) constraints.sameSumGroups.push(sameSumGroups);
+            constraints.supported.push("samesum");
+        }
+        if (variantEnabled(puzzle, "sumskyscrapers")) {
+            var sumSkyTop = Number(puzzle.space && puzzle.space[0] || 0);
+            var sumSkyLeft = Number(puzzle.space && puzzle.space[2] || 0);
+            var sumSkyStartRow = 2 + sumSkyTop;
+            var sumSkyStartCol = 2 + sumSkyLeft;
+            function addSumSkyscraper(key, cells) {
+                var clue = outsideClueFromEntry(numbers[key]);
+                if (clue !== null) constraints.sumskyscrapers.push({ clue: clue, cells: cells });
+            }
+            for (var sumSkyIndex = 0; sumSkyIndex < SIZE; sumSkyIndex++) {
+                var sumSkyColumn = Array.from({ length: SIZE }, function(_, row) {
+                    return { row: row, col: sumSkyIndex };
+                });
+                var sumSkyRow = Array.from({ length: SIZE }, function(_, col) {
+                    return { row: sumSkyIndex, col: col };
+                });
+                addSumSkyscraper((sumSkyStartCol + sumSkyIndex) +
+                    (sumSkyStartRow - 1) * puzzle.nx0, sumSkyColumn);
+                addSumSkyscraper((sumSkyStartCol + sumSkyIndex) +
+                    (sumSkyStartRow + SIZE) * puzzle.nx0, sumSkyColumn.slice().reverse());
+                addSumSkyscraper((sumSkyStartCol - 1) +
+                    (sumSkyStartRow + sumSkyIndex) * puzzle.nx0, sumSkyRow);
+                addSumSkyscraper((sumSkyStartCol + SIZE) +
+                    (sumSkyStartRow + sumSkyIndex) * puzzle.nx0, sumSkyRow.slice().reverse());
+            }
+            constraints.supported.push("sumskyscrapers");
+        }
+        if (variantEnabled(puzzle, "sumsandwich")) {
+            var sumSandwichTop = Number(puzzle.space && puzzle.space[0] || 0);
+            var sumSandwichLeft = Number(puzzle.space && puzzle.space[2] || 0);
+            var sumSandwichStartRow = 2 + sumSandwichTop;
+            var sumSandwichStartCol = 2 + sumSandwichLeft;
+            function addSumSandwich(key, cells) {
+                var entry = numbers[key];
+                var clue = outsideClueFromEntry(entry);
+                var sequence = clue === null ? [] : String(entry[0]).split("").map(function(digit) {
+                    return parseInt(digit, 10);
+                });
+                constraints.sumsandwiches.push({ sequence: sequence, cells: cells });
+            }
+            for (var sumSandwichIndex = 0; sumSandwichIndex < SIZE; sumSandwichIndex++) {
+                var sumSandwichColumn = Array.from({ length: SIZE }, function(_, row) {
+                    return { row: row, col: sumSandwichIndex };
+                });
+                var sumSandwichRow = Array.from({ length: SIZE }, function(_, col) {
+                    return { row: sumSandwichIndex, col: col };
+                });
+                addSumSandwich((sumSandwichStartCol + sumSandwichIndex) +
+                    (sumSandwichStartRow - 1) * puzzle.nx0, sumSandwichColumn);
+                addSumSandwich((sumSandwichStartCol + sumSandwichIndex) +
+                    (sumSandwichStartRow + SIZE) * puzzle.nx0, sumSandwichColumn.slice().reverse());
+                addSumSandwich((sumSandwichStartCol - 1) +
+                    (sumSandwichStartRow + sumSandwichIndex) * puzzle.nx0, sumSandwichRow);
+                addSumSandwich((sumSandwichStartCol + SIZE) +
+                    (sumSandwichStartRow + sumSandwichIndex) * puzzle.nx0, sumSandwichRow.slice().reverse());
+            }
+            constraints.supported.push("sumsandwich");
+        }
+        if (variantEnabled(puzzle, "positionsums") || variantEnabled(puzzle, "positionsum")) {
+            var positionSumsTop = Number(puzzle.space && puzzle.space[0] || 0);
+            var positionSumsLeft = Number(puzzle.space && puzzle.space[2] || 0);
+            var positionSumsStartRow = 2 + positionSumsTop;
+            var positionSumsStartCol = 2 + positionSumsLeft;
+            function addPositionSum(outerKey, innerKey, cells) {
+                var indexedDigitsSum = outsideClueFromEntry(numbers[outerKey]);
+                var firstTwoSum = outsideClueFromEntry(numbers[innerKey]);
+                if (indexedDigitsSum !== null || firstTwoSum !== null) {
+                    constraints.outsideRelations.push({
+                        relation: "positionsums",
+                        firstTwoSum: firstTwoSum,
+                        indexedDigitsSum: indexedDigitsSum,
+                        cells: cells
+                    });
+                }
+            }
+            for (var positionSumsIndex = 0; positionSumsIndex < SIZE; positionSumsIndex++) {
+                var positionSumsColumn = Array.from({ length: SIZE }, function(_, row) {
+                    return { row: row, col: positionSumsIndex };
+                });
+                var positionSumsRow = Array.from({ length: SIZE }, function(_, col) {
+                    return { row: positionSumsIndex, col: col };
+                });
+                addPositionSum((positionSumsStartCol + positionSumsIndex) +
+                    (positionSumsStartRow - 2) * puzzle.nx0,
+                    (positionSumsStartCol + positionSumsIndex) +
+                    (positionSumsStartRow - 1) * puzzle.nx0, positionSumsColumn);
+                addPositionSum((positionSumsStartCol - 2) +
+                    (positionSumsStartRow + positionSumsIndex) * puzzle.nx0,
+                    (positionSumsStartCol - 1) +
+                    (positionSumsStartRow + positionSumsIndex) * puzzle.nx0, positionSumsRow);
+            }
+            constraints.supported.push("positionsums");
+        }
         var paritySandwichVariant = ["evensandwich", "oddsandwich"].find(function(name) {
             return variantEnabled(puzzle, name);
         });
@@ -1884,11 +2036,11 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push(paritySandwichVariant);
         }
-        var activeOutsideVariants = ["bust", "xsums", "numberedrooms", "sumframe", "productframe", "edgedifference",
+        var activeOutsideVariants = ["bust", "xsums", "numberedrooms", "sumframe", "edgedifference",
             "fullrank", "outsideparity", "parityparty", "serbianframe", "median", "descriptivepairs",
             "maximin", "minimax", "ascendingstarters", "before9", "before1after9", "firstseenoddeven", "maxascending",
             "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers",
-            "position", "sumnexttonine", "wrongoutsidesum", "doublesandwich"].filter(function(name) {
+            "position", "sumnexttonine", "wrongoutsidesum", "doublesandwich", "xaverage", "triplesum"].filter(function(name) {
             return variantEnabled(puzzle, name);
         });
         if (activeOutsideVariants.length) {
@@ -1926,6 +2078,9 @@ var SudokuSolver = (function() {
                             outsideColumn, outsideBoxHeight, "column", "before1");
                         addOutsideRelation((outsideStartCol - 2) + (outsideStartRow + outsideIndex) * puzzle.nx0,
                             outsideRow, outsideBoxWidth, "row", "before1");
+                    } else if (variant === "triplesum") {
+                        addOutsideRelation((outsideStartCol - 1) + (outsideStartRow + outsideIndex) * puzzle.nx0,
+                            outsideRow, outsideBoxWidth, "row");
                     } else {
                         addOutsideRelation((outsideStartCol + outsideIndex) + (outsideStartRow - 1) * puzzle.nx0,
                             outsideColumn, outsideBoxHeight, "column");
@@ -1951,7 +2106,7 @@ var SudokuSolver = (function() {
             var distancesStartCol = 2 + distancesLeft;
             function addDistancesRelation(key, cells, axis) {
                 var entry = numbers[key];
-                if (!entry || entry[2] !== "1") return;
+                if (!entry || ["1", "6"].indexOf(String(entry[2])) === -1) return;
                 var str = String(entry[0]).trim();
                 var match = str.match(/^([1-9])-([1-9]):([1-9][0-9]*)$/);
                 if (!match) return;
@@ -2014,7 +2169,7 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push(unorderedOutsideVariant);
         }
-        var activeDiagVariants = ["little killer", "product little killer", "bouncing x-sums", "czech outsider", "framediagonal", "pointingdifferents"].filter(function(name) {
+        var activeDiagVariants = ["little killer", "product little killer", "productframe", "bouncing x-sums", "czech outsider", "framediagonal", "pointingdifferents"].filter(function(name) {
             return variantEnabled(puzzle, name);
         });
         if (activeDiagVariants.length) {
@@ -2621,7 +2776,9 @@ var SudokuTools = (function() {
             var result = SudokuSolver.solve(board, constraints);
             if (result && result.solved) {
                 SudokuSolver.applySolution(pu, result.board);
+                if (pu.mode.qa !== "pu_q") pu.mode_qa("pu_q");
                 pu.redraw();
+                document.dispatchEvent(new CustomEvent("sudoku-solved"));
                 generatorLog("Solved", "Puzzle solved successfully.");
             } else {
                 const msg = result && result.reason ? result.reason : "No complete solution exists for the current grid.";
@@ -2916,7 +3073,7 @@ var SudokuTools = (function() {
             symbol: submode === "circle_SS" ? (variant === "consecutive" ? "White Dot" : "Kropki Dot") :
                 variant === "odd even" ? "Odd / Even Mark" :
                     variant === "battenburg" ? "Battenburg Mark" :
-                        variant === "little killer" || variant === "product little killer" || variant === "bouncing x-sums" || variant === "czech outsider" || variant === "pointingdifferents" ? "Arrow" :
+                        variant === "little killer" || variant === "product little killer" || variant === "productframe" || variant === "bouncing x-sums" || variant === "czech outsider" || variant === "pointingdifferents" ? "Arrow" :
                             variant === "diagonallyconsecutive" || variant === "diagonal sum is nine" || variant === "diagonal tens" ? "Bars" : "Mark",
             special: submode === "arrows" ? "Arrow" : submode === "thermo" ? "Thermo" :
                 submode === "nobulbthermo" ? "No-bulb Thermo" : "Special",
@@ -2925,12 +3082,15 @@ var SudokuTools = (function() {
             cage: "Cage",
             number: variant === "xv" && submode === "5" ? "XV Clue" :
                 variant === "multiplication" ? "Multiplication Sign" :
-                    variant === "product little killer" ? "Product" :
+                    variant === "product little killer" || variant === "productframe" ? "Product" :
                         variant === "little killer" || variant === "bouncing x-sums" || variant === "pointingdifferents" ? "Total" :
                             ["innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers"].indexOf(variant) !== -1 ? "Outside Clue" :
                                 variant === "czech outsider" ? "Outsider" :
                 submode === "11" ? "Killer Sum" : variant === "skyscraper" ? "Skyscraper Clue" :
-                    variant === "sandwich" ? "Sandwich Clue" : "Clue",
+                    variant === "sumskyscrapers" ? "Visible Height Sum" :
+                        variant === "sumsandwich" ? "Sum Sequence" :
+                            variant === "positionsums" ? "Position Sums" :
+                                variant === "sandwich" ? "Sandwich Clue" : "Clue",
             surface: "Cell",
             combi: "Composite"
         };
@@ -2986,7 +3146,8 @@ var SudokuTools = (function() {
         "parityparty", "serbianframe", "median", "rossini", "before9",
         "before1after9", "ascendingstarters", "bouncing x-sums", "czech outsider", "distances",
         "firstseenoddeven", "maxascending", "framediagonal",
-        "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers", "pointingdifferents"];
+        "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers", "pointingdifferents",
+        "sumskyscrapers", "sumsandwich", "positionsums", "xaverage", "triplesum"];
 
     function variantConflict(variant) {
         var variants = activeVariants();
@@ -3256,10 +3417,11 @@ var SudokuTools = (function() {
         pu.battenburg_mode = pu.activeSudokuVariant === "battenburg";
         pu.sudoku_edge_clue_mode = ["difference", "sum", "product", "arithmetic", "greater", "lesser",
             "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares", "multiplication", "xivi",
-            "primesums", "twodigitprimenumbers", "blocksumrelations", "divisor", "eitheror", "anticonsecutive", "fives", "fadedkropki"].indexOf(pu.activeSudokuVariant) !== -1 &&
+            "primesums", "twodigitprimenumbers", "blocksumrelations", "divisor", "eitheror", "anticonsecutive", "fives", "fadedkropki",
+            "oneortwodifferencepairs", "teneleven", "tenspositionproducts"].indexOf(pu.activeSudokuVariant) !== -1 &&
             (mode === "number" || mode === "symbol");
         pu.sudoku_corner_clue_mode = ["quadruple", "equalsums", "equaldifferences", "equalproducts",
-            "equalratios", "consecutivequads", "quadmax", "quadmin", "exclusion", "groupsum", "wheel", "crosssums", "determinant"].indexOf(pu.activeSudokuVariant) !== -1 &&
+            "equalratios", "consecutivequads", "quadmax", "quadmin", "exclusion", "groupsum", "wheel", "crosssums", "determinant", "fullorhalf"].indexOf(pu.activeSudokuVariant) !== -1 &&
             (mode === "number" || mode === "symbol");
         pu.sudoku_directional_cell_mode = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious",
             "search9", "sumdetector", "detection"].indexOf(pu.activeSudokuVariant) !== -1 && mode === "symbol";

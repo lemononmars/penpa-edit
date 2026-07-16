@@ -865,6 +865,126 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("uniqueRectangles", {
+        validatePartial: function(board) {
+            for (var firstRow = 0; firstRow < SIZE - 1; firstRow++) {
+                for (var secondRow = firstRow + 1; secondRow < SIZE; secondRow++) {
+                    for (var firstCol = 0; firstCol < SIZE - 1; firstCol++) {
+                        for (var secondCol = firstCol + 1; secondCol < SIZE; secondCol++) {
+                            var values = [
+                                board[firstRow][firstCol], board[firstRow][secondCol],
+                                board[secondRow][firstCol], board[secondRow][secondCol]
+                            ];
+                            if (values.some(function(value) { return !value; })) continue;
+                            var distinct = {};
+                            values.forEach(function(value) { distinct[value] = true; });
+                            if (Object.keys(distinct).length === 2) return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("inequalityTriples", {
+        validatePartial: function(board) {
+            if (SIZE !== 9) return false;
+            function sameDirection(pairs) {
+                var direction = 0;
+                for (var index = 0; index < pairs.length; index++) {
+                    var first = cellValue(board, pairs[index][0]);
+                    var second = cellValue(board, pairs[index][1]);
+                    if (!first || !second) continue;
+                    var current = first < second ? -1 : 1;
+                    if (direction && current !== direction) return false;
+                    direction = current;
+                }
+                return true;
+            }
+            for (var boxRow = 0; boxRow < 3; boxRow++) {
+                for (var boundaryCol = 0; boundaryCol < 2; boundaryCol++) {
+                    var verticalPairs = [];
+                    for (var rowOffset = 0; rowOffset < 3; rowOffset++) {
+                        verticalPairs.push([
+                            { row: boxRow * 3 + rowOffset, col: boundaryCol * 3 + 2 },
+                            { row: boxRow * 3 + rowOffset, col: boundaryCol * 3 + 3 }
+                        ]);
+                    }
+                    if (!sameDirection(verticalPairs)) return false;
+                }
+            }
+            for (var boundaryRow = 0; boundaryRow < 2; boundaryRow++) {
+                for (var boxCol = 0; boxCol < 3; boxCol++) {
+                    var horizontalPairs = [];
+                    for (var colOffset = 0; colOffset < 3; colOffset++) {
+                        horizontalPairs.push([
+                            { row: boundaryRow * 3 + 2, col: boxCol * 3 + colOffset },
+                            { row: boundaryRow * 3 + 3, col: boxCol * 3 + colOffset }
+                        ]);
+                    }
+                    if (!sameDirection(horizontalPairs)) return false;
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("sameSumGroups", {
+        validatePartial: function(board, groups) {
+            var completedSum = null;
+            for (var groupIndex = 0; groupIndex < groups.length; groupIndex++) {
+                var values = groups[groupIndex].map(function(cell) { return cellValue(board, cell); });
+                if (values.some(function(value) { return !value; })) continue;
+                var sum = values.reduce(function(total, value) { return total + value; }, 0);
+                if (completedSum !== null && sum !== completedSum) return false;
+                completedSum = sum;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("sumskyscrapers", {
+        validatePartial: function(board, sightline) {
+            var values = sightline.cells.map(function(cell) { return cellValue(board, cell); });
+            if (values.some(function(value) { return !value; })) return true;
+            var tallest = 0;
+            var visibleSum = 0;
+            values.forEach(function(value) {
+                if (value > tallest) {
+                    tallest = value;
+                    visibleSum += value;
+                }
+            });
+            return visibleSum === sightline.clue;
+        }
+    });
+
+    function sumSandwichSequence(board, sightline) {
+        var values = sightline.cells.map(function(cell) { return cellValue(board, cell); });
+        var sequence = [];
+        for (var index = 1; index < values.length - 1; index++) {
+            if (values[index] === values[index - 1] + values[index + 1]) {
+                sequence.push(values[index]);
+            }
+        }
+        return sequence;
+    }
+
+    registerConstraint("sumsandwiches", {
+        validatePartial: function(board, sightline) {
+            if (!Array.isArray(sightline.sequence) || sightline.sequence.some(function(value) {
+                return !Number.isInteger(value) || value < 1 || value > SIZE;
+            })) return false;
+            var values = sightline.cells.map(function(cell) { return cellValue(board, cell); });
+            if (values.some(function(value) { return !value; })) return true;
+            var actual = sumSandwichSequence(board, sightline);
+            return actual.length === sightline.sequence.length && actual.every(function(value, index) {
+                return value === sightline.sequence[index];
+            });
+        }
+    });
+
     registerConstraint("diagonalAllDifferent", {
         validatePartial: function(board, diagonal) {
             var seen = 0;
@@ -1011,8 +1131,12 @@ var SudokuCSP = (function() {
                 case "fives": return sum === 5 || difference === 5;
                 case "notFives": return sum !== 5 && difference !== 5;
                 case "difference": return difference === clue.target;
+                case "oneortwodifferencepairs": return difference === 1 || difference === 2;
                 case "sum": return sum === clue.target;
                 case "product": return product === clue.target;
+                case "tenspositionproducts": return Math.floor(product / 10) === clue.target;
+                case "teneleven": return sum === 10 || sum === 11;
+                case "notTenEleven": return sum !== 10 && sum !== 11;
                 case "greater": return Math.max(first, second) === clue.target;
                 case "lesser": return Math.min(first, second) === clue.target;
                 case "consecutive": return difference === 1;
@@ -1263,6 +1387,39 @@ var SudokuCSP = (function() {
     registerConstraint("outsideRelations", {
         validatePartial: function(board, clue) {
             var values = clue.cells.map(function(cell) { return cellValue(board, cell); });
+            if (clue.relation === "positionsums") {
+                var hasFirstTwoSum = Number.isInteger(clue.firstTwoSum);
+                var hasIndexedDigitsSum = Number.isInteger(clue.indexedDigitsSum);
+                if ((!hasFirstTwoSum && !hasIndexedDigitsSum) || values.length < 2) return false;
+                var positionA = values[0];
+                var positionB = values[1];
+                if (!positionA || !positionB) return true;
+                if (hasFirstTwoSum && positionA + positionB !== clue.firstTwoSum) return false;
+                if (!hasIndexedDigitsSum) return true;
+                if (positionA > values.length || positionB > values.length) return false;
+                var digitAtA = values[positionA - 1];
+                var digitAtB = values[positionB - 1];
+                return !digitAtA || !digitAtB || digitAtA + digitAtB === clue.indexedDigitsSum;
+            }
+            if (clue.relation === "xaverage") {
+                var averageLength = values[0];
+                if (!averageLength) return true;
+                if (averageLength > values.length) return false;
+                var averageValues = values.slice(0, averageLength);
+                var averageSum = averageValues.reduce(function(total, value) { return total + value; }, 0);
+                var averageBlanks = averageValues.filter(function(value) { return !value; }).length;
+                var averageTarget = clue.value * averageLength;
+                return averageSum + averageBlanks <= averageTarget &&
+                    averageSum + averageBlanks * SIZE >= averageTarget &&
+                    (averageBlanks > 0 || averageSum === averageTarget);
+            }
+            if (clue.relation === "triplesum") {
+                if (values.some(function(value) { return !value; })) return true;
+                var firstPart = Number(values.slice(0, 4).join(""));
+                var secondPart = Number(values.slice(4, 7).join(""));
+                var thirdPart = Number(values.slice(7, 9).join(""));
+                return firstPart + secondPart + thirdPart === clue.value;
+            }
             if (clue.relation === "numberedrooms") {
                 var room = values[0];
                 return !room || room > values.length || !values[room - 1] || values[room - 1] === clue.value;
@@ -2178,6 +2335,16 @@ var SudokuCSP = (function() {
                 if (clue.kind === "white") return increasesClockwise;
                 if (clue.kind === "black") return increasesCounter;
                 return !increasesClockwise && !increasesCounter;
+            }
+            if (clue.relation === "fullorhalf") {
+                var oddCount = assigned.filter(function(value) { return value % 2 === 1; }).length;
+                var openCount = values.length - assigned.length;
+                if (clue.kind === "circle") {
+                    var allOddPossible = oddCount === assigned.length;
+                    var allEvenPossible = oddCount === 0;
+                    return allOddPossible || allEvenPossible || openCount > 0 && (allOddPossible || allEvenPossible);
+                }
+                return oddCount <= 2 && oddCount + openCount >= 2;
             }
             if (assigned.length < 4) return true;
             var first = values[0], second = values[1], third = values[2], fourth = values[3];

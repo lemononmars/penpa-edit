@@ -320,23 +320,29 @@ const UserSettings = {
         2: "./css/dark_theme.css"
     },
     set color_theme(newValue) {
-        const valueInt = newValue ? parseInt(newValue, 10) : THEME_LIGHT;
-        if (this._color_theme === valueInt)
-            return; // avoid loading the theme css repeatedly
+        let valueInt = newValue ? parseInt(newValue, 10) : THEME_LIGHT;
+        if (valueInt !== THEME_LIGHT && valueInt !== THEME_DARK) valueInt = THEME_LIGHT;
+        const changed = this._color_theme !== valueInt;
 
         this._color_theme = valueInt;
 
         let themeStylesheet = this._theme_urls[valueInt];
         if (!themeStylesheet) { themeStylesheet = this._theme_urls[THEME_LIGHT]; }
 
-        document.getElementById("theme_mode_opt").value = valueInt;
+        const themeOption = document.getElementById("theme_mode_opt");
+        if (themeOption) themeOption.value = valueInt;
         if (style_tag_cache['color_theme']) {
             style_tag_cache['color_theme'].href = themeStylesheet;
         } else {
             console.error('Could not find color theme stylesheet to change.');
         }
 
-        if (window.pu) {
+        document.documentElement.classList.toggle("dark", valueInt === THEME_DARK);
+        document.dispatchEvent(new CustomEvent("penpa-theme-change", {
+            detail: { dark: valueInt === THEME_DARK }
+        }));
+
+        if (changed && window.pu) {
             pu.set_redoundocolor();
             pu.redraw();
         }
@@ -344,36 +350,6 @@ const UserSettings = {
     },
     get color_theme() {
         return this._color_theme;
-    },
-
-    _primary_color: "blue",
-    set primary_color(newValue) {
-        if (!newValue || ["blue", "green", "orange", "pink", "grey"].indexOf(newValue) === -1) {
-            newValue = "blue";
-        }
-        if (this._primary_color === newValue) {
-            return;
-        }
-
-        const oldClass = "theme-" + this._primary_color;
-        const newClass = "theme-" + newValue;
-
-        this._primary_color = newValue;
-
-        let el = document.getElementById("primary_color_opt");
-        if (el) {
-            el.value = newValue;
-        }
-
-        document.documentElement.classList.remove(oldClass);
-        if (newValue !== "blue") {
-            document.documentElement.classList.add(newClass);
-        }
-
-        this.attemptSave();
-    },
-    get primary_color() {
-        return this._primary_color;
     },
 
     _displaysize: 38,
@@ -525,7 +501,6 @@ const UserSettings = {
         'check_pencil_marks',
         'app_language',
         'color_theme',
-        'primary_color',
         'conflict_detection',
         'custom_colors_on',
         'ignore_line_style',
