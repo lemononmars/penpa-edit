@@ -1348,7 +1348,7 @@
                 {#if variationByValue.has(ruleVariant)}
                   <a
                     class="rule-wiki-link"
-                    href={`./variant.html?id=${encodeURIComponent(ruleVariant)}`}
+                    href={`./list/${encodeURIComponent(ruleVariant)}`}
                     target="_blank"
                     rel="noreferrer">{ruleTitle}</a
                   >
@@ -1369,7 +1369,7 @@
                 {#if variationByValue.has(ruleVariant)}
                   <a
                     class="rule-wiki-link"
-                    href={`./variant.html?id=${encodeURIComponent(ruleVariant)}`}
+                    href={`./list/${encodeURIComponent(ruleVariant)}`}
                     target="_blank"
                     rel="noreferrer">{ruleTitle}</a
                   >
