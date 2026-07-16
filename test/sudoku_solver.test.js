@@ -1472,12 +1472,12 @@ test("normalizes the next catalog batch into concrete CSP constraints", function
     assert.equal(inequality.edgeRelations[0].sign, ">");
 
     const xy = SudokuSolver.readConstraints(puzzleFor("xydifference", {
-        symbol: { 200: [1, "circle_SS", 2] }
+        symbol: { 200: [1, "diamond_SS", 2] }
     }, edgePoint));
     assert.deepEqual(xy.edgeRelations[0].reference, { row: 0, col: 0 });
 
     const squares = SudokuSolver.readConstraints(puzzleFor("perfectsquares", {
-        symbol: { 200: [1, "circle_SS", 2] }
+        symbol: { 200: [1, "diamond_SS", 2] }
     }, edgePoint));
     assert.equal(squares.edgeRelations.some((clue) => clue.relation === "perfectsquares"), true);
     assert.equal(squares.edgeRelations.some((clue) => clue.relation === "notPerfectSquare"), true);
