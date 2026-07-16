@@ -409,10 +409,12 @@ export function installVariationCatalog() {
         if (!constraints.options.sudoku.includes(variation.value)) constraints.options.sudoku.push(variation.value);
         const existingOption = Array.from(select.options).find((option) => option.value === variation.value);
         const targetGroup = variation.status === "available" ? implementedGroup : unsupportedGroup;
-        if (existingOption && existingOption.parentElement !== targetGroup) {
+        if (existingOption) {
             existingOption.textContent = variation.name;
-            targetGroup.appendChild(existingOption);
-        } else if (!existingOption) {
+            if (existingOption.parentElement !== targetGroup) {
+                targetGroup.appendChild(existingOption);
+            }
+        } else {
             const option = document.createElement("option");
             option.value = variation.value;
             option.textContent = variation.name;

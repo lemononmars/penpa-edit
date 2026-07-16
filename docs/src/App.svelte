@@ -460,6 +460,7 @@
     const query = variantSearch.trim().toLowerCase();
     return variants.filter(
       (variant) =>
+        variant.group !== "Unsupported CSP" &&
         (!query ? primaryVariantTab(variant.value) === variantTab : true) &&
         (!query ||
           variant.label.toLowerCase().includes(query) ||
