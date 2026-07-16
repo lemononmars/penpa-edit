@@ -147,7 +147,7 @@
                     {#each filteredVariations as variation (variation.value)}
                         {@const implemented = cspSupportedVariants.has(variation.value)}
                         <tr>
-                            <th scope="row"><a class="variant-link" href={`./variant.html?id=${encodeURIComponent(variation.value)}`}><strong>{variation.name}</strong></a><code>{variation.value}</code></th>
+                            <th scope="row"><a class="variant-link" href={`./list/${encodeURIComponent(variation.value)}`}><strong>{variation.name}</strong></a><code>{variation.value}</code></th>
                             <td class="rule">{variation.rule}</td>
                             <td>
                                 {#if implemented}

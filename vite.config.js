@@ -12,23 +12,30 @@ function variantDetailPages() {
     antidiagonal: "anti diagonal", antiknight: "anti knight", battenburg: "battenburg",
     littlekiller: "little killer", nonconsecutive: "non consecutive", oddeven: "odd even"
   };
-  const ids = Array.from(new Set(readdirSync(resolve(process.cwd(), "variations"))
+  const normalize = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, "").replace(/sudoku$/i, "");
+  const scrapedVariants = JSON.parse(readFileSync(resolve(process.cwd(), "sudoku_variants.json"), "utf8"));
+  const scrapedIds = scrapedVariants.map((item) => normalize(item.title));
+
+  const fileIds = Array.from(new Set(readdirSync(resolve(process.cwd(), "variations"))
     .filter((name) => name.endsWith(".json") && !name.startsWith("_"))
     .map((name) => JSON.parse(readFileSync(resolve(process.cwd(), "variations", name), "utf8")).id)
     .filter((id) => id && !removed.has(id))
     .map((id) => aliases[id] || id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase())));
+  const ids = Array.from(new Set([...fileIds, ...scrapedIds]));
   return {
     name: "variant-detail-pages",
     writeBundle(options) {
       const outputDirectory = options.dir || resolve(process.cwd(), "dist");
       const template = readFileSync(resolve(outputDirectory, "variant.html"), "utf8");
-      const pageDirectory = resolve(outputDirectory, "variant-pages");
+      const pageDirectory = resolve(outputDirectory, "list");
       mkdirSync(pageDirectory, { recursive: true });
       ids.forEach((id) => {
         const source = template
-          .replace("<head>", "<head><base href=\"../\">")
+          .replace("<head>", "<head><base href=\"../../\">")
           .replace('data-catalog-page="detail"', `data-catalog-page="detail" data-variant-id="${id}"`);
-        writeFileSync(resolve(pageDirectory, `${id}.html`), source, "utf8");
+        const idDirectory = resolve(pageDirectory, id);
+        mkdirSync(idDirectory, { recursive: true });
+        writeFileSync(resolve(idDirectory, "index.html"), source, "utf8");
       });
     }
   };
