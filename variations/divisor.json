@@ -1,9 +1,0 @@
-{
-  "id": "divisor",
-  "name": "Divisor",
-  "rules": {
-    "6x6": "A circled edge clue divides the two-digit number formed by its adjacent cells, read left-to-right or top-to-bottom.",
-    "9x9": "A circled edge clue divides the two-digit number formed by its adjacent cells, read left-to-right or top-to-bottom."
-  },
-  "tags": ["math"]
-}

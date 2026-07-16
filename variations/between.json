@@ -1,9 +1,0 @@
-{
-  "id": "between",
-  "name": "Between",
-  "rules": {
-    "6x6": "Every interior digit on a line lies strictly between the digits in the circles at the two ends. Digits may repeat on a line.",
-    "9x9": "Every interior digit on a line lies strictly between the digits in the circles at the two ends. Digits may repeat on a line."
-  },
-  "tags": ["line"]
-}

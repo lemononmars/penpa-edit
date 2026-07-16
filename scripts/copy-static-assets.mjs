@@ -6,7 +6,7 @@ const docsDir = join(root, "docs");
 const distDir = join(root, "dist");
 
 const directories = ["css", "fonts", "js", "penpa"];
-const files = ["favicon.svg", "identity.js", "points.md"];
+const files = ["favicon.svg", "app-icon.png", "identity.js", "points.md"];
 
 mkdirSync(distDir, { recursive: true });
 

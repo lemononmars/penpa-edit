@@ -464,6 +464,32 @@ const UserSettings = {
         return this._resize_whitespace;
     },
 
+    _start_grid_size: "9",
+    set start_grid_size(newValue) {
+        this._start_grid_size = newValue;
+        localStorage.setItem("start_grid_size", newValue);
+        var opt = document.getElementById("start_grid_size_opt");
+        if (opt) opt.value = newValue;
+    },
+    get start_grid_size() {
+        var val = localStorage.getItem("start_grid_size");
+        if (val) this._start_grid_size = val;
+        return this._start_grid_size;
+    },
+
+    _start_grid_type: "blank",
+    set start_grid_type(newValue) {
+        this._start_grid_type = newValue;
+        localStorage.setItem("start_grid_type", newValue);
+        var opt = document.getElementById("start_grid_type_opt");
+        if (opt) opt.value = newValue;
+    },
+    get start_grid_type() {
+        var val = localStorage.getItem("start_grid_type");
+        if (val) this._start_grid_type = val;
+        return this._start_grid_type;
+    },
+
     can_save: [
         'auto_save_history',
         'check_pencil_marks',
@@ -540,6 +566,13 @@ const UserSettings = {
             }
 
             this._settingsLoaded = true;
+
+            var savedSize = localStorage.getItem("start_grid_size") || "9";
+            var savedType = localStorage.getItem("start_grid_type") || "blank";
+            var sizeOpt = document.getElementById("start_grid_size_opt");
+            if (sizeOpt) sizeOpt.value = savedSize;
+            var typeOpt = document.getElementById("start_grid_type_opt");
+            if (typeOpt) typeOpt.value = savedType;
         } else {
             this.gridtype_size.forEach(function(setting) {
                 UserSettings[setting] = getCookie(setting);

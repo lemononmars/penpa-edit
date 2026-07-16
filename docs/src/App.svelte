@@ -2,18 +2,23 @@
   import { onMount } from "svelte";
   import { guideFor } from "./variantRules";
   import {
-    cspSupportedVariants,
-    directionalShapeVariationValues,
     installVariationCatalog,
-    noInputVariationValues,
     outsideVariationValues,
     scratchGeneratableVariants,
     variationByValue,
+    variantMetadata,
   } from "./variationCatalog";
   import { markChoiceFor } from "./variantMarks";
 
   type VariantOption = { value: string; label: string; group: string };
-  type VariantTab = "no-input" | "line" | "region" | "outside" | "shape";
+  type VariantTab =
+    | "no-input"
+    | "line"
+    | "region"
+    | "outside"
+    | "cell"
+    | "edge"
+    | "intersection";
 
   let boardHost: HTMLElement;
   let variantHost: HTMLElement;
@@ -75,29 +80,12 @@
     { value: "line", label: "Line" },
     { value: "region", label: "Region" },
     { value: "outside", label: "Outside" },
-    { value: "shape", label: "Shape" },
+    { value: "cell", label: "Cell" },
+    { value: "edge", label: "Edge" },
+    { value: "intersection", label: "Intersection" },
   ];
 
-  const variantIcons: Record<string, string> = {
-    classic: "9",
-    "odd even": "◐",
-    diagonal: "╳",
-    "anti diagonal": "⨯",
-    "anti king": "♔",
-    "anti knight": "♞",
-    "non consecutive": "↮",
-    arrow: "➜",
-    thermo: "♨",
-    killer: "Σ",
-    kropki: "●",
-    palindrome: "↔",
-    xv: "Ⅹ",
-    battenburg: "▦",
-    skyscraper: "▥",
-    sandwich: "☰",
-    alloddalleven: "◑",
-    clone: "⧉",
-  };
+  const variantIcons: Record<string, string> = variantMetadata.icons;
 
   function legacyClick(id: string) {
     document.getElementById(id)?.click();
@@ -106,7 +94,10 @@
 
   function toggleMobilePanelPosition() {
     mobilePanelPosition = mobilePanelPosition === "above" ? "below" : "above";
-    window.localStorage.setItem("penpa-mobile-input-panel-position", mobilePanelPosition);
+    window.localStorage.setItem(
+      "penpa-mobile-input-panel-position",
+      mobilePanelPosition,
+    );
     queueMicrotask(fitBoard);
   }
 
@@ -162,7 +153,10 @@
           : mode === "number"
             ? "Number"
             : "Sudoku";
-    if (mode === "number" && (variant === "inequality" || variant === "blocksumrelations")) {
+    if (
+      mode === "number" &&
+      (variant === "inequality" || variant === "blocksumrelations")
+    ) {
       toolPanelOptions = [
         { value: "<", label: "<" },
         { value: "^", label: "^" },
@@ -181,7 +175,19 @@
       ];
     } else if (mode === "number" && variant === "multiplication") {
       toolPanelOptions = [{ value: "×", label: "×" }];
-    } else if (mode === "symbol" && variant === "detection" && /^arrow_/.test(submode)) {
+    } else if (
+      mode === "symbol" &&
+      [
+        "detection",
+        "little killer",
+        "product little killer",
+        "bouncing x-sums",
+        "czech outsider",
+        "framediagonal",
+        "pointingdifferents",
+      ].includes(variant) &&
+      /^arrow_/.test(submode)
+    ) {
       toolPanelOptions = [1, 3, 5, 7].map((index) => ({
         value: String(index + 1),
         label: arrows[index],
@@ -197,7 +203,9 @@
       ];
     } else if (
       mode === "symbol" &&
-      (variant === "consecutive" || variant === "evensumpairs") &&
+      (variant === "consecutive" ||
+        variant === "evensumpairs" ||
+        variant === "fadedkropki") &&
       submode === "circle_SS"
     ) {
       toolPanelOptions = [{ value: "1", label: "White" }];
@@ -208,6 +216,7 @@
         "perfectsquares",
         "primesums",
         "twodigitprimenumbers",
+        "fives",
       ].includes(variant) &&
       submode === "diamond_SS"
     ) {
@@ -229,7 +238,14 @@
         { value: "trio-mid", input: "3", label: "4–6 □", submode: "square_L" },
         { value: "trio-high", input: "3", label: "7–9 △", submode: "triup_L" },
       ];
-    } else if (mode === "symbol" && variant === "diagonallyconsecutive") {
+    } else if (
+      mode === "symbol" &&
+      [
+        "diagonallyconsecutive",
+        "diagonal sum is nine",
+        "diagonal tens",
+      ].includes(variant)
+    ) {
       toolPanelOptions = [
         { value: "1", label: "Left diagonal" },
         { value: "2", label: "Right diagonal" },
@@ -360,9 +376,9 @@
   }
 
   function variantInputFamilies(value: string): VariantTab[] {
-    if (noInputVariationValues.has(value)) return ["no-input"];
-    if (directionalShapeVariationValues.has(value)) return ["shape"];
     const catalog = variationByValue.get(value);
+    if (catalog?.inputType.categories.length)
+      return catalog.inputType.categories;
     const setting = (window as any).penpa_constraints?.setting?.[value];
     const modes: string[] = setting?.modeset || [];
     const families = new Set<VariantTab>();
@@ -374,11 +390,15 @@
       families.add("line");
     if (!families.size) {
       const choice = catalog ? markChoiceFor(catalog) : null;
-      families.add(
-        choice?.position === "none" || value === "classic"
-          ? "no-input"
-          : "shape",
-      );
+      if (choice?.position === "none" || value === "classic") {
+        families.add("no-input");
+      } else if (choice?.position === "edge") {
+        families.add("edge");
+      } else if (choice?.position === "corner") {
+        families.add("intersection");
+      } else {
+        families.add("cell");
+      }
     }
     return [...families];
   }
@@ -386,9 +406,17 @@
   function primaryVariantTab(value: string): VariantTab {
     const families = variantInputFamilies(value);
     return (
-      (["outside", "region", "line", "no-input", "shape"] as VariantTab[]).find(
-        (tab) => families.includes(tab),
-      ) || "shape"
+      (
+        [
+          "outside",
+          "region",
+          "line",
+          "no-input",
+          "cell",
+          "edge",
+          "intersection",
+        ] as VariantTab[]
+      ).find((tab) => families.includes(tab)) || "no-input"
     );
   }
 
@@ -479,6 +507,10 @@
         "oddsandwich",
         "before9",
         "before1after9",
+        "nextto9",
+        "outsideconsecutive",
+        "outsidekiller",
+        "parityskyscrapers",
       ].includes(selectedVariant);
       let layers = [
         "outside",
@@ -531,7 +563,7 @@
 
   function updateToolDescription() {
     const active = variantHost?.querySelector<HTMLButtonElement>(
-      ".sudoku-variant-mode.active, .sudoku-variant-label.active",
+      ".sudoku-variant-mode.active",
     );
     const variant =
       active?.dataset.variant ||
@@ -960,6 +992,8 @@
       studioModal
     )
       return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
     const modes = Array.from(
       variantHost?.querySelectorAll<HTMLButtonElement>(
         ".sudoku-variant-mode",
@@ -976,7 +1010,6 @@
           ? 0
           : modes.length - 1
         : (active + direction + modes.length) % modes.length;
-    event.preventDefault();
     modes[next].click();
     modes[next].focus({ preventScroll: true });
   }
@@ -1019,7 +1052,9 @@
   }
 
   onMount(() => {
-    const savedPanelPosition = window.localStorage.getItem("penpa-mobile-input-panel-position");
+    const savedPanelPosition = window.localStorage.getItem(
+      "penpa-mobile-input-panel-position",
+    );
     if (savedPanelPosition === "above" || savedPanelPosition === "below") {
       mobilePanelPosition = savedPanelPosition;
     }
@@ -1077,7 +1112,7 @@
       window.addEventListener("load", () => window.setTimeout(begin, 0), {
         once: true,
       });
-    document.addEventListener("keydown", cycleInputMode);
+    document.addEventListener("keydown", cycleInputMode, true);
     document.addEventListener("keydown", toolPanelNumberShortcut, true);
     document.addEventListener("pointerup", requestSync);
     const closeVariantMenu = (event: PointerEvent) => {
@@ -1097,7 +1132,7 @@
       observer?.disconnect();
       resizeObserver?.disconnect();
       if (syncFrame) window.cancelAnimationFrame(syncFrame);
-      document.removeEventListener("keydown", cycleInputMode);
+      document.removeEventListener("keydown", cycleInputMode, true);
       document.removeEventListener("keydown", toolPanelNumberShortcut, true);
       document.removeEventListener("pointerup", requestSync);
       document.removeEventListener("pointerdown", closeVariantMenu);
@@ -1106,10 +1141,10 @@
 </script>
 
 <svelte:head>
-  <title>Penpa Sudoku Studio</title>
+  <title>Sudotoku</title>
   <meta
     name="description"
-    content="A reactive Sudoku setting and CSP solving workspace powered by Penpa."
+    content="A Sudoku setter and solver powered by Penpa+."
   />
 </svelte:head>
 
@@ -1211,10 +1246,6 @@
           class:hidden-section={layer !== "problem"}
         >
           <div class="control-label" id="svelte-variant-label">Add variant</div>
-          <div class="generation-legend">
-            <span class="csp-legend-icon">⬢</span> CSP implemented · ✦ Generates
-            from scratch
-          </div>
           <div class="variant-search-control">
             <span class="variant-icon">{variantIcon(selectedVariant)}</span>
             <input
@@ -1274,22 +1305,17 @@
                     >
                     <span>{variant.label}</span>
                     <span class="capability-badges">
-                      {#if cspSupportedVariants.has(variant.value)}
+                      {#if variationByValue.get(variant.value)?.status === "available"}
                         <span
                           class="csp-badge"
                           title="CSP solver implemented"
                           aria-label="CSP solver implemented">⬢</span
                         >
                       {:else}
-                        <span
-                          class="unsupported-badge"
-                          title="CSP solver unsupported">CSP ⊘</span
+                        <span class="unsupported-badge" title="Planned"
+                          >Planned</span
                         >
                       {/if}
-                      {#if scratchGeneratableVariants.has(variant.value)}<span
-                          class="generation-badge"
-                          title="Can generate from scratch">✦</span
-                        >{/if}
                     </span>
                     {#if conflict}<span class="input-conflict"
                         >Used by {guideFor(conflict).title}</span
@@ -1379,7 +1405,12 @@
         class:disabled-section={layer === "solution"}
         class:hidden-section={layer === "modes"}
       >
-        <h2>Input modes</h2>
+        <div class="input-modes-heading">
+          <h2>Input modes</h2>
+          <kbd class="tab-key-hint" title="Press Tab to cycle input modes"
+            >Tab ↹</kbd
+          >
+        </div>
         <div bind:this={variantHost} class="legacy-variant-host"></div>
         {#if selectedVariant === "slotmachine"}
           <div class="slot-column-controls" aria-label="Slot Machine columns">
@@ -1437,7 +1468,29 @@
             Move {mobilePanelPosition === "above" ? "below" : "above"}
           </button>
         </div>
-        <div class="tool-input-panel" aria-label={`${toolPanelMode} mobile input panel`}>
+        {#if layer === "solution" && toolPanelMode === "Sudoku"}
+          <div class="note-modes mobile-note-modes" aria-label="Note input style">
+            <button
+              type="button"
+              class:active={noteMode === "1"}
+              on:click={() => chooseNoteMode("1")}>Normal</button
+            >
+            <button
+              type="button"
+              class:active={noteMode === "3"}
+              on:click={() => chooseNoteMode("3")}>Center</button
+            >
+            <button
+              type="button"
+              class:active={noteMode === "2"}
+              on:click={() => chooseNoteMode("2")}>Corner</button
+            >
+          </div>
+        {/if}
+        <div
+          class="tool-input-panel"
+          aria-label={`${toolPanelMode} mobile input panel`}
+        >
           {#each toolPanelOptions as option, index}
             <button
               type="button"
@@ -1445,7 +1498,9 @@
               class:panel-action={Boolean(option.action)}
               on:pointerdown={(event) => useToolPanelOption(event, option)}
             >
-              {option.label}{#if !option.action && index < 9}<kbd>{index + 1}</kbd>{/if}
+              {option.label}{#if !option.action && index < 9}<kbd
+                  >{index + 1}</kbd
+                >{/if}
             </button>
           {/each}
         </div>
@@ -1613,7 +1668,8 @@
               class="info-action"
               title="About this editor"
               aria-label="About this editor"
-              on:click={() => (studioModal = "info")}><span>ⓘ</span></button
+              on:click={() => (studioModal = "info")}
+              ><span>ⓘ</span>About</button
             >
           </div>
         </div>
@@ -1653,16 +1709,17 @@
           <button class="primary" on:click={createGrid}>Create grid</button>
         </div>
       {:else if studioModal === "confirm-generate"}
-        <h2 id="studio-modal-title">Generate from the current variants?</h2>
+        <h2 id="studio-modal-title">
+          Generate {generatorSource === "existing"
+            ? "from existing clues"
+            : "from the blank grid"}
+        </h2>
         <p>
-          {generatorSource === "existing"
-            ? "The current givens and clues will seed the completed grid before pruning."
-            : "A fresh completed grid will be constructed."} The {newGridSize} ×
-          {newGridSize}
-          {generatorVariants
-            .filter((variant) => variant !== "classic")
-            .join(" + ") || "Classic"} puzzle uses 180° rotational symmetry, and
-          every clue-pair removal is checked by the CSP for a unique solution.
+          {generatorVariants.length == 0
+            ? "This will be a Classic Sudoku."
+            : generatorVariants.length == 1
+              ? "This will be " + generatorVariants.join() + " Sudoku"
+              : "This will be " + generatorVariants.join(", ") + " Sudoku"}
         </p>
         <div class="studio-modal-actions">
           <button on:click={() => (studioModal = null)}>Cancel</button>
@@ -1677,10 +1734,6 @@
             <button
               class:active={screenshotType === "png"}
               on:click={() => (screenshotType = "png")}>PNG</button
-            >
-            <button
-              class:active={screenshotType === "jpg"}
-              on:click={() => (screenshotType = "jpg")}>JPG</button
             >
             <button
               class:active={screenshotType === "svg"}
@@ -1719,26 +1772,57 @@
           >
         </div>
       {:else}
-        <h2 id="studio-modal-title">About Penpa Sudoku Studio</h2>
+        <h2 id="studio-modal-title">About Sudotoku</h2>
         <p>
-          This editor builds on Penpa+, created and maintained by the Penpa
-          community and its contributors.
+          Sudotoku (Sudoku + Toku (解く = to solve)) is a Sudoku setter and
+          solver powered by Penpa+. Feel free to use this to create and share
+          your own puzzles!
         </p>
         <div class="info-copy">
           <strong>Credits</strong>
           <p>
-            Native puzzle drawing, canvas interaction, serialization, and SVG
-            export are powered by Penpa+. This workspace adds the Svelte
-            interface and CSP Sudoku tooling.
+            <a
+              href="https://swaroopg92.github.io/penpa-edit/"
+              target="_blank"
+              rel="noreferrer">Penpa+</a
+            > for the amazing puzzle editor.
           </p>
-          <strong>Disclaimer</strong>
           <p>
-            This is an independent working fork. Variant solving remains
-            experimental; always verify generated candidates before publishing a
-            puzzle.
+            <a
+              href="https://semiexp.net/apps/sudoku-editor/index.html"
+              target="_blank"
+              rel="noreferrer">Sudoku Editor Plus</a
+            >
+            for CSP solver inspiration. This website uses a vibecoded CSP implementation,
+            but I hope to learn to integrate
           </p>
-          <a href="./variant-wiki.html" target="_blank" rel="noreferrer"
-            >Open the variant wiki</a
+          <p>
+            <a
+              href="https://github.com/semiexp/cspuz_core"
+              target="_blank"
+              rel="noreferrer">cspuz_core</a
+            > someday.
+          </p>
+          <p>
+            <a
+              href="https://logic-puzzles.ropeko.ch/php/db/search.php"
+              target="_blank"
+              rel="noreferrer">Logic Puzzles</a
+            > for the variant database!
+          </p>
+          <p>Codex for making this ambitious project possible.</p>
+          <h2 id="studio-modal-title">Disclaimer</h2>
+          <p>
+            The solver is deterministic, but if you find a bug, please report it
+            to the GitHub.
+          </p>
+          <p>This uses local storage for settings only.</p>
+          <p>
+            The solver runs on your device, and it does not collect nor send any
+            of your data.
+          </p>
+          <a href="./list" target="_blank" rel="noreferrer"
+            >See list of variants ↗</a
           >
           <a
             href="https://github.com/lemononmars/penpa-edit"
@@ -1748,7 +1832,7 @@
         </div>
         <div class="studio-modal-actions">
           <button class="primary" on:click={() => (studioModal = null)}
-            >Done</button
+            >Back to setting Sudoku</button
           >
         </div>
       {/if}
@@ -2228,6 +2312,23 @@
     min-height: 0;
     overflow: hidden;
   }
+  .input-modes-heading {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .input-modes-heading h2 {
+    margin: 0;
+  }
+  .tab-key-hint {
+    padding: 1px 5px;
+    border: 1px solid #aebbc7;
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    color: #536170;
+    background: #f8fafc;
+    font: 700 9px/1.5 system-ui, sans-serif;
+  }
   .hidden-section {
     display: none !important;
   }
@@ -2397,6 +2498,20 @@
     font-size: 12px !important;
     font-weight: 650;
   }
+  :global(.svelte-home .legacy-variant-host .sudoku-variant-title) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    box-sizing: border-box;
+    padding: 0 10px;
+    border: 1px solid #bdc8d3;
+    border-radius: 6px 0 0 6px;
+    color: #263443;
+    background: #eef2f6;
+    font-size: 12px;
+    font-weight: 750;
+    white-space: nowrap;
+  }
   :global(.svelte-home .legacy-variant-host button:hover) {
     border-color: #176fae !important;
     background: #eef7fd !important;
@@ -2455,17 +2570,11 @@
   :global(.svelte-home .sudoku-variant-group[data-variant="sandwich"]) {
     --variant-icon: "☰";
   }
-  :global(.svelte-home .sudoku-variant-group .sudoku-variant-mode::before),
-  :global(.svelte-home .sudoku-variant-group .sudoku-variant-label::before) {
+  :global(.svelte-home .sudoku-variant-group .sudoku-variant-title::before) {
     content: var(--variant-icon);
     margin-right: 6px;
     color: #176fae;
     font-size: 15px;
-  }
-  :global(
-      .svelte-home .sudoku-variant-group .sudoku-variant-mode.active::before
-    ) {
-    color: #fff;
   }
   :global(.svelte-home .sudoku-variant-tools > .sudoku-variant-mode::before) {
     content: "9";
@@ -2490,8 +2599,7 @@
     border-radius: 0 !important;
   }
   :global(.svelte-home .sudoku-variant-group > button:first-child) {
-    border-left-width: 1px !important;
-    border-radius: 6px 0 0 6px !important;
+    border-radius: 0 !important;
   }
   :global(.svelte-home .sudoku-variant-group > button:last-child) {
     border-radius: 0 6px 6px 0 !important;
@@ -3573,6 +3681,17 @@
       font-weight: 700;
       letter-spacing: normal;
       text-transform: none;
+    }
+    .mobile-note-modes {
+      margin: 0 0 6px;
+    }
+    .mobile-note-modes button {
+      display: block;
+      min-height: 32px;
+      padding: 5px 7px;
+    }
+    .controls-top-drawer .note-modes span {
+      display: none;
     }
     .studio-shell.dark .mobile-input-panel-header button {
       color: #dce5ec;
