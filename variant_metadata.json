@@ -23,7 +23,15 @@
     "evenpassage": "even passage",
     "equalsumline": "equal sum line",
     "germanwhispers": "german whispers",
-    "factorlines": "factor lines"
+    "factorlines": "factor lines",
+    "sumnexttonine": "sum next to nine",
+    "wrongoutsidesum": "wrong outside sum",
+    "doublesandwich": "double sandwich",
+    "divisiblebythree": "divisible by three",
+    "equalsumlines": "equal sum lines",
+    "number5isalive": "number 5 is alive",
+    "oddtapa": "odd tapa",
+    "tictactoe": "tic-tac-toe"
   },
   "scrapedAliases": {
     "elimination": "eliminate",
@@ -1964,7 +1972,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Inside each 3x3 box all sums created by three horizontally or vertically adjacent digits must be divisible by 3."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -2037,7 +2045,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Clues outside the grid indicate the sum of the digit(s) placed between the digits 1, 5 and 9 in the respective row or column in the correct order. The order of the digits 1,5 and 9 is not given."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -2252,7 +2260,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. All lines have the same sum of digits. Digits may repeat on lines."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -4025,7 +4033,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Some numbers are given on the edges between two adjacent cells. Treating those cells as a two-digit number (reading left to right or top to bottom), the two-digit number must be a multiple of the clue. (For example, near a 7 clue, the two digits can be 14, 21, 28, 35,...)"
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -4249,7 +4257,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Digits must not repeat in cages and their sums end with 5 (the sums can be 5, 15, 25, 35 or 45)."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -4479,11 +4487,11 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. All odd digits must be orthogonally interconnected with no 2x2 area covered completely by odd digits (like shaded cells in Tapa puzzle)."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       },
@@ -5197,7 +5205,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Numbers outside the grid signify the position of the highest of the nearest three digits in the corresponding row/column."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6547,7 +6555,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Clues outside the grid indicate the sum of the immediate neighbours of the digit 9 in the corresponding row or column."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6848,11 +6856,11 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. The central 3x3 region serves as a map to the 9 regions of the grid (for the example, its top-left cell corresponds to the top-left 3x3 region, and its central cell corresponds to the central 3x3 region). Wherever the central region contains an odd digit, the corresponding region must have three odd digits in at least one line (horizontal, vertical or diagonal). Wherever it contains an even digit, the corresponding region must have three even digits in a line. No region can contain both a line of odd digits and a line of even digits."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       },
@@ -7329,7 +7337,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules.\nThe clues outside the grid differ by exactly 1 from the sum of the first 3 numbers placed in the corresponding direction."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [

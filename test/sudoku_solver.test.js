@@ -2123,3 +2123,97 @@ test("validates new variants: inner frame sum, missing digit, next to 9, outside
         { relation: "pointingdifferents", cells: firstRow, value: 8 }
     ] }).solved, false);
 });
+
+test("validates new variants: position, sum next to nine, wrong outside sum, multiples, double sandwich, divisible by three, equal sum lines, number 5 is alive, odd tapa, tic-tac-toe", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+    const row0 = Array.from({ length: 9 }, (_, col) => ({ row: 0, col }));
+
+    // 1. position: in row0 (5,3,4,6,7,8,9,1,2), the nearest three are 5,3,4. Highest is 5 (at 1-indexed position 1).
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "position", cells: row0, value: 1 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "position", cells: row0, value: 2 }
+    ] }).solved, false);
+
+    // 2. sum next to nine: in row0, 9 is at index 6 (value 9). Immediate neighbors are 8 (index 5) and 1 (index 7). Sum = 8 + 1 = 9.
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "sumnexttonine", cells: row0, value: 9 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "sumnexttonine", cells: row0, value: 10 }
+    ] }).solved, false);
+
+    // 3. wrong outside sum: in row0, sum of first 3 is 5+3+4 = 12. Clue must differ by exactly 1, so 11 or 13.
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "wrongoutsidesum", cells: row0, value: 11 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "wrongoutsidesum", cells: row0, value: 13 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "wrongoutsidesum", cells: row0, value: 12 }
+    ] }).solved, false);
+
+    // 4. multiples: edge relation.
+    // r0c0 (5) and r0c1 (3): two-digit is 53. Not a multiple of 7.
+    // r0c7 (1) and r0c8 (2): two-digit is 12. Multiple of 4.
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "multiples", cells: [{ row: 0, col: 7 }, { row: 0, col: 8 }], target: 4 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "multiples", cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }], target: 7 }
+    ] }).solved, false);
+
+    // 5. double sandwich: in row0 (5,3,4,6,7,8,9,1,2), positions of 1, 5, 9 are:
+    // 5 at index 0, 9 at index 6, 1 at index 7.
+    // Sorted indices: 0 (5) < 6 (9) < 7 (1).
+    // Digits between first and second (index 0 and 6) are: 3, 4, 6, 7, 8 (indices 1 to 5).
+    // Sum = 3+4+6+7+8 = 28.
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "doublesandwich", cells: row0, value: 28 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
+        { relation: "doublesandwich", cells: row0, value: 27 }
+    ] }).solved, false);
+
+    // 6. divisible by three: global constraint.
+    assert.equal(SudokuCSP.solve(solved, { divisiblebythree: [true] }).solved, false);
+    
+    // 7. equal sum lines: global/catalog lines.
+    // Line 1: (0,0) [5] and (0,1) [3] -> sum 8.
+    // Line 2: (1,6) [3] and (1,5) [5] -> sum 8.
+    assert.equal(SudokuCSP.solve(solved, { equalsumlines: [
+        { lines: [
+            [{ row: 0, col: 0 }, { row: 0, col: 1 }],
+            [{ row: 1, col: 6 }, { row: 1, col: 5 }]
+        ] }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { equalsumlines: [
+        { lines: [
+            [{ row: 0, col: 0 }, { row: 0, col: 1 }],
+            [{ row: 0, col: 6 }, { row: 0, col: 7 }]
+        ] }
+    ] }).solved, false);
+
+    // 8. number 5 is alive: cage constraint.
+    // Cage: (0,1) [3] and (0,2) [4] and (0,5) [8] -> sum = 15 (ends in 5).
+    assert.equal(SudokuCSP.solve(solved, { number5isalive: [
+        { cells: [{ row: 0, col: 1 }, { row: 0, col: 2 }, { row: 0, col: 5 }] }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { number5isalive: [
+        { cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }] }
+    ] }).solved, false);
+
+    // 9. odd tapa: global constraint.
+    // oddCells = 5 (0,0), 3 (0,1), 7 (0,4), 9 (0,6), 1 (0,7). Not fully connected (0,4 isolated).
+    assert.equal(SudokuCSP.solve(solved, { oddtapa: [true] }).solved, false);
+    
+    // 10. tic-tac-toe: central region maps to boxes.
+    assert.equal(SudokuCSP.solve(solved, { tictactoe: [true] }).solved, false);
+});
+

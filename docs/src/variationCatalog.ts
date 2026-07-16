@@ -159,7 +159,7 @@ function genericSetting(variation: Variation) {
         add("line", "1", 2, ["mo_line_lb", "sub_line1_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["clonedstrands", "equal sum line", "german whispers", "factor lines"].includes(variation.value)) {
+    if (["clonedstrands", "equal sum line", "equal sum lines", "german whispers", "factor lines"].includes(variation.value)) {
         add("line", "2", 3, ["mo_line_lb", "sub_line2_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }

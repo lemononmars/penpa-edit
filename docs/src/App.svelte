@@ -1348,7 +1348,7 @@
                 {#if variationByValue.has(ruleVariant)}
                   <a
                     class="rule-wiki-link"
-                    href={`./variant.html?id=${encodeURIComponent(ruleVariant)}`}
+                    href={`./list.html?id=${encodeURIComponent(ruleVariant)}`}
                     target="_blank"
                     rel="noreferrer">{ruleTitle}</a
                   >
@@ -1369,7 +1369,7 @@
                 {#if variationByValue.has(ruleVariant)}
                   <a
                     class="rule-wiki-link"
-                    href={`./variant.html?id=${encodeURIComponent(ruleVariant)}`}
+                    href={`./list.html?id=${encodeURIComponent(ruleVariant)}`}
                     target="_blank"
                     rel="noreferrer">{ruleTitle}</a
                   >
@@ -1404,6 +1404,8 @@
         class="input-modes-section"
         class:disabled-section={layer === "solution"}
         class:hidden-section={layer === "modes"}
+        class:panel-above={mobilePanelPosition === "above"}
+        class:panel-below={mobilePanelPosition === "below"}
       >
         <div class="input-modes-heading">
           <h2>Input modes</h2>
@@ -1821,7 +1823,7 @@
             The solver runs on your device, and it does not collect nor send any
             of your data.
           </p>
-          <a href="./list" target="_blank" rel="noreferrer"
+          <a href="./list.html" target="_blank" rel="noreferrer"
             >See list of variants ↗</a
           >
           <a
@@ -3558,19 +3560,17 @@
     }
 
     .column.controls {
-      display: flex;
-      flex-direction: column;
-      height: auto;
-      width: 100%;
+      display: contents;
+    }
+
+    .legacy-modes-section {
       order: 4;
-      flex-shrink: 0;
       background: #ffffff;
       border-top: 1px solid #d7dee5;
       padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 12px)) 8px;
       box-sizing: border-box;
-      gap: 6px;
     }
-    .studio-shell.dark .column.controls {
+    .studio-shell.dark .legacy-modes-section {
       background: #263340;
       border-top-color: #40505f;
     }
@@ -3598,15 +3598,33 @@
       border-color: #40505f;
     }
 
-    .input-modes-section {
-      padding: 4px !important;
-      margin: 0 !important;
-      box-shadow: none !important;
-      border: none !important;
+    .input-modes-section.panel-above,
+    .input-modes-section.panel-below {
+      order: 1;
+      margin: 8px 8px 0 8px !important;
+      padding: 6px 12px !important;
+      background: #fff;
+      border: 1px solid #d4dbe3;
+      border-bottom: none;
+      border-radius: 10px 10px 0 0;
+      box-shadow: 0 -2px 8px rgba(23, 34, 49, 0.04);
+      box-sizing: border-box;
+      width: calc(100% - 16px);
+      z-index: 5;
     }
-    .input-modes-section h2 {
+    .input-modes-section.panel-below {
+      order: 3;
+    }
+    .input-modes-section.panel-above h2,
+    .input-modes-section.panel-below h2 {
       display: none;
     }
+    .studio-shell.dark .input-modes-section.panel-above,
+    .studio-shell.dark .input-modes-section.panel-below {
+      background: #32414f;
+      border-color: #40505f;
+    }
+
     :global(.svelte-home .legacy-variant-host .sudoku-variant-tools) {
       display: flex !important;
       flex-direction: row !important;
@@ -3645,14 +3663,40 @@
     }
     .mobile-input-panel.panel-above {
       order: 1;
-      margin-bottom: 0;
+      margin-top: 0 !important;
+      margin-bottom: 8px !important;
+      border-radius: 0 0 10px 10px;
+      border-top: none;
+      box-shadow: 0 4px 8px rgba(23, 34, 49, 0.06);
     }
     .mobile-input-panel.panel-below {
       order: 3;
-      margin-top: 0;
+      margin-top: 0 !important;
+      margin-bottom: 8px !important;
+      border-radius: 0 0 10px 10px;
+      border-top: none;
+      box-shadow: 0 4px 8px rgba(23, 34, 49, 0.06);
     }
     .studio-shell.dark .mobile-input-panel {
       background: #32414f;
+    }
+
+    .variant-picker .variant-menu {
+      position: fixed;
+      top: 145px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-height: none;
+      z-index: 200;
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+      background: #ffffff;
+      border: 1px solid #bdc8d3;
+    }
+    .studio-shell.dark .variant-picker .variant-menu {
+      background: #263340;
+      border-color: #40505f;
     }
     .mobile-input-panel-header {
       display: flex;
