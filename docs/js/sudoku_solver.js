@@ -271,6 +271,65 @@ var SudokuSolver = (function() {
         return (col + 2 + left) + ((row + 2 + top) * puzzle.nx0);
     }
 
+    function defaultIrregularRegions(size) {
+        var boxHeight = size === 6 ? 2 : 3;
+        var boxWidth = size / boxHeight;
+        return Array.from({ length: size * size }, function(_, index) {
+            var row = (index / size) | 0;
+            var col = index % size;
+            return 1 + ((row / boxHeight) | 0) * (size / boxWidth) + ((col / boxWidth) | 0);
+        });
+    }
+
+    function irregularRegionIds(puzzle) {
+        var size = puzzleSize(puzzle) || SIZE;
+        var stored = puzzle && puzzle.pu_q && puzzle.pu_q.irregularRegions;
+        var defaults = defaultIrregularRegions(size);
+        if (!Array.isArray(stored) || stored.length !== size * size) {
+            return defaults;
+        }
+        return stored.map(function(value, index) {
+            var normalized = String(value === undefined || value === null ? "" : value).trim();
+            return normalized || String(defaults[index]);
+        });
+    }
+
+    function irregularBoundaryEdges(puzzle, regionIds) {
+        var size = puzzleSize(puzzle);
+        if (!puzzle || !size || !Array.isArray(regionIds)) return [];
+        var top = Number(puzzle.space && puzzle.space[0] || 0);
+        var left = Number(puzzle.space && puzzle.space[2] || 0);
+        var firstRow = 1 + top;
+        var firstCol = 1 + left;
+        var base = puzzle.nx0 * puzzle.ny0;
+        var edges = [];
+        function vertical(row, boundaryCol) {
+            var latticeCol = firstCol + boundaryCol;
+            var first = base + (firstRow + row) * puzzle.nx0 + latticeCol;
+            return first + "," + (first + puzzle.nx0);
+        }
+        function horizontal(boundaryRow, col) {
+            var first = base + (firstRow + boundaryRow) * puzzle.nx0 + firstCol + col;
+            return first + "," + (first + 1);
+        }
+        for (var row = 0; row < size; row++) {
+            for (var col = 1; col < size; col++) {
+                if (String(regionIds[row * size + col - 1]) !== String(regionIds[row * size + col])) {
+                    edges.push(vertical(row, col));
+                }
+            }
+        }
+        for (var boundaryRow = 1; boundaryRow < size; boundaryRow++) {
+            for (var boundaryCol = 0; boundaryCol < size; boundaryCol++) {
+                if (String(regionIds[(boundaryRow - 1) * size + boundaryCol]) !==
+                    String(regionIds[boundaryRow * size + boundaryCol])) {
+                    edges.push(horizontal(boundaryRow, boundaryCol));
+                }
+            }
+        }
+        return edges;
+    }
+
     function digitFromEntry(entry) {
         if (!entry) {
             return 0;
@@ -508,6 +567,22 @@ var SudokuSolver = (function() {
         };
         if (!puzzle || !puzzle.pu_q) {
             return constraints;
+        }
+
+        if (variantEnabled(puzzle, "irregular")) {
+            var irregularGroups = {};
+            irregularRegionIds(puzzle).forEach(function(regionId, index) {
+                var key = String(regionId);
+                (irregularGroups[key] || (irregularGroups[key] = [])).push({
+                    row: (index / SIZE) | 0,
+                    col: index % SIZE
+                });
+            });
+            constraints.baseBoxes = false;
+            Object.keys(irregularGroups).forEach(function(regionId) {
+                constraints.regionAllDifferent.push(irregularGroups[regionId]);
+            });
+            constraints.supported.push("irregular");
         }
 
         [["thermo", "thermos"], ["nobulbthermo", "thermos"]].forEach(function(names) {
@@ -2642,7 +2717,10 @@ var SudokuSolver = (function() {
         primeUniqueSolution: primeUniqueSolution,
         showConflict: showConflict,
         shouldDiscoverVariant: shouldDiscoverVariant,
-        puzzleSize: puzzleSize
+        puzzleSize: puzzleSize,
+        defaultIrregularRegions: defaultIrregularRegions,
+        irregularRegionIds: irregularRegionIds,
+        irregularBoundaryEdges: irregularBoundaryEdges
     };
 })();
 
@@ -3099,6 +3177,7 @@ var SudokuTools = (function() {
 
     function modeLabel(variant, mode, submode) {
         var labels = {
+            irregular: "Regions",
             sudoku: "Sudoku",
             symbol: submode === "circle_SS" ? (variant === "consecutive" ? "White Dot" : "Kropki Dot") :
                 variant === "odd even" ? "Odd / Even Mark" :
@@ -3320,6 +3399,10 @@ var SudokuTools = (function() {
             return;
         }
         Array.prototype.forEach.call(toolbar.querySelectorAll(".sudoku-variant-mode"), function(button) {
+            if (button.dataset.mode === "irregular") {
+                button.classList.toggle("active", pu.irregular_mode === true);
+                return;
+            }
             var mode = pu.mode[pu.mode.qa].edit_mode;
             var submode = pu.mode[pu.mode.qa][mode] ? pu.mode[pu.mode.qa][mode][0] : "";
             var active = button.dataset.mode === mode &&
@@ -3419,6 +3502,10 @@ var SudokuTools = (function() {
     }
 
     function applyMode(variant, mode, submode, style) {
+        if (mode === "irregular") {
+            enterIrregularEditor();
+            return;
+        }
         if (!pu || !pu.mode || !pu.mode[pu.mode.qa] || !pu.mode[pu.mode.qa][mode]) {
             return;
         }
@@ -3473,6 +3560,137 @@ var SudokuTools = (function() {
         updateBattenburgNegativeControl();
     }
 
+    function ensureIrregularRegions() {
+        if (!pu || !pu.pu_q) return [];
+        var size = SudokuSolver.puzzleSize(pu);
+        if (!size) return [];
+        var current = pu.pu_q.irregularRegions;
+        if (!Array.isArray(current) || current.length !== size * size) {
+            current = SudokuSolver.defaultIrregularRegions(size);
+        } else {
+            var defaults = SudokuSolver.defaultIrregularRegions(size);
+            current = current.map(function(value, index) {
+                var normalized = String(value === undefined || value === null ? "" : value).trim();
+                return normalized || String(defaults[index]);
+            });
+        }
+        pu.pu_q.irregularRegions = current;
+        return current;
+    }
+
+    function irregularBoundaryEdges(regionIds) {
+        return SudokuSolver.irregularBoundaryEdges(pu, regionIds);
+    }
+
+    function redrawIrregularBoundaries() {
+        if (!pu || !pu.pu_q || !pu.pu_q.lineE) return;
+        var size = SudokuSolver.puzzleSize(pu);
+        var oldEdges = Array.isArray(pu.pu_q.irregularRegionEdges) ?
+            pu.pu_q.irregularRegionEdges : irregularBoundaryEdges(SudokuSolver.defaultIrregularRegions(size));
+        oldEdges.forEach(function(edge) {
+            if (pu.pu_q.lineE[edge] === 2) delete pu.pu_q.lineE[edge];
+        });
+        var newEdges = irregularBoundaryEdges(ensureIrregularRegions());
+        newEdges.forEach(function(edge) { pu.pu_q.lineE[edge] = 2; });
+        pu.pu_q.irregularRegionEdges = newEdges;
+        SudokuSolver.invalidateCandidateAnalysis();
+        pu.redraw();
+    }
+
+    function removeIrregularEditor() {
+        var overlay = byId("sudoku-irregular-region-editor");
+        if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        var host = byId("dvique");
+        if (host) host.classList.remove("irregular-editing");
+    }
+
+    function renderIrregularEditor() {
+        removeIrregularEditor();
+        if (!pu || !pu.irregular_mode || pu.mode.qa !== "pu_q") return;
+        var host = byId("dvique");
+        var canvas = byId("canvas");
+        var size = SudokuSolver.puzzleSize(pu);
+        var regions = ensureIrregularRegions();
+        if (!host || !canvas || !size || !regions.length) return;
+        host.classList.add("irregular-editing");
+        var overlay = document.createElement("div");
+        overlay.id = "sudoku-irregular-region-editor";
+        overlay.className = "irregular-region-editor";
+        overlay.setAttribute("aria-label", "Irregular Sudoku region numbers");
+        overlay.addEventListener("pointerdown", function(event) {
+            // Own the whole board while region IDs are being edited. This
+            // prevents clicks between inputs from reaching the previous
+            // Penpa drawing mode.
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        overlay.style.width = canvas.style.width || canvas.width + "px";
+        overlay.style.height = canvas.style.height || canvas.height + "px";
+        regions.forEach(function(regionId, index) {
+            var row = (index / size) | 0;
+            var col = index % size;
+            var point = pu.point[SudokuSolver.cellKey(pu, row, col)];
+            if (!point) return;
+            var input = document.createElement("input");
+            input.type = "text";
+            input.inputMode = "numeric";
+            input.pattern = "[0-9]*";
+            input.maxLength = 3;
+            input.value = String(regionId);
+            input.setAttribute("aria-label", "Region number for row " + (row + 1) + ", column " + (col + 1));
+            input.style.left = point.x + "px";
+            input.style.top = point.y + "px";
+            input.style.width = Math.max(24, pu.size * 0.72) + "px";
+            input.style.height = Math.max(24, pu.size * 0.72) + "px";
+            input.style.fontSize = Math.max(16, pu.size * 0.42) + "px";
+            input.addEventListener("pointerdown", function(event) { event.stopPropagation(); });
+            input.addEventListener("input", function() {
+                input.value = input.value.replace(/\D/g, "").slice(0, 3);
+                pu.pu_q.irregularRegions[index] = input.value;
+                SudokuSolver.invalidateCandidateAnalysis();
+            });
+            input.addEventListener("blur", function() {
+                if (!input.value) {
+                    input.value = String(SudokuSolver.defaultIrregularRegions(size)[index]);
+                    pu.pu_q.irregularRegions[index] = input.value;
+                }
+            });
+            input.addEventListener("keydown", function(event) {
+                event.stopPropagation();
+                var offset = event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" || event.key === "Enter" ? 1 :
+                    event.key === "ArrowUp" ? -size : event.key === "ArrowDown" ? size : 0;
+                if (!offset) return;
+                event.preventDefault();
+                var inputs = overlay.querySelectorAll("input");
+                var next = Math.max(0, Math.min(inputs.length - 1, index + offset));
+                inputs[next].focus();
+                inputs[next].select();
+            });
+            overlay.appendChild(input);
+        });
+        host.appendChild(overlay);
+        var first = overlay.querySelector("input");
+        if (first) window.setTimeout(function() { first.focus(); first.select(); }, 0);
+    }
+
+    function enterIrregularEditor() {
+        if (!pu || !SudokuSolver.puzzleSize(pu)) return;
+        addVariant("irregular");
+        ensureIrregularRegions();
+        pu.activeSudokuVariant = "irregular";
+        pu.irregular_mode = true;
+        renderVariantTools();
+    }
+
+    function finishIrregularEditor() {
+        if (!pu || !pu.irregular_mode) return;
+        pu.irregular_mode = false;
+        removeIrregularEditor();
+        redrawIrregularBoundaries();
+        applyMode("classic", "sudoku", "1", "");
+        renderVariantTools();
+    }
+
     function ensureWindokuCages() {
         if (!pu || SudokuSolver.puzzleSize(pu) !== 9 || typeof pu.cage_for_selection !== "function") return;
         var added = Array.isArray(pu.windokuCageSegments) ? pu.windokuCageSegments.slice() : [];
@@ -3501,6 +3719,31 @@ var SudokuTools = (function() {
         discoverVariantsFromBoard();
         syncDiagonalLines();
         toolbar.innerHTML = "";
+        if (pu && pu.irregular_mode) {
+            var editorGroup = document.createElement("span");
+            editorGroup.className = "sudoku-variant-group irregular-editor-tools";
+            editorGroup.dataset.variant = "irregular";
+            var editorTitle = document.createElement("span");
+            editorTitle.className = "sudoku-variant-title";
+            editorTitle.textContent = variantLabel("irregular");
+            editorGroup.appendChild(editorTitle);
+            var finish = document.createElement("button");
+            finish.type = "button";
+            finish.className = "button sudoku-tool-button sudoku-variant-mode active";
+            finish.dataset.variant = "irregular";
+            finish.dataset.mode = "irregular";
+            finish.dataset.submode = "regions";
+            finish.textContent = "Finish regions";
+            finish.addEventListener("click", function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                finishIrregularEditor();
+            });
+            editorGroup.appendChild(finish);
+            toolbar.appendChild(editorGroup);
+            renderIrregularEditor();
+            return;
+        }
         var sudokuButton = document.createElement("button");
         sudokuButton.type = "button";
         sudokuButton.className = "button sudoku-tool-button sudoku-variant-mode";
@@ -3529,12 +3772,16 @@ var SudokuTools = (function() {
             title.className = "sudoku-variant-title";
             title.textContent = variantLabel(variant);
             group.appendChild(title);
-            for (var i = 0; i < setting.modeset.length; i++) {
-                if (setting.modeset[i] === "sudoku") {
-                    continue;
+            if (variant === "irregular") {
+                addVariantModeButton(group, variant, "irregular", "regions", "");
+            } else {
+                for (var i = 0; i < setting.modeset.length; i++) {
+                    if (setting.modeset[i] === "sudoku") {
+                        continue;
+                    }
+                    addVariantModeButton(group, variant, setting.modeset[i],
+                        setting.submodeset[i], setting.styleset[i]);
                 }
-                addVariantModeButton(group, variant, setting.modeset[i],
-                    setting.submodeset[i], setting.styleset[i]);
             }
             if (variant === "kropki" || variant === "consecutive" || variant === "xv" || variant === "battenburg") {
                 var negative = document.createElement("button");
@@ -3790,6 +4037,20 @@ var SudokuTools = (function() {
             pu.windokuCageSegments.forEach(function(segment) { delete pu.pu_q.cage[segment]; });
             pu.windokuCageSegments = [];
             if (typeof pu.refreshKillerCages === "function") pu.refreshKillerCages("pu_q");
+        } else if (variant === "irregular") {
+            removeIrregularEditor();
+            pu.irregular_mode = false;
+            var irregularEdges = Array.isArray(pu.pu_q.irregularRegionEdges) ?
+                pu.pu_q.irregularRegionEdges : [];
+            irregularEdges.forEach(function(edge) {
+                if (pu.pu_q.lineE[edge] === 2) delete pu.pu_q.lineE[edge];
+            });
+            var size = SudokuSolver.puzzleSize(pu);
+            irregularBoundaryEdges(SudokuSolver.defaultIrregularRegions(size)).forEach(function(edge) {
+                pu.pu_q.lineE[edge] = 2;
+            });
+            delete pu.pu_q.irregularRegions;
+            delete pu.pu_q.irregularRegionEdges;
         }
         pu.activeSudokuVariant = "classic";
         pu.kropki_mode = false;
@@ -3830,6 +4091,8 @@ var SudokuTools = (function() {
             pu.consecutiveNegativeConstraint = false;
             pu.xvNegativeConstraint = false;
             pu.battenburgNegativeConstraint = false;
+            pu.irregular_mode = false;
+            removeIrregularEditor();
         }
         var select = byId("constraints_settings_opt");
         if (select) {
@@ -3861,6 +4124,11 @@ var SudokuTools = (function() {
         addVariant(variant);
         if (pu) pu.activeSudokuVariant = variant;
         if (variant === "windoku") ensureWindokuCages();
+        if (variant === "irregular") {
+            SudokuSolver.invalidateCandidateAnalysis();
+            enterIrregularEditor();
+            return;
+        }
         syncDiagonalLines();
 
         SudokuSolver.invalidateCandidateAnalysis();
@@ -3949,6 +4217,8 @@ var SudokuTools = (function() {
         renderVariantTools: renderVariantTools,
         variantChanged: variantChanged,
         resetForNewGrid: resetForNewGrid,
+        enterIrregularEditor: enterIrregularEditor,
+        finishIrregularEditor: finishIrregularEditor,
         generatePuzzle: generatePuzzle,
         pauseGenerator: pauseGenerator,
         stopWork: stopWork,

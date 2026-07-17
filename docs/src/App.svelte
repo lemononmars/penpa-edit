@@ -119,6 +119,9 @@
   }
 
   function chooseLayer(nextLayer: "problem" | "solution" | "modes") {
+    if (nextLayer !== "problem") {
+      (window as any).SudokuTools?.finishIrregularEditor?.();
+    }
     layer = nextLayer;
     variantMenuOpen = false;
     legacyPress(nextLayer === "solution" ? "pu_a_label" : "pu_q_label");
@@ -137,6 +140,12 @@
 
   function syncToolPanel() {
     const pu = (window as any).pu;
+    if (pu?.irregular_mode) {
+      toolPanelMode = "Regions";
+      toolPanelOptions = [];
+      toolPanelSelected = new Set<string>();
+      return;
+    }
     const mode = pu?.mode?.[pu?.mode?.qa]?.edit_mode || "sudoku";
     const setting = pu?.mode?.[pu?.mode?.qa]?.[mode] || [];
     const submode = String(setting[0] || "");
@@ -442,6 +451,9 @@
   }
 
   function conflictingVariant(value: string) {
+    // Irregular owns a persisted region-ID grid, not Penpa's cage/surface
+    // primitives, so it can coexist with variants that use Region inputs.
+    if (value === "irregular") return null;
     const restricted = variantInputFamilies(value).filter(
       (family) =>
         family === "line" || family === "region" || family === "outside",
@@ -452,6 +464,7 @@
         (active) =>
           active !== value &&
           active !== "classic" &&
+          active !== "irregular" &&
           variantInputFamilies(active).some((family) =>
             restricted.includes(family),
           ),
@@ -500,6 +513,9 @@
 
   function chooseVariant(value: string) {
     if (conflictingVariant(value) || unavailableVariant(value)) return;
+    if (value !== "irregular") {
+      (window as any).SudokuTools?.finishIrregularEditor?.();
+    }
     selectedVariant = value;
     variantMenuOpen = false;
     const select = document.getElementById(
@@ -1057,7 +1073,12 @@
     if (select?.options.length) {
       variants = Array.from(select.options).map((option) => ({
         value: option.value,
-        label: option.textContent,
+        // Never expose the internal option value as the menu label. The
+        // catalog is backed directly by variant_metadata.json's `name` field.
+        label:
+          variationByValue.get(option.value)?.name ||
+          option.textContent ||
+          "Unnamed variant",
         group:
           (option.parentElement as HTMLOptGroupElement | null)?.label ||
           "Variants",
@@ -2324,6 +2345,39 @@
     border: 1px solid #d4dbe3;
     border-radius: 10px;
     box-shadow: 0 4px 18px rgba(23, 34, 49, 0.1);
+  }
+  :global(.svelte-home #dvique.irregular-editing) {
+    position: relative;
+  }
+  :global(.svelte-home .irregular-region-editor) {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    pointer-events: auto;
+  }
+  :global(.svelte-home .irregular-region-editor input) {
+    position: absolute;
+    box-sizing: border-box;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    outline: none;
+    background: rgba(255, 255, 255, 0.78);
+    color: #173f78;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    pointer-events: auto;
+  }
+  :global(.svelte-home .irregular-region-editor input:hover) {
+    border-color: #8aa9ca;
+  }
+  :global(.svelte-home .irregular-region-editor input:focus) {
+    border-color: #176fae;
+    background: rgba(232, 243, 255, 0.96);
+    box-shadow: 0 0 0 2px rgba(23, 111, 174, 0.2);
   }
   :global(.svelte-home .board-host #puzzleinfo),
   :global(.svelte-home .board-host #contestinfo) {

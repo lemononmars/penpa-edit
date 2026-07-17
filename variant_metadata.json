@@ -1,39 +1,5 @@
 {
-  "version": 2,
-  "aliases": {
-    "antiking": "anti king",
-    "antidiagonal": "anti diagonal",
-    "antiknight": "anti knight",
-    "battenburg": "battenburg",
-    "littlekiller": "little killer",
-    "productlittlekiller": "product little killer",
-    "nonconsecutive": "non consecutive",
-    "oddeven": "odd even",
-    "bouncingxsums": "bouncing x-sums",
-    "czechoutsider": "czech outsider",
-    "diagonalsumisnine": "diagonal sum is nine",
-    "diagonaltens": "diagonal tens",
-    "disparity": "disparity",
-    "distances": "distances",
-    "fadedkropki": "faded kropki",
-    "firstseenoddeven": "first seen odd/even",
-    "maxascending": "max ascending",
-    "fives": "fives",
-    "framediagonal": "frame-diagonal",
-    "oddlabyrinth": "odd labyrinth",
-    "evenpassage": "even passage",
-    "equalsumline": "equal sum line",
-    "germanwhispers": "german whispers",
-    "factorlines": "factor lines",
-    "sumnexttonine": "sum next to nine",
-    "wrongoutsidesum": "wrong outside sum",
-    "doublesandwich": "double sandwich",
-    "divisiblebythree": "divisible by three",
-    "equalsumlines": "equal sum lines",
-    "number5isalive": "number 5 is alive",
-    "oddtapa": "odd tapa",
-    "tictactoe": "tic-tac-toe"
-  },
+  "version": 3,
   "scrapedAliases": {
     "elimination": "eliminate",
     "disjointgroups": "disjoint",
@@ -41,228 +7,6 @@
     "min-max": "minimax",
     "minmax": "minimax",
     "renban": "renbanregion"
-  },
-  "guides": {
-    "classic": {
-      "title": "Classic",
-      "rule": "Place each digit exactly once in every row, column, and box.",
-      "usage": "Click a cell, then type a digit. Use Tab to cycle through available input tools."
-    },
-    "odd even": {
-      "title": "Odd / Even",
-      "rule": "A circle contains an odd digit; a square contains an even digit.",
-      "usage": "Click a cell center to cycle through an odd circle, an even square, and no mark."
-    },
-    "alloddalleven": {
-      "title": "All Odd All Even",
-      "rule": "Within each Sudoku box, all shaded cells contain digits of the same parity.",
-      "usage": "Use the Cell tool to shade every constrained cell. Shaded cells are grouped by their Sudoku box."
-    },
-    "clone": {
-      "title": "Clone",
-      "rule": "Matching translated caged shapes contain identical digits in corresponding positions.",
-      "usage": "Draw cages around matching shapes. Every cage must have at least one other cage with exactly the same shape."
-    },
-    "diagonal": {
-      "title": "Diagonal Sudoku",
-      "rule": "Each marked main diagonal contains every digit exactly once.",
-      "usage": "No mark is required. Select this button to inspect or activate the rule."
-    },
-    "anti diagonal": {
-      "title": "Anti-Diagonal",
-      "rule": "Each marked diagonal contains exactly three distinct digits, each appearing three times.",
-      "usage": "No mark is required. Select this button to inspect or activate the rule."
-    },
-    "anti king": {
-      "title": "Anti King (No touch)",
-      "rule": "Equal digits may not be a chess king move apart.",
-      "usage": "This is a global rule and requires no additional marks."
-    },
-    "anti knight": {
-      "title": "Anti-Knight",
-      "rule": "Equal digits may not be a chess knight move apart.",
-      "usage": "This is a global rule and requires no additional marks."
-    },
-    "non consecutive": {
-      "title": "Non-Consecutive",
-      "rule": "Orthogonally adjacent cells may not contain consecutive digits.",
-      "usage": "This is a global rule and requires no additional marks."
-    },
-    "arrow": {
-      "title": "Arrow",
-      "rule": "Digits along an arrow sum to the digit in its circle.",
-      "usage": "Drag from the circle cell through the shaft cells to create an arrow."
-    },
-    "thermo": {
-      "title": "Thermometer",
-      "rule": "Digits strictly increase from the bulb to the tip.",
-      "usage": "Drag from the bulb through the cells in increasing order."
-    },
-    "killer": {
-      "title": "Killer",
-      "rule": "Digits in a cage do not repeat and sum to the displayed cage total.",
-      "usage": "Drag across cells to make a cage, then use Killer Sum on its upper-left corner."
-    },
-    "kropki": {
-      "title": "Kropki",
-      "rule": "White dots join consecutive digits; black dots join digits in a 1:2 ratio.",
-      "usage": "Click an edge to cycle through a black dot, a white dot, and no dot."
-    },
-    "palindrome": {
-      "title": "Palindrome",
-      "rule": "Digits along the line read the same in either direction.",
-      "usage": "Drag through cell centers to draw a palindrome line."
-    },
-    "xv": {
-      "title": "XV",
-      "rule": "Cells joined by V sum to 5; cells joined by X sum to 10.",
-      "usage": "Click an edge to cycle through V, X, and no clue."
-    },
-    "battenburg": {
-      "title": "Battenburg",
-      "rule": "The four cells around a mark alternate odd and even like a checkerboard. Negative Battenburg forbids that pattern at every unmarked corner.",
-      "usage": "Click a four-cell corner to add or remove a Battenburg mark; use its Negative toggle to constrain unmarked corners."
-    },
-    "skyscraper": {
-      "title": "Skyscraper",
-      "rule": "An outside clue gives the number of visible digits when taller digits hide shorter ones.",
-      "usage": "Click an outside clue cell and type its visibility count."
-    },
-    "sandwich": {
-      "title": "Sandwich",
-      "rule": "An outside clue gives the sum of digits strictly between 1 and 6 in that row or column.",
-      "usage": "Click an outside clue cell and type the sandwich sum."
-    },
-    "bouncing x-sums": {
-      "title": "Bouncing X-Sums",
-      "rule": "Each number outside the grid is the sum of the first X cells along the indicated diagonal, starting from that cell, where X is the first digit placed in that direction. If the diagonal hits the edge, it bounces at a 90 degree angle.",
-      "usage": "Place the total and its arrow on the same outside cell."
-    },
-    "czech outsider": {
-      "title": "Czech Outsider",
-      "rule": "Each number outside the grid must appear on the diagonal indicated by its corresponding arrow. Multiple instances must appear at least that many times.",
-      "usage": "Place the digits and its arrow on the same outside cell."
-    },
-    "diagonal sum is nine": {
-      "title": "Diagonal Sum is Nine",
-      "rule": "Pairs of diagonally adjacent cells that contain digits summing to nine are marked with a line; diagonally adjacent cells without a line cannot sum to nine.",
-      "usage": "Toggle the left and right diagonal bars at each intersection."
-    },
-    "diagonal tens": {
-      "title": "Diagonal Tens",
-      "rule": "Pairs of diagonally adjacent cells that contain digits summing to ten are marked with a line; diagonally adjacent cells without a line cannot sum to ten.",
-      "usage": "Toggle the left and right diagonal bars at each intersection."
-    },
-    "disparity": {
-      "title": "Disparity",
-      "rule": "Any two cells that share a border between two different boxes must contain digits of opposite parity.",
-      "usage": "This is a global rule and requires no additional marks."
-    },
-    "distances": {
-      "title": "Distances",
-      "rule": "Clues outside the grid indicate the distance (in steps) between the digits in the corresponding row or column. Digits must be placed in order of appearance.",
-      "usage": "Click an outside clue cell and type its X-Y:Z clue (e.g. 2-5:4)."
-    },
-    "faded kropki": {
-      "title": "Faded Kropki",
-      "rule": "All dots are white and indicate that the digits must be consecutive or have a 1:2 ratio. Undotted orthogonal pairs cannot be consecutive or have a 1:2 ratio.",
-      "usage": "Place white dots between adjacent cells. Negative constraint can be toggled using the Negative Kropki button."
-    },
-    "first seen odd/even": {
-      "title": "First Seen Odd/Even",
-      "rule": "Clues outside the grid indicate the first digit of a specific parity (odd/even) seen from that direction.",
-      "usage": "Click an outside cell and type the digit."
-    },
-    "max ascending": {
-      "title": "Max Ascending",
-      "rule": "Clues outside indicate the length of the longest contiguous run of strictly ascending digits in that row/column from that direction.",
-      "usage": "Click an outside cell and type the digit."
-    },
-    "fives": {
-      "title": "Fives",
-      "rule": "Adjacent cells separated by a diamond must sum to 5 or differ by 5. All possible diamonds are given.",
-      "usage": "Place diamond marks between adjacent cells."
-    },
-    "frame-diagonal": {
-      "title": "Frame-Diagonal",
-      "rule": "Clues outside indicate the sum of the first 3 cells along the diagonal in that direction.",
-      "usage": "Place diagonal arrow symbols outside the grid, and enter the sum digits."
-    },
-    "odd labyrinth": {
-      "title": "Odd Labyrinth",
-      "rule": "There must be a continuous path of odd digits connecting r1c1 to r9c9.",
-      "usage": "This is a global rule and requires no additional marks."
-    },
-    "even passage": {
-      "title": "Even Passage",
-      "rule": "There must be a continuous path of even digits connecting r1c1 to r9c9.",
-      "usage": "This is a global rule and requires no additional marks."
-    },
-    "equal sum line": {
-      "title": "Equal Sum Line",
-      "rule": "Digits on line segments within each 3x3 box must sum to the same total.",
-      "usage": "Draw lines through cells."
-    },
-    "german whispers": {
-      "title": "German Whispers",
-      "rule": "Adjacent digits along the line must differ by at least 5.",
-      "usage": "Draw lines through cells."
-    },
-    "factor lines": {
-      "title": "Factor Lines",
-      "rule": "Adjacent digits along the line must be factors or multiples of each other.",
-      "usage": "Draw lines through cells."
-    },
-    "inner frame sum": {
-      "title": "Inner Frame Sum",
-      "rule": "Outside clues indicate the sum of the 2nd, 3rd, and 4th cells in that row or column in that direction.",
-      "usage": "Place number clues outside the grid."
-    },
-    "missing digit": {
-      "title": "Missing Digit",
-      "rule": "Outside clues indicate the digit that is missing from the first three cells in that row or column in that direction.",
-      "usage": "Place number clues outside the grid."
-    },
-    "next to 9": {
-      "title": "Next to 9",
-      "rule": "Outside clues indicate the sum of the immediate neighbors of the digit 9 in that row or column.",
-      "usage": "Place number clues outside the grid."
-    },
-    "outside consecutive": {
-      "title": "Outside Consecutive",
-      "rule": "Outside clues indicate the count of consecutive adjacent pairs in that row or column.",
-      "usage": "Place number clues outside the grid."
-    },
-    "outside greater than": {
-      "title": "Outside Greater Than",
-      "rule": "Outside clues indicate the count of neighboring cells in that row or column that contain a digit greater than their neighbor in that direction.",
-      "usage": "Place number clues outside the grid."
-    },
-    "outside killer": {
-      "title": "Outside Killer",
-      "rule": "Outside clues indicate the sum of at least one pair of neighboring cells in that row or column.",
-      "usage": "Place number clues outside the grid."
-    },
-    "parity skyscrapers": {
-      "title": "Parity Sky Scrapers",
-      "rule": "Outside clues indicate whether an odd or even number of skyscrapers are visible in that direction.",
-      "usage": "Place number clues outside the grid."
-    },
-    "pointing differents": {
-      "title": "Pointing Differents",
-      "rule": "Outside clues indicate the count of distinct digits along the diagonal starting in that direction.",
-      "usage": "Place diagonal arrow symbols outside the grid, and enter the count digits."
-    },
-    "renbanline": {
-      "title": "Renban (line)",
-      "rule": "Digits along each line must form a set of consecutive digits in any order.",
-      "usage": "Draw lines through cells."
-    },
-    "renbanregion": {
-      "title": "Renban (region)",
-      "rule": "Digits in each marked region must form a set of consecutive digits in any order.",
-      "usage": "Draw cages around cells."
-    }
   },
   "icons": {
     "classic": "9",
@@ -359,7 +103,7 @@
       "id": "24trio",
       "name": "24-Trio",
       "rules": {
-        "9x9": "Apply classic sudoku rules.\nThe three numbers placed along marked lines must result in 24 after applying two of the arithmetic operations (+, x, -, /). The order of these numbers along the line does not matter.\nE.g. 395 can be combined as 24 = (3 x 5) + 9."
+        "9x9": "Apply classic sudoku rules. The three numbers placed along marked lines must result in 24 after applying two of the arithmetic operations (+, x, -, /). The order of these numbers along the line does not matter. E.g. 395 can be combined as 24 = (3 x 5) + 9."
       },
       "status": "planned",
       "scratchGeneratable": false,
@@ -404,7 +148,9 @@
         "categories": [
           "shape"
         ],
-        "instructions": []
+        "instructions": [
+          "Use the Cell tool to shade every constrained cell. Shaded cells are grouped by their Sudoku box."
+        ]
       }
     },
     {
@@ -466,7 +212,7 @@
       }
     },
     {
-      "id": "antidiagonal",
+      "id": "anti diagonal",
       "name": "Anti Diagonal",
       "rules": {
         "6x6": "Place a digit from 1 to 6 into each empty cell in the grid so that each digit appears exactly once in each row, column and 2x3 outlined box. Each main diagonal contains exactly three digits.",
@@ -482,11 +228,13 @@
         "categories": [
           "shape"
         ],
-        "instructions": []
+        "instructions": [
+          "No mark is required. Select this button to inspect or activate the rule."
+        ]
       }
     },
     {
-      "id": "antiknight",
+      "id": "anti knight",
       "name": "Anti Knight",
       "rules": {
         "6x6": "Place a digit from 1 to 6 into each empty cell in the grid so that each digit appears exactly once in each row, column and 2x3 outlined box. No cell that is a knight-step away can contain the same digit. A knight's move is 2 in a line and 1 to the side, as in chess.",
@@ -501,7 +249,9 @@
         "categories": [
           "no-input"
         ],
-        "instructions": []
+        "instructions": [
+          "This is a global rule and requires no additional marks."
+        ]
       }
     },
     {
@@ -577,7 +327,9 @@
         "categories": [
           "shape"
         ],
-        "instructions": []
+        "instructions": [
+          "Drag from the circle cell through the shaft cells to create an arrow."
+        ]
       }
     },
     {
@@ -670,25 +422,10 @@
         "categories": [
           "shape"
         ],
-        "instructions": []
+        "instructions": [
+          "Click a four-cell corner to add or remove a Battenburg mark; use its Negative toggle to constrain unmarked corners."
+        ]
       }
-    },
-    {
-      "otherNames": "",
-      "id": "battenburglittlekiller",
-      "name": "Battenburg Little Killer",
-      "rules": {
-        "9x9": "Apply classic sudoku rules. Wherever 2 odd and 2 even digits form a 2x2 chessboard pattern, a Battenburg marking is given. If there is no marking, the above pattern is not allowed. The clues outside the grid indicate the sum of the digits contained in the cells in the direction of the corresponding arrow."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "outside"
-        ],
-        "instructions": []
-      },
-      "tags": []
     },
     {
       "id": "battleship",
@@ -861,7 +598,7 @@
       }
     },
     {
-      "id": "bouncingxsums",
+      "id": "bouncing x-sums",
       "name": "Bouncing X-Sums",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. Each number outside the grid is the sum of the first X cells along the indicated diagonal, starting from that cell, where X is the first digit placed in that direction. If the diagonal hits the edge, it bounces at a 90 degree angle. Digits may be repeated in the sums."
@@ -1011,7 +748,9 @@
         "categories": [
           "no-input"
         ],
-        "instructions": []
+        "instructions": [
+          "Click a cell, then type a digit. Use Tab to cycle through available input tools."
+        ]
       }
     },
     {
@@ -1091,25 +830,10 @@
         "categories": [
           "region"
         ],
-        "instructions": []
+        "instructions": [
+          "Draw cages around matching shapes. Every cage must have at least one other cage with exactly the same shape."
+        ]
       }
-    },
-    {
-      "otherNames": "",
-      "id": "clonefortress",
-      "name": "Clone Fortress",
-      "rules": {
-        "9x9": "Apply classic sudoku rules. Digits in the same place in both shaded figures must be identical. A digit placed in a shaded cell must be strictly greater than digits placed in orthogonally adjacent unshaded cells."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "shape"
-        ],
-        "instructions": []
-      },
-      "tags": []
     },
     {
       "otherNames": "",
@@ -1494,7 +1218,7 @@
       "tags": []
     },
     {
-      "id": "czechoutsider",
+      "id": "czech outsider",
       "name": "Czech Outsider",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. Each number outside the grid must appear on the diagonal indicated by its corresponding arrow. If a number is given multiple times for a single arrow, that number must appear at least as many times as it is specified on that diagonal."
@@ -1626,8 +1350,7 @@
       "id": "determinant",
       "name": "Determinant",
       "rules": {
-        "6x6": "A circled clue at a four-cell intersection gives a×d−b×c for the surrounding 2×2 matrix.",
-        "9x9": "A circled clue at a four-cell intersection gives a×d−b×c for the surrounding 2×2 matrix."
+        "9x9": "The determinants of 2x2 matrices are given in the center of the four cells. The determinant of a 2x2 matrix is a a x d - b x c, where a is the top left, b is the top right, c is bottom left and d is the bottom right element."
       },
       "tags": [
         "math"
@@ -1659,9 +1382,11 @@
       "scratchGeneratable": true,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
-        "instructions": []
+        "instructions": [
+          "No mark is required. Select this button to inspect or activate the rule."
+        ]
       }
     },
     {
@@ -1733,7 +1458,7 @@
       "tags": []
     },
     {
-      "id": "diagonalsumisnine",
+      "id": "diagonal sum is nine",
       "name": "Diagonal Sum is Nine",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. All pairs of diagonally adjacent cells that contain digits summing to nine are marked with a line; diagonally adjacent cells without a line cannot sum to nine."
@@ -1754,7 +1479,7 @@
       }
     },
     {
-      "id": "diagonaltens",
+      "id": "diagonal tens",
       "name": "Diagonal Tens",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. All pairs of diagonally adjacent cells that contain digits summing to ten are marked with a line; diagonally adjacent cells without a line cannot sum to ten."
@@ -1929,7 +1654,9 @@
         "categories": [
           "no-input"
         ],
-        "instructions": []
+        "instructions": [
+          "This is a global rule and requires no additional marks."
+        ]
       }
     },
     {
@@ -1967,13 +1694,14 @@
         ],
         "instructions": [
           "Number · normal",
-          "Click an outside clue cell and type its X-Y:Z clue (e.g. 2-5:3)."
+          "Click an outside clue cell and type its X-Y:Z clue (e.g. 2-5:3).",
+          "Click an outside clue cell and type its X-Y:Z clue (e.g. 2-5:4)."
         ]
       }
     },
     {
       "otherNames": "",
-      "id": "divisiblebythree",
+      "id": "divisible by three",
       "name": "Divisible by Three",
       "rules": {
         "9x9": "Apply classic sudoku rules. Inside each 3x3 box all sums created by three horizontally or vertically adjacent digits must be divisible by 3."
@@ -2046,7 +1774,7 @@
     },
     {
       "otherNames": "",
-      "id": "doublesandwich",
+      "id": "double sandwich",
       "name": "Double Sandwich",
       "rules": {
         "9x9": "Apply classic sudoku rules. Clues outside the grid indicate the sum of the digit(s) placed between the digits 1, 5 and 9 in the respective row or column in the correct order. The order of the digits 1,5 and 9 is not given."
@@ -2238,7 +1966,7 @@
       }
     },
     {
-      "id": "equalsumline",
+      "id": "equal sum line",
       "name": "Equal Sum Line",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. The line is divided by the borders of the 3x3 boxes. The digits on a line segment within any given 3x3 box must sum to the same total as the digits on every other segment of that same line."
@@ -2255,13 +1983,14 @@
         ],
         "instructions": [
           "Line · diagonal",
-          "Draw the lines of the same length."
+          "Draw the lines of the same length.",
+          "Draw lines through cells."
         ]
       }
     },
     {
       "otherNames": "",
-      "id": "equalsumlines",
+      "id": "equal sum lines",
       "name": "Equal Sum Lines",
       "rules": {
         "9x9": "Apply classic sudoku rules. All lines have the same sum of digits. Digits may repeat on lines."
@@ -2334,7 +2063,7 @@
       }
     },
     {
-      "id": "evenpassage",
+      "id": "even passage",
       "name": "Even Passage",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. There must be at least one continuous path of cells containing only even digits that travels orthogonally from the top-left corner (r1c1) to the bottom-right corner (r9c9)."
@@ -2350,7 +2079,8 @@
         ],
         "instructions": [
           "No placed input",
-          "The constraint is generated from grid geometry."
+          "The constraint is generated from grid geometry.",
+          "This is a global rule and requires no additional marks."
         ]
       }
     },
@@ -2534,7 +2264,7 @@
       "tags": []
     },
     {
-      "id": "factorlines",
+      "id": "factor lines",
       "name": "Factor Lines",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. For any two adjacent digits on the line, one digit must be a factor or a multiple of the other."
@@ -2551,12 +2281,13 @@
         ],
         "instructions": [
           "Line · diagonal",
-          "Draw the lines of the same length."
+          "Draw the lines of the same length.",
+          "Draw lines through cells."
         ]
       }
     },
     {
-      "id": "fadedkropki",
+      "id": "faded kropki",
       "name": "Faded Kropki",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. A white dot between two adjacent cells indicates that the digits in those cells must either be consecutive (differ by 1) or have a 1:2 ratio. All possible white dots are given: cells without a dot cannot be consecutive or have a 1:2 ratio."
@@ -2572,7 +2303,8 @@
         ],
         "instructions": [
           "Shape · small white circle",
-          "Place white dots between adjacent cells."
+          "Place white dots between adjacent cells.",
+          "Place white dots between adjacent cells. Negative constraint can be toggled using the Negative Kropki button."
         ]
       }
     },
@@ -2628,7 +2360,7 @@
       "tags": []
     },
     {
-      "id": "firstseenoddeven",
+      "id": "first seen odd/even",
       "name": "First Seen Odd/Even",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. Clues outside the grid indicate the first digit of a specific parity (odd or even) encountered when looking into the grid from that direction. Any number of opposite-parity digits may appear before the first seen digit."
@@ -2646,7 +2378,8 @@
         ],
         "instructions": [
           "Number · normal",
-          "Enter the parity clue digit in the margin."
+          "Enter the parity clue digit in the margin.",
+          "Click an outside cell and type the digit."
         ]
       }
     },
@@ -2759,7 +2492,7 @@
       "tags": []
     },
     {
-      "id": "framediagonal",
+      "id": "frame-diagonal",
       "name": "Frame-Diagonal",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. Each number outside the grid is the sum of the first 3 cells along the indicated diagonal."
@@ -2779,7 +2512,8 @@
         "instructions": [
           "Number · normal",
           "Shape · eight-direction arrow",
-          "Place diagonal arrow outside and enter its sum."
+          "Place diagonal arrow outside and enter its sum.",
+          "Place diagonal arrow symbols outside the grid, and enter the sum digits."
         ]
       }
     },
@@ -2854,7 +2588,7 @@
       "tags": []
     },
     {
-      "id": "germanwhispers",
+      "id": "german whispers",
       "name": "German Whispers",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. Adjacent digits along the line must differ by at least 5."
@@ -2870,7 +2604,8 @@
         ],
         "instructions": [
           "Line · diagonal",
-          "Draw the lines of the same length."
+          "Draw the lines of the same length.",
+          "Draw lines through cells."
         ]
       }
     },
@@ -3226,7 +2961,9 @@
         "categories": [
           "outside"
         ],
-        "instructions": []
+        "instructions": [
+          "Place number clues outside the grid."
+        ]
       },
       "tags": []
     },
@@ -3261,13 +2998,15 @@
       "tags": [
         "irregular"
       ],
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shape"
         ],
-        "instructions": []
+        "instructions": [
+          "Enter a region number in every cell. Cells with the same number form one box; they do not need to be connected. Finish region editing to draw the box borders."
+        ]
       }
     },
     {
@@ -3422,7 +3161,9 @@
         "categories": [
           "shape"
         ],
-        "instructions": []
+        "instructions": [
+          "Drag across cells to make a cage, then use Killer Sum on its upper-left corner."
+        ]
       }
     },
     {
@@ -3512,7 +3253,9 @@
         "categories": [
           "shape"
         ],
-        "instructions": []
+        "instructions": [
+          "Click an edge to cycle through a black dot, a white dot, and no dot."
+        ]
       }
     },
     {
@@ -3675,7 +3418,7 @@
       "tags": []
     },
     {
-      "id": "littlekiller",
+      "id": "little killer",
       "name": "Little Killer",
       "rules": {
         "6x6": "Place a digit from 1 to 6 into each empty cell in the grid so that each digit appears exactly once in each row, column and 2x3 outlined box. Each number outside the grid is the sum of digits in the direction pointed by its arrow.",
@@ -3810,7 +3553,7 @@
       "tags": []
     },
     {
-      "id": "maxascending",
+      "id": "max ascending",
       "name": "Max Ascending",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. Clues outside the grid indicate the length of the longest contiguous run of strictly ascending digits in that row or column viewed from the direction of the clue."
@@ -3827,7 +3570,8 @@
         ],
         "instructions": [
           "Number · normal",
-          "Enter the ascending sequence length in the margin."
+          "Enter the ascending sequence length in the margin.",
+          "Click an outside cell and type the digit."
         ]
       }
     },
@@ -3961,7 +3705,9 @@
         "categories": [
           "outside"
         ],
-        "instructions": []
+        "instructions": [
+          "Place number clues outside the grid."
+        ]
       },
       "tags": []
     },
@@ -4108,7 +3854,9 @@
         "categories": [
           "outside"
         ],
-        "instructions": []
+        "instructions": [
+          "Place number clues outside the grid."
+        ]
       },
       "tags": []
     },
@@ -4206,10 +3954,9 @@
         "instructions": []
       }
     },
-
     {
-      "id": "nonconsecutive",
-      "name": "Nonconsecutive",
+      "id": "non consecutive",
+      "name": "Non Consecutive",
       "rules": {
         "6x6": "Place a digit from 1 to 6 into each empty cell in the grid so that each digit appears exactly once in each row, column and 2x3 outlined box. Digits in adjacent cells must not be consecutive.",
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. Digits in adjacent cells must not be consecutive."
@@ -4225,7 +3972,9 @@
         "categories": [
           "no-input"
         ],
-        "instructions": []
+        "instructions": [
+          "This is a global rule and requires no additional marks."
+        ]
       }
     },
     {
@@ -4247,7 +3996,7 @@
     },
     {
       "otherNames": "Number 5 still alive Sudoku",
-      "id": "number5isalive",
+      "id": "number 5 is alive",
       "name": "Number 5 is Alive",
       "rules": {
         "9x9": "Apply classic sudoku rules. Digits must not repeat in cages and their sums end with 5 (the sums can be 5, 15, 25, 35 or 45)."
@@ -4306,7 +4055,7 @@
       }
     },
     {
-      "id": "oddeven",
+      "id": "odd even",
       "name": "Odd Even",
       "rules": {
         "6x6": "Place a digit from 1 to 6 into each empty cell in the grid so that each digit appears exactly once in each row, column and 2x3 outlined box. Cells with shaded squares contain even digits. Cells with shaded circles contain odd digits.",
@@ -4321,7 +4070,9 @@
         "categories": [
           "shape"
         ],
-        "instructions": []
+        "instructions": [
+          "Click a cell center to cycle through an odd circle, an even square, and no mark."
+        ]
       }
     },
     {
@@ -4393,7 +4144,7 @@
       "tags": []
     },
     {
-      "id": "oddlabyrinth",
+      "id": "odd labyrinth",
       "name": "Odd Labyrinth",
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box. There must be at least one continuous path of cells containing only odd digits that travels orthogonally from the top-left corner (r1c1) to the bottom-right corner (r9c9)."
@@ -4409,7 +4160,8 @@
         ],
         "instructions": [
           "No placed input",
-          "The constraint is generated from grid geometry."
+          "The constraint is generated from grid geometry.",
+          "This is a global rule and requires no additional marks."
         ]
       }
     },
@@ -4477,7 +4229,7 @@
     },
     {
       "otherNames": "",
-      "id": "oddtapa",
+      "id": "odd tapa",
       "name": "Odd Tapa",
       "rules": {
         "9x9": "Apply classic sudoku rules. All odd digits must be orthogonally interconnected with no 2x2 area covered completely by odd digits (like shaded cells in Tapa puzzle)."
@@ -4699,7 +4451,9 @@
         "categories": [
           "outside"
         ],
-        "instructions": []
+        "instructions": [
+          "Place number clues outside the grid."
+        ]
       },
       "tags": []
     },
@@ -4716,7 +4470,9 @@
         "categories": [
           "outside"
         ],
-        "instructions": []
+        "instructions": [
+          "Place number clues outside the grid."
+        ]
       },
       "tags": []
     },
@@ -4733,7 +4489,9 @@
         "categories": [
           "outside"
         ],
-        "instructions": []
+        "instructions": [
+          "Place number clues outside the grid."
+        ]
       },
       "tags": []
     },
@@ -4847,7 +4605,9 @@
         "categories": [
           "line"
         ],
-        "instructions": []
+        "instructions": [
+          "Drag through cell centers to draw a palindrome line."
+        ]
       }
     },
     {
@@ -4955,7 +4715,9 @@
         "categories": [
           "outside"
         ],
-        "instructions": []
+        "instructions": [
+          "Place number clues outside the grid."
+        ]
       },
       "tags": []
     },
@@ -5175,7 +4937,9 @@
         "categories": [
           "outside"
         ],
-        "instructions": []
+        "instructions": [
+          "Place diagonal arrow symbols outside the grid, and enter the count digits."
+        ]
       },
       "tags": []
     },
@@ -5365,7 +5129,7 @@
       "tags": []
     },
     {
-      "id": "productlittlekiller",
+      "id": "product little killer",
       "name": "Product Little Killer",
       "rules": {
         "6x6": "Place a digit from 1 to 6 into each empty cell in the grid so that each digit appears exactly once in each row, column and 2x3 outlined box. Each number outside the grid is the product of digits in the direction pointed by its arrow.",
@@ -5623,7 +5387,9 @@
         "categories": [
           "line"
         ],
-        "instructions": []
+        "instructions": [
+          "Draw lines through cells."
+        ]
       }
     },
     {
@@ -5643,7 +5409,9 @@
         "categories": [
           "region"
         ],
-        "instructions": []
+        "instructions": [
+          "Draw cages around cells."
+        ]
       }
     },
     {
@@ -5772,7 +5540,9 @@
         "categories": [
           "outside"
         ],
-        "instructions": []
+        "instructions": [
+          "Click an outside clue cell and type the sandwich sum."
+        ]
       }
     },
     {
@@ -6045,7 +5815,9 @@
         "categories": [
           "outside"
         ],
-        "instructions": []
+        "instructions": [
+          "Click an outside clue cell and type its visibility count."
+        ]
       }
     },
     {
@@ -6552,7 +6324,7 @@
     },
     {
       "otherNames": "",
-      "id": "sumnexttonine",
+      "id": "sum next to nine",
       "name": "Sum Next to Nine",
       "rules": {
         "9x9": "Apply classic sudoku rules. Clues outside the grid indicate the sum of the immediate neighbours of the digit 9 in the corresponding row or column."
@@ -6625,7 +6397,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. The sum of the digits in each marked cage must be different."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6814,7 +6586,9 @@
         "categories": [
           "shape"
         ],
-        "instructions": []
+        "instructions": [
+          "Drag from the bulb through the cells in increasing order."
+        ]
       }
     },
     {
@@ -6853,7 +6627,7 @@
     },
     {
       "otherNames": "",
-      "id": "tictactoe",
+      "id": "tic-tac-toe",
       "name": "Tic-Tac-Toe",
       "rules": {
         "9x9": "Apply classic sudoku rules. The central 3x3 region serves as a map to the 9 regions of the grid (for the example, its top-left cell corresponds to the top-left 3x3 region, and its central cell corresponds to the central 3x3 region). Wherever the central region contains an odd digit, the corresponding region must have three odd digits in at least one line (horizontal, vertical or diagonal). Wherever it contains an even digit, the corresponding region must have three even digits in a line. No region can contain both a line of odd digits and a line of even digits."
@@ -6910,7 +6684,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Each marked line contains exactly one identical digit."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6927,7 +6701,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. For every pair of vertically adjacent digits where both digits lie in the range 1-7, the upper digit must be greater than the lower digit."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -7334,7 +7108,7 @@
     },
     {
       "otherNames": "",
-      "id": "wrongoutsidesum",
+      "id": "wrong outside sum",
       "name": "Wrong Outside Sum",
       "rules": {
         "9x9": "Apply classic sudoku rules.\nThe clues outside the grid differ by exactly 1 from the sum of the first 3 numbers placed in the corresponding direction."
@@ -7449,7 +7223,9 @@
         "categories": [
           "shape"
         ],
-        "instructions": []
+        "instructions": [
+          "Click an edge to cycle through V, X, and no clue."
+        ]
       }
     },
     {
@@ -7492,7 +7268,7 @@
       "tags": []
     },
     {
-      "id": "antiking",
+      "id": "anti king",
       "name": "Anti King",
       "rules": {
         "9x9": "Apply classic sudoku rules. Equal digits may not be a chess king move apart."
@@ -7506,7 +7282,9 @@
         "categories": [
           "no-input"
         ],
-        "instructions": []
+        "instructions": [
+          "This is a global rule and requires no additional marks."
+        ]
       }
     },
     {
@@ -7639,7 +7417,7 @@
       "id": "pointingdifferents",
       "name": "Pointing Differents",
       "rules": {
-        "9x9": "Apply classic sudoku rules. Outside clues indicate the count of distinct digits along the diagonal starting in that direction."
+        "9x9": "Apply classic sudoku rules. Outside clues indicate the count of distinct digits along the diagonal starting in that gonalrection."
       },
       "tags": [
         "outside"

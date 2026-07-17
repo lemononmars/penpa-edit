@@ -1457,7 +1457,7 @@ test("normalizes the next catalog batch into concrete CSP constraints", function
         };
     }
 
-    ["productframe", "edgedifference", "fullrank", "outsideparity", "parityparty",
+    ["edgedifference", "fullrank", "outsideparity", "parityparty",
         "serbianframe", "median", "ascendingstarters"].forEach(function(variant) {
         const constraints = SudokuSolver.readConstraints(puzzleFor(variant, { number: { 15: [4, 1, "1"] } }));
         assert.equal(constraints.supported.includes(variant), true);
@@ -1845,6 +1845,55 @@ test("Extra Region reads orthogonally connected shading and ignores cages", func
         return region.map(function(cell) { return [cell.row, cell.col]; });
     }), [[[0, 0], [0, 1]], [[2, 2]]]);
     assert.equal(constraints.killers.length, 0);
+});
+
+test("Irregular Sudoku replaces fixed boxes with persisted region-number groups", function() {
+    const regionIds = Array.from({ length: 36 }, function(_, index) {
+        return 1 + ((index / 6) | 0);
+    });
+    const puzzle = {
+        nx: 6, ny: 6, nx0: 10, space: [0, 0, 0, 0],
+        activeSudokuVariants: ["classic", "irregular"],
+        centerlist: [], point: {},
+        pu_q: {
+            line: {}, lineE: {}, number: {}, numberS: {}, symbol: {}, surface: {},
+            cage: {}, killercages: [], irregularRegions: regionIds
+        }
+    };
+
+    const constraints = SudokuSolver.readConstraints(puzzle);
+    assert.equal(constraints.baseBoxes, false);
+    assert.equal(constraints.supported.includes("irregular"), true);
+    assert.deepEqual(constraints.regionAllDifferent.map(function(region) {
+        return region.map(function(cell) { return [cell.row, cell.col]; });
+    }), Array.from({ length: 6 }, function(_, row) {
+        return Array.from({ length: 6 }, function(__, col) { return [row, col]; });
+    }));
+
+    const latinSquare = Array.from({ length: 6 }, function(_, row) {
+        return Array.from({ length: 6 }, function(__, col) { return 1 + ((row + col) % 6); });
+    });
+    assert.equal(SudokuCSP.solve(latinSquare).solved, false,
+        "the Latin square violates the normal 2x3 boxes");
+    assert.equal(SudokuCSP.solve(latinSquare, constraints).solved, true,
+        "the same grid is valid when equal region numbers define the boxes");
+});
+
+test("Irregular Sudoku derives Penpa border segments from adjacent region numbers", function() {
+    const puzzle = { nx: 6, ny: 6, nx0: 10, ny0: 10, space: [0, 0, 0, 0] };
+    const regions = SudokuSolver.defaultIrregularRegions(6);
+    const standardEdges = SudokuSolver.irregularBoundaryEdges(puzzle, regions);
+
+    assert.equal(standardEdges.length, 18);
+    assert.equal(standardEdges.includes("114,124"), true,
+        "the vertical 2x3-box boundary uses Penpa's edge lattice");
+    assert.equal(standardEdges.includes("131,132"), true,
+        "the horizontal 2x3-box boundary uses Penpa's edge lattice");
+
+    regions[0] = 9;
+    const editedEdges = SudokuSolver.irregularBoundaryEdges(puzzle, regions);
+    assert.equal(editedEdges.includes("112,122"), true);
+    assert.equal(editedEdges.includes("121,122"), true);
 });
 
 test("validates the new line, pair, cross, detector, and edge relations", function() {

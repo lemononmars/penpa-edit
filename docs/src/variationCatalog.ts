@@ -15,9 +15,7 @@ type RawVariation = {
 };
 
 type VariantMetadata = {
-    aliases: Record<string, string>;
     scrapedAliases: Record<string, string>;
-    guides: Record<string, { title: string; rule: string; usage: string }>;
     icons: Record<string, string>;
     markOverrides: Record<string, { position: string; mark: string }>;
     variants: RawVariation[];
@@ -30,7 +28,6 @@ export type Variation = RawVariation & {
 
 import metadataJson from "../../variant_metadata.json";
 export const variantMetadata = metadataJson as VariantMetadata;
-const aliases = variantMetadata.aliases;
 const scrapedAliases = variantMetadata.scrapedAliases;
 
 function stripRulePreamble(rule: string) {
@@ -44,6 +41,7 @@ function preferredRule(rules: Record<string, string>) {
 
 function getMarkPosition(value: string, tags: string[], rule: string, name: string): "no-input" | "line" | "region" | "outside" | "cell" | "edge" | "intersection" {
     const text = `${name} ${rule}`.toLowerCase();
+    if (value === "irregular") return "region";
     if (["anti king", "anti knight", "disjoint", "queen", "disparity", "touchy"].includes(value)) {
         return "no-input";
     }
@@ -93,7 +91,7 @@ function getMarkPosition(value: string, tags: string[], rule: string, name: stri
 }
 
 const allVariations: Variation[] = variantMetadata.variants.map((item) => {
-    const value = aliases[item.id] || item.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+    const value = item.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
     const rule = preferredRule(item.rules);
     const categories = item.inputType.categories.map((c) => {
         if (c === "shape") {
@@ -106,7 +104,7 @@ const allVariations: Variation[] = variantMetadata.variants.map((item) => {
     }) as any;
     return {
         ...item,
-        name: value === "anti king" ? "Anti King (No touch)" : item.name.replace(/\s+Sudoku\b/gi, "").trim(),
+        name: item.name.trim(),
         rules: Object.fromEntries(Object.entries(item.rules).map(([size, rule]) => [size, stripRulePreamble(rule)])),
         value,
         rule,
@@ -150,6 +148,11 @@ function genericSetting(variation: Variation) {
         modes.push(mode); submodes.push(submode); styles.push(style); show.push(...controls);
     };
 
+    // Irregular uses its own region-ID editor rather than a Penpa drawing
+    // primitive. SudokuTools adds the Regions button for this setting.
+    if (variation.value === "irregular") {
+        return { show, modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
     if (variation.inputType.categories.includes("no-input")) {
         return { show, modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
@@ -417,10 +420,13 @@ export function installVariationCatalog() {
         if (!constraints.options.sudoku.includes(variation.value)) constraints.options.sudoku.push(variation.value);
         const existingOption = Array.from(select.options).find((option) => option.value === variation.value);
         const targetGroup = variation.status === "available" ? implementedGroup : unsupportedGroup;
-        if (existingOption && existingOption.parentElement !== targetGroup) {
+        if (existingOption) {
+            // The legacy select may use the internal variant ID as its label.
+            // Metadata names are the display source of truth, even when the
+            // option is already filed under the correct group.
             existingOption.textContent = variation.name;
-            targetGroup.appendChild(existingOption);
-        } else if (!existingOption) {
+            if (existingOption.parentElement !== targetGroup) targetGroup.appendChild(existingOption);
+        } else {
             const option = document.createElement("option");
             option.value = variation.value;
             option.textContent = variation.name;
