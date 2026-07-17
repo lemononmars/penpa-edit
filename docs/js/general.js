@@ -1741,11 +1741,11 @@ async function request_shortlink(url) {
             if (status === "success") {
                 return link;
             }
-            console.log('Error while creating tinyurl');
+            console.error('Error while creating tinyurl');
             return null;
         });
     } catch (error) {
-        console.log('Error while creating tinyurl');
+        console.error('Error while creating tinyurl');
         return null;
     }
 }
