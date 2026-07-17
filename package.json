@@ -15,7 +15,7 @@
     "express": "^4.21.2",
     "mocha": "^10.8.2",
     "nodemon": "^2.0.22",
-    "puppeteer": "^25.3.0",
+    "playwright": "^1.61.1",
     "svelte": "^5.56.4",
     "typescript": "^7.0.2",
     "vite": "^8.1.4"
