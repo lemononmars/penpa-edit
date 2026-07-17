@@ -11,6 +11,7 @@ type RawVariation = {
     tags: string[];
     isDuplicate?: boolean;
     duplicateOf?: string;
+    example?: { problemImage: string; solutionImage: string; link: string };
 };
 
 type VariantMetadata = {

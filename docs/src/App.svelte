@@ -872,6 +872,98 @@
     studioModal = null;
   }
 
+  async function saveExample() {
+    const res = verifyUniqueSolution();
+    if (!res.success) {
+      if ((window as any).Swal) {
+        (window as any).Swal.fire({
+          icon: "warning",
+          title: "Cannot Save Example",
+          text: res.msg,
+        });
+      } else {
+        alert(res.msg);
+      }
+      return;
+    }
+    const pu = (window as any).pu;
+    const settings = (window as any).UserSettings;
+    const SudokuSolver = (window as any).SudokuSolver;
+    if (!pu || !settings || !SudokuSolver) return;
+
+    const variantId = activeVariantFilename();
+    const originalVisibility = settings.show_solution;
+
+    // Ensure problem is showing without solution
+    settings.show_solution = false;
+    pu.redraw();
+
+    // Set format to PNG, with border
+    const typeId = document.getElementById("nb_type1") as HTMLInputElement | null;
+    if (typeId) typeId.checked = true;
+    const border = document.getElementById("nb_margin2") as HTMLInputElement | null;
+    if (border) border.checked = true;
+
+    // Grab problem base64
+    const problemDataUrl = pu.resizecanvas();
+
+    // Apply solution and show it
+    SudokuSolver.applySolution(pu, res.solution);
+    settings.show_solution = true;
+    pu.redraw();
+
+    // Grab solution base64
+    const solutionDataUrl = pu.resizecanvas();
+
+    // Revert visually
+    settings.show_solution = originalVisibility;
+    pu.redraw();
+
+    // Grab the duplicate link
+    const link = pu.maketext_duplicate();
+
+    try {
+      const response = await fetch("/api/save-example", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          variantId,
+          problemDataUrl,
+          solutionDataUrl,
+          link
+        })
+      });
+      if (response.ok) {
+        if ((window as any).Swal) {
+          (window as any).Swal.fire({
+            icon: "success",
+            title: "Success",
+            text: `Example for ${variantId} saved successfully.`,
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+      } else {
+        const text = await response.text();
+        if ((window as any).Swal) {
+          (window as any).Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: text,
+          });
+        }
+      }
+    } catch (e: any) {
+      if ((window as any).Swal) {
+        (window as any).Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: e.message,
+        });
+      }
+    }
+  }
+
   function toggleTheme() {
     darkTheme = !darkTheme;
     document.documentElement.classList.toggle("dark", darkTheme);
@@ -1643,6 +1735,7 @@
               {/if}
             </div>
             <button on:click={openScreenshot}><span>▣</span>Screenshot</button>
+            <button on:click={saveExample}><span>💾</span>Save Example</button>
             <button on:click={() => legacyPress("savetext")}
               ><span>↗</span>Share</button
             >

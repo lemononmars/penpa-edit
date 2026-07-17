@@ -141,6 +141,24 @@
             </span>
           {/if}
         </div>
+        {#if detailVariation.example}
+          <section>
+            <h2>Example</h2>
+            <div class="example-images">
+              <figure>
+                <img src={detailVariation.example.problemImage} alt="Problem grid" />
+                <figcaption>Problem</figcaption>
+              </figure>
+              <figure>
+                <img src={detailVariation.example.solutionImage} alt="Solution grid" />
+                <figcaption>Solution</figcaption>
+              </figure>
+            </div>
+            <p style="margin-top: 14px; font-weight: 500;">
+              <a href={detailVariation.example.link} target="_blank" rel="noreferrer">Open this example in the editor ↗</a>
+            </p>
+          </section>
+        {/if}
         <section>
           <h2>Rules</h2>
           {#each Object.entries(detailVariation.rules) as [size, rule]}
@@ -728,6 +746,29 @@
     padding: 12px;
     color: #8c4e1e;
     background: #fff4e9;
+  }
+  .example-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-top: 16px;
+  }
+  .example-images figure {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .example-images img {
+    max-width: 100%;
+    border: 1px solid #dbe4e5;
+    background: #fff;
+  }
+  .example-images figcaption {
+    margin-top: 8px;
+    color: #526773;
+    font-size: 13px;
+    font-weight: 600;
   }
   footer {
     padding: 24px;
