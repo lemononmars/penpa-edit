@@ -3370,6 +3370,7 @@ function display_answercheck() {
 }
 
 function isEmpty(obj) {
+    if (obj == null) return true;
     return !Object.keys(obj).length;
 }
 
@@ -3430,4 +3431,8 @@ if (!String.prototype.startsWith) {
             return this.substring(pos, pos + search.length) === search;
         }
     });
+}
+
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { isEmpty };
 }
