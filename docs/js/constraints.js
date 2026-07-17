@@ -1,5 +1,5 @@
 const penpa_constraints = {
-    "implemented_sudoku": ["classic", "odd even", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv", "battenburg", "skyscraper", "sandwich"],
+    "implemented_sudoku": ["classic", "odd even", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv", "battenburg", "skyscraper", "sandwich", "uniquerectangles", "sumskyscrapers", "sumsandwich", "positionsums", "inequalitytriples", "oneortwodifferencepairs", "teneleven", "tenspositionproducts", "fullorhalf", "samesum", "xaverage", "triplesum"],
     "options_groups": ["general", "sudoku", "puzzle"],
     "options": {
         "general": ["all"],
@@ -21,9 +21,21 @@ const penpa_constraints = {
             "sandwich",
             "quadruple",
             "xv",
-            "between line",
+            "between",
             "battenburg",
-            "skyscraper"
+            "skyscraper",
+            "uniquerectangles",
+            "sumskyscrapers",
+            "sumsandwich",
+            "positionsums",
+            "inequalitytriples",
+            "oneortwodifferencepairs",
+            "teneleven",
+            "tenspositionproducts",
+            "fullorhalf",
+            "samesum",
+            "xaverage",
+            "triplesum"
         ],
         "puzzle": [
             "slitherlink",
@@ -197,7 +209,7 @@ const penpa_constraints = {
             "submodeset": ["1", "5"],
             "styleset": ["", 6]
         },
-        "between line": {
+        "between": {
             "show": ["mo_surface_lb",
                 "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
                 "mo_symbol_lb", "ms1", "ms1_circle", "li_circle_L", "li_circle",
@@ -222,6 +234,122 @@ const penpa_constraints = {
             "modeset": ["sudoku", "number"],
             "submodeset": ["1", "1"],
             "styleset": ["", 1]
+        },
+        "uniquerectangles": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb"],
+            "modeset": ["sudoku"],
+            "submodeset": ["1"],
+            "styleset": [""]
+        },
+        "sumskyscrapers": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_number_lb", "sub_number1_lb"],
+            "modeset": ["sudoku", "number"],
+            "submodeset": ["1", "1"],
+            "styleset": ["", 1],
+            "outside": true
+        },
+        "sumsandwich": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_number_lb", "sub_number10_lb"],
+            "modeset": ["sudoku", "number"],
+            "submodeset": ["1", "10"],
+            "styleset": ["", 1],
+            "outside": true
+        },
+        "positionsums": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_number_lb", "sub_number10_lb"],
+            "modeset": ["sudoku", "number"],
+            "submodeset": ["1", "10"],
+            "styleset": ["", 1],
+            "outside": true
+        },
+        "pinocchio": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_number_lb", "sub_number1_lb", "st_number0_lb"],
+            "modeset": ["sudoku", "number"],
+            "submodeset": ["1", "1"],
+            "styleset": ["", 0]
+        },
+        "inequalitytriples": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb"],
+            "modeset": ["sudoku"],
+            "submodeset": ["1"],
+            "styleset": [""]
+        },
+        "oneortwodifferencepairs": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_symbol_lb", "ms1", "ms1_circle", "li_circle_SS", "li_circle"],
+            "modeset": ["sudoku", "symbol"],
+            "submodeset": ["1", "circle_SS"],
+            "styleset": ["", ""]
+        },
+        "teneleven": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_symbol_lb", "ms1", "ms1_bars", "li_bars", "ul_bars"],
+            "modeset": ["sudoku", "symbol"],
+            "submodeset": ["1", "bars_G"],
+            "styleset": ["", ""]
+        },
+        "tenspositionproducts": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_number_lb", "sub_number5_lb", "st_number6_lb"],
+            "modeset": ["sudoku", "number"],
+            "submodeset": ["1", "5"],
+            "styleset": ["", 6]
+        },
+        "fullorhalf": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_symbol_lb", "ms1", "ms1_circle", "ms1_square", "li_circle_SS", "li_square_SS", "li_circle", "li_square"],
+            "modeset": ["sudoku", "symbol"],
+            "submodeset": ["1", "circle_SS"],
+            "styleset": ["", ""]
+        },
+        "samesum": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb", "mo_surface_lb"],
+            "modeset": ["sudoku", "surface"],
+            "submodeset": ["1", ""],
+            "styleset": ["", 1]
+        },
+        "xaverage": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_number_lb", "sub_number1_lb"],
+            "modeset": ["sudoku", "number"],
+            "submodeset": ["1", "1"],
+            "styleset": ["", 1],
+            "outside": true
+        },
+        "triplesum": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_number_lb", "sub_number6_lb"],
+            "modeset": ["sudoku", "number"],
+            "submodeset": ["1", "6"],
+            "styleset": ["", 1],
+            "outside": true
+        },
+        "alternatingstripes": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_line_lb", "sub_line2_lb", "st_line5_lb"],
+            "modeset": ["sudoku", "line"],
+            "submodeset": ["1", "2"],
+            "styleset": ["", 5]
+        },
+        "productframe": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_number_lb", "sub_number6_lb", "mo_symbol_lb", "ms3", "li_arrow_eight"],
+            "modeset": ["sudoku", "number", "symbol"],
+            "submodeset": ["1", "6", "arrow_eight"],
+            "styleset": ["", 1, 2],
+            "outside": true
+        },
+        "product little killer": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_number_lb", "sub_number6_lb", "mo_symbol_lb", "ms3", "li_arrow_eight"],
+            "modeset": ["sudoku", "number", "symbol"],
+            "submodeset": ["1", "6", "arrow_eight"],
+            "styleset": ["", 1, 2],
+            "outside": true
         },
         "slitherlink": {
             "show": ["mo_surface_lb",

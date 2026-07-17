@@ -23,7 +23,7 @@
     );
     if (themeCookie) {
       const val = themeCookie.split("=")[1];
-      darkTheme = val === "1";
+      darkTheme = val === "2";
     }
     document.documentElement.classList.toggle("dark", darkTheme);
   });
@@ -115,7 +115,7 @@
   <nav aria-label="Reference pages">
     <a
       class:active={page === "variants" || page === "detail"}
-      href="./list">Variant wiki</a
+      href="./list.html">Variant wiki</a
     >
   </nav>
 </header>
@@ -124,7 +124,7 @@
   {#if page === "detail"}
     {#if detailVariation}
       <article class="variant-detail">
-        <a class="back-link" href="./list"
+        <a class="back-link" href="./list.html"
           >Back to list of variants</a
         >
         <h1>{detailVariation.name}</h1>
@@ -193,7 +193,7 @@
     {:else}
       <section class="hero">
         <h1>Variant not found</h1>
-        <p><a href="./list">Return to the variant wiki.</a></p>
+        <p><a href="./list.html">Return to the variant wiki.</a></p>
       </section>
     {/if}
   {:else}
@@ -276,7 +276,7 @@
               <th scope="row"
                 ><a
                   class="variant-link"
-                  href={`./list?id=${encodeURIComponent(variation.value)}`}
+                  href={`./list.html?id=${encodeURIComponent(variation.value)}`}
                   ><strong>{variation.name}</strong></a
                 ><code>{variation.value}</code></th
               >

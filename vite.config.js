@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const metadataPath = resolve(process.cwd(), "variant_metadata.json");
@@ -104,7 +104,6 @@ function devApiPlugin() {
           });
           return;
         }
-
         next();
       });
     }
@@ -127,7 +126,7 @@ function variantDetailPages() {
       ids.forEach((id) => {
         const source = template
           .replace("<head>", "<head><base href=\"../../\">")
-          .replace('data-catalog-page="detail"', `data-catalog-page="detail" data-variant-id="${id}"`);
+          .replace('data-catalog-page="variants"', `data-catalog-page="detail" data-variant-id="${id}"`);
         const idDirectory = resolve(pageDirectory, id);
         mkdirSync(idDirectory, { recursive: true });
         writeFileSync(resolve(idDirectory, "index.html"), source, "utf8");

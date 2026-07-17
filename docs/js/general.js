@@ -83,7 +83,7 @@ function set_default_sudoku_board_options() {
     document.getElementById("nb_sudoku2").checked = false;
     document.getElementById("nb_sudoku3").checked = false;
     document.getElementById("nb_sudoku4").checked = false;
-    document.getElementById("nb_sudoku5").checked = false;
+    document.getElementById("nb_sudoku5").checked = (size === 6);
     document.getElementById("nb_sudoku6").checked = false;
     document.getElementById("nb_sudoku8").checked = false;
     changetype();
@@ -1741,11 +1741,11 @@ async function request_shortlink(url) {
             if (status === "success") {
                 return link;
             }
-            console.log('Error while creating tinyurl');
+            console.error('Error while creating tinyurl');
             return null;
         });
     } catch (error) {
-        console.log('Error while creating tinyurl');
+        console.error('Error while creating tinyurl');
         return null;
     }
 }

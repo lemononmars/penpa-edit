@@ -39,6 +39,7 @@
     | null = null;
   let actionMenu: "new-grid" | "generate" | "transform" | "clone" | null = null;
   let newGridSize: 6 | 9 = 9;
+  let keepVariants = false;
   let hoveredVariant: string | null = null;
   let noteMode = "1";
   let variantSearch = "";
@@ -90,6 +91,11 @@
   function legacyClick(id: string) {
     document.getElementById(id)?.click();
     queueMicrotask(syncState);
+  }
+
+  function clearMarks() {
+    legacyClick("sudoku_reset");
+    chooseLayer("problem");
   }
 
   function toggleMobilePanelPosition() {
@@ -205,10 +211,18 @@
       mode === "symbol" &&
       (variant === "consecutive" ||
         variant === "evensumpairs" ||
-        variant === "fadedkropki") &&
+        variant === "fadedkropki" ||
+        variant === "oneortwodifferencepairs") &&
       submode === "circle_SS"
     ) {
       toolPanelOptions = [{ value: "1", label: "White" }];
+    } else if (mode === "symbol" && variant === "fullorhalf") {
+      toolPanelOptions = [
+        { value: "full", input: "1", label: "Full â—‹", submode: "circle_SS" },
+        { value: "half", input: "1", label: "Half â–¡", submode: "square_SS" },
+      ];
+    } else if (mode === "symbol" && variant === "teneleven") {
+      toolPanelOptions = [{ value: "1", label: "Gray bar" }];
     } else if (
       mode === "symbol" &&
       [
@@ -511,6 +525,7 @@
         "outsideconsecutive",
         "outsidekiller",
         "parityskyscrapers",
+        "positionsums",
       ].includes(selectedVariant);
       let layers = [
         "outside",
@@ -521,7 +536,15 @@
         ? 3
         : 1;
       if (selectedVariant === "before1after9") layers = 2;
-      ensureOutsideSpace(layers, leftTopOnly ? [0, 2] : [0, 1, 2, 3]);
+      if (selectedVariant === "positionsums") layers = 2;
+      ensureOutsideSpace(
+        layers,
+        selectedVariant === "triplesum"
+          ? [2]
+          : leftTopOnly
+            ? [0, 2]
+            : [0, 1, 2, 3],
+      );
     }
   }
 
@@ -593,6 +616,7 @@
 
   function requestNewGrid(size: 6 | 9) {
     newGridSize = size;
+    keepVariants = false;
     actionMenu = null;
     studioModal = "confirm-grid";
   }
@@ -616,7 +640,9 @@
       const option = document.getElementById(id) as HTMLInputElement | null;
       if (option) option.checked = id === "nb_sudoku5" && newGridSize === 6;
     });
-    (window as any).SudokuTools?.resetForNewGrid?.();
+    if (!keepVariants) {
+      (window as any).SudokuTools?.resetForNewGrid?.();
+    }
     (window as any).create_newboard?.();
     (window as any).SudokuTools?.renderVariantTools?.();
     actionMenu = null;
@@ -969,7 +995,8 @@
     document.documentElement.classList.toggle("dark", darkTheme);
     const settings = (window as any).UserSettings;
     if (settings) {
-      settings.color_theme = darkTheme ? 1 : 0;
+      // THEME_LIGHT=1, THEME_DARK=2 (see settings.js)
+      settings.color_theme = darkTheme ? 2 : 1;
     }
   }
 
@@ -1160,17 +1187,18 @@
         syncState();
       });
     };
+    const syncDisplayTheme = (event: Event) => {
+      const detail = (event as CustomEvent<{ dark: boolean }>).detail;
+      darkTheme = Boolean(detail?.dark);
+    };
     const start = () => {
       installVariationCatalog();
       if (!moveLegacyNodes()) return false;
       const settings = (window as any).UserSettings;
       if (settings) {
-        if (settings.primary_color && settings.primary_color !== "blue") {
-          document.documentElement.classList.add("theme-" + settings.primary_color);
-        }
-        if (settings.color_theme === 1) {
+        if (settings.color_theme === 2) {
           darkTheme = true;
-        } else if (settings.color_theme === 0) {
+        } else if (settings.color_theme === 1) {
           darkTheme = false;
         }
       }
@@ -1210,6 +1238,8 @@
     document.addEventListener("keydown", cycleInputMode, true);
     document.addEventListener("keydown", toolPanelNumberShortcut, true);
     document.addEventListener("pointerup", requestSync);
+    document.addEventListener("sudoku-solved", requestSync);
+    document.addEventListener("penpa-theme-change", syncDisplayTheme);
     const closeVariantMenu = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target?.closest(".variant-picker")) variantMenuOpen = false;
@@ -1230,6 +1260,8 @@
       document.removeEventListener("keydown", cycleInputMode, true);
       document.removeEventListener("keydown", toolPanelNumberShortcut, true);
       document.removeEventListener("pointerup", requestSync);
+      document.removeEventListener("sudoku-solved", requestSync);
+      document.removeEventListener("penpa-theme-change", syncDisplayTheme);
       document.removeEventListener("pointerdown", closeVariantMenu);
     };
   });
@@ -1443,7 +1475,7 @@
                 {#if variationByValue.has(ruleVariant)}
                   <a
                     class="rule-wiki-link"
-                    href={`./list/${encodeURIComponent(ruleVariant)}`}
+                    href={`./list.html?id=${encodeURIComponent(ruleVariant)}`}
                     target="_blank"
                     rel="noreferrer">{ruleTitle}</a
                   >
@@ -1464,7 +1496,7 @@
                 {#if variationByValue.has(ruleVariant)}
                   <a
                     class="rule-wiki-link"
-                    href={`./list/${encodeURIComponent(ruleVariant)}`}
+                    href={`./list.html?id=${encodeURIComponent(ruleVariant)}`}
                     target="_blank"
                     rel="noreferrer">{ruleTitle}</a
                   >
@@ -1499,6 +1531,8 @@
         class="input-modes-section"
         class:disabled-section={layer === "solution"}
         class:hidden-section={layer === "modes"}
+        class:panel-above={mobilePanelPosition === "above"}
+        class:panel-below={mobilePanelPosition === "below"}
       >
         <div class="input-modes-heading">
           <h2>Input modes</h2>
@@ -1564,7 +1598,10 @@
           </button>
         </div>
         {#if layer === "solution" && toolPanelMode === "Sudoku"}
-          <div class="note-modes mobile-note-modes" aria-label="Note input style">
+          <div
+            class="note-modes mobile-note-modes"
+            aria-label="Note input style"
+          >
             <button
               type="button"
               class:active={noteMode === "1"}
@@ -1679,7 +1716,7 @@
                 </div>
               {/if}
             </div>
-            <button on:click={() => legacyClick("sudoku_reset")}
+            <button on:click={clearMarks}
               ><span>↺</span>Clear mark</button
             >
             <div class="action-dropdown">
@@ -1800,6 +1837,10 @@
           This replaces the current puzzle, variants, solver state, and undo
           history.
         </p>
+        <label class="keep-variants-label">
+          <input type="checkbox" bind:checked={keepVariants} />
+          Keep current variants
+        </label>
         <div class="studio-modal-actions">
           <button on:click={() => (studioModal = null)}>Cancel</button>
           <button class="primary" on:click={createGrid}>Create grid</button>
@@ -1917,7 +1958,7 @@
             The solver runs on your device, and it does not collect nor send any
             of your data.
           </p>
-          <a href="./list" target="_blank" rel="noreferrer"
+          <a href="./list.html" target="_blank" rel="noreferrer"
             >See list of variants ↗</a
           >
           <a
@@ -1964,6 +2005,10 @@
   }
   .studio-shell {
     min-height: 100vh;
+    --primary-color: #176fae;
+    --primary-color-dark: #0d6099;
+    --primary-color-light: #eaf4fb;
+    --primary-color-rgb: 23, 111, 174;
   }
   .studio-grid {
     display: grid;
@@ -2423,7 +2468,9 @@
     border-radius: 4px;
     color: #536170;
     background: #f8fafc;
-    font: 700 9px/1.5 system-ui, sans-serif;
+    font:
+      700 9px/1.5 system-ui,
+      sans-serif;
   }
   .hidden-section {
     display: none !important;
@@ -3438,6 +3485,23 @@
     border-color: #40505f;
     background: #2e3d4a;
   }
+  .studio-shell.dark :global(.log-host #sudoku_auto_solver),
+  .studio-shell.dark :global(.log-host #sudoku_solve_once),
+  .studio-shell.dark :global(.sudoku-kropki-negative),
+  .studio-shell.dark :global(.sudoku-xv-negative),
+  .studio-shell.dark :global(.sudoku-battenburg-negative) {
+    color: #dce5ec !important;
+    border-color: #536473 !important;
+    background: #263340 !important;
+  }
+  .studio-shell.dark :global(.log-host #sudoku_auto_solver.active),
+  .studio-shell.dark :global(.sudoku-kropki-negative.active),
+  .studio-shell.dark :global(.sudoku-xv-negative.active),
+  .studio-shell.dark :global(.sudoku-battenburg-negative.active) {
+    color: #fff !important;
+    border-color: #176fae !important;
+    background: #176fae !important;
+  }
   .studio-shell.dark :global(#sudoku-solver-status) {
     color: #b8c5cf;
   }
@@ -3654,19 +3718,17 @@
     }
 
     .column.controls {
-      display: flex;
-      flex-direction: column;
-      height: auto;
-      width: 100%;
+      display: contents;
+    }
+
+    .legacy-modes-section {
       order: 4;
-      flex-shrink: 0;
       background: #ffffff;
       border-top: 1px solid #d7dee5;
       padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 12px)) 8px;
       box-sizing: border-box;
-      gap: 6px;
     }
-    .studio-shell.dark .column.controls {
+    .studio-shell.dark .legacy-modes-section {
       background: #263340;
       border-top-color: #40505f;
     }
@@ -3694,15 +3756,33 @@
       border-color: #40505f;
     }
 
-    .input-modes-section {
-      padding: 4px !important;
-      margin: 0 !important;
-      box-shadow: none !important;
-      border: none !important;
+    .input-modes-section.panel-above,
+    .input-modes-section.panel-below {
+      order: 1;
+      margin: 8px 8px 0 8px !important;
+      padding: 6px 12px !important;
+      background: #fff;
+      border: 1px solid #d4dbe3;
+      border-bottom: none;
+      border-radius: 10px 10px 0 0;
+      box-shadow: 0 -2px 8px rgba(23, 34, 49, 0.04);
+      box-sizing: border-box;
+      width: calc(100% - 16px);
+      z-index: 5;
     }
-    .input-modes-section h2 {
+    .input-modes-section.panel-below {
+      order: 3;
+    }
+    .input-modes-section.panel-above h2,
+    .input-modes-section.panel-below h2 {
       display: none;
     }
+    .studio-shell.dark .input-modes-section.panel-above,
+    .studio-shell.dark .input-modes-section.panel-below {
+      background: #32414f;
+      border-color: #40505f;
+    }
+
     :global(.svelte-home .legacy-variant-host .sudoku-variant-tools) {
       display: flex !important;
       flex-direction: row !important;
@@ -3741,14 +3821,40 @@
     }
     .mobile-input-panel.panel-above {
       order: 1;
-      margin-bottom: 0;
+      margin-top: 0 !important;
+      margin-bottom: 8px !important;
+      border-radius: 0 0 10px 10px;
+      border-top: none;
+      box-shadow: 0 4px 8px rgba(23, 34, 49, 0.06);
     }
     .mobile-input-panel.panel-below {
       order: 3;
-      margin-top: 0;
+      margin-top: 0 !important;
+      margin-bottom: 8px !important;
+      border-radius: 0 0 10px 10px;
+      border-top: none;
+      box-shadow: 0 4px 8px rgba(23, 34, 49, 0.06);
     }
     .studio-shell.dark .mobile-input-panel {
       background: #32414f;
+    }
+
+    .variant-picker .variant-menu {
+      position: fixed;
+      top: 145px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-height: none;
+      z-index: 200;
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+      background: #ffffff;
+      border: 1px solid #bdc8d3;
+    }
+    .studio-shell.dark .variant-picker .variant-menu {
+      background: #263340;
+      border-color: #40505f;
     }
     .mobile-input-panel-header {
       display: flex;
