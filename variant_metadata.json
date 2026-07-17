@@ -1846,15 +1846,20 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Each digit in a grey cell must have at least one orthogonally adjacent digit (in eather a grey or a white cell) that is exactly 2 greater or smaller.\nThere may also be digits in white cells which have orthohonally adjacent digits that are exactly 2 greater or smaller."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "region"
         ],
-        "instructions": []
+        "instructions": [
+          "Surface",
+          "Shade each cell subject to the constraint."
+        ]
       },
-      "tags": []
+      "tags": [
+        "neighbour"
+      ]
     },
     {
       "otherNames": "Count different Sudoku",
@@ -2474,15 +2479,20 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Each marked region must contain each digit from 1-9 exactly twice."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "region"
         ],
-        "instructions": []
+        "instructions": [
+          "Surface",
+          "Shade each extra large region as one orthogonally connected group of cells."
+        ]
       },
-      "tags": []
+      "tags": [
+        "region"
+      ]
     },
     {
       "id": "extraregion",

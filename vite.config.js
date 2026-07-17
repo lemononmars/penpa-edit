@@ -14,33 +14,92 @@ function devApiPlugin() {
     name: "dev-api",
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        if (req.url === "/ping" && req.method === "GET") {
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify("pong"));
-          return;
-        }
-        if (req.url === "/snapshot" && req.method === "POST") {
+        if (req.url === "/api/add-variant" && req.method === "POST") {
           let body = "";
-          req.on("data", chunk => {
-            body += chunk;
-          });
+          req.on("data", chunk => { body += chunk.toString(); });
           req.on("end", () => {
             try {
-              const { data, filename, updateSnapshots } = JSON.parse(body);
-              const filepath = resolve(process.cwd(), "test/snapshots", filename);
-              mkdirSync(resolve(process.cwd(), "test/snapshots"), { recursive: true });
-              let returnData = "";
-              if (updateSnapshots) {
-                writeFileSync(filepath, data, "utf8");
-                returnData = data;
-              } else if (existsSync(filepath)) {
-                returnData = readFileSync(filepath, "utf8");
+              const data = JSON.parse(body);
+              const metadata = readMetadata();
+
+              if (metadata.variants.some(v => v.id === data.id)) {
+                res.statusCode = 400;
+                res.end("Variant ID already exists");
+                return;
               }
+
+              metadata.variants.push({
+                id: data.id,
+                name: data.name,
+                rules: { "9x9": data.rule },
+                status: data.status,
+                scratchGeneratable: false,
+                inputType: {
+                  categories: [data.inputType],
+                  instructions: []
+                },
+                tags: data.tags
+              });
+
+              writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
               res.setHeader("Content-Type", "application/json");
-              res.end(JSON.stringify({ data: returnData }));
+              res.end(JSON.stringify({ message: "Variant added successfully!" }));
             } catch (err) {
               res.statusCode = 500;
-              res.end(JSON.stringify({ error: err.message }));
+              res.end("Error adding variant");
+            }
+          });
+          return;
+        }
+
+        if (req.url === "/api/save-example" && req.method === "POST") {
+          let body = "";
+          req.on("data", chunk => { body += chunk.toString(); });
+          req.on("end", () => {
+            try {
+              const data = JSON.parse(body);
+              const { variantId, problemDataUrl, solutionDataUrl, link } = data;
+
+              const imagesDir = resolve(process.cwd(), "docs/images/examples");
+              mkdirSync(imagesDir, { recursive: true });
+
+              const problemImageName = `${variantId.replace(/[^a-z0-9]/g, "")}_problem.png`;
+              const solutionImageName = `${variantId.replace(/[^a-z0-9]/g, "")}_solution.png`;
+
+              const problemBase64Data = problemDataUrl.replace(/^data:image\/png;base64,/, "");
+              const solutionBase64Data = solutionDataUrl.replace(/^data:image\/png;base64,/, "");
+
+              writeFileSync(resolve(imagesDir, problemImageName), problemBase64Data, 'base64');
+              writeFileSync(resolve(imagesDir, solutionImageName), solutionBase64Data, 'base64');
+
+              const metadata = readMetadata();
+              let updated = false;
+
+              // Find the variant by comparing its "value" alias, or if no alias exists, fallback
+              for (const variant of metadata.variants) {
+                const value = metadata.aliases[variant.id] || variant.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+                if (value === variantId) {
+                  variant.example = {
+                    problemImage: `images/examples/${problemImageName}`,
+                    solutionImage: `images/examples/${solutionImageName}`,
+                    link: link
+                  };
+                  updated = true;
+                  break;
+                }
+              }
+
+              if (updated) {
+                writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+                res.setHeader("Content-Type", "application/json");
+                res.end(JSON.stringify({ message: "Example saved successfully!" }));
+              } else {
+                res.statusCode = 404;
+                res.end("Variant not found in metadata");
+              }
+            } catch (err) {
+              res.statusCode = 500;
+              res.end("Error saving example: " + err.message);
             }
           });
           return;

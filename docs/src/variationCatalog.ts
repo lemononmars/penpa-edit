@@ -11,6 +11,7 @@ type RawVariation = {
     tags: string[];
     isDuplicate?: boolean;
     duplicateOf?: string;
+    example?: { problemImage: string; solutionImage: string; link: string };
 };
 
 type VariantMetadata = {
@@ -152,7 +153,7 @@ function genericSetting(variation: Variation) {
     if (variation.inputType.categories.includes("no-input")) {
         return { show, modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (variation.value === "extraregion") {
+    if (["extraregion", "extralargeregions", "difference2neighbours"].includes(variation.value)) {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }

@@ -178,7 +178,7 @@ var SudokuCSP = (function() {
         return cells;
     }
 
-    function duplicateConflict(board, constraints) {
+    function duplicateConflict(board, constraints) { if (constraints && constraints.extraLargeRegions && constraints.extraLargeRegions.length) return null;
         var groups = [];
         for (var index = 0; index < SIZE; index++) {
             groups.push({ label: "row " + (index + 1), cells: Array.from({ length: SIZE }, function(_, col) {
@@ -230,7 +230,7 @@ var SudokuCSP = (function() {
         var labels = {
             antiKing: "Anti King", antiKnight: "Anti Knight", nonConsecutive: "Non-Consecutive",
             edgeRelations: "edge clue", quadRelations: "quad clue", catalogLines: "line clue",
-            diagonalAllDifferent: "diagonal/region", regionAllDifferent: "region",
+            diagonalAllDifferent: "diagonal/region", regionAllDifferent: "region", extraLargeRegions: "extra large regions", difference2Neighbours: "difference 2 neighbours",
             regionCoverage: "region coverage", kropki: "Kropki", xv: "XV", battenburg: "Battenburg"
         };
         return labels[name] || name.replace(/([a-z])([A-Z])/g, "$1 $2");
@@ -2390,6 +2390,110 @@ var SudokuCSP = (function() {
                 var bit = 1 << value;
                 if (seen & bit) return false;
                 seen |= bit;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("extraLargeRegions", {
+        validatePartial: function(board, cells) {
+            var counts = {};
+            for (var index = 0; index < cells.length; index++) {
+                var value = cellValue(board, cells[index]);
+                if (!value) continue;
+                counts[value] = (counts[value] || 0) + 1;
+                if (counts[value] > 2) return false;
+            }
+            return true;
+        },
+        validateComplete: function(board, cells) {
+            var counts = {};
+            for (var index = 0; index < cells.length; index++) {
+                var value = cellValue(board, cells[index]);
+                counts[value] = (counts[value] || 0) + 1;
+            }
+            for (var i = 1; i <= SIZE; i++) {
+                if (counts[i] !== 2) return false;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("difference2Neighbours", {
+        validatePartial: function(board, cells) {
+            for (var index = 0; index < cells.length; index++) {
+                var cell = cells[index];
+                var value = cellValue(board, cell);
+                if (!value) continue;
+                var hasDiff2 = false;
+                var hasBlank = false;
+                var neighborOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                for (var i = 0; i < neighborOffsets.length; i++) {
+                    var nr = cell.row + neighborOffsets[i][0];
+                    var nc = cell.col + neighborOffsets[i][1];
+                    if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+                        var nVal = cellValue(board, { row: nr, col: nc });
+                        if (!nVal) {
+                            hasBlank = true;
+                        } else if (Math.abs(value - nVal) === 2) {
+                            hasDiff2 = true;
+                            break;
+                        }
+                    }
+                }
+                if (!hasDiff2 && !hasBlank) return false;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("extraLargeRegions", {
+        validatePartial: function(board, cells) {
+            var counts = {};
+            for (var index = 0; index < cells.length; index++) {
+                var value = cellValue(board, cells[index]);
+                if (!value) continue;
+                counts[value] = (counts[value] || 0) + 1;
+                if (counts[value] > 2) return false;
+            }
+            return true;
+        },
+        validateComplete: function(board, cells) {
+            var counts = {};
+            for (var index = 0; index < cells.length; index++) {
+                var value = cellValue(board, cells[index]);
+                counts[value] = (counts[value] || 0) + 1;
+            }
+            for (var i = 1; i <= SIZE; i++) {
+                if (counts[i] !== 2) return false;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("difference2Neighbours", {
+        validatePartial: function(board, cells) {
+            for (var index = 0; index < cells.length; index++) {
+                var cell = cells[index];
+                var value = cellValue(board, cell);
+                if (!value) continue;
+                var hasDiff2 = false;
+                var hasBlank = false;
+                var neighborOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                for (var i = 0; i < neighborOffsets.length; i++) {
+                    var nr = cell.row + neighborOffsets[i][0];
+                    var nc = cell.col + neighborOffsets[i][1];
+                    if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+                        var nVal = cellValue(board, { row: nr, col: nc });
+                        if (!nVal) {
+                            hasBlank = true;
+                        } else if (Math.abs(value - nVal) === 2) {
+                            hasDiff2 = true;
+                            break;
+                        }
+                    }
+                }
+                if (!hasDiff2 && !hasBlank) return false;
             }
             return true;
         }
