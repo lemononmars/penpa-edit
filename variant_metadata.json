@@ -32,7 +32,8 @@
     "equalsumlines": "equal sum lines",
     "number5isalive": "number 5 is alive",
     "oddtapa": "odd tapa",
-    "tictactoe": "tic-tac-toe"
+    "tictactoe": "tic-tac-toe",
+    "unmarkedthermo": "Unmarked Thermo"
   },
   "scrapedAliases": {
     "elimination": "eliminate",
@@ -1452,7 +1453,8 @@
           "Special · no-bulb thermo",
           "Draw each monotonic line with the no-bulb thermo tool."
         ]
-      }
+      },
+      "otherNames": "Unmarked Thermo"
     },
     {
       "id": "crosssums",
@@ -4206,7 +4208,6 @@
         "instructions": []
       }
     },
-
     {
       "id": "nonconsecutive",
       "name": "Nonconsecutive",
@@ -6625,11 +6626,11 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. The sum of the digits in each marked cage must be different."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -6910,13 +6911,16 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. Each marked line contains exactly one identical digit."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "line"
         ],
-        "instructions": []
+        "instructions": [
+          "Line · diagonal · grey",
+          "Draw each marked line with the grey diagonal style."
+        ]
       },
       "tags": []
     },
@@ -6927,11 +6931,11 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. For every pair of vertically adjacent digits where both digits lie in the range 1-7, the upper digit must be greater than the lower digit."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       },
@@ -7158,23 +7162,6 @@
       "name": "Unique Renban",
       "rules": {
         "9x9": "Apply classic sudoku rules. Shaded regions must contain a set of distinct, consecutive digits in any order. Every renban group consists of an unique set of digits."
-      },
-      "status": "planned",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "shape"
-        ],
-        "instructions": []
-      },
-      "tags": []
-    },
-    {
-      "otherNames": "Sudoku (Unmarked Thermo)",
-      "id": "unmarkedthermo",
-      "name": "Unmarked Thermo",
-      "rules": {
-        "9x9": "Place a number from the range 1-X in each unnumbered cell in the grid such that each row, column and marked box contains each number from the range 1-X exactly once, where X is the number of cells in each row.\nSeveral \"thermometers\" in the grid each indicate a sequence of cells. The numbers in a thermometer must be strictly increasing (no duplicates) from one end of the thermometer to the other. You are not told which end is which."
       },
       "status": "planned",
       "scratchGeneratable": false,
