@@ -462,6 +462,8 @@ var SudokuSolver = (function() {
             shadedParityGroups: [],
             regionAllDifferent: [],
             regionCoverage: [],
+            extraLargeRegions: [],
+            difference2Neighbours: [],
             renbanRegions: [],
             cloneGroups: [],
             consecutiveCloneGroups: [],
@@ -956,6 +958,34 @@ var SudokuSolver = (function() {
                 constraints.regionAllDifferent.push(component);
             });
             constraints.supported.push("extraregion");
+        }
+        if (variantEnabled(puzzle, "extralargeregions")) {
+            var extraLargeRegionLookup = {};
+            shadedCells.forEach(function(cell) { extraLargeRegionLookup[cell.row + ":" + cell.col] = cell; });
+            var extraLargeRegionVisited = {};
+            shadedCells.forEach(function(start) {
+                var startKey = start.row + ":" + start.col;
+                if (extraLargeRegionVisited[startKey]) return;
+                var component = [], queue = [start];
+                extraLargeRegionVisited[startKey] = true;
+                while (queue.length) {
+                    var current = queue.shift();
+                    component.push(current);
+                    [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function(offset) {
+                        var neighborKey = (current.row + offset[0]) + ":" + (current.col + offset[1]);
+                        if (extraLargeRegionLookup[neighborKey] && !extraLargeRegionVisited[neighborKey]) {
+                            extraLargeRegionVisited[neighborKey] = true;
+                            queue.push(extraLargeRegionLookup[neighborKey]);
+                        }
+                    });
+                }
+                constraints.extraLargeRegions.push(component);
+            });
+            constraints.supported.push("extralargeregions");
+        }
+        if (variantEnabled(puzzle, "difference2neighbours")) {
+            constraints.difference2Neighbours = shadedCells.slice();
+            constraints.supported.push("difference2neighbours");
         }
         if (variantEnabled(puzzle, "alloddalleven")) {
             var parityBoxes = {};
