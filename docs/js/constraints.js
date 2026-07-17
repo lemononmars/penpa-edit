@@ -1,5 +1,5 @@
 const penpa_constraints = {
-    "implemented_sudoku": ["classic", "odd even", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv", "battenburg", "skyscraper", "sandwich", "uniquerectangles", "sumskyscrapers", "sumsandwich", "positionsums", "inequalitytriples", "oneortwodifferencepairs", "teneleven", "tenspositionproducts", "fullorhalf", "samesum", "xaverage", "triplesum"],
+    "implemented_sudoku": ["classic", "odd even", "odd even bridge", "odd even count", "odd even sum", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv", "battenburg", "skyscraper", "sandwich", "uniquerectangles", "sumskyscrapers", "sumsandwich", "positionsums", "inequalitytriples", "oneortwodifferencepairs", "teneleven", "tenspositionproducts", "fullorhalf", "samesum", "xaverage", "triplesum"],
     "options_groups": ["general", "sudoku", "puzzle"],
     "options": {
         "general": ["all"],
@@ -35,7 +35,10 @@ const penpa_constraints = {
             "fullorhalf",
             "samesum",
             "xaverage",
-            "triplesum"
+            "triplesum",
+            "odd even bridge",
+            "odd even count",
+            "odd even sum"
         ],
         "puzzle": [
             "slitherlink",
@@ -84,6 +87,35 @@ const penpa_constraints = {
             "modeset": ["sudoku", "symbol"],
             "submodeset": ["1", "circle_L"],
             "styleset": ["", ""]
+        },
+        "odd even bridge": {
+            "show": ["mo_surface_lb",
+                "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_symbol_lb", "ms1", "ms1_circle", "li_circle_L", "li_circle",
+                "mo_line_lb", "sub_line1_lb", "sub_line2_lb", "sub_line3_lb"
+            ],
+            "modeset": ["sudoku", "symbol", "line"],
+            "submodeset": ["1", "circle_L", "2"],
+            "styleset": ["", "", 5]
+        },
+        "odd even count": {
+            "show": ["mo_surface_lb",
+                "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_symbol_lb", "ms1", "ms1_circle", "ms1_square", "li_circle_L", "li_square_L", "li_square", "li_circle"
+            ],
+            "modeset": ["sudoku", "symbol"],
+            "submodeset": ["1", "circle_L"],
+            "styleset": ["", ""]
+        },
+        "odd even sum": {
+            "show": ["mo_surface_lb",
+                "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb",
+                "mo_number_lb", "sub_number11_lb", "sub_number3_lb"
+            ],
+            "modeset": ["sudoku", "cage", "number"],
+            "submodeset": ["1", "1", "11"],
+            "styleset": ["", 10, 1]
         },
         "diagonal": {
             "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb"],

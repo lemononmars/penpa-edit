@@ -505,6 +505,8 @@ var SudokuSolver = (function() {
             arrows: [],
             killers: [],
             oddEven: [],
+            oddEvenCounts: [],
+            oddEvenSums: [],
             diagonalAllDifferent: [],
             antiDiagonals: [],
             antiKing: [],
@@ -614,7 +616,17 @@ var SudokuSolver = (function() {
                 } else {
                     constraints.arrows.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
                 }
+
+                if (variantEnabled(puzzle, "odd even sum")) {
+                    var label = readCageLabel(puzzle, cages[k]);
+                    if (label === "O" || label === "E") {
+                        constraints.oddEvenSums.push({ cells: cageCells, parity: label === "O" ? "odd" : "even" });
+                    }
+                }
             }
+        }
+        if (constraints.oddEvenSums.length) {
+            constraints.supported.push("odd even sum");
         }
         if (constraints.arrows.length) {
             constraints.supported.push("arrow");
@@ -1240,10 +1252,13 @@ var SudokuSolver = (function() {
             });
             constraints.supported.push(variant);
         });
-        ["alternatingstripes", "between"].forEach(function(variant) {
+        ["alternatingstripes", "between", "odd even bridge"].forEach(function(variant) {
             if (!variantEnabled(puzzle, variant)) return;
             connectedLinePaths(puzzle, 2).forEach(function(path) {
-                if (path.length > 1) constraints.catalogLines.push({ path: path, relation: variant });
+                if (path.length > 1) constraints.catalogLines.push({ path: path, relation: variant === "odd even bridge" ? "oddevenbridge" : variant });
+            });
+            connectedLinePaths(puzzle, 5).forEach(function(path) {
+                if (path.length > 1 && variant === "odd even bridge") constraints.catalogLines.push({ path: path, relation: "oddevenbridge" });
             });
             constraints.supported.push(variant);
         });
@@ -1514,20 +1529,32 @@ var SudokuSolver = (function() {
         }
         Object.keys(symbols).forEach(function(key) {
             var entry = symbols[key];
-            if (!variantEnabled(puzzle, "odd even") || !entry ||
-                (entry[1] !== "circle_L" && entry[1] !== "square_L") || !activeCells[key]) {
+            if (!entry || !activeCells[key]) {
                 return;
             }
-            var cell = keyToCell(puzzle, Number(key));
-            if (cell) {
-                constraints.oddEven.push({
-                    cell: cell,
-                    parity: entry[1] === "circle_L" ? "odd" : "even"
-                });
+            if ((entry[1] === "circle_L" || entry[1] === "square_L")) {
+                var cell = keyToCell(puzzle, Number(key));
+                if (cell) {
+                    if (variantEnabled(puzzle, "odd even")) {
+                        constraints.oddEven.push({
+                            cell: cell,
+                            parity: entry[1] === "circle_L" ? "odd" : "even"
+                        });
+                    }
+                    if (variantEnabled(puzzle, "odd even count")) {
+                        constraints.oddEvenCounts.push({
+                            cell: cell,
+                            parity: entry[1] === "circle_L" ? "odd" : "even"
+                        });
+                    }
+                }
             }
         });
         if (constraints.oddEven.length) {
             constraints.supported.push("odd even");
+        }
+        if (constraints.oddEvenCounts.length) {
+            constraints.supported.push("odd even count");
         }
         if (variantEnabled(puzzle, "battenburg")) {
             var markedBattenburg = {};
@@ -3180,7 +3207,7 @@ var SudokuTools = (function() {
             irregular: "Regions",
             sudoku: "Sudoku",
             symbol: submode === "circle_SS" ? (variant === "consecutive" ? "White Dot" : "Kropki Dot") :
-                variant === "odd even" ? "Odd / Even Mark" :
+                variant === "odd even" || variant === "odd even count" || variant === "odd even bridge" ? "Odd / Even Mark" :
                     variant === "battenburg" ? "Battenburg Mark" :
                         variant === "little killer" || variant === "product little killer" || variant === "productframe" || variant === "bouncing x-sums" || variant === "czech outsider" || variant === "pointingdifferents" ? "Arrow" :
                             variant === "diagonallyconsecutive" || variant === "diagonal sum is nine" || variant === "diagonal tens" ? "Bars" : "Mark",
@@ -3530,7 +3557,7 @@ var SudokuTools = (function() {
         pu.pencilmarks_mode = pu.activeSudokuVariant === "pencilmarks";
         pu.diagonal_consecutive_mode = ["diagonallyconsecutive", "diagonal sum is nine", "diagonal tens"].indexOf(pu.activeSudokuVariant) !== -1;
         pu.xv_mode = pu.activeSudokuVariant === "xv" || pu.activeSudokuVariant === "xivi";
-        pu.odd_even_mode = pu.activeSudokuVariant === "odd even";
+        pu.odd_even_mode = pu.activeSudokuVariant === "odd even" || pu.activeSudokuVariant === "odd even count" || pu.activeSudokuVariant === "odd even bridge";
         pu.battenburg_mode = pu.activeSudokuVariant === "battenburg";
         pu.sudoku_edge_clue_mode = ["difference", "sum", "product", "arithmetic", "greater", "lesser",
             "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares", "multiplication", "xivi",
@@ -3895,13 +3922,15 @@ var SudokuTools = (function() {
             deleteEntries(colorLayer && colorLayer.symbol, function(entry) {
                 return entry && entry[1] === "circle_SS" && entry[0] === 1;
             });
-        } else if (variant === "odd even") {
+        } else if (variant === "odd even" || variant === "odd even count" || variant === "odd even bridge") {
             deleteEntries(layer.symbol, function(entry) {
                 return entry && (entry[1] === "circle_L" || entry[1] === "square_L");
             });
             deleteEntries(colorLayer && colorLayer.symbol, function(entry) {
                 return entry && (entry[1] === "circle_L" || entry[1] === "square_L");
             });
+        } else if (variant === "odd even sum") {
+            // odd even sum can piggyback off cage clear behavior but has no specific delete
         } else if (variant === "battenburg") {
             deleteEntries(layer.symbol, function(entry) {
                 return entry && entry[1] === "sudokuetc" && entry[0] === 1;
