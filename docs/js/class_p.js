@@ -4593,29 +4593,6 @@ class Puzzle {
                     }
                 }
 
-                // Another way of implementing
-                // if (!isEmptycontent("pu_q", "number", 2, "1")) {
-                //     for (var j = 2; j < this.ny0 - 2; j++) {
-                //         for (var i = 2; i < this.nx0 - 2; i++) {
-                //             if (this.pu_q.number[i + j * (this.nx0)] &&
-                //                 this.pu_q.number[i + j * (this.nx0)][2] === "1" &&
-                //                 !isNaN(this.pu_q.number[i + j * (this.nx0)][0])) {
-                //                 text += this.pu_q.number[i + j * (this.nx0)][0];
-                //             } else if (this.pu_q.symbol[i + j * (this.nx0)] &&
-                //                 !isNaN(this.pu_q.symbol[i + j * (this.nx0)][0]) &&
-                //                 this.pu_q.symbol[i + j * (this.nx0)][1].substring(0, 6) === "circle") {
-                //                 text += "x";
-                //             } else {
-                //                 text += ".";
-                //             }
-                //             if (i < this.nx0 - 3) {
-                //                 text += " ";
-                //             }
-                //         }
-                //         text += "\n";
-                //     }
-                // }
-
                 //Shading Solution
                 if (!isEmpty(this.pu_a.surface)) {
                     for (var j = 2; j < this.ny0 - 2; j++) {
