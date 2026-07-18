@@ -538,6 +538,8 @@ var SudokuSolver = (function() {
             invalidRegions: [],
             extraLargeRegions: [],
             difference2Neighbours: [],
+            offsetStarts: [],
+            oneKnightStep: [],
             escapeStarts: [],
             renbanRegions: [],
             cloneGroups: [],
@@ -1147,6 +1149,14 @@ var SudokuSolver = (function() {
         if (variantEnabled(puzzle, "difference2neighbours")) {
             constraints.difference2Neighbours = shadedCells.slice();
             constraints.supported.push("difference2neighbours");
+        }
+        if (variantEnabled(puzzle, "offset")) {
+            constraints.offsetStarts = shadedCells.slice();
+            constraints.supported.push("offset");
+        }
+        if (variantEnabled(puzzle, "oneknightstep")) {
+            constraints.oneKnightStep = shadedCells.slice();
+            constraints.supported.push("oneknightstep");
         }
         if (variantEnabled(puzzle, "alloddalleven")) {
             var parityBoxes = {};

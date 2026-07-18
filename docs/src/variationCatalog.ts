@@ -162,7 +162,7 @@ function genericSetting(variation: Variation) {
     if (variation.inputType.categories.includes("no-input")) {
         return { show, modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["extraregion", "extralargeregions", "difference2neighbours", "escape"].includes(variation.value)) {
+    if (["extraregion", "extralargeregions", "difference2neighbours", "escape", "offset", "oneknightstep"].includes(variation.value)) {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
