@@ -1213,6 +1213,15 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("knightmare", {
+        validatePartial: function(board, pair) {
+            var first = cellValue(board, pair[0]);
+            var second = cellValue(board, pair[1]);
+            if (!first || !second) return true;
+            return first + second !== 5 && first + second !== 15;
+        }
+    });
+
     registerConstraint("disparity", {
         validatePartial: function(board, pair) {
             var first = cellValue(board, pair[0]);
@@ -1552,6 +1561,52 @@ var SudokuCSP = (function() {
 
     registerConstraint("outsideRelations", {
         validatePartial: function(board, clue) {
+            if (clue.relation === "mastermind") {
+                var dimensions = boxDimensions(SIZE);
+                var centerTriplet = clue.cells.map(function(cell) {
+                    var r = cell.row, c = cell.col;
+                    r = r < dimensions.height ? r + dimensions.height : (r >= SIZE - dimensions.height ? r - dimensions.height : r);
+                    c = c < dimensions.width ? c + dimensions.width : (c >= SIZE - dimensions.width ? c - dimensions.width : c);
+                    return { row: r, col: c };
+                });
+                var cornerValues = clue.cells.map(function(cell) { return cellValue(board, cell); });
+                var centerValues = centerTriplet.map(function(cell) { return cellValue(board, cell); });
+
+                if (cornerValues.some(function(v) { return !v; }) || centerValues.some(function(v) { return !v; })) {
+                    return true;
+                }
+
+                var blackCount = 0, whiteCount = 0, crossCount = 0;
+                clue.clues.forEach(function(c) {
+                    if (c === "black") blackCount++;
+                    else if (c === "white") whiteCount++;
+                    else if (c === "cross") crossCount++;
+                });
+
+                var actualBlack = 0;
+                var actualWhite = 0;
+                var cornerCounts = {};
+                var centerCounts = {};
+                for (var i = 0; i < cornerValues.length; i++) {
+                    if (cornerValues[i] === centerValues[i]) {
+                        actualBlack++;
+                    } else {
+                        cornerCounts[cornerValues[i]] = (cornerCounts[cornerValues[i]] || 0) + 1;
+                        centerCounts[centerValues[i]] = (centerCounts[centerValues[i]] || 0) + 1;
+                    }
+                }
+
+                Object.keys(cornerCounts).forEach(function(digit) {
+                    actualWhite += Math.min(cornerCounts[digit], centerCounts[digit] || 0);
+                });
+
+                if (crossCount > 0) {
+                    if (actualBlack > 0 || actualWhite > 0) return false;
+                } else {
+                    if (actualBlack !== blackCount || actualWhite !== whiteCount) return false;
+                }
+                return true;
+            }
             var values = clue.cells.map(function(cell) { return cellValue(board, cell); });
             if (clue.relation === "positionsums") {
                 var hasFirstTwoSum = Number.isInteger(clue.firstTwoSum);
@@ -2340,6 +2395,31 @@ var SudokuCSP = (function() {
                 });
                 return mismatches <= 1 && (mismatches === 1 || open > 0);
             }
+            if (clue.relation === "countingneighbours") {
+                var cellVal = cellValue(board, clue.cell);
+                if (!cellVal) return true;
+                var diagVals = clue.diagonals.map(function(c) { return cellValue(board, c); });
+                var orthoVals = clue.orthogonals.map(function(c) { return cellValue(board, c); });
+                if (diagVals.indexOf(0) !== -1 || orthoVals.indexOf(0) !== -1) return true;
+
+                var countDistinct = function(arr) {
+                    return arr.filter(function(v, i, a) { return a.indexOf(v) === i; }).length;
+                };
+                var diagDistinct = countDistinct(diagVals);
+                var allDistinct = countDistinct(diagVals.concat(orthoVals));
+
+                var satisfiesCircle = cellVal === allDistinct;
+                var satisfiesCross = cellVal === diagDistinct;
+
+                if (clue.kind === "circle") return satisfiesCircle;
+                if (clue.kind === "cross") return satisfiesCross && !satisfiesCircle;
+                if (clue.kind === "none" && !satisfiesCircle && !satisfiesCross) return true;
+                // Since this validation could be called while not all digits are filled out or during setup, wait, if there's no symbol, and it's evaluated for a partial board, and the numbers DO match, it will be rejected.
+                // However, `validatePartial` can reject valid partial states if we evaluate negative constraints strictly on partials. Wait, `diagVals.indexOf(0) !== -1` ensures we only evaluate this when ALL neighbors are filled!
+                // Ah, what if neighbors are all filled, but the current cell value matches the circle/cross condition, but the user DID NOT place a circle/cross?
+                // Then the negative constraint is violated, and we return false! That is correct.
+                return !satisfiesCircle && !satisfiesCross;
+            }
             if (clue.relation === "wheel") {
                 var wheelValues = clue.cells.map(function(cell) { return cellValue(board, cell); });
                 for (var rotation = 0; rotation < 4; rotation++) {
@@ -2382,6 +2462,9 @@ var SudokuCSP = (function() {
                     }
                 }
                 return increasing || decreasing;
+            }
+            if (clue.relation === "meandering diagonals") {
+                if (new Set(assigned).size !== assigned.length) return false;
             }
             if (clue.relation === "alternatingstripes") {
                 if (new Set(assigned).size !== assigned.length) return false;
@@ -2772,6 +2855,39 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("hiddenCloneShapeChecks", {
+        validatePartial: function() { return true; },
+        validateComplete: function(board, check) {
+            var component = check.component;
+            var assigned = [];
+            for (var i = 0; i < component.length; i++) {
+                assigned.push(cellValue(board, component[i]));
+            }
+
+            for (var dr = -SIZE + 1; dr < SIZE; dr++) {
+                for (var dc = -SIZE + 1; dc < SIZE; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    var match = true;
+                    for (var i = 0; i < component.length; i++) {
+                        var cell = component[i];
+                        var tr = cell.row + dr, tc = cell.col + dc;
+                        if (tr < 0 || tr >= SIZE || tc < 0 || tc >= SIZE) {
+                            match = false;
+                            break;
+                        }
+                        var tval = cellValue(board, { row: tr, col: tc });
+                        if (tval !== assigned[i]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) return true;
+                }
+            }
+            return false;
+        }
+    });
+
     registerConstraint("palindromes", {
         validatePartial: function(board, path) {
             for (var i = 0; i < Math.floor(path.length / 2); i++) {
@@ -2850,6 +2966,55 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("disguisedPalindromes", {
+        validatePartial: function(board, path) {
+            if (path.length <= 1) return true;
+            for (var k = 0; k < path.length; k++) {
+                var isPal = true;
+                var left = 0;
+                var right = path.length - 1;
+                while (left < right) {
+                    if (left === k) left++;
+                    if (right === k) right--;
+                    if (left >= right) break;
+                    var a = cellValue(board, path[left]);
+                    var b = cellValue(board, path[right]);
+                    if (a && b && a !== b) {
+                        isPal = false;
+                        break;
+                    }
+                    left++;
+                    right--;
+                }
+                if (isPal) return true;
+            }
+            return false;
+        },
+        validateComplete: function(board, path) {
+            if (path.length <= 1) return true;
+            for (var k = 0; k < path.length; k++) {
+                var isPal = true;
+                var left = 0;
+                var right = path.length - 1;
+                while (left < right) {
+                    if (left === k) left++;
+                    if (right === k) right--;
+                    if (left >= right) break;
+                    var a = cellValue(board, path[left]);
+                    var b = cellValue(board, path[right]);
+                    if (a !== b) {
+                        isPal = false;
+                        break;
+                    }
+                    left++;
+                    right--;
+                }
+                if (isPal) return true;
+            }
+            return false;
+        }
+    });
+
     // Anti-Consecutive: explicitly marked edges must NOT be consecutive
     registerConstraint("antiConsecutive", {
         validatePartial: function(board, pair) {
@@ -2915,6 +3080,23 @@ var SudokuCSP = (function() {
                 }
             }
             return false;
+        }
+    });
+
+
+    registerConstraint("lc", {
+        validatePartial: function(board, clue) {
+            var a = cellValue(board, clue.cells[0]);
+            var b = cellValue(board, clue.cells[1]);
+            var c = cellValue(board, clue.cells[2]);
+            var d = cellValue(board, clue.cells[3]);
+            if (a && b && c && d) {
+                var sum = (a * 10 + b) + (c * 10 + d);
+                if (clue.kind === "L") return sum === 50;
+                if (clue.kind === "C") return sum === 100;
+                return sum !== 50 && sum !== 100;
+            }
+            return true;
         }
     });
 

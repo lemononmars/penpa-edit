@@ -2106,6 +2106,7 @@ test("validates the new line, pair, cross, detector, and edge relations", functi
     const crossCells = [cell(0, 0), cell(0, 1), cell(1, 0), cell(0, 2)];
     const constraints = {
         catalogLines: [
+            { relation: "meandering diagonals", path: [cell(0, 0), cell(0, 1), cell(0, 2)] },
             { relation: "alternatingstripes", path: [cell(0, 0), cell(0, 1), cell(0, 2)] },
             { relation: "between", path: [cell(0, 0), cell(0, 2), cell(0, 1)] }
         ],
@@ -2130,6 +2131,9 @@ test("validates the new line, pair, cross, detector, and edge relations", functi
     };
 
     assert.equal(SudokuCSP.solve(solution, constraints).solved, true);
+    assert.equal(SudokuCSP.solve(solution, {
+        catalogLines: [{ relation: "meandering diagonals", path: [cell(0, 0), cell(0, 1), cell(1, 5)] }]
+    }).solved, false);
     assert.equal(SudokuCSP.solve(solution, {
         catalogLines: [{ relation: "alternatingstripes", path: [cell(0, 0), cell(0, 1), cell(0, 7)] }]
     }).solved, false);

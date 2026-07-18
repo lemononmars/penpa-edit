@@ -3,11 +3,7 @@
 
 <head>
     <script>
-        // Decide the rendering surface before the browser can paint the legacy
-        // document. The /penpa iframe explicitly opts into the native UI.
-        if (new URLSearchParams(window.location.search).get("penpa") !== "legacy") {
-            document.documentElement.classList.add("svelte-home");
-        }
+        document.documentElement.classList.add("svelte-home");
     </script>
     <style>
         html.svelte-home:not(.svelte-mounted) {

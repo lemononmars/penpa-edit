@@ -104,12 +104,16 @@ function genericSetting(variation: Variation) {
     if (variation.inputType.categories.includes("shading")) {
         add("surface", "", 1, ["mo_surface_lb"]);
     }
-    if (["extraregion", "extralargeregions", "difference2neighbours", "escape", "offset", "oneknightstep"].includes(variation.value)) {
+    if (["extraregion", "extralargeregions", "difference2neighbours", "hiddenclone", "escape", "offset", "oneknightstep"].includes(variation.value)) {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "alternatingstripes") {
         add("line", "1", 2, ["mo_line_lb", "sub_line1_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "meandering diagonals") {
+        add("line", "2", 2, ["mo_line_lb", "sub_line2_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (["clonedstrands", "equal sum line", "equal sum lines", "german whispers", "factor lines"].includes(variation.value)) {
@@ -136,6 +140,11 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "crosssums") {
+        add("symbol", "cross", 2, ["mo_symbol_lb", "ms1", "li_cross"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "countingneighbours") {
+        add("symbol", "circle_L", 2, ["mo_symbol_lb", "ms1", "ms1_circle", "li_circle_L"]);
         add("symbol", "cross", 2, ["mo_symbol_lb", "ms1", "li_cross"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
@@ -208,7 +217,7 @@ function genericSetting(variation: Variation) {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
-    if (variation.value === "almostpalindrome") {
+    if (variation.value === "almostpalindrome" || variation.value === "disguisedpalindromes") {
         add("line", "2", 5, ["mo_line_lb", "sub_line2_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
@@ -306,6 +315,10 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "xivi") {
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "lc") {
         add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
