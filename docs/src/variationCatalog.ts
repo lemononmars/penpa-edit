@@ -15,9 +15,7 @@ type RawVariation = {
 };
 
 type VariantMetadata = {
-    aliases: Record<string, string>;
     scrapedAliases: Record<string, string>;
-    guides: Record<string, { title: string; rule: string; usage: string }>;
     icons: Record<string, string>;
     markOverrides: Record<string, { position: string; mark: string }>;
     variants: RawVariation[];
@@ -30,7 +28,6 @@ export type Variation = RawVariation & {
 
 import metadataJson from "../../variant_metadata.json";
 export const variantMetadata = metadataJson as VariantMetadata;
-const aliases = variantMetadata.aliases;
 const scrapedAliases = variantMetadata.scrapedAliases;
 
 function stripRulePreamble(rule: string) {
@@ -44,10 +41,11 @@ function preferredRule(rules: Record<string, string>) {
 
 function getMarkPosition(value: string, tags: string[], rule: string, name: string): "no-input" | "line" | "region" | "outside" | "cell" | "edge" | "intersection" {
     const text = `${name} ${rule}`.toLowerCase();
-    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "touchy"].includes(value)) {
+    if (value === "irregular") return "region";
+    if (["anti king", "anti knight", "disjoint", "knightmare", "queen", "disparity", "touchy", "liardiagonal", "magicsquares"].includes(value)) {
         return "no-input";
     }
-    if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector"].includes(value)) {
+    if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector", "deadoralivearrows"].includes(value)) {
         return "cell";
     }
     if (["quadmax", "quadmin"].includes(value)) {
@@ -56,7 +54,7 @@ function getMarkPosition(value: string, tags: string[], rule: string, name: stri
     if (value === "coded") return "intersection";
     if (value === "pencilmarks") return "cell";
     if (["xydifference", "primesums", "twodigitprimenumbers"].includes(value)) return "edge";
-    if (value === "xivi") return "edge";
+    if (value === "xivi" || value === "lc") return "edge";
     if (value === "clock") return "cell";
     if (value === "slotmachine") return "cell";
     if (["wheel", "little killer", "product little killer", "bouncing x-sums", "czech outsider"].includes(value)) {
@@ -66,6 +64,9 @@ function getMarkPosition(value: string, tags: string[], rule: string, name: stri
         return "intersection";
     }
     if (value === "distances") {
+        return "outside";
+    }
+    if (value === "mastermind") {
         return "outside";
     }
     if (["productkiller", "solokiller"].includes(value)) return "cell";
@@ -93,7 +94,7 @@ function getMarkPosition(value: string, tags: string[], rule: string, name: stri
 }
 
 const allVariations: Variation[] = variantMetadata.variants.map((item) => {
-    const value = aliases[item.id] || item.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+    const value = item.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
     const rule = preferredRule(item.rules);
     const categories = item.inputType.categories.map((c) => {
         if (c === "shape") {
@@ -106,7 +107,7 @@ const allVariations: Variation[] = variantMetadata.variants.map((item) => {
     }) as any;
     return {
         ...item,
-        name: value === "anti king" ? "Anti King (No touch)" : item.name.replace(/\s+Sudoku\b/gi, "").trim(),
+        name: item.name.trim(),
         rules: Object.fromEntries(Object.entries(item.rules).map(([size, rule]) => [size, stripRulePreamble(rule)])),
         value,
         rule,
@@ -138,6 +139,7 @@ export const outsideVariationValues = new Set(variations.filter((item) =>
     item.value !== "xydifference" && (item.inputType.categories.includes("outside") ||
         item.tags?.includes("outside") || /outside the grid/i.test(item.rule))
 ).map((item) => item.value));
+const regionGridVariants = ["irregular", "scattered", "deficit", "surplus"];
 
 function genericSetting(variation: Variation) {
     const text = variation.rule.toLowerCase();
@@ -150,15 +152,29 @@ function genericSetting(variation: Variation) {
         modes.push(mode); submodes.push(submode); styles.push(style); show.push(...controls);
     };
 
+    // These variants share the persisted region-ID editor rather than using
+    // Penpa cages. Scattered also exposes surface paint for its visual set,
+    // but remains a no-input rule in the variant catalogue.
+    if (regionGridVariants.includes(variation.value)) {
+        if (variation.value === "scattered") add("surface", "", 1, ["mo_surface_lb"]);
+        return {
+            show, modeset: modes, submodeset: submodes, styleset: styles,
+            outside: false, regionEditor: true
+        };
+    }
     if (variation.inputType.categories.includes("no-input")) {
         return { show, modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["extraregion", "extralargeregions", "difference2neighbours"].includes(variation.value)) {
+    if (["extraregion", "extralargeregions", "difference2neighbours", "hiddenclone", "escape", "offset", "oneknightstep"].includes(variation.value)) {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "alternatingstripes") {
         add("line", "1", 2, ["mo_line_lb", "sub_line1_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "meandering diagonals") {
+        add("line", "2", 2, ["mo_line_lb", "sub_line2_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (["clonedstrands", "equal sum line", "equal sum lines", "german whispers", "factor lines"].includes(variation.value)) {
@@ -179,7 +195,17 @@ function genericSetting(variation: Variation) {
         add("number", "3", 1, ["mo_number_lb", "sub_number3_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
+    if (variation.value === "deadoralivearrows") {
+        add("symbol", "arrow_B_W", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"]);
+        add("symbol", "arrow_B_G", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
     if (variation.value === "crosssums") {
+        add("symbol", "cross", 2, ["mo_symbol_lb", "ms1", "li_cross"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "countingneighbours") {
+        add("symbol", "circle_L", 2, ["mo_symbol_lb", "ms1", "ms1_circle", "li_circle_L"]);
         add("symbol", "cross", 2, ["mo_symbol_lb", "ms1", "li_cross"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
@@ -245,6 +271,10 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
     if (variation.value === "almostpalindrome" || variation.value === "disguisedpalindromes") {
+        add("line", "2", 5, ["mo_line_lb", "sub_line2_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "tinder") {
         add("line", "2", 5, ["mo_line_lb", "sub_line2_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
@@ -341,6 +371,10 @@ function genericSetting(variation: Variation) {
         add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
+    if (variation.value === "lc") {
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
     if (variation.value === "slotmachine") {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
@@ -412,15 +446,24 @@ export function installVariationCatalog() {
     ).forEach((element) => element.remove());
     variations.forEach((variation) => {
         if (variation.wikiOnly) return;
-        if (!constraints.setting[variation.value]) constraints.setting[variation.value] = genericSetting(variation);
+        if (regionGridVariants.includes(variation.value)) {
+            // Replace legacy cage-based settings so every consumer—not only
+            // the custom toolbar—sees the persisted region-number editor.
+            constraints.setting[variation.value] = genericSetting(variation);
+        } else if (!constraints.setting[variation.value]) {
+            constraints.setting[variation.value] = genericSetting(variation);
+        }
         constraints.setting[variation.value].outside = outsideVariationValues.has(variation.value);
         if (!constraints.options.sudoku.includes(variation.value)) constraints.options.sudoku.push(variation.value);
         const existingOption = Array.from(select.options).find((option) => option.value === variation.value);
         const targetGroup = variation.status === "available" ? implementedGroup : unsupportedGroup;
-        if (existingOption && existingOption.parentElement !== targetGroup) {
+        if (existingOption) {
+            // The legacy select may use the internal variant ID as its label.
+            // Metadata names are the display source of truth, even when the
+            // option is already filed under the correct group.
             existingOption.textContent = variation.name;
-            targetGroup.appendChild(existingOption);
-        } else if (!existingOption) {
+            if (existingOption.parentElement !== targetGroup) targetGroup.appendChild(existingOption);
+        } else {
             const option = document.createElement("option");
             option.value = variation.value;
             option.textContent = variation.name;

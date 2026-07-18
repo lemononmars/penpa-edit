@@ -523,8 +523,15 @@ function make_class(gridtype, loadtype = 'new') {
             break;
         case "sudoku":
             if (loadtype === 'new') {
+                var requestedSudokuSize = Number(window.sudotokuNewGridSize);
+                if ([6, 7, 8, 9].indexOf(requestedSudokuSize) === -1) {
+                    requestedSudokuSize = 0;
+                }
                 if (document.getElementById("nb_sudoku2").checked === true) { // Outside, little killer
-                    if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
+                    if (requestedSudokuSize) {
+                        var nx = requestedSudokuSize + 2;
+                        var ny = requestedSudokuSize + 2;
+                    } else if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
                         var nx = 10;
                         var ny = 10;
                     } else if (document.getElementById("nb_sudoku5").checked === true) { // 6x6 grid
@@ -542,7 +549,10 @@ function make_class(gridtype, loadtype = 'new') {
                     document.getElementById("nb_space3").value = 1;
                     document.getElementById("nb_space4").value = 1;
                 } else if (document.getElementById("nb_sudoku3").checked === true) { // sandwich
-                    if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
+                    if (requestedSudokuSize) {
+                        var nx = requestedSudokuSize + 1;
+                        var ny = requestedSudokuSize + 1;
+                    } else if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
                         var nx = 9;
                         var ny = 9;
                     } else if (document.getElementById("nb_sudoku5").checked === true) { // 6x6 grid
@@ -560,7 +570,10 @@ function make_class(gridtype, loadtype = 'new') {
                     document.getElementById("nb_space3").value = 1;
                     document.getElementById("nb_space4").value = 0;
                 } else {
-                    if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
+                    if (requestedSudokuSize) {
+                        var nx = requestedSudokuSize;
+                        var ny = requestedSudokuSize;
+                    } else if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
                         var nx = 8;
                         var ny = 8;
                     } else if (document.getElementById("nb_sudoku5").checked === true) { // 6x6 grid
@@ -589,7 +602,10 @@ function make_class(gridtype, loadtype = 'new') {
             if (loadtype === 'new') {
                 let rows, cols;
                 if (document.getElementById("nb_sudoku2").checked === true) { // Outside, little killer
-                    if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
+                    if (requestedSudokuSize === 7) {
+                        rows = [3, 4, 5, 6, 7, 8];
+                        cols = [];
+                    } else if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
                         rows = [4, 6, 8];
                         cols = [6];
                     } else if (document.getElementById("nb_sudoku5").checked === true) { // 6x6 grid
@@ -618,7 +634,10 @@ function make_class(gridtype, loadtype = 'new') {
                         pu.draw_Z(start, end, end + 1, linestyle);
                     }
                 } else if (document.getElementById("nb_sudoku3").checked === true) { // sandwich
-                    if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
+                    if (requestedSudokuSize === 7) {
+                        rows = [3, 4, 5, 6, 7, 8];
+                        cols = [];
+                    } else if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
                         rows = [4, 6, 8];
                         cols = [6];
                     } else if (document.getElementById("nb_sudoku5").checked === true) { // 6x6 grid
@@ -647,7 +666,10 @@ function make_class(gridtype, loadtype = 'new') {
                         pu.draw_Z(start, end, end + 1, linestyle);
                     }
                 } else {
-                    if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
+                    if (requestedSudokuSize === 7) {
+                        rows = [2, 3, 4, 5, 6, 7];
+                        cols = [];
+                    } else if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
                         rows = [3, 5, 7];
                         cols = [5];
                     } else if (document.getElementById("nb_sudoku5").checked === true) { // 6x6 grid
@@ -676,6 +698,7 @@ function make_class(gridtype, loadtype = 'new') {
                         pu.draw_Z(start, end, end, linestyle);
                     }
                 }
+                delete window.sudotokuNewGridSize;
             }
             break;
         case "kakuro":
@@ -3415,8 +3438,8 @@ function update_title() {
     let title = document.getElementById("saveinfotitle").value;
     let author = document.getElementById("saveinfoauthor").value;
 
-    document.getElementById("puzzletitle").innerHTML = title;
-    document.getElementById("puzzleauthor").innerHTML = author;
+    document.getElementById('puzzletitle').innerHTML = DOMPurify.sanitize(title);
+    document.getElementById('puzzleauthor').innerHTML = DOMPurify.sanitize(author);
 
     let auth_str = (author ? (title ? ' by ' + author : author) : '');
     let auth_tit_str = (title ? title : (auth_str ? '' : 'Puzzle')) + auth_str;

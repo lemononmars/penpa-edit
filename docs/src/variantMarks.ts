@@ -64,7 +64,7 @@ function has(text: string, pattern: RegExp) {
 /** Provides a conservative default that can be corrected through the dev-only editor. */
 export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     const text = `${variation.name} ${variation.rule}`.toLowerCase();
-    if (["anti king", "anti knight", "disjoint", "queen", "disparity"].includes(variation.value)) {
+    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "liardiagonal", "magicsquares"].includes(variation.value)) {
         return { position: "none", mark: "none" };
     }
     if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector"].includes(variation.value)) {
@@ -82,6 +82,9 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     if (["wheel", "pinnochio", "little killer", "product little killer", "bouncing x-sums", "czech outsider"].includes(variation.value)) {
         return { position: "multiple", mark: "multiple" };
     }
+    if (variation.value === "mastermind") {
+        return { position: "outside", mark: "multiple" };
+    }
     if (["diagonal sum is nine", "diagonal tens"].includes(variation.value)) {
         return { position: "corner", mark: "bars" };
     }
@@ -94,7 +97,7 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     }
     const multiSignals = [
         /horizontal.+vertical|vertical.+horizontal/, /black.+white|white.+black/,
-        /circle.+square|square.+circle/, /different (?:symbols|marks)/, /one of (?:the )?following/
+        /circle.+square|square.+circle/, /circle.+cross|cross.+circle/, /different (?:symbols|marks)/, /one of (?:the )?following/
     ];
     if (multiSignals.some((pattern) => has(text, pattern))) return { position: "multiple", mark: "multiple" };
     if (variation.tags?.includes("region")) return { position: "center", mark: "cage" };
@@ -181,11 +184,45 @@ export function cspConstraintFunctionFor(variation: Variation) {
         ,evensandwich: `validateComplete(board, clue) {\n  const values = clue.cells.map(cellValue);\n  const found = values.filter((value, index) => index > 0 && index < values.length - 1\n    && values[index - 1] % 2 === 0 && values[index + 1] % 2 === 0);\n  return sameDigits(found, clue.clues);\n}`,
         oddsandwich: `validateComplete(board, clue) {\n  const values = clue.cells.map(cellValue);\n  const found = values.filter((value, index) => index > 0 && index < values.length - 1\n    && values[index - 1] % 2 === 1 && values[index + 1] % 2 === 1);\n  return sameDigits(found, clue.clues);\n}`,
         clock: `validateComplete(board, cage) {\n  if (cage.cells.length !== 4 || !cellsFormOneHorizontalRun(cage.cells)) return true;\n  const [h1, h2, m1, m2] = cage.cells.map(cellValue);\n  return 10 * h1 + h2 < 24 && 10 * m1 + m2 < 60;\n}`,
+        lc: `validatePartial(board, clue) {
+  const [a, b, c, d] = clue.cells.map(cellValue);
+  if (a && b && c && d) {
+    const sum = (a * 10 + b) + (c * 10 + d);
+    if (clue.kind === "L") return sum === 50;
+    if (clue.kind === "C") return sum === 100;
+    return sum !== 50 && sum !== 100;
+  }
+  return true;
+}`,
+        hiddenclone: `validateComplete(board, check) {
+  const component = check.component;
+  const assigned = [];
+  for (let i = 0; i < component.length; i++) {
+    assigned.push(cellValue(board, component[i]));
+  }
+  const SIZE = board.length;
+  for (let dr = -SIZE + 1; dr < SIZE; dr++) {
+    for (let dc = -SIZE + 1; dc < SIZE; dc++) {
+      if (dr === 0 && dc === 0) continue;
+      let match = true;
+      for (let i = 0; i < component.length; i++) {
+        const cell = component[i];
+        const tr = cell.row + dr, tc = cell.col + dc;
+        if (tr < 0 || tr >= SIZE || tc < 0 || tc >= SIZE) { match = false; break; }
+        const tval = cellValue(board, { row: tr, col: tc });
+        if (tval !== assigned[i]) { match = false; break; }
+      }
+      if (match) return true;
+    }
+  }
+  return false;
+}`,
         xivi: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const sum = a + b;\n  return clue.kind === "VI" ? sum === 6 : clue.kind === "XI" ? sum === 11 : sum !== 6 && sum !== 11;\n}`,
         slotmachine: `validatePartial(board, clue) {\n  return clue.columns.slice(1).every(column => someCyclicShiftMatchesAssignedDigits(board, clue.columns[0], column));\n}`,
         wheel: `validatePartial(board, clue) {\n  return someRotationMatchesAssignedDigits(board, clue.cells, clue.digits);\n}`,
         pinnochio: `validatePartial(board, clue) {\n  const comparisons = clue.clues.map(item => !cellValue(board, item.cell) ? "open"\n    : cellValue(board, item.cell) === item.value ? "true" : "false");\n  return comparisons.filter(value => value === "false").length <= 1\n    && (comparisons.includes("false") || comparisons.includes("open"));\n}`,
         sumdetector: `validatePartial(board, group) {\n  return range(1, board.length).some(n => group.clues.every(clue =>\n    clue.rays.every(ray => firstNDigitsCanSumTo(board, ray, n, cellValue(board, clue.origin)))));\n}`,
+        "meandering diagonals": `validatePartial(board, path) {\n  const values = path.map(cellValue);\n  return assignedDigitsAreDistinct(values);\n}`,
         alternatingstripes: `validatePartial(board, path) {\n  const values = path.map(cellValue);\n  return assignedDigitsAreDistinct(values) && everyAssignedTripleAlternates(values);\n}`,
         between: `validatePartial(board, path) {\n  const values = path.map(cellValue), low = Math.min(values[0], values.at(-1)), high = Math.max(values[0], values.at(-1));\n  return !values[0] || !values.at(-1) || values.slice(1, -1).every(value => !value || (value > low && value < high));\n}`,
         blocksumrelations: `validatePartial(board, clue) {\n  const sums = clue.groups.map(group => group.map(cellValue));\n  return sums.some(incomplete) || compare(sums[0].sum(), clue.sign, sums[1].sum());\n}`,
@@ -204,6 +241,39 @@ export function cspConstraintFunctionFor(variation: Variation) {
         "distances": `validatePartial(board, clue) {\n  const { x, y, z } = clue.value;\n  const values = clue.cells.map(cellValue);\n  const idxX = values.indexOf(x), idxY = values.indexOf(y);\n  if (idxX !== -1 && idxY !== -1) return idxX < idxY && idxY - idxX === z;\n  if (idxX !== -1) return idxX + z < values.length && (!values[idxX + z] || values[idxX + z] === y);\n  if (idxY !== -1) return idxY - z >= 0 && (!values[idxY - z] || values[idxY - z] === x);\n  return range(0, values.length - z).some(i => (!values[i] || values[i] === x) && (!values[i+z] || values[i+z] === y));\n}`,
         "faded kropki": `validatePartial(board, dot) {\n  const [a, b] = dot.cells.map(cellValue);\n  if (!a || !b) return true;\n  const consecutive = Math.abs(a - b) === 1, double = a === 2 * b || b === 2 * a;\n  return dot.kind === "white" ? consecutive || double : !consecutive && !double;\n}`,
         "first seen odd/even": `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue), isOddClue = (clue.value % 2) !== 0;\n  for (let i = 0; i < values.length; i++) {\n    if (!values[i]) break;\n    if (((values[i] % 2) !== 0) === isOddClue) return values[i] === clue.value;\n  }\n  const idxOfClue = values.indexOf(clue.value);\n  if (idxOfClue !== -1) {\n    return values.slice(0, idxOfClue).every(v => !v || ((v % 2) !== 0) !== isOddClue);\n  }\n  return !values.some(v => v && ((v % 2) !== 0) === isOddClue) && !values.every(v => v);\n}`,
+        mastermind: `validatePartial(board, clue) {
+  const dimensions = boxDimensions(board.length);
+  const centerTriplet = clue.cells.map(cell => {
+    let { row: r, col: c } = cell;
+    r = r < dimensions.height ? r + dimensions.height : (r >= board.length - dimensions.height ? r - dimensions.height : r);
+    c = c < dimensions.width ? c + dimensions.width : (c >= board.length - dimensions.width ? c - dimensions.width : c);
+    return { row: r, col: c };
+  });
+  const cornerValues = clue.cells.map(cell => cellValue(board, cell));
+  const centerValues = centerTriplet.map(cell => cellValue(board, cell));
+  if (cornerValues.some(v => !v) || centerValues.some(v => !v)) return true;
+
+  const blackCount = clue.clues.filter(c => c === "black").length;
+  const whiteCount = clue.clues.filter(c => c === "white").length;
+  const hasCross = clue.clues.includes("cross");
+
+  let actualBlack = 0, actualWhite = 0;
+  const cornerCounts = {}, centerCounts = {};
+  for (let i = 0; i < cornerValues.length; i++) {
+    if (cornerValues[i] === centerValues[i]) {
+      actualBlack++;
+    } else {
+      cornerCounts[cornerValues[i]] = (cornerCounts[cornerValues[i]] || 0) + 1;
+      centerCounts[centerValues[i]] = (centerCounts[centerValues[i]] || 0) + 1;
+    }
+  }
+  Object.keys(cornerCounts).forEach(digit => {
+    actualWhite += Math.min(cornerCounts[digit], centerCounts[digit] || 0);
+  });
+
+  if (hasCross) return actualBlack === 0 && actualWhite === 0;
+  return actualBlack === blackCount && actualWhite === whiteCount;
+}`,
         "max ascending": `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue);\n  let maxGuaranteed = 0, currentGuaranteed = 0;\n  for (let i = 0; i < values.length; i++) {\n    if (i === 0 || (values[i] && values[i-1] && values[i] > values[i-1])) {\n      currentGuaranteed = values[i] ? currentGuaranteed + 1 : 0;\n    } else {\n      maxGuaranteed = Math.max(maxGuaranteed, currentGuaranteed);\n      currentGuaranteed = values[i] ? 1 : 0;\n    }\n  }\n  maxGuaranteed = Math.max(maxGuaranteed, currentGuaranteed);\n  if (maxGuaranteed > clue.value) return false;\n  let maxPossible = 0, currentPossible = 0;\n  for (let i = 0; i < values.length; i++) {\n    if (i === 0 || !values[i] || !values[i-1] || values[i] > values[i-1]) currentPossible++;\n    else {\n      maxPossible = Math.max(maxPossible, currentPossible);\n      currentPossible = 1;\n    }\n  }\n  maxPossible = Math.max(maxPossible, currentPossible);\n  if (maxPossible < clue.value) return false;\n  return !values.every(v => v) || maxGuaranteed === clue.value;\n}`,
         "fives": `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const isFive = a + b === 5 || Math.abs(a - b) === 5;\n  return clue.marked ? isFive : !isFive;\n}`,
         "frame-diagonal": `validatePartial(board, clue) {\n  return sumBoundsContain(board, clue.cells.slice(0, 3), clue.value);\n}`,
@@ -240,7 +310,7 @@ export function cspConstraintFunctionFor(variation: Variation) {
         return `function ${functionName}(board, clue) {\n  const [a, b] = clue.cells.map(cell => cellValue(board, cell));\n  return !a || !b || ${edgeRelations[variation.value]};\n}`;
     }
     const pairRelations: Record<string, string> = {
-        "anti king": "a !== b", "anti knight": "a !== b",
+        "anti king": "a !== b", "anti knight": "a !== b", knightmare: "a + b !== 5 && a + b !== 15",
         "non consecutive": "Math.abs(a - b) !== 1", diagonallynonconsecutive: "Math.abs(a - b) !== 1",
         noevenneighbours: "a % 2 !== 0 || b % 2 !== 0", queen: "a !== size || b !== size"
     };

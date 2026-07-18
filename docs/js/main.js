@@ -178,6 +178,30 @@ onload = function() {
                 }
             }
 
+
+            if (pu.lc_mode && pu.mode[pu.mode.qa].edit_mode === "number" &&
+                String(pu.mode[pu.mode.qa].number[0]) === "5") {
+                let edge = pu.point[num];
+                let distance = edge ? (x - edge.x) ** 2 + (y - edge.y) ** 2 : Infinity;
+                if (!pu.isKropkiEdge(num) || distance > (0.3 * pu.size) ** 2) {
+                    pu.drawing = false;
+                    pu.last = -1;
+                    pu.cursol = -1;
+                    pu.redraw();
+                    return;
+                }
+                if (event.button !== 2 && edge.use === 1) {
+                    pu.mouse_mode = "down_left";
+                    pu.mouse_click = 0;
+                    pu.mouse_click_last = 1;
+                    pu.cycleLCClue(num);
+                    pu.mouse_mode = "out";
+                    pu.redraw();
+                    e.preventDefault();
+                    return;
+                }
+            }
+
             if (pu.sudoku_edge_clue_mode) {
                 let cluePoint = pu.point[num];
                 let clueDistance = cluePoint ? (x - cluePoint.x) ** 2 + (y - cluePoint.y) ** 2 : Infinity;
