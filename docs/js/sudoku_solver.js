@@ -2524,6 +2524,48 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push("disparity");
         }
+        if (variantEnabled(puzzle, "countingneighbours")) {
+            var markedCells = {};
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                if (!entry || !activeCells[key]) return;
+                var cell = keyToCell(puzzle, Number(key));
+                if (!cell) return;
+                if (entry[1] === "circle_L" || entry[1] === "cross") {
+                    markedCells[key] = entry[1] === "circle_L" ? "circle" : "cross";
+                }
+            });
+            var diagOffsets = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+            var orthoOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            Object.keys(activeCells).forEach(function(key) {
+                if (activeCells[key]) {
+                    var cell = keyToCell(puzzle, Number(key));
+                    if (cell) {
+                        var diagonals = [], orthogonals = [];
+                        diagOffsets.forEach(function(o) {
+                            var r = cell.row + o[0], c = cell.col + o[1];
+                            if (r >= 0 && r < SIZE && c >= 0 && c < SIZE && activeCells[cellKey(puzzle, r, c)]) {
+                                diagonals.push({ row: r, col: c });
+                            }
+                        });
+                        orthoOffsets.forEach(function(o) {
+                            var r = cell.row + o[0], c = cell.col + o[1];
+                            if (r >= 0 && r < SIZE && c >= 0 && c < SIZE && activeCells[cellKey(puzzle, r, c)]) {
+                                orthogonals.push({ row: r, col: c });
+                            }
+                        });
+                        constraints.cellRelations.push({
+                            relation: "countingneighbours",
+                            cell: cell,
+                            kind: markedCells[key] || "none",
+                            diagonals: diagonals,
+                            orthogonals: orthogonals
+                        });
+                    }
+                }
+            });
+            constraints.supported.push("countingneighbours");
+        }
         return constraints;
     }
 

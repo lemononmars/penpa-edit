@@ -2340,6 +2340,31 @@ var SudokuCSP = (function() {
                 });
                 return mismatches <= 1 && (mismatches === 1 || open > 0);
             }
+            if (clue.relation === "countingneighbours") {
+                var cellVal = cellValue(board, clue.cell);
+                if (!cellVal) return true;
+                var diagVals = clue.diagonals.map(function(c) { return cellValue(board, c); });
+                var orthoVals = clue.orthogonals.map(function(c) { return cellValue(board, c); });
+                if (diagVals.indexOf(0) !== -1 || orthoVals.indexOf(0) !== -1) return true;
+
+                var countDistinct = function(arr) {
+                    return arr.filter(function(v, i, a) { return a.indexOf(v) === i; }).length;
+                };
+                var diagDistinct = countDistinct(diagVals);
+                var allDistinct = countDistinct(diagVals.concat(orthoVals));
+
+                var satisfiesCircle = cellVal === allDistinct;
+                var satisfiesCross = cellVal === diagDistinct;
+
+                if (clue.kind === "circle") return satisfiesCircle;
+                if (clue.kind === "cross") return satisfiesCross && !satisfiesCircle;
+                if (clue.kind === "none" && !satisfiesCircle && !satisfiesCross) return true;
+                // Since this validation could be called while not all digits are filled out or during setup, wait, if there's no symbol, and it's evaluated for a partial board, and the numbers DO match, it will be rejected.
+                // However, `validatePartial` can reject valid partial states if we evaluate negative constraints strictly on partials. Wait, `diagVals.indexOf(0) !== -1` ensures we only evaluate this when ALL neighbors are filled!
+                // Ah, what if neighbors are all filled, but the current cell value matches the circle/cross condition, but the user DID NOT place a circle/cross?
+                // Then the negative constraint is violated, and we return false! That is correct.
+                return !satisfiesCircle && !satisfiesCross;
+            }
             if (clue.relation === "wheel") {
                 var wheelValues = clue.cells.map(function(cell) { return cellValue(board, cell); });
                 for (var rotation = 0; rotation < 4; rotation++) {
