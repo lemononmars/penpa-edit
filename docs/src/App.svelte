@@ -2029,10 +2029,8 @@
             >
             for CSP solver inspiration. This website uses a vibecoded CSP implementation,
             but I hope to learn to integrate
-          </p>
-          <p>
             <a
-              href="https://github.com/semiexp/cspuz_core"
+href="https://github.com/semiexp/cspuz_core"
               target="_blank"
               rel="noreferrer">cspuz_core</a
             > someday.
@@ -2046,11 +2044,6 @@
           </p>
           <p>Codex for making this ambitious project possible.</p>
           <h2 id="studio-modal-title">Disclaimer</h2>
-          <p>
-            The solver is deterministic, but if you find a bug, please report it
-            to the GitHub.
-          </p>
-          <p>This uses local storage for settings only.</p>
           <p>
             The solver runs on your device, and it does not collect nor send any
             of your data.
