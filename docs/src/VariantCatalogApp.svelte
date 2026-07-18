@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { variations } from "./variationCatalog";
+  import { variantMetadata, variations } from "./variationCatalog";
   import {
     automaticBlockerFor,
     cspApproachFor,
@@ -26,6 +26,7 @@
       darkTheme = val === "2";
     }
     document.documentElement.classList.toggle("dark", darkTheme);
+    if (import.meta.env.DEV) loadMetadata();
   });
 
   const detailId =
@@ -52,54 +53,87 @@
     );
   });
 
-  let newId = "";
-  let newName = "";
-  let newRule = "";
-  let newTags = "";
-  let newStatus: "available" | "planned" | "infeasible" | "hidden" = "planned";
-  let newInputType: "no-input" | "line" | "region" | "outside" | "shape" = "shape";
+  let metadataText = JSON.stringify(variantMetadata, null, 2);
   let isSaving = false;
   let saveMessage = "";
   let saveSuccess = false;
 
-  async function handleAddVariant() {
+  function errorMessage(error: unknown) {
+    if (error instanceof Error && error.message.trim()) return error.message;
+    if (typeof error === "string" && error.trim()) return error;
+    return "Unknown error. Check that the Vite development server was restarted.";
+  }
+
+  async function readApiResponse(response: Response) {
+    const text = await response.text();
+    const contentType = response.headers.get("content-type") || "";
+    if (/<!doctype|<html/i.test(text) || !contentType.includes("application/json")) {
+      throw new Error(
+        "The development metadata API returned the wiki page instead of JSON. Restart `npm run dev` and try again.",
+      );
+    }
+    let result: any;
+    try {
+      result = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error("The development metadata API returned invalid JSON.");
+    }
+    if (!response.ok) {
+      throw new Error(result.error || result.message || `Request failed (${response.status}).`);
+    }
+    return result;
+  }
+
+  function parseMetadataEditor() {
+    const parsed = JSON.parse(metadataText);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("The metadata root must be a JSON object.");
+    }
+    if (!Array.isArray(parsed.variants)) {
+      throw new Error('The metadata must contain a "variants" array.');
+    }
+    return parsed;
+  }
+
+  function formatMetadata() {
+    try {
+      metadataText = JSON.stringify(parseMetadataEditor(), null, 2);
+      saveSuccess = true;
+      saveMessage = "JSON is valid and formatted.";
+    } catch (err: any) {
+      saveSuccess = false;
+      saveMessage = `Invalid JSON: ${errorMessage(err)}`;
+    }
+  }
+
+  async function loadMetadata() {
+    try {
+      const response = await fetch("/api/variant-metadata");
+      metadataText = JSON.stringify(await readApiResponse(response), null, 2);
+      saveMessage = "";
+    } catch (err: any) {
+      saveSuccess = false;
+      saveMessage = `Could not reload metadata: ${errorMessage(err)}`;
+    }
+  }
+
+  async function saveMetadata() {
     isSaving = true;
     saveMessage = "";
     try {
-      const id = newId.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
-      const response = await fetch("/api/add-variant", {
-        method: "POST",
+      const metadata = parseMetadataEditor();
+      const response = await fetch("/api/variant-metadata", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id,
-          name: newName.trim(),
-          rule: newRule.trim(),
-          tags: newTags.split(",").map(t => t.trim()).filter(Boolean),
-          status: newStatus,
-          inputType: newInputType
-        })
+        body: JSON.stringify(metadata),
       });
-      if (response.ok) {
-        const res = await response.json();
-        saveSuccess = true;
-        saveMessage = res.message || "Saved successfully!";
-        newId = "";
-        newName = "";
-        newRule = "";
-        newTags = "";
-        newStatus = "planned";
-        newInputType = "shape";
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } else {
-        const text = await response.text();
-        saveSuccess = false;
-        saveMessage = `Error: ${text}`;
-      }
+      const result = await readApiResponse(response);
+      saveSuccess = true;
+      saveMessage = result.message || "Metadata saved.";
+      metadataText = JSON.stringify(metadata, null, 2);
     } catch (err: any) {
       saveSuccess = false;
-      saveMessage = `Error: ${err.message}`;
+      saveMessage = `Could not save metadata: ${errorMessage(err)}`;
     } finally {
       isSaving = false;
     }
@@ -308,81 +342,36 @@
 
   {#if import.meta.env.DEV}
     <section class="dev-form-card">
-      <h2>Developer Options: Add New Variant</h2>
-      <p class="dev-form-desc">This form is only visible in development mode. Submitting it adds the variant to <code>variant_metadata.json</code>.</p>
-      <form on:submit|preventDefault={handleAddVariant}>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="new-variant-id">Variant ID (alphanumeric, lowercase)</label>
-            <input
-              id="new-variant-id"
-              type="text"
-              bind:value={newId}
-              placeholder="e.g. bouncingxsums"
-              required
-            />
-            {#if newId}
-              <span class="preview-filename">Entry: <code>variant_metadata.json → {newId.trim().toLowerCase().replace(/[^a-z0-9]/g, "")}</code></span>
-            {/if}
-          </div>
-          <div class="form-group">
-            <label for="new-variant-name">Display Name</label>
-            <input
-              id="new-variant-name"
-              type="text"
-              bind:value={newName}
-              placeholder="e.g. Bouncing X-Sums"
-              required
-            />
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="new-variant-rule">Rule Description (9x9)</label>
-          <textarea
-            id="new-variant-rule"
-            bind:value={newRule}
-            placeholder="Standard sudoku rules apply. Outside clues indicate..."
-            rows="3"
-            required
-          ></textarea>
-        </div>
-        <div class="form-group">
-          <label for="new-variant-tags">Tags (comma-separated)</label>
-          <input
-            id="new-variant-tags"
-            type="text"
-            bind:value={newTags}
-            placeholder="outside, math, diagonal"
-          />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="new-variant-status">Status</label>
-            <select id="new-variant-status" bind:value={newStatus}>
-              <option value="available">Available</option>
-              <option value="planned">Planned</option>
-              <option value="infeasible">Infeasible</option>
-              <option value="hidden">Hidden</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="new-variant-input-type">Input type</label>
-            <select id="new-variant-input-type" bind:value={newInputType}>
-              <option value="no-input">No input</option>
-              <option value="line">Line</option>
-              <option value="region">Region</option>
-              <option value="outside">Outside</option>
-              <option value="shape">Shape</option>
-            </select>
-          </div>
-        </div>
+      <h2>Developer Options: Metadata Editor</h2>
+      <p class="dev-form-desc">
+        This development-only editor reads and writes the complete
+        <code>variant_metadata.json</code> file. Any root setting or variant
+        field can be edited here.
+      </p>
+      <form on:submit|preventDefault={saveMetadata}>
+        <label class="metadata-editor-label" for="variant-metadata-editor"
+          >Complete metadata JSON</label
+        >
+        <textarea
+          id="variant-metadata-editor"
+          class="metadata-editor"
+          bind:value={metadataText}
+          spellcheck="false"
+          aria-describedby="metadata-editor-status"
+        ></textarea>
         <div class="form-actions">
+          <button type="button" on:click={loadMetadata} disabled={isSaving}
+            >Reload from disk</button
+          >
+          <button type="button" on:click={formatMetadata} disabled={isSaving}
+            >Validate &amp; Format</button
+          >
           <button type="submit" disabled={isSaving}>
-            {#if isSaving}Saving...{:else}Save & Create JSON{/if}
+            {#if isSaving}Saving...{:else}Save metadata{/if}
           </button>
         </div>
         {#if saveMessage}
-          <div class="save-status {saveSuccess ? 'success' : 'error'}">
+          <div id="metadata-editor-status" aria-live="polite" class="save-status {saveSuccess ? 'success' : 'error'}">
             {saveMessage}
           </div>
         {/if}
@@ -971,50 +960,37 @@
   :global(html.dark) .dev-form-desc {
     color: #aebdca;
   }
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+  .metadata-editor-label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 13px;
+    font-weight: 700;
   }
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 16px;
+  .metadata-editor {
+    width: 100%;
+    min-height: 65vh;
+    resize: vertical;
+    padding: 14px;
+    border: 1px solid #b9c9ce;
+    border-radius: 6px;
+    color: #20313b;
+    background: #f8fbfc;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+    tab-size: 2;
   }
-  .form-group label {
-    color: #3b4d58;
-    font-size: 12px;
-    font-weight: 600;
+  .metadata-editor:focus {
+    border-color: #267f95;
+    outline: 3px solid rgba(38, 127, 149, 0.16);
   }
-  :global(html.dark) .form-group label {
-    color: #d5dfe7;
-  }
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
-    padding: 10px 12px;
-    border: 1px solid #cbd8da;
-    border-radius: 4px;
-    font-size: 14px;
-  }
-  :global(html.dark) .form-group input,
-  :global(html.dark) .form-group select,
-  :global(html.dark) .form-group textarea {
-    border-color: #465563;
-    background: #1f2b35;
-    color: #d5dfe7;
-  }
-  .preview-filename {
-    font-size: 11px;
-    color: #267f95;
-    margin-top: 4px;
-  }
-  :global(html.dark) .preview-filename {
-    color: #e5b858;
+  :global(html.dark) .metadata-editor {
+    color: #dce6ed;
+    border-color: #526372;
+    background: #17222c;
   }
   .form-actions {
     display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     justify-content: flex-end;
     margin-top: 8px;
   }

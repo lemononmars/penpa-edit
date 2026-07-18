@@ -14,6 +14,42 @@ function devApiPlugin() {
     name: "dev-api",
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
+        const pathname = new URL(req.url || "/", "http://localhost").pathname.replace(/\/+$/, "");
+        const sendJson = (status, payload) => {
+          res.statusCode = status;
+          res.setHeader("Content-Type", "application/json; charset=utf-8");
+          res.end(JSON.stringify(payload));
+        };
+
+        if (pathname === "/api/variant-metadata" && req.method === "GET") {
+          try {
+            sendJson(200, readMetadata());
+          } catch (err) {
+            sendJson(500, { error: "Could not read variant_metadata.json: " + err.message });
+          }
+          return;
+        }
+
+        if (pathname === "/api/variant-metadata" && req.method === "PUT") {
+          let body = "";
+          req.on("data", chunk => { body += chunk.toString(); });
+          req.on("end", () => {
+            try {
+              const metadata = JSON.parse(body);
+              if (!metadata || typeof metadata !== "object" || Array.isArray(metadata) ||
+                  !Array.isArray(metadata.variants)) {
+                sendJson(400, { error: 'Metadata must be a JSON object containing a "variants" array.' });
+                return;
+              }
+              writeFileSync(metadataPath, JSON.stringify(metadata, null, 2) + "\n", "utf8");
+              sendJson(200, { message: "variant_metadata.json saved. Reload the wiki to apply it." });
+            } catch (err) {
+              sendJson(400, { error: "Could not save metadata: " + err.message });
+            }
+          });
+          return;
+        }
+
         if (req.url === "/api/add-variant" && req.method === "POST") {
           let body = "";
           req.on("data", chunk => { body += chunk.toString(); });
@@ -77,7 +113,7 @@ function devApiPlugin() {
 
               // Find the variant by comparing its "value" alias, or if no alias exists, fallback
               for (const variant of metadata.variants) {
-                const value = metadata.aliases[variant.id] || variant.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+                const value = variant.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
                 if (value === variantId) {
                   variant.example = {
                     problemImage: `images/examples/${problemImageName}`,
@@ -114,7 +150,7 @@ function variantDetailPages() {
   const metadata = readMetadata();
   const ids = Array.from(new Set(metadata.variants
     .filter((variant) => variant.status !== "hidden")
-    .map((variant) => metadata.aliases[variant.id] || variant.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase())
+    .map((variant) => variant.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase())
     .filter(Boolean)));
   return {
     name: "variant-detail-pages",
