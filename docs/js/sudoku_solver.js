@@ -468,6 +468,7 @@ var SudokuSolver = (function() {
             regionCoverage: [],
             extraLargeRegions: [],
             difference2Neighbours: [],
+            escapeStarts: [],
             renbanRegions: [],
             cloneGroups: [],
             consecutiveCloneGroups: [],
@@ -1972,6 +1973,10 @@ var SudokuSolver = (function() {
             });
             if (sameSumGroups.length) constraints.sameSumGroups.push(sameSumGroups);
             constraints.supported.push("samesum");
+        }
+        if (variantEnabled(puzzle, "escape") && shadedCells.length) {
+            constraints.escapeStarts = shadedCells;
+            constraints.supported.push("escape");
         }
         if (variantEnabled(puzzle, "sumskyscrapers")) {
             var sumSkyTop = Number(puzzle.space && puzzle.space[0] || 0);

@@ -2304,7 +2304,7 @@
       "rules": {
         "9x9": "Apply classic Sudoku rules. Each of the shaded cells has an escape path to the edge of the grid. An escape path consists of a series of adjacent cells containing a descending consecutive sequence of digits. All escape paths begin with the digit in the shaded cell and end at a cell containing a 1 at the edge of the grid. Escape paths starting in different shaded cells never share any cell. It is possible that a shaded cell can have more than one escape path."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
