@@ -2468,6 +2468,46 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push(unorderedOutsideVariant);
         }
+        if (variantEnabled(puzzle, "mastermind")) {
+            var mmTop = Number(puzzle.space && puzzle.space[0] || 0);
+            var mmLeft = Number(puzzle.space && puzzle.space[2] || 0);
+            var mmStartRow = 2 + mmTop;
+            var mmStartCol = 2 + mmLeft;
+            var mmDimensions = boxDimensions(SIZE);
+            var mmBoxHeight = mmDimensions.height;
+            var mmBoxWidth = mmDimensions.width;
+            function mastermindClues(keys) {
+                return keys.map(function(key) {
+                    var entry = puzzle.pu_q.symbol[key];
+                    if (entry && entry[1] === "cross") return "cross";
+                    if (entry && entry[1] === "circle_SS") return entry[0] === 2 ? "black" : "white";
+                    return null;
+                }).filter(function(value) { return value !== null; });
+            }
+            function addMastermind(keys, cells, tripletSize, axis) {
+                var clues = mastermindClues(keys);
+                if (!clues.length) return;
+                constraints.outsideRelations.push({ relation: "mastermind", clues: clues,
+                    cells: cells.slice(0, tripletSize), axis: axis });
+            }
+            for (var mmIndex = 0; mmIndex < SIZE; mmIndex++) {
+                var mmColumn = Array.from({ length: SIZE }, function(_, row) { return { row: row, col: mmIndex }; });
+                var mmRow = Array.from({ length: SIZE }, function(_, col) { return { row: mmIndex, col: col }; });
+                addMastermind([1, 2, 3].map(function(layer) {
+                    return (mmStartCol + mmIndex) + (mmStartRow - layer) * puzzle.nx0;
+                }), mmColumn, mmBoxHeight, "column");
+                addMastermind([0, 1, 2].map(function(layer) {
+                    return (mmStartCol + mmIndex) + (mmStartRow + SIZE + layer) * puzzle.nx0;
+                }), mmColumn.slice().reverse(), mmBoxHeight, "column");
+                addMastermind([1, 2, 3].map(function(layer) {
+                    return (mmStartCol - layer) + (mmStartRow + mmIndex) * puzzle.nx0;
+                }), mmRow, mmBoxWidth, "row");
+                addMastermind([0, 1, 2].map(function(layer) {
+                    return (mmStartCol + SIZE + layer) + (mmStartRow + mmIndex) * puzzle.nx0;
+                }), mmRow.slice().reverse(), mmBoxWidth, "row");
+            }
+            constraints.supported.push("mastermind");
+        }
         var activeDiagVariants = ["little killer", "product little killer", "productframe", "bouncing x-sums", "czech outsider", "framediagonal", "pointingdifferents"].filter(function(name) {
             return variantEnabled(puzzle, name);
         });

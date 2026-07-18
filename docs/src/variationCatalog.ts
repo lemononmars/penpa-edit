@@ -66,6 +66,9 @@ function getMarkPosition(value: string, tags: string[], rule: string, name: stri
     if (value === "distances") {
         return "outside";
     }
+    if (value === "mastermind") {
+        return "outside";
+    }
     if (["productkiller", "solokiller"].includes(value)) return "cell";
     if (value === "consecutive" || value === "evensumpairs") {
         return "edge";
