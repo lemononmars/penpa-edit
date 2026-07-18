@@ -22,10 +22,18 @@ var SudokuCSP = (function() {
         });
     }
 
+    function boxDimensions(size) {
+        if (size === 6) return { height: 2, width: 3 };
+        if (size === 8) return { height: 2, width: 4 };
+        if (size === 9) return { height: 3, width: 3 };
+        return { height: 1, width: size };
+    }
+
     function boxIndex(row, col, size) {
         size = size || SIZE;
-        var boxHeight = size === 6 ? 2 : 3;
-        var boxWidth = size / boxHeight;
+        var dimensions = boxDimensions(size);
+        var boxHeight = dimensions.height;
+        var boxWidth = dimensions.width;
         return ((row / boxHeight) | 0) * (size / boxWidth) + ((col / boxWidth) | 0);
     }
 
@@ -189,8 +197,9 @@ var SudokuCSP = (function() {
             }) });
         }
         if (!constraints || constraints.baseBoxes !== false) {
-            var boxHeight = SIZE === 6 ? 2 : 3;
-            var boxWidth = SIZE / boxHeight;
+            var dimensions = boxDimensions(SIZE);
+            var boxHeight = dimensions.height;
+            var boxWidth = dimensions.width;
             for (var boxRow = 0; boxRow < SIZE; boxRow += boxHeight) {
                 for (var boxCol = 0; boxCol < SIZE; boxCol += boxWidth) {
                     var boxCells = [];
@@ -231,7 +240,8 @@ var SudokuCSP = (function() {
             antiKing: "Anti King", antiKnight: "Anti Knight", nonConsecutive: "Non-Consecutive",
             edgeRelations: "edge clue", quadRelations: "quad clue", catalogLines: "line clue",
             diagonalAllDifferent: "diagonal/region", regionAllDifferent: "region", extraLargeRegions: "extra large regions", difference2Neighbours: "difference 2 neighbours",
-            regionCoverage: "region coverage", kropki: "Kropki", xv: "XV", battenburg: "Battenburg"
+            regionCoverage: "region coverage", scatteredAllDifferent: "Scattered shaded cells",
+            invalidRegions: "region layout", kropki: "Kropki", xv: "XV", battenburg: "Battenburg"
         };
         return labels[name] || name.replace(/([a-z])([A-Z])/g, "$1 $2");
     }
@@ -253,8 +263,9 @@ var SudokuCSP = (function() {
                         kind: "constraint",
                         constraint: name,
                         cells: cells,
-                        message: "Constraint conflict: " + constraintLabel(name, items[itemIndex]) + " conflicts with the current digits" +
-                            (cells.length ? " at " + cells.map(cellName).join(", ") : "") + "."
+                        message: name === "invalidRegions" && items[itemIndex].message ? items[itemIndex].message :
+                            "Constraint conflict: " + constraintLabel(name, items[itemIndex]) + " conflicts with the current digits" +
+                                (cells.length ? " at " + cells.map(cellName).join(", ") : "") + "."
                     };
                 }
             }
@@ -2393,6 +2404,27 @@ var SudokuCSP = (function() {
             }
             return true;
         }
+    });
+
+    registerConstraint("scatteredAllDifferent", {
+        validatePartial: function(board, cells) {
+            var seen = 0;
+            for (var index = 0; index < cells.length; index++) {
+                var value = cellValue(board, cells[index]);
+                if (!value) continue;
+                var bit = 1 << value;
+                if (seen & bit) return false;
+                seen |= bit;
+            }
+            return true;
+        }
+    });
+
+    // Region editors can describe an invalid partition. Keep that failure in
+    // the CSP itself so solve, candidate analysis, and generation all stop
+    // before starting an otherwise enormous Latin-square search.
+    registerConstraint("invalidRegions", {
+        validatePartial: function() { return false; }
     });
 
     registerConstraint("extraLargeRegions", {

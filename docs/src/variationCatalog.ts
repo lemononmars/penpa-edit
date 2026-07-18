@@ -136,6 +136,7 @@ export const outsideVariationValues = new Set(variations.filter((item) =>
     item.value !== "xydifference" && (item.inputType.categories.includes("outside") ||
         item.tags?.includes("outside") || /outside the grid/i.test(item.rule))
 ).map((item) => item.value));
+const regionGridVariants = ["irregular", "scattered", "deficit", "surplus"];
 
 function genericSetting(variation: Variation) {
     const text = variation.rule.toLowerCase();
@@ -148,10 +149,15 @@ function genericSetting(variation: Variation) {
         modes.push(mode); submodes.push(submode); styles.push(style); show.push(...controls);
     };
 
-    // Irregular uses its own region-ID editor rather than a Penpa drawing
-    // primitive. SudokuTools adds the Regions button for this setting.
-    if (variation.value === "irregular") {
-        return { show, modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    // These variants share the persisted region-ID editor rather than using
+    // Penpa cages. Scattered also exposes surface paint for its visual set,
+    // but remains a no-input rule in the variant catalogue.
+    if (regionGridVariants.includes(variation.value)) {
+        if (variation.value === "scattered") add("surface", "", 1, ["mo_surface_lb"]);
+        return {
+            show, modeset: modes, submodeset: submodes, styleset: styles,
+            outside: false, regionEditor: true
+        };
     }
     if (variation.inputType.categories.includes("no-input")) {
         return { show, modeset: modes, submodeset: submodes, styleset: styles, outside: false };
@@ -415,7 +421,13 @@ export function installVariationCatalog() {
     ).forEach((element) => element.remove());
     variations.forEach((variation) => {
         if (variation.wikiOnly) return;
-        if (!constraints.setting[variation.value]) constraints.setting[variation.value] = genericSetting(variation);
+        if (regionGridVariants.includes(variation.value)) {
+            // Replace legacy cage-based settings so every consumer—not only
+            // the custom toolbar—sees the persisted region-number editor.
+            constraints.setting[variation.value] = genericSetting(variation);
+        } else if (!constraints.setting[variation.value]) {
+            constraints.setting[variation.value] = genericSetting(variation);
+        }
         constraints.setting[variation.value].outside = outsideVariationValues.has(variation.value);
         if (!constraints.options.sudoku.includes(variation.value)) constraints.options.sudoku.push(variation.value);
         const existingOption = Array.from(select.options).find((option) => option.value === variation.value);
