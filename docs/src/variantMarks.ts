@@ -94,7 +94,7 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     }
     const multiSignals = [
         /horizontal.+vertical|vertical.+horizontal/, /black.+white|white.+black/,
-        /circle.+square|square.+circle/, /different (?:symbols|marks)/, /one of (?:the )?following/
+        /circle.+square|square.+circle/, /circle.+cross|cross.+circle/, /different (?:symbols|marks)/, /one of (?:the )?following/
     ];
     if (multiSignals.some((pattern) => has(text, pattern))) return { position: "multiple", mark: "multiple" };
     if (variation.tags?.includes("region")) return { position: "center", mark: "cage" };
