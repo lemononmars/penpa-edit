@@ -270,7 +270,7 @@ function genericSetting(variation: Variation) {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
-    if (variation.value === "almostpalindrome") {
+    if (variation.value === "almostpalindrome" || variation.value === "disguisedpalindromes") {
         add("line", "2", 5, ["mo_line_lb", "sub_line2_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
