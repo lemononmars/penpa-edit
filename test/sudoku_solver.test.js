@@ -1148,6 +1148,28 @@ test("recognizes spaced Search 9 names and Fat Gray arrows as supported", functi
     assert.deepEqual(constraints.directionalMarks[0].targets, [{ row: 1, col: 2 }]);
 });
 
+test("reads dead or alive arrows correctly", function() {
+    const puzzle = {
+        nx0: 13,
+        activeSudokuVariants: ["classic", "deadoralivearrows"],
+        centerlist: [28, 29, 30, 41, 42, 43, 54, 55, 56],
+        point: {},
+        pu_q: { symbol: {
+            42: [5, "arrow_B_W", 2, "deadoralivearrows"],
+            43: [1, "arrow_B_G", 2, "deadoralivearrows"]
+        } }
+    };
+    const constraints = SudokuSolver.readConstraints(puzzle);
+    assert.equal(constraints.supported.includes("deadoralivearrows"), true);
+
+    const relations = constraints.directionalMarks.map(c => c.relation);
+    assert.deepEqual(relations, ["deadoralivearrows", "deadoralivearrows"]);
+
+    const isWhites = constraints.directionalMarks.map(c => c.isWhite);
+    assert.equal(isWhites.includes(true), true);
+    assert.equal(isWhites.includes(false), true);
+});
+
 test("keeps shared arrow marks assigned to every active directional variant", function() {
     const puzzle = {
         nx0: 13,
@@ -1233,6 +1255,10 @@ test("validates all directional shape relations", function() {
         neighbors: [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 3 }] }), true);
     assert.equal(accepted({ relation: "smallestneighbours", targets: [{ row: 0, col: 0 }],
         neighbors: [{ row: 0, col: 0 }, { row: 0, col: 1 }] }), false);
+    assert.equal(accepted({ relation: "deadoralivearrows", isWhite: true, origin: { row: 0, col: 0 }, targets: [{ row: 0, col: 1 }] }), true); // 5 vs 3
+    assert.equal(accepted({ relation: "deadoralivearrows", isWhite: true, origin: { row: 0, col: 0 }, targets: [{ row: 1, col: 5 }] }), false); // 5 vs 5
+    assert.equal(accepted({ relation: "deadoralivearrows", isWhite: false, origin: { row: 0, col: 0 }, targets: [{ row: 0, col: 1 }] }), false); // Complete but no 5
+    assert.equal(accepted({ relation: "deadoralivearrows", isWhite: false, origin: { row: 0, col: 0 }, targets: [{ row: 1, col: 5 }] }), true); // Complete and contains 5
     assert.equal(accepted({ relation: "eliminate", origin: { row: 0, col: 0 }, targets: [{ row: 0, col: 1 }] }), true);
     assert.equal(accepted({ relation: "eliminate", origin: { row: 0, col: 0 }, targets: [{ row: 1, col: 5 }] }), false);
     assert.equal(accepted({ relation: "pointtonext", origin: { row: 0, col: 0 }, targets: [{ row: 0, col: 1 }] }), false);

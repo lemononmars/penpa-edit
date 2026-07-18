@@ -1206,6 +1206,16 @@ var SudokuCSP = (function() {
             var relation = clue.relation;
             var origin = clue.origin ? cellValue(board, clue.origin) : 0;
             var targetValues = (clue.targets || []).map(function(cell) { return cellValue(board, cell); });
+            if (relation === "deadoralivearrows") {
+                if (!origin) return true;
+                if (clue.isWhite) {
+                    return targetValues.every(function(value) { return !value || value !== origin; });
+                } else {
+                    var isComplete = targetValues.every(function(value) { return !!value; });
+                    var hasMatch = targetValues.some(function(value) { return value === origin; });
+                    return !isComplete || hasMatch;
+                }
+            }
             if (relation === "eliminate") {
                 return !origin || targetValues.every(function(value) { return !value || value !== origin; });
             }
@@ -2613,6 +2623,69 @@ var SudokuCSP = (function() {
                 var second = cellValue(board, path[path.length - 1 - i]);
                 if (first && second && first !== second) {
                     return false;
+                }
+            }
+            return true;
+        }
+    });
+
+
+    registerConstraint("tinder", {
+        validatePartial: function(board, path) {
+            var values = [];
+            for (var i = 0; i < path.length; i++) {
+                var v = cellValue(board, path[i]);
+                if (v) values.push(v);
+            }
+            var counts = {};
+            for (var i = 0; i < values.length; i++) {
+                var v = values[i];
+                counts[v] = (counts[v] || 0) + 1;
+            }
+            var multiples = 0;
+            var keys = Object.keys(counts);
+            for (var i = 0; i < keys.length; i++) {
+                if (counts[keys[i]] > 1) multiples++;
+            }
+            if (multiples > 1) return false;
+            if (values.length === path.length && multiples !== 1) return false;
+            return true;
+        }
+    });
+
+    registerConstraint("sumsetCages", {
+        validatePartial: function(board, cages) {
+            var sums = [];
+            for (var i = 0; i < cages.length; i++) {
+                var cage = cages[i];
+                var sum = 0;
+                var complete = true;
+                for (var j = 0; j < cage.length; j++) {
+                    var val = cellValue(board, cage[j]);
+                    if (!val) {
+                        complete = false;
+                        break;
+                    }
+                    sum += val;
+                }
+                if (complete) {
+                    if (sums.indexOf(sum) !== -1) return false;
+                    sums.push(sum);
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("topheavy", {
+        validatePartial: function(board) {
+            for (var c = 0; c < SIZE; c++) {
+                for (var r = 0; r < SIZE - 1; r++) {
+                    var top = cellValue(board, { row: r, col: c });
+                    var bottom = cellValue(board, { row: r + 1, col: c });
+                    if (top && bottom && top >= 1 && top <= 7 && bottom >= 1 && bottom <= 7 && top <= bottom) {
+                        return false;
+                    }
                 }
             }
             return true;

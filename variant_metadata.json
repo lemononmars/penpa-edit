@@ -1131,7 +1131,8 @@
           "Special · no-bulb thermo",
           "Draw each monotonic line with the no-bulb thermo tool."
         ]
-      }
+      },
+      "otherNames": "Unmarked Thermo"
     },
     {
       "id": "crosssums",
@@ -1202,13 +1203,16 @@
       "rules": {
         "9x9": "There are some white and grey arrows in the grid. The digit placed in the cell with white arrow must not repeat in the direction of the arrow. The digit placed in the cell with grey arrow is repeated at least once in the direction of the arrow."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shape"
         ],
-        "instructions": []
+        "instructions": [
+          "Shape · diagonal arrow",
+          "White arrows must not repeat in the direction of the arrow. Grey arrows must repeat at least once."
+        ]
       },
       "tags": []
     },
@@ -6087,7 +6091,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -6369,9 +6373,12 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "line"
         ],
-        "instructions": []
+        "instructions": [
+          "Line · diagonal · grey",
+          "Draw each marked line with the grey diagonal style."
+        ]
       },
       "tags": []
     },
@@ -6386,7 +6393,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       },
@@ -6607,23 +6614,6 @@
       "name": "Unique Renban",
       "rules": {
         "9x9": "Shaded regions must contain a set of distinct, consecutive digits in any order. Every renban group consists of an unique set of digits."
-      },
-      "status": "planned",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "shape"
-        ],
-        "instructions": []
-      },
-      "tags": []
-    },
-    {
-      "otherNames": "Sudoku (Unmarked Thermo)",
-      "id": "unmarkedthermo",
-      "name": "Unmarked Thermo",
-      "rules": {
-        "9x9": "Place a number from the range 1-X in each unnumbered cell in the grid such that each row, column and marked box contains each number from the range 1-X exactly once, where X is the number of cells in each row. Several \"thermometers\" in the grid each indicate a sequence of cells. The numbers in a thermometer must be strictly increasing (no duplicates) from one end of the thermometer to the other. You are not told which end is which."
       },
       "status": "planned",
       "scratchGeneratable": false,

@@ -6735,12 +6735,6 @@ class Puzzle {
                         text += "\n";
                     }
                 }
-            } else if (header === "test") {
-                console.log(this.pu_q);
-                console.log(this.pu_a);
-                console.log(this.pu_q_col);
-                console.log(this.pu_a_col);
-                console.log(this);
             } else {
                 text += PenpaText.get('gmp_unsupported', header);
             }
@@ -13178,15 +13172,6 @@ class Puzzle {
         let edit_mode = this.mode[this.mode.qa].edit_mode;
         if (edit_mode === "sudoku" || this.number_multi_enabled() || edit_mode === "multicolor" ||
             (edit_mode === "cage" && document.getElementById("sub_cage1").checked)) {
-            // [ZW] removing this for now, preventing escape to clear selection, not sure what the purpose is
-            // since we dont want single cell highlighed while in killer submode
-            // if (this.selection.length === 0 && this.mode[this.mode.qa].edit_mode === "sudoku") {
-            //    // check if cursor is in centerlist, to avoid border/edge case
-            //    let cursorexist = this.centerlist.indexOf(this.cursol);
-            //    if (cursorexist !== -1) {
-            //        this.selection.push(this.cursol);
-            //    }
-            // }
             this.ctx.shadowBlur = 10;
             this.ctx.shadowColor = Color.ORANGE_TRANSPARENT;
             let irregular = false;
