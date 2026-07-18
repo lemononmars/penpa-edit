@@ -14,7 +14,8 @@
   type VariantTab =
     | "no-input"
     | "line"
-    | "region"
+    | "cage"
+    | "shading"
     | "outside"
     | "cell"
     | "edge"
@@ -79,14 +80,24 @@
   const variantTabs: Array<{ value: VariantTab; label: string }> = [
     { value: "no-input", label: "No input" },
     { value: "line", label: "Line" },
-    { value: "region", label: "Region" },
+    { value: "cage", label: "Cage" },
+    { value: "shading", label: "Shading" },
     { value: "outside", label: "Outside" },
     { value: "cell", label: "Cell" },
     { value: "edge", label: "Edge" },
     { value: "intersection", label: "Intersection" },
   ];
 
-  const variantIcons: Record<string, string> = variantMetadata.icons;
+  const inputTypeIcons: Record<VariantTab, string> = {
+    "no-input": "∅",
+    line: "╱",
+    cage: "▧",
+    shading: "◩",
+    outside: "↘",
+    cell: "□",
+    edge: "⊟",
+    intersection: "✣",
+  };
 
   function legacyClick(id: string) {
     document.getElementById(id)?.click();
@@ -408,7 +419,8 @@
     if (outsideVariationValues.has(value) || setting?.outside)
       families.add("outside");
     if (catalog?.tags?.includes("region") || modes.includes("cage"))
-      families.add("region");
+      families.add("cage");
+    if (modes.includes("surface")) families.add("shading");
     if (modes.includes("line") || modes.includes("special"))
       families.add("line");
     if (!families.size) {
@@ -432,7 +444,8 @@
       (
         [
           "outside",
-          "region",
+          "cage",
+          "shading",
           "line",
           "no-input",
           "cell",
@@ -461,7 +474,7 @@
     }
     const restricted = variantInputFamilies(value).filter(
       (family) =>
-        family === "line" || family === "region" || family === "outside",
+        family === "line" || family === "cage" || family === "outside",
     );
     if (!restricted.length) return null;
     return (
@@ -1042,7 +1055,7 @@
   }
 
   function variantIcon(variant: string) {
-    return variantIcons[variant] || "◇";
+    return inputTypeIcons[primaryVariantTab(variant)];
   }
 
   function applyZoom() {

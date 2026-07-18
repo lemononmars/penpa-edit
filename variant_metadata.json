@@ -8,26 +8,6 @@
     "minmax": "minimax",
     "renban": "renbanregion"
   },
-  "icons": {
-    "classic": "9",
-    "odd even": "◐",
-    "diagonal": "╳",
-    "anti diagonal": "⨯",
-    "anti king": "♔",
-    "anti knight": "♞",
-    "non consecutive": "↮",
-    "arrow": "➜",
-    "thermo": "♨",
-    "killer": "Σ",
-    "kropki": "●",
-    "palindrome": "↔",
-    "xv": "Ⅹ",
-    "battenburg": "▦",
-    "skyscraper": "▥",
-    "sandwich": "☰",
-    "alloddalleven": "◑",
-    "clone": "⧉"
-  },
   "markOverrides": {},
   "variants": [
     {
@@ -41,7 +21,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -58,7 +38,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -75,7 +55,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -109,7 +89,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -126,7 +106,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -145,7 +125,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": [
           "Use the Cell tool to shade every constrained cell. Shaded cells are grouped by their Sudoku box."
@@ -163,7 +143,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "line"
         ],
         "instructions": []
       },
@@ -204,7 +184,7 @@
       "scratchGeneratable": true,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": [
           "No mark is required. Select this button to inspect or activate the rule."
@@ -242,7 +222,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -261,7 +241,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -280,7 +260,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       }
@@ -299,7 +279,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "line"
         ],
         "instructions": [
           "Drag from the circle cell through the shaft cells to create an arrow."
@@ -317,7 +297,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -355,7 +335,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -371,7 +351,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "line"
         ],
         "instructions": []
       },
@@ -392,7 +372,7 @@
       "scratchGeneratable": true,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": [
           "Click a four-cell corner to add or remove a Battenburg mark; use its Negative toggle to constrain unmarked corners."
@@ -483,7 +463,7 @@
       "inputType": {
         "categories": [
           "line",
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Line · normal",
@@ -503,7 +483,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -539,7 +519,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -557,7 +537,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Number · edge",
@@ -581,7 +561,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · normal",
@@ -601,7 +581,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -618,7 +598,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -639,7 +619,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · small",
@@ -658,7 +638,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -675,7 +655,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -692,7 +672,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -731,8 +711,8 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region",
-          "shape"
+          "cage",
+          "cell"
         ],
         "instructions": [
           "Cage",
@@ -751,7 +731,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -772,7 +752,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -790,7 +770,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region"
+          "cage"
         ],
         "instructions": [
           "Draw cages around matching shapes. Every cage must have at least one other cage with exactly the same shape."
@@ -808,7 +788,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -825,7 +805,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -865,7 +845,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · corner",
@@ -884,7 +864,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -903,12 +883,11 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region",
-          "shape"
+          "cage"
         ],
         "instructions": [
           "Cage",
-          "Number · Killer",
+          "Number · erer",
           "Cage each pair and give matching pairs the same code."
         ]
       }
@@ -945,7 +924,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       }
@@ -961,7 +940,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -981,7 +960,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region"
+          "cage"
         ],
         "instructions": []
       }
@@ -997,7 +976,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -1018,7 +997,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -1053,7 +1032,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -1070,7 +1049,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -1087,7 +1066,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -1104,14 +1083,14 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
       "tags": []
     },
     {
-      "otherNames": "Creasing",
+      "otherNames": "Unmarked Thermo",
       "id": "creasing",
       "name": "Unmarked Thermo",
       "rules": {
@@ -1131,8 +1110,7 @@
           "Special · no-bulb thermo",
           "Draw each monotonic line with the no-bulb thermo tool."
         ]
-      },
-      "otherNames": "Unmarked Thermo"
+      }
     },
     {
       "id": "crosssums",
@@ -1147,7 +1125,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": [
           "Shape · cross",
@@ -1166,7 +1144,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -1187,7 +1165,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · normal",
@@ -1207,7 +1185,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Shape · diagonal arrow",
@@ -1248,7 +1226,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -1269,7 +1247,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · normal",
@@ -1291,7 +1269,7 @@
       "inputType": {
         "categories": [
           "line",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Shape · eight-direction arrow",
@@ -1312,7 +1290,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": [
           "Number · circled corner",
@@ -1352,7 +1330,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -1369,7 +1347,8 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge",
+          "shading"
         ],
         "instructions": []
       },
@@ -1388,7 +1367,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": [
           "Shape · paired bars",
@@ -1409,7 +1388,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": [
           "Shape · paired bars",
@@ -1432,7 +1411,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": [
           "Shape · paired bars",
@@ -1455,7 +1434,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       }
@@ -1474,7 +1453,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       }
@@ -1490,7 +1469,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region"
+          "shading"
         ],
         "instructions": [
           "Surface",
@@ -1512,7 +1491,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -1529,7 +1508,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -1585,7 +1564,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -1605,7 +1584,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Number · normal",
@@ -1625,7 +1604,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no input"
         ],
         "instructions": []
       },
@@ -1644,7 +1623,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Number · circled edge",
@@ -1663,7 +1642,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -1680,7 +1659,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -1714,7 +1693,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -1769,7 +1748,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Number · circled edge",
@@ -1791,7 +1770,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -1807,7 +1786,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -1828,7 +1807,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -1848,7 +1827,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -1868,7 +1847,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -1897,23 +1876,6 @@
       }
     },
     {
-      "otherNames": "",
-      "id": "equal sum lines",
-      "name": "Equal Sum Lines",
-      "rules": {
-        "9x9": "All lines have the same sum of digits. Digits may repeat on lines."
-      },
-      "status": "available",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "shape"
-        ],
-        "instructions": []
-      },
-      "tags": []
-    },
-    {
       "id": "equalsums",
       "name": "Equal Sums",
       "rules": {
@@ -1928,7 +1890,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -1944,7 +1906,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -1988,7 +1950,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Number · normal",
@@ -2010,7 +1972,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Shape · small white circle",
@@ -2031,7 +1993,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -2047,7 +2009,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2081,7 +2043,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2098,7 +2060,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region"
+          "cage"
         ],
         "instructions": [
           "Surface",
@@ -2122,7 +2084,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region"
+          "cage"
         ],
         "instructions": [
           "Surface",
@@ -2141,7 +2103,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -2183,7 +2145,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Shape · small white circle",
@@ -2203,7 +2165,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2220,7 +2182,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2237,7 +2199,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -2258,7 +2220,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · normal",
@@ -2280,7 +2242,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Shape · diamond",
@@ -2299,7 +2261,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2316,7 +2278,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -2335,7 +2297,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       }
@@ -2345,13 +2307,13 @@
       "id": "fourpairs",
       "name": "Four pairs",
       "rules": {
-        "9x9": "Follow classic sudoku rules. There are two independent groups of eight cells in the grid, marked with a grey shading. Exactly four different digits can be found in each of the groups, each of them exactly twice."
+        "9x9": "Follow classic sudoku rules. There are two independent groups of eight cells in the grid, marked with a grey gg. Exactly four different digits can be found in each of the groups, each of them exactly twice."
       },
       "status": "planned",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -2390,7 +2352,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · normal",
@@ -2446,7 +2408,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -2463,7 +2425,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2504,7 +2466,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       }
@@ -2520,7 +2482,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -2537,7 +2499,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -2554,7 +2516,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -2571,7 +2533,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -2590,7 +2552,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -2606,7 +2568,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2623,7 +2585,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       },
@@ -2642,7 +2604,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       }
@@ -2658,7 +2620,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2675,7 +2637,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2692,7 +2654,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2709,7 +2671,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2729,7 +2691,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -2745,7 +2707,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -2762,7 +2724,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2781,7 +2743,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -2799,7 +2761,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       }
@@ -2851,7 +2813,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -2870,7 +2832,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Enter a region number in every cell. Cells with the same number form one box; they do not need to be connected. Finish region editing to draw the box borders."
@@ -2888,7 +2850,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2905,7 +2867,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -2922,7 +2884,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2939,7 +2901,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -2956,7 +2918,8 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "outside"
+          "outside",
+          "shading"
         ],
         "instructions": []
       },
@@ -2975,7 +2938,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": [
           "Drag across cells to make a cage, then use Killer Sum on its upper-left corner."
@@ -2993,7 +2956,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3010,7 +2973,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -3027,7 +2990,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -3044,7 +3007,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3066,7 +3029,7 @@
       "scratchGeneratable": true,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Click an edge to cycle through a black dot, a white dot, and no dot."
@@ -3084,7 +3047,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3103,7 +3066,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       }
@@ -3119,7 +3082,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3136,7 +3099,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3170,7 +3133,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -3187,7 +3150,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3204,7 +3167,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -3226,7 +3189,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · normal",
@@ -3246,7 +3209,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3280,7 +3243,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3300,7 +3263,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       }
@@ -3320,7 +3283,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -3336,7 +3299,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3356,7 +3319,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · normal",
@@ -3380,7 +3343,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Number · normal",
@@ -3399,7 +3362,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3434,7 +3397,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3455,7 +3418,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · normal",
@@ -3511,7 +3474,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3530,7 +3493,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -3548,7 +3511,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -3564,7 +3527,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -3583,8 +3546,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region",
-          "shape"
+          "cage"
         ],
         "instructions": [
           "Cage",
@@ -3625,7 +3587,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -3641,7 +3603,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3658,7 +3620,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3699,7 +3661,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       }
@@ -3737,7 +3699,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3754,7 +3716,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -3775,7 +3737,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · small",
@@ -3796,7 +3758,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -3814,7 +3776,7 @@
       "scratchGeneratable": true,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Click a cell center to cycle through an odd circle, an even square, and no mark."
@@ -3832,7 +3794,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -3845,11 +3807,11 @@
       "rules": {
         "9x9": "Some circled cells are connected by a bridge. An odd digit in a circle denotes the number of odd digits on the bridge. An even digit in a circle equals the number of even digits on the bridge. The digits on the circles are not counted. If a circled cell is connected by more than one bridge, an odd/even digit in the cell denote the number of odd/even digits on each connected bridge (not the sum of all connected bridges)."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "line"
         ],
         "instructions": []
       },
@@ -3866,7 +3828,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -3879,11 +3841,11 @@
       "rules": {
         "9x9": "Follow classic sudoku rules. Moreover, the sum of two digits in every cage marked with “O” is odd and the sum of two digits in every cage marked with “E” is even."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -3927,7 +3889,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Number · normal",
@@ -3949,7 +3911,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       }
@@ -3999,7 +3961,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4029,11 +3991,11 @@
       "rules": {
         "9x9": "A digit in a grey cell must be placed in the Nth position in the next row, where N is the digit immediately to the right of the grey cell."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -4050,7 +4012,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -4084,7 +4046,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4101,7 +4063,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4118,7 +4080,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4135,7 +4097,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -4152,7 +4114,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -4173,7 +4135,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · normal",
@@ -4272,7 +4234,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · normal",
@@ -4291,7 +4253,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4308,7 +4270,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4325,7 +4287,8 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "outside"
+          "outside",
+          "shading"
         ],
         "instructions": []
       },
@@ -4362,7 +4325,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -4379,7 +4342,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4396,7 +4359,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4416,7 +4379,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cellinel"
         ],
         "instructions": []
       }
@@ -4473,7 +4436,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -4508,7 +4471,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · candidates",
@@ -4530,7 +4493,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       }
@@ -4565,7 +4528,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4582,7 +4545,8 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage",
+          "shading"
         ],
         "instructions": []
       },
@@ -4599,7 +4563,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4616,7 +4580,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4635,7 +4599,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -4653,7 +4617,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -4688,7 +4652,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4739,7 +4703,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4755,7 +4719,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -4775,7 +4739,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       }
@@ -4791,7 +4755,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4833,8 +4797,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region",
-          "shape"
+          "cage"
         ],
         "instructions": [
           "Cage",
@@ -4854,7 +4817,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4876,7 +4839,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · M",
@@ -4896,7 +4859,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -4915,7 +4878,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -4933,7 +4896,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -4949,7 +4912,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -4969,7 +4932,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "no-input"
         ],
         "instructions": []
       }
@@ -4987,7 +4950,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -5022,7 +4985,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -5039,7 +5002,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5056,7 +5019,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5073,7 +5036,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5090,7 +5053,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5131,7 +5094,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region"
+          "cage"
         ],
         "instructions": [
           "Draw cages around cells."
@@ -5149,7 +5112,8 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage",
+          "shading"
         ],
         "instructions": []
       },
@@ -5166,7 +5130,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -5183,7 +5147,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5205,7 +5169,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Shape · thin black arrow",
@@ -5224,7 +5188,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -5241,7 +5205,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "shading"
         ],
         "instructions": []
       },
@@ -5299,7 +5263,8 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "outside"
+          "outside",
+          "shading"
         ],
         "instructions": []
       },
@@ -5318,7 +5283,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -5334,7 +5299,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5351,7 +5316,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5388,7 +5353,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5424,7 +5389,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5441,7 +5406,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -5458,7 +5423,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5475,7 +5440,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -5530,7 +5495,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5547,7 +5512,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -5566,7 +5531,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": [
           "Input-mode column checkboxes",
@@ -5585,7 +5550,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -5604,7 +5569,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Shape · eight-direction arrow",
@@ -5623,7 +5588,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5642,7 +5607,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region"
+          "cage"
         ],
         "instructions": [
           "Cage",
@@ -5661,7 +5626,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -5678,7 +5643,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5697,7 +5662,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       }
@@ -5730,7 +5695,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5769,7 +5734,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -5788,7 +5753,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -5807,7 +5772,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -5823,7 +5788,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -5840,7 +5805,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5857,7 +5822,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5877,7 +5842,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       }
@@ -5893,7 +5858,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -5910,7 +5875,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -5927,7 +5892,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -5944,7 +5909,8 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "outside"
+          "outside",
+          "shading"
         ],
         "instructions": []
       },
@@ -5964,7 +5930,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Shape · eight-direction arrow",
@@ -5987,7 +5953,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · small",
@@ -6006,7 +5972,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -6040,7 +6006,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6057,7 +6023,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -6125,7 +6091,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -6163,7 +6129,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6180,7 +6146,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6215,7 +6181,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -6269,7 +6235,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "line"
         ],
         "instructions": [
           "Drag from the bulb through the cells in increasing order."
@@ -6287,7 +6253,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6304,7 +6270,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -6338,7 +6304,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6357,7 +6323,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -6412,7 +6378,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -6428,7 +6394,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6465,7 +6431,8 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "outside"
+          "outside",
+          "shading"
         ],
         "instructions": []
       },
@@ -6485,7 +6452,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       }
@@ -6501,7 +6468,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6518,7 +6485,8 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "outside"
+          "outside",
+          "shading"
         ],
         "instructions": []
       },
@@ -6535,7 +6503,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6551,7 +6519,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": []
       },
@@ -6568,7 +6536,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6585,7 +6553,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -6619,7 +6587,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },
@@ -6636,7 +6604,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "line"
         ],
         "instructions": []
       },
@@ -6653,7 +6621,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "shading"
         ],
         "instructions": []
       },
@@ -6670,7 +6638,8 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "outside"
+          "outside",
+          "shading"
         ],
         "instructions": []
       },
@@ -6689,7 +6658,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": [
           "Number · Tapa",
@@ -6709,7 +6678,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "intersection"
         ],
         "instructions": []
       },
@@ -6726,7 +6695,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6745,7 +6714,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "region"
+          "cage"
         ],
         "instructions": [
           "Cage",
@@ -6764,7 +6733,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6815,7 +6784,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cell"
         ],
         "instructions": []
       },
@@ -6836,7 +6805,7 @@
       "inputType": {
         "categories": [
           "outside",
-          "shape"
+          "cell"
         ],
         "instructions": [
           "Number · small",
@@ -6859,7 +6828,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Number · edge",
@@ -6882,7 +6851,7 @@
       "scratchGeneratable": true,
       "inputType": {
         "categories": [
-          "shape"
+          "edge"
         ],
         "instructions": [
           "Click an edge to cycle through V, X, and no clue."
@@ -6921,7 +6890,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "cage"
         ],
         "instructions": []
       },

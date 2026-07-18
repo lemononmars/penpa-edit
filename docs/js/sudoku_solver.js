@@ -3296,7 +3296,8 @@ var SudokuTools = (function() {
         var labels = {
             irregular: "Regions",
             sudoku: "Sudoku",
-            symbol: submode === "circle_SS" ? (variant === "consecutive" ? "White Dot" : "Kropki Dot") :
+            symbol: variant === "deadoralivearrows" ? (submode === "arrow_B_W" ? "White Arrow" : "Grey Arrow") :
+                submode === "circle_SS" ? (variant === "consecutive" ? "White Dot" : "Kropki Dot") :
                 variant === "odd even" || variant === "odd even count" || variant === "odd even bridge" ? "Odd / Even Mark" :
                     variant === "battenburg" ? "Battenburg Mark" :
                         variant === "little killer" || variant === "product little killer" || variant === "productframe" || variant === "bouncing x-sums" || variant === "czech outsider" || variant === "pointingdifferents" ? "Arrow" :
@@ -3674,7 +3675,7 @@ var SudokuTools = (function() {
         if (pu.battenburg_mode) {
             UserSettings.draw_edges = true;
         }
-        if (pu.xv_mode || pu.sudoku_edge_clue_mode || pu.sudoku_corner_clue_mode) {
+        if (pu.xv_mode || pu.sudoku_edge_clue_mode || pu.sudoku_corner_clue_mode || pu.diagonal_consecutive_mode) {
             UserSettings.draw_edges = true;
         }
         pu.mode_set(mode);

@@ -23,6 +23,21 @@ test("caps each automatic CSP analysis run at 60 seconds", function() {
     assert.equal(SudokuSolver.AUTO_RUN_LIMIT_MS, 60000);
 });
 
+test("Tinder requires exactly one repeated pair, not a triple", function() {
+    const path = [{ row: 0, col: 0 }, { row: 3, col: 3 }, { row: 6, col: 6 }];
+    const pairBoard = emptyBoard();
+    pairBoard[0][0] = 5;
+    pairBoard[3][3] = 5;
+    pairBoard[6][6] = 7;
+    assert.equal(SudokuCSP.findConflict(pairBoard, { catalogLines: [{ relation: "tinder", path }] }), null);
+
+    const tripleBoard = emptyBoard();
+    tripleBoard[0][0] = 5;
+    tripleBoard[3][3] = 5;
+    tripleBoard[6][6] = 5;
+    assert.equal(SudokuCSP.findConflict(tripleBoard, { catalogLines: [{ relation: "tinder", path }] })?.constraint, "catalogLines");
+});
+
 test("shared Penpa primitives stay owned by the selected variant", function() {
     const settings = {
         renban: { modeset: ["sudoku", "line", "cage"], submodeset: ["1", "2", "1"] },

@@ -5,7 +5,7 @@ type RawVariation = {
     status: "available" | "planned" | "infeasible" | "hidden";
     scratchGeneratable: boolean;
     inputType: {
-        categories: Array<"no-input" | "line" | "region" | "outside" | "shape" | "cell" | "edge" | "intersection">;
+        categories: Array<"no-input" | "line" | "cage" | "shading" | "outside" | "cell" | "edge" | "intersection">;
         instructions: string[];
     };
     tags: string[];
@@ -16,7 +16,6 @@ type RawVariation = {
 
 type VariantMetadata = {
     scrapedAliases: Record<string, string>;
-    icons: Record<string, string>;
     markOverrides: Record<string, { position: string; mark: string }>;
     variants: RawVariation[];
 };
@@ -39,69 +38,9 @@ function preferredRule(rules: Record<string, string>) {
     return stripRulePreamble(rules["9x9"] || rules["6x6"] || Object.values(rules)[0] || "");
 }
 
-function getMarkPosition(value: string, tags: string[], rule: string, name: string): "no-input" | "line" | "region" | "outside" | "cell" | "edge" | "intersection" {
-    const text = `${name} ${rule}`.toLowerCase();
-    if (value === "irregular") return "region";
-    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "touchy", "liardiagonal", "magicsquares"].includes(value)) {
-        return "no-input";
-    }
-    if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector", "deadoralivearrows"].includes(value)) {
-        return "cell";
-    }
-    if (["quadmax", "quadmin"].includes(value)) {
-        return "intersection";
-    }
-    if (value === "coded") return "intersection";
-    if (value === "pencilmarks") return "cell";
-    if (["xydifference", "primesums", "twodigitprimenumbers"].includes(value)) return "edge";
-    if (value === "xivi") return "edge";
-    if (value === "clock") return "cell";
-    if (value === "slotmachine") return "cell";
-    if (["wheel", "little killer", "product little killer", "bouncing x-sums", "czech outsider"].includes(value)) {
-        return "outside";
-    }
-    if (["diagonal sum is nine", "diagonal tens"].includes(value)) {
-        return "intersection";
-    }
-    if (value === "distances") {
-        return "outside";
-    }
-    if (["productkiller", "solokiller"].includes(value)) return "cell";
-    if (value === "consecutive" || value === "evensumpairs") {
-        return "edge";
-    }
-    if (tags?.includes("region")) return "region";
-    if (tags?.includes("outside") || /outside (?:the )?grid|outside clue/.test(text)) {
-        return "outside";
-    }
-    if (/thermometer|thermo/.test(text)) return "cell";
-    if (/arrow/.test(text)) return "cell";
-    if (/cage|outlined region/.test(text)) return "cell";
-    if (/line|path|renban|palindrome/.test(text)) return "cell";
-    if (/between|average/.test(text)) {
-        if (/bar/.test(text)) return "edge";
-        if (/circle|dot/.test(text)) return "edge";
-        return "edge";
-    }
-    if (/intersection|four cells|2x2 area/.test(text)) return "intersection";
-    if (/shaded|colou?red|painted/.test(text)) return "cell";
-    if (/circle|dot/.test(text)) return "cell";
-    if (/square/.test(text)) return "cell";
-    return "cell";
-}
-
 const allVariations: Variation[] = variantMetadata.variants.map((item) => {
     const value = item.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
     const rule = preferredRule(item.rules);
-    const categories = item.inputType.categories.map((c) => {
-        if (c === "shape") {
-            const pos = getMarkPosition(value, item.tags, rule, item.name);
-            if (pos === "edge") return "edge";
-            if (pos === "intersection") return "intersection";
-            return "cell";
-        }
-        return c;
-    }) as any;
     return {
         ...item,
         name: item.name.trim(),
@@ -110,7 +49,7 @@ const allVariations: Variation[] = variantMetadata.variants.map((item) => {
         rule,
         inputType: {
             ...item.inputType,
-            categories
+            categories: item.inputType.categories
         }
     };
 });
@@ -134,7 +73,7 @@ Object.entries(scrapedAliases).forEach(([alias, canonical]) => {
 });
 export const outsideVariationValues = new Set(variations.filter((item) =>
     item.value !== "xydifference" && (item.inputType.categories.includes("outside") ||
-        item.tags?.includes("outside") || /outside the grid/i.test(item.rule))
+        item.tags?.includes("outside"))
 ).map((item) => item.value));
 const regionGridVariants = ["irregular", "scattered", "deficit", "surplus"];
 
@@ -144,8 +83,8 @@ function genericSetting(variation: Variation) {
     const submodes: Array<string | number> = ["1"];
     const styles: Array<string | number> = [""];
     const show = ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb"];
-    const add = (mode: string, submode: string | number, style: string | number, controls: string[]) => {
-        if (modes.includes(mode)) return;
+    const add = (mode: string, submode: string | number, style: string | number, controls: string[], allowDuplicateMode = false) => {
+        if (!allowDuplicateMode && modes.includes(mode)) return;
         modes.push(mode); submodes.push(submode); styles.push(style); show.push(...controls);
     };
 
@@ -161,6 +100,9 @@ function genericSetting(variation: Variation) {
     }
     if (variation.inputType.categories.includes("no-input")) {
         return { show, modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.inputType.categories.includes("shading")) {
+        add("surface", "", 1, ["mo_surface_lb"]);
     }
     if (["extraregion", "extralargeregions", "difference2neighbours", "escape", "offset", "oneknightstep"].includes(variation.value)) {
         add("surface", "", 1, ["mo_surface_lb"]);
@@ -190,7 +132,7 @@ function genericSetting(variation: Variation) {
     }
     if (variation.value === "deadoralivearrows") {
         add("symbol", "arrow_B_W", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"]);
-        add("symbol", "arrow_B_G", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"]);
+        add("symbol", "arrow_B_G", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"], true);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "crosssums") {
@@ -375,7 +317,7 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
 
-    if (variation.tags?.includes("region")) {
+    if (variation.inputType.categories.includes("cage") || variation.tags?.includes("region")) {
         add("cage", "1", 10, ["mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb"]);
     }
 
@@ -396,7 +338,7 @@ function genericSetting(variation: Variation) {
     } else if (/clue|digit between|number between|sum|difference|product|ratio/.test(text)) {
         add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
     }
-    if (!variation.tags?.includes("region") && /marked|circle|square|shaded|bar|dot|diamond|symbol/.test(text)) {
+    if (!variation.tags?.includes("region") && !variation.inputType.categories.includes("shading") && /marked|circle|square|shaded|bar|dot|diamond|symbol/.test(text)) {
         add("symbol", "circle_L", 2, ["mo_symbol_lb", "ms1", "ms1_circle", "ms1_square", "li_circle_L", "li_square_L"]);
     }
     return {

@@ -56,6 +56,23 @@ test("region-number variants remain visible without a legacy Penpa setting", fun
         /var isRegionGridVariant[\s\S]*?if \(!setting && !isRegionGridVariant\)[\s\S]*?return/);
 });
 
+test("variant input types separate cages from surface shading", function() {
+    const metadata = JSON.parse(fs.readFileSync(path.join(root, "variant_metadata.json"), "utf8"));
+    const byId = new Map(metadata.variants.map((variant) => [variant.id, variant]));
+    const app = fs.readFileSync(path.join(root, "docs/src/App.svelte"), "utf8");
+
+    assert.equal(Object.hasOwn(metadata, "icons"), false);
+    assert.equal(metadata.variants.some((variant) => variant.inputType.categories.includes("region")), false);
+    assert.deepEqual(byId.get("killer").inputType.categories, ["cage"]);
+    assert.deepEqual(byId.get("difference2neighbours").inputType.categories, ["shading"]);
+    assert.deepEqual(byId.get("samesum").inputType.categories, ["shading"]);
+    assert.deepEqual(byId.get("renbankiller").inputType.categories, ["cage", "shading"]);
+    assert.match(app, /value: "cage", label: "Cage"/);
+    assert.match(app, /value: "shading", label: "Shading"/);
+    assert.match(app, /inputTypeIcons\[primaryVariantTab\(variant\)\]/);
+    assert.doesNotMatch(app, /variantMetadata\.icons/);
+});
+
 test("mobile actions place Clear Mark after Undo and keep About and Save Example in a bottom row", function() {
     assert.match(app, /class="action-group final-actions"[\s\S]*?>Undo<\/button[\s\S]*?>Clear mark<\/button/);
     assert.match(app, /class="action-group bottom-actions"[\s\S]*?>Save Example<\/button[\s\S]*?>About<\/button/);
@@ -63,4 +80,20 @@ test("mobile actions place Clear Mark after Undo and keep About and Save Example
 
 test("mobile solver log has an in-row expand control", function() {
     assert.match(app, /class="solver-status"[\s\S]*?class="expand-btn"[\s\S]*?fullLogExpanded/);
+});
+
+test("variant modes expose both Dead or Alive arrows and the diagonal cursor", function() {
+    assert.match(catalog, /const add = \([^)]*allowDuplicateMode = false/);
+    assert.match(catalog, /add\("symbol", "arrow_B_W"[\s\S]*?add\("symbol", "arrow_B_G"[^;]*true\)/);
+    assert.match(solver, /pu\.diagonal_consecutive_mode[\s\S]*?UserSettings\.draw_edges = true/);
+    assert.match(solver, /variant === "deadoralivearrows"[\s\S]*?"White Arrow"[\s\S]*?"Grey Arrow"/);
+});
+
+test("translation initializer and language setting are no longer loaded", function() {
+    const index = fs.readFileSync(path.join(root, "docs/index.html"), "utf8");
+    const main = fs.readFileSync(path.join(root, "docs/js/main.js"), "utf8");
+
+    assert.doesNotMatch(index, /\.\/js\/translate\.js/);
+    assert.match(index, /\.\/js\/penpa_text\.js/);
+    assert.match(index, /<tr class="permanently-hidden-control">[\s\S]*?id="language_opt"/);
 });
