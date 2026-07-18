@@ -941,6 +941,91 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("escapeStarts", {
+        validatePartial: function(board, starts) {
+            return true;
+        },
+        validateComplete: function(board, starts) {
+            if (!starts.length) return true;
+
+            var SIZE = board.length;
+            var numNodes = 2 + 2 * SIZE * SIZE;
+            var S = 0, T = 1;
+            var capacity = [];
+            var adj = [];
+            for (var i = 0; i < numNodes; i++) {
+                capacity[i] = [];
+                adj[i] = [];
+            }
+            function addEdge(u, v, cap) {
+                adj[u].push(v);
+                adj[v].push(u);
+                capacity[u][v] = cap;
+                capacity[v][u] = 0;
+            }
+            function inNode(r, c) { return 2 + 2 * (r * SIZE + c); }
+            function outNode(r, c) { return 3 + 2 * (r * SIZE + c); }
+
+            for (var i = 0; i < starts.length; i++) {
+                addEdge(S, inNode(starts[i].row, starts[i].col), 1);
+            }
+
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var uIn = inNode(r, c);
+                    var uOut = outNode(r, c);
+                    addEdge(uIn, uOut, 1);
+
+                    var valU = cellValue(board, {row: r, col: c});
+                    if (valU === 1 && (r === 0 || r === SIZE - 1 || c === 0 || c === SIZE - 1)) {
+                        addEdge(uOut, T, 1);
+                    }
+
+                    var neighbors = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                    for (var i = 0; i < neighbors.length; i++) {
+                        var nr = r + neighbors[i][0];
+                        var nc = c + neighbors[i][1];
+                        if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+                            var valV = cellValue(board, {row: nr, col: nc});
+                            if (valV === valU - 1) {
+                                addEdge(uOut, inNode(nr, nc), 1);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var flow = 0;
+            while (true) {
+                var parent = new Array(numNodes).fill(-1);
+                var queue = [S];
+                parent[S] = S;
+                while (queue.length > 0 && parent[T] === -1) {
+                    var u = queue.shift();
+                    for (var i = 0; i < adj[u].length; i++) {
+                        var v = adj[u][i];
+                        if (parent[v] === -1 && capacity[u][v] > 0) {
+                            parent[v] = u;
+                            queue.push(v);
+                        }
+                    }
+                }
+                if (parent[T] === -1) break;
+
+                var push = 1;
+                var curr = T;
+                while (curr !== S) {
+                    var prev = parent[curr];
+                    capacity[prev][curr] -= push;
+                    capacity[curr][prev] += push;
+                    curr = prev;
+                }
+                flow += push;
+            }
+            return flow === starts.length;
+        }
+    });
+
     registerConstraint("sameSumGroups", {
         validatePartial: function(board, groups) {
             var completedSum = null;
