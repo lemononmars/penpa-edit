@@ -64,7 +64,7 @@ function has(text: string, pattern: RegExp) {
 /** Provides a conservative default that can be corrected through the dev-only editor. */
 export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     const text = `${variation.name} ${variation.rule}`.toLowerCase();
-    if (["anti king", "anti knight", "disjoint", "queen", "disparity"].includes(variation.value)) {
+    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "liardiagonal", "magicsquares"].includes(variation.value)) {
         return { position: "none", mark: "none" };
     }
     if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector"].includes(variation.value)) {

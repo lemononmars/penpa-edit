@@ -44,7 +44,7 @@ function preferredRule(rules: Record<string, string>) {
 
 function getMarkPosition(value: string, tags: string[], rule: string, name: string): "no-input" | "line" | "region" | "outside" | "cell" | "edge" | "intersection" {
     const text = `${name} ${rule}`.toLowerCase();
-    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "touchy"].includes(value)) {
+    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "touchy", "liardiagonal", "magicsquares"].includes(value)) {
         return "no-input";
     }
     if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector", "deadoralivearrows"].includes(value)) {
