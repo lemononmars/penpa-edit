@@ -1303,6 +1303,12 @@ var SudokuSolver = (function() {
             });
             constraints.supported.push(variant);
         });
+        ["meandering diagonals"].forEach(function(variant) {
+            if (!variantEnabled(puzzle, variant)) return;
+            connectedLinePaths(puzzle, 2).forEach(function(path) {
+                if (path.length > 1) constraints.catalogLines.push({ path: path, relation: variant });
+            });
+        });
         ["alternatingstripes", "between", "odd even bridge"].forEach(function(variant) {
             if (!variantEnabled(puzzle, variant)) return;
             connectedLinePaths(puzzle, 2).forEach(function(path) {

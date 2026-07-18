@@ -3395,11 +3395,11 @@
       "rules": {
         "9x9": "In each set of cells connected by meandering diagonal lines each digit appears at most once."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "shape"
+          "line"
         ],
         "instructions": []
       },
