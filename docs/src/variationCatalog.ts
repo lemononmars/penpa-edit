@@ -47,7 +47,7 @@ function getMarkPosition(value: string, tags: string[], rule: string, name: stri
     if (["anti king", "anti knight", "disjoint", "queen", "disparity", "touchy"].includes(value)) {
         return "no-input";
     }
-    if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector"].includes(value)) {
+    if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector", "deadoralivearrows"].includes(value)) {
         return "cell";
     }
     if (["quadmax", "quadmin"].includes(value)) {
@@ -177,6 +177,11 @@ function genericSetting(variation: Variation) {
     if (variation.value === "codedpairs") {
         add("cage", "1", 10, ["mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb"]);
         add("number", "3", 1, ["mo_number_lb", "sub_number3_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "deadoralivearrows") {
+        add("symbol", "arrow_B_W", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"]);
+        add("symbol", "arrow_B_G", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "crosssums") {

@@ -1524,13 +1524,16 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. There are some white and grey arrows in the grid. The digit placed in the cell with white arrow must not repeat in the direction of the arrow. The digit placed in the cell with grey arrow is repeated at least once in the direction of the arrow."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shape"
         ],
-        "instructions": []
+        "instructions": [
+          "Shape · diagonal arrow",
+          "White arrows must not repeat in the direction of the arrow. Grey arrows must repeat at least once."
+        ]
       },
       "tags": []
     },
@@ -4206,7 +4209,6 @@
         "instructions": []
       }
     },
-
     {
       "id": "nonconsecutive",
       "name": "Nonconsecutive",
