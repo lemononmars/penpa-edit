@@ -941,6 +941,66 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("offsetStarts", {
+        validatePartial: function(board, starts) {
+            var SIZE = board.length;
+            for (var index = 0; index < starts.length; index++) {
+                var cell = starts[index];
+                if (cell.row + 1 >= SIZE || cell.col + 1 >= SIZE) continue;
+                var nVal = cellValue(board, { row: cell.row, col: cell.col + 1 });
+                if (!nVal) continue;
+                var cellVal = cellValue(board, cell);
+                var targetVal = cellValue(board, { row: cell.row + 1, col: nVal - 1 });
+                if (cellVal && targetVal && cellVal !== targetVal) return false;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("oneKnightStep", {
+        validatePartial: function(board, starts) {
+            var SIZE = board.length;
+            var knightOffsets = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+            for (var index = 0; index < starts.length; index++) {
+                var cell = starts[index];
+                var cellVal = cellValue(board, cell);
+                if (!cellVal) continue;
+                var matchCount = 0;
+                var emptyCount = 0;
+                for (var i = 0; i < knightOffsets.length; i++) {
+                    var r = cell.row + knightOffsets[i][0];
+                    var c = cell.col + knightOffsets[i][1];
+                    if (r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+                        var kVal = cellValue(board, { row: r, col: c });
+                        if (!kVal) emptyCount++;
+                        else if (kVal === cellVal) matchCount++;
+                    }
+                }
+                if (matchCount > 1) return false;
+                if (matchCount === 0 && emptyCount === 0) return false;
+            }
+            return true;
+        },
+        validateComplete: function(board, starts) {
+            var SIZE = board.length;
+            var knightOffsets = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+            for (var index = 0; index < starts.length; index++) {
+                var cell = starts[index];
+                var cellVal = cellValue(board, cell);
+                var matchCount = 0;
+                for (var i = 0; i < knightOffsets.length; i++) {
+                    var r = cell.row + knightOffsets[i][0];
+                    var c = cell.col + knightOffsets[i][1];
+                    if (r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+                        if (cellValue(board, { row: r, col: c }) === cellVal) matchCount++;
+                    }
+                }
+                if (matchCount !== 1) return false;
+            }
+            return true;
+        }
+    });
+
     registerConstraint("escapeStarts", {
         validatePartial: function(board, starts) {
             return true;
