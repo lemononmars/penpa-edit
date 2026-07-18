@@ -2587,6 +2587,69 @@ var SudokuCSP = (function() {
         }
     });
 
+
+    registerConstraint("tinder", {
+        validatePartial: function(board, path) {
+            var values = [];
+            for (var i = 0; i < path.length; i++) {
+                var v = cellValue(board, path[i]);
+                if (v) values.push(v);
+            }
+            var counts = {};
+            for (var i = 0; i < values.length; i++) {
+                var v = values[i];
+                counts[v] = (counts[v] || 0) + 1;
+            }
+            var multiples = 0;
+            var keys = Object.keys(counts);
+            for (var i = 0; i < keys.length; i++) {
+                if (counts[keys[i]] > 1) multiples++;
+            }
+            if (multiples > 1) return false;
+            if (values.length === path.length && multiples !== 1) return false;
+            return true;
+        }
+    });
+
+    registerConstraint("sumsetCages", {
+        validatePartial: function(board, cages) {
+            var sums = [];
+            for (var i = 0; i < cages.length; i++) {
+                var cage = cages[i];
+                var sum = 0;
+                var complete = true;
+                for (var j = 0; j < cage.length; j++) {
+                    var val = cellValue(board, cage[j]);
+                    if (!val) {
+                        complete = false;
+                        break;
+                    }
+                    sum += val;
+                }
+                if (complete) {
+                    if (sums.indexOf(sum) !== -1) return false;
+                    sums.push(sum);
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("topheavy", {
+        validatePartial: function(board) {
+            for (var c = 0; c < SIZE; c++) {
+                for (var r = 0; r < SIZE - 1; r++) {
+                    var top = cellValue(board, { row: r, col: c });
+                    var bottom = cellValue(board, { row: r + 1, col: c });
+                    if (top && bottom && top >= 1 && top <= 7 && bottom >= 1 && bottom <= 7 && top <= bottom) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
     // Almost Palindrome: exactly one mismatched pair across the whole line
     registerConstraint("almostPalindromes", {
         validatePartial: function(board, path) {

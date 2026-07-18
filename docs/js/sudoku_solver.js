@@ -568,7 +568,7 @@ var SudokuSolver = (function() {
         var cages = typeof puzzle.refreshKillerCages === "function" ?
             puzzle.refreshKillerCages("pu_q") : (puzzle.pu_q.killercages || []);
         var regionVariantNames = ["clone", "consecutiveclone", "deficit", "renban", "surplus", "windoku",
-            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "number 5 is alive"];
+            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "number 5 is alive", "sumset"];
         var usesCagedRegions = regionVariantNames.some(function(name) { return variantEnabled(puzzle, name); });
         var regionCages = [];
         for (var k = 0; k < cages.length; k++) {
@@ -611,6 +611,10 @@ var SudokuSolver = (function() {
                 }
             }
             constraints.supported.push("number5isalive");
+        }
+        if (variantEnabled(puzzle, "sumset")) {
+            if (regionCages.length) constraints.sumsetCages = [regionCages];
+            constraints.supported.push("sumset");
         }
         if (variantEnabled(puzzle, "codedpairs")) {
             var codedPairGroups = {};
@@ -1169,6 +1173,16 @@ var SudokuSolver = (function() {
             if (constraints.almostPalindromes.length) {
                 constraints.supported.push("almostpalindrome");
             }
+        }
+        if (variantEnabled(puzzle, "tinder")) {
+            connectedLinePaths(puzzle, 5).forEach(function(path) {
+                if (path.length > 1) constraints.catalogLines.push({ path: path, relation: "tinder" });
+            });
+            constraints.supported.push("tinder");
+        }
+        if (variantEnabled(puzzle, "topheavy")) {
+            constraints.supported.push("topheavy");
+            constraints.topheavy = [{}];
         }
         ["renban", "paritylines", "sequence"].forEach(function(variant) {
             if (!variantEnabled(puzzle, variant)) return;
