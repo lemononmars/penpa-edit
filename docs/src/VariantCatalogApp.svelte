@@ -4,7 +4,7 @@
   import {
     automaticBlockerFor,
     cspApproachFor,
-    cspConstraintFunctionFor,
+    cspConstraintFunctionsFor,
     inputModesFor,
     solverTestCasesFor,
   } from "./variantMarks";
@@ -211,7 +211,10 @@
         <section>
           <h2>CSP constraint function</h2>
           <p>{cspApproachFor(detailVariation)}</p>
-          <pre><code>{cspConstraintFunctionFor(detailVariation)}</code></pre>
+          <h3>Partial validator</h3>
+          <pre><code>{cspConstraintFunctionsFor(detailVariation).partial}</code></pre>
+          <h3>Full validator</h3>
+          <pre><code>{cspConstraintFunctionsFor(detailVariation).full}</code></pre>
           {#if detailVariation.status !== "available"}<p class="blocker">
               {automaticBlockerFor(detailVariation)}
             </p>{/if}

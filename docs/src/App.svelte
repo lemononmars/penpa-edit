@@ -8,6 +8,7 @@
     variantMetadata,
   } from "./variationCatalog";
   import { markChoiceFor } from "./variantMarks";
+  import { metadataVariantIdForActiveVariants } from "./exampleSave.mjs";
 
   type VariantOption = { value: string; label: string; group: string };
   type VariantTab =
@@ -928,7 +929,18 @@
     const SudokuSolver = (window as any).SudokuSolver;
     if (!pu || !settings || !SudokuSolver) return;
 
-    const variantId = activeVariantFilename();
+    const variantId = metadataVariantIdForActiveVariants(
+      pu.activeSudokuVariants,
+      variantMetadata.variants,
+    );
+    if (!variantId) {
+      (window as any).Swal?.fire({
+        icon: "warning",
+        title: "Cannot Save Example",
+        text: "Select exactly one non-Classic variant before saving its wiki example.",
+      });
+      return;
+    }
     const originalVisibility = settings.show_solution;
 
     // Ensure problem is showing without solution

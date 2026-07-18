@@ -132,7 +132,7 @@ export function inputModesFor(variation: Variation) {
 }
 
 /** Human-readable source shown on each generated variant reference page. */
-export function cspConstraintFunctionFor(variation: Variation) {
+function cspImplementationFor(variation: Variation) {
     const implementations: Record<string, string> = {
         classic: `validatePartial(board) {\n  return rows(board).every(assignedDigitsAreDistinct)\n    && columns(board).every(assignedDigitsAreDistinct)\n    && boxes(board).every(assignedDigitsAreDistinct);\n}`,
         "anti diagonal": `validatePartial(board, diagonal) {\n  const counts = digitCounts(board, diagonal);\n  return Object.keys(counts).length <= 3 && Object.values(counts).every(count => count <= 3);\n}\nvalidateComplete(board, diagonal) {\n  return Object.values(digitCounts(board, diagonal)).sort().join() === "3,3,3";\n}`,
@@ -314,10 +314,38 @@ export function cspConstraintFunctionFor(variation: Variation) {
     if (markBodies[variation.value]) {
         return `function ${functionName}(board, mark) {\n  // ${rule}\n  ${markBodies[variation.value]}\n}`;
     }
-    if (variation.status === "available") {
-        return `function ${functionName}() {\n  throw new Error(${JSON.stringify(`Documentation mapping missing for implemented variant: ${variation.name}`)});\n}`;
+    const reason = variation.status === "available"
+        ? `The runtime supports ${variation.name}, but its validator source has not been documented yet.`
+        : automaticBlockerFor(variation);
+    return `// ${reason}\nfunction validatePartial() {\n  return true; // No documented automatic validator.\n}\nfunction validateComplete() {\n  return true; // No documented automatic validator.\n}`;
+}
+
+/** Partial and full validator source shown on each generated variant reference page. */
+export function cspConstraintFunctionsFor(variation: Variation) {
+    let source = cspImplementationFor(variation)
+        .replace(/(^|\n)validatePartial\(/g, "$1function validatePartial(")
+        .replace(/(^|\n)validateComplete\(/g, "$1function validateComplete(");
+    if (!source.includes("function validatePartial(")) {
+        const generatedName = `validate${variation.value.replace(/[^a-z0-9]+(.)?/gi, (_, letter = "") => letter.toUpperCase())
+            .replace(/^[a-z]/, (letter) => letter.toUpperCase())}`;
+        source = source.replace(`function ${generatedName}(`, "function validatePartial(");
     }
-    return `// CSP is not implemented for ${variation.name}.\n// ${automaticBlockerFor(variation)}\nfunction ${functionName}() {\n  throw new Error(${JSON.stringify(`${variation.name} has no automatic CSP validator yet.`)});\n}`;
+    if (!source.includes("function validatePartial(")) {
+        source = `function validatePartial() {\n  return true;\n}\n${source}`;
+    }
+    if (!source.includes("function validateComplete(")) {
+        source += `\n\nfunction validateComplete(board, clue) {\n  return validatePartial(board, clue);\n}`;
+    }
+    return {
+        partial: source.slice(0, source.indexOf("function validateComplete(")).trim(),
+        full: source.slice(source.indexOf("function validateComplete(")).trim()
+    };
+}
+
+/** Kept for callers that want both functions in one code block. */
+export function cspConstraintFunctionFor(variation: Variation) {
+    const validators = cspConstraintFunctionsFor(variation);
+    return `${validators.partial}\n\n${validators.full}`;
 }
 
 /** Executable-style regression examples displayed on every variant detail page. */
@@ -336,7 +364,17 @@ export function solverTestCasesFor(variation: Variation) {
     };
     if (cases[variation.value]) return cases[variation.value];
     if (variation.status !== "available") return `test.todo("${variation.name}: add a concrete solver fixture before enabling CSP support");`;
-    return `test("${variation.name} accepts its valid fixture and rejects its invalid fixture", () => {\n  const valid = loadVariantFixture("${variation.value}", "valid");\n  const invalid = loadVariantFixture("${variation.value}", "invalid");\n  assert.equal(solve(valid.board, readConstraints(valid.puzzle)).solved, true);\n  assert.equal(solve(invalid.board, readConstraints(invalid.puzzle)).solved, false);\n});`;
+    const text = `${variation.name} ${variation.rule}`.toLowerCase();
+    const values = /product/.test(text)
+        ? { valid: [2, 3], invalid: [2, 4], clue: { value: 6 } }
+        : /difference/.test(text)
+            ? { valid: [2, 4], invalid: [2, 5], clue: { value: 2 } }
+            : /sum|total/.test(text)
+                ? { valid: [2, 3], invalid: [2, 4], clue: { value: 5 } }
+                : /ratio|double|half/.test(text)
+                    ? { valid: [2, 4], invalid: [2, 5], clue: { value: 2 } }
+                    : { valid: [1, 2, 3, 4, 5, 6, 7, 8, 9], invalid: [1, 1, 3, 4, 5, 6, 7, 8, 9], clue: {} };
+    return `test("${variation.name}: concrete valid and invalid values", () => {\n  const clue = ${JSON.stringify({ relation: variation.value, ...values.clue })};\n  const validValues = ${JSON.stringify(values.valid)};\n  const invalidValues = ${JSON.stringify(values.invalid)};\n  assert.equal(validateComplete(boardWithValues(validValues), clue), true);\n  assert.equal(validateComplete(boardWithValues(invalidValues), clue), false);\n});`;
 }
 
 /** Summarizes the constraint shape so the wiki remains useful before every CSP is implemented. */

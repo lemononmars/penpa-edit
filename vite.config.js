@@ -111,10 +111,8 @@ function devApiPlugin() {
               const metadata = readMetadata();
               let updated = false;
 
-              // Find the variant by comparing its "value" alias, or if no alias exists, fallback
               for (const variant of metadata.variants) {
-                const value = variant.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
-                if (value === variantId) {
+                if (variant.id === variantId) {
                   variant.example = {
                     problemImage: `images/examples/${problemImageName}`,
                     solutionImage: `images/examples/${solutionImageName}`,
