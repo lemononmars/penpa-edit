@@ -2825,30 +2825,28 @@ var SudokuCSP = (function() {
         }
     });
 
-    // Almost Palindrome: exactly one mismatched pair across the whole line
-    registerConstraint("almostPalindromes", {
-        validatePartial: function(board, path) {
-            var mismatches = 0;
-            var half = Math.floor(path.length / 2);
-            for (var i = 0; i < half; i++) {
-                var a = cellValue(board, path[i]);
-                var b = cellValue(board, path[path.length - 1 - i]);
-                if (a && b && a !== b) {
-                    mismatches++;
-                    if (mismatches > 1) return false;
-                }
+    function canDeleteOneForPalindrome(values) {
+        function isPalindromeWithout(skipped) {
+            var filtered = values.filter(function(_, index) { return index !== skipped; });
+            for (var left = 0, right = filtered.length - 1; left < right; left++, right--) {
+                if (filtered[left] !== filtered[right]) return false;
             }
             return true;
+        }
+        for (var skipped = 0; skipped < values.length; skipped++) {
+            if (isPalindromeWithout(skipped)) return true;
+        }
+        return false;
+    }
+
+    // Almost Palindrome: removing exactly one digit leaves a palindrome.
+    registerConstraint("almostPalindromes", {
+        validatePartial: function(board, path) {
+            var values = path.map(function(cell) { return cellValue(board, cell); });
+            return values.some(function(value) { return !value; }) || canDeleteOneForPalindrome(values);
         },
         validateComplete: function(board, path) {
-            var mismatches = 0;
-            var half = Math.floor(path.length / 2);
-            for (var i = 0; i < half; i++) {
-                var a = cellValue(board, path[i]);
-                var b = cellValue(board, path[path.length - 1 - i]);
-                if (a !== b) mismatches++;
-            }
-            return mismatches === 1;
+            return canDeleteOneForPalindrome(path.map(function(cell) { return cellValue(board, cell); }));
         }
     });
 

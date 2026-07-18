@@ -58,6 +58,15 @@
   let saveMessage = "";
   let saveSuccess = false;
 
+  function exampleUrl(example: string, variant: string) {
+    const base = new URL(".", document.baseURI);
+    const stored = /[&]variants=/.test(example)
+      ? example
+      : `${example}&variants=${encodeURIComponent(`classic,${variant}`)}`;
+    base.hash = `m=solve&p=${stored}`;
+    return base.href;
+  }
+
   function errorMessage(error: unknown) {
     if (error instanceof Error && error.message.trim()) return error.message;
     if (typeof error === "string" && error.trim()) return error;
@@ -178,18 +187,8 @@
         {#if detailVariation.example}
           <section>
             <h2>Example</h2>
-            <div class="example-images">
-              <figure>
-                <img src={detailVariation.example.problemImage} alt="Problem grid" />
-                <figcaption>Problem</figcaption>
-              </figure>
-              <figure>
-                <img src={detailVariation.example.solutionImage} alt="Solution grid" />
-                <figcaption>Solution</figcaption>
-              </figure>
-            </div>
             <p style="margin-top: 14px; font-weight: 500;">
-              <a href={detailVariation.example.link} target="_blank" rel="noreferrer">Open this example in the editor ↗</a>
+              <a href={exampleUrl(detailVariation.example, detailVariation.value)} target="_blank" rel="noreferrer">Open this example puzzle ↗</a>
             </p>
           </section>
         {/if}
@@ -304,6 +303,7 @@
             <th>Variant</th>
             <th>Rule</th>
             <th>Status</th>
+            <th>Has example</th>
             <th>Tags</th>
           </tr>
         </thead>
@@ -331,6 +331,7 @@
                   </span>
                 {/if}
               </td>
+              <td>{variation.example ? "Yes" : "No"}</td>
               <td class="tags">
                 {#each variation.tags as variantTag}
                   <button type="button" class="tag" on:click={() => (tag = variantTag)}>{variantTag}</button>
@@ -738,29 +739,6 @@
     padding: 12px;
     color: #8c4e1e;
     background: #fff4e9;
-  }
-  .example-images {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 24px;
-    margin-top: 16px;
-  }
-  .example-images figure {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .example-images img {
-    max-width: 100%;
-    border: 1px solid #dbe4e5;
-    background: #fff;
-  }
-  .example-images figcaption {
-    margin-top: 8px;
-    color: #526773;
-    font-size: 13px;
-    font-weight: 600;
   }
   footer {
     padding: 24px;

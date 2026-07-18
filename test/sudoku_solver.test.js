@@ -219,6 +219,37 @@ test("honors an arrow sum", function() {
     assert.equal(result.board[0][0], result.board[0][1] + result.board[0][2]);
 });
 
+test("an active Arrow variant is CSP-supported before its first clue is drawn", function() {
+    const puzzle = {
+        nx: 9, ny: 9, space: [0, 0, 0, 0],
+        activeSudokuVariants: ["classic", "arrow"],
+        pu_q: { arrows: [], thermo: [], number: {}, numberS: {}, symbol: {}, line: {}, lineE: {}, cage: {}, surface: {} },
+        point: {}
+    };
+    assert.equal(SudokuSolver.readConstraints(puzzle).supported.includes("arrow"), true);
+});
+
+test("Almost Palindrome accepts a sequence made palindromic by deleting one digit", function() {
+    const path = [{ row: 0, col: 0 }, { row: 1, col: 3 }, { row: 2, col: 6 }, { row: 3, col: 8 }];
+    const accepted = emptyBoard();
+    [1, 9, 1, 3].forEach(function(value, index) { accepted[path[index].row][path[index].col] = value; });
+    assert.equal(SudokuCSP.findConflict(accepted, { almostPalindromes: [path] }), null);
+
+    const rejected = emptyBoard();
+    [1, 9, 2, 3].forEach(function(value, index) { rejected[path[index].row][path[index].col] = value; });
+    assert.equal(SudokuCSP.findConflict(rejected, { almostPalindromes: [path] })?.constraint, "almostPalindromes");
+});
+
+test("an active Almost Palindrome remains CSP-supported after its final line is removed", function() {
+    const puzzle = {
+        nx: 9, ny: 9, space: [0, 0, 0, 0],
+        activeSudokuVariants: ["classic", "almostpalindrome"],
+        pu_q: { arrows: [], thermo: [], number: {}, numberS: {}, symbol: {}, line: {}, lineE: {}, cage: {}, surface: {} },
+        point: {}
+    };
+    assert.equal(SudokuSolver.readConstraints(puzzle).supported.includes("almostpalindrome"), true);
+});
+
 test("honors killer totals and distinct digits", function() {
     const constraints = {
         killers: [{

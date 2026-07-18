@@ -1317,7 +1317,8 @@
         "instructions": [
           "No mark is required. Select this button to inspect or activate the rule."
         ]
-      }
+      },
+      "example": "zVbvb+I4EP3OX3Hy17W0sZM4caT9QH+tVG175a69XotQlUIotIHsBmirVN2/fd84TvMDuqdb6aRTwMyM4b03Y4/NajPJHjZc43FD7nCBxw0d8w49eglEKX4+X6dJ9Bvvb9azLIfB+e9HR3wap6uEH1/d7x089J8O+39/9K9d9+J0+uH+YHBxP7n8Swyc+cfcOU3D5cnZwV764XNxfTLrPyaHiTpbZeNZmsSTuLi+PH5Ol0fh3Wwq9o9n++E0Xjqrb+G5ftwbfPrUG5IMPKPekAnGmcRbsNF3VqbAvpuwHvVeij+il+ImGo5eeXFRm2Ft/hm9YDyNXpgMWTSkpAmLM1fC9WvXhatq14MbvLle2/U7LiHL2tVw3TdXBXD1mxs4rS8HxBu+udpvzWpCromEI1o5CKdNJQSBN+YFCa2TFLLjmzRp4Suf6GutwlVtfo/wK7WoqzDVvTLjOQrOC9eMB2Z0zOib8Yv5ziHWQYQos4ZwCRStuRRYCdj45FJCANnS59JF8mRjt0ofiZPtCy4VRJOtPC4DFJfsIOBSQxzZGnvaQVkJPwS+Y/Ed4AuLL4BPG8JwAd+z+B7waXUNF/Bp8QwX8EOLj36RusTHJ7hQJIND+m1curAtjgROMy9ZfV/BtvgS+E09sqwPPlEHy+uC17U6FdXB5qXAqyyvAm+zPsryKvAqy6vA28xLWV4FXmV5FXhpp5oaYoNpfB/rgyJit2gQk4MoKgpFZkYA1gF16UAf5WwcSkiAvHRoZcFiHA8pUdrGccHpIw/j+EiKdlvpUFaVAkrLtwrKdakUBJRYpSCEAuqm0oGCoFKgfayZVeA6UBAaBdiel2aT7pvRM6Mymzegs6TXGyIRaq7mQ830P4rgyMSxyFZZerPa5NN4nNwkz/F4zaLy9G7OtGLLzeI2yVuhNMu+pvPlLoRqqhWc3y2zPNk5RcFkcvceFE3tgLrN8klH01Ocpu1cvm3ivP3j8Twfp+3QOp+3/DjPs6dWZBGvZ63AbbzGLbiazb+2kZJlp5jruC0xfog7bIu6HK899szMG8c2dnVIl5iOigEvPket244XA9xiJ1F16dFVNmQMS8zZYpOu5+MszcBsYzhgzc8lzMPavDTzZO2XQeHAPrU2zCuYZcFuvpSRs2hYnHNGCvbMr8lki+wROZQKyR9ni1tkOWSNOnEXE1ZuxYAe6v9KHoCq8iCzzIOsHXlQev9tHnr0Wq6c86/+c/zaDfmPB9Gz7fAs/0mT15Pd8I5WR/Qn3d6Y3RV/p7Ebs934VheT2O1GRnRHLyPabWeEtjsawa2mRuydvibUbmuTqm53E9VWgxNVs8dxBhvrBw=="
     },
     {
       "otherNames": "",
@@ -1809,7 +1810,9 @@
         "categories": [
           "intersection"
         ],
-        "instructions": []
+        "instructions": [
+          "Shape · black cross (option 4)"
+        ]
       }
     },
     {
@@ -1829,7 +1832,9 @@
         "categories": [
           "intersection"
         ],
-        "instructions": []
+        "instructions": [
+          "Shape · black cross (option 4)"
+        ]
       }
     },
     {
@@ -1849,7 +1854,9 @@
         "categories": [
           "intersection"
         ],
-        "instructions": []
+        "instructions": [
+          "Shape · black cross (option 4)"
+        ]
       }
     },
     {
@@ -1892,7 +1899,9 @@
         "categories": [
           "intersection"
         ],
-        "instructions": []
+        "instructions": [
+          "Shape · black cross (option 4)"
+        ]
       }
     },
     {
@@ -4880,7 +4889,9 @@
         "categories": [
           "intersection"
         ],
-        "instructions": []
+        "instructions": [
+          "Shape · diagonal arrow"
+        ]
       }
     },
     {
@@ -4898,7 +4909,9 @@
         "categories": [
           "intersection"
         ],
-        "instructions": []
+        "instructions": [
+          "Shape · diagonal arrow"
+        ]
       }
     },
     {
@@ -4952,7 +4965,9 @@
         "categories": [
           "intersection"
         ],
-        "instructions": []
+        "instructions": [
+          "Number · corner · circle background"
+        ]
       }
     },
     {

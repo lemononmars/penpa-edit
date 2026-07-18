@@ -94,30 +94,19 @@ function devApiPlugin() {
           req.on("end", () => {
             try {
               const data = JSON.parse(body);
-              const { variantId, problemDataUrl, solutionDataUrl, link } = data;
-
-              const imagesDir = resolve(process.cwd(), "docs/images/examples");
-              mkdirSync(imagesDir, { recursive: true });
-
-              const problemImageName = `${variantId.replace(/[^a-z0-9]/g, "")}_problem.png`;
-              const solutionImageName = `${variantId.replace(/[^a-z0-9]/g, "")}_solution.png`;
-
-              const problemBase64Data = problemDataUrl.replace(/^data:image\/png;base64,/, "");
-              const solutionBase64Data = solutionDataUrl.replace(/^data:image\/png;base64,/, "");
-
-              writeFileSync(resolve(imagesDir, problemImageName), problemBase64Data, 'base64');
-              writeFileSync(resolve(imagesDir, solutionImageName), solutionBase64Data, 'base64');
+              const { variantId, example } = data;
+              if (!variantId || typeof example !== "string" || !example) {
+                res.statusCode = 400;
+                res.end("Variant ID and solving example are required");
+                return;
+              }
 
               const metadata = readMetadata();
               let updated = false;
 
               for (const variant of metadata.variants) {
                 if (variant.id === variantId) {
-                  variant.example = {
-                    problemImage: `images/examples/${problemImageName}`,
-                    solutionImage: `images/examples/${solutionImageName}`,
-                    link: link
-                  };
+                  variant.example = data.example;
                   updated = true;
                   break;
                 }

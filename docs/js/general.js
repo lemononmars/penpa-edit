@@ -3352,7 +3352,8 @@ function set_solvemode(type = "url") {
 
     // No need of Solving URL in Solver Mode, instead show replay url
     document.getElementById('address_solve').style.display = 'none';
-    document.getElementById('expansion_replay').style.display = '';
+    var replayExpansion = document.getElementById('expansion_replay');
+    if (replayExpansion) replayExpansion.style.display = '';
 }
 
 function set_contestmode() {

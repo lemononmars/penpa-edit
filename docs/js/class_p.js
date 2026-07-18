@@ -1632,6 +1632,8 @@ class Puzzle {
             document.getElementById('mode_' + mode).style.display = 'inline-block';
         }
         let m = mode === 'multicolor' ? 'surface' : mode;
+        const styleVariable = document.getElementById('style_variable');
+        if (styleVariable) styleVariable.textContent = m;
         if (document.getElementById('style_' + m)) {
             document.getElementById('style_' + m).style.display = 'inline-block';
         }

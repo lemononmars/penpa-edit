@@ -8,6 +8,7 @@ const app = fs.readFileSync(path.join(root, "docs/src/App.svelte"), "utf8");
 const general = fs.readFileSync(path.join(root, "docs/js/general.js"), "utf8");
 const catalog = fs.readFileSync(path.join(root, "docs/src/variationCatalog.ts"), "utf8");
 const solver = fs.readFileSync(path.join(root, "docs/js/sudoku_solver.js"), "utf8");
+const legacyGeneral = fs.readFileSync(path.join(root, "docs/js/general.js"), "utf8");
 
 test("new-grid confirmation offers Cancel, Keep variants, and Classic actions", function() {
     const modal = app.match(/\{#if studioModal === "confirm-grid"\}([\s\S]*?)\{:else if/)?.[1] || "";
@@ -51,9 +52,11 @@ test("every region-number variant advertises Regions without polluting Penpa mod
     assert.match(catalog, /regionGridVariants\.includes\(variation\.value\)[\s\S]*?genericSetting\(variation\)/);
 });
 
-test("region-number variants remain visible without a legacy Penpa setting", function() {
-    assert.match(solver,
-        /var isRegionGridVariant[\s\S]*?if \(!setting && !isRegionGridVariant\)[\s\S]*?return/);
+test("active variants remain visible without a legacy Penpa setting", function() {
+    const renderer = solver.match(/function renderVariantTools\(\) \{([\s\S]*?)\n    function addVariantModeButton/)?.[1] || "";
+    assert.doesNotMatch(renderer, /if \(!setting[^)]*\)[\s\S]*?return/,
+        "metadata-only and no-input variants must still render their title and remove button");
+    assert.match(renderer, /group\.appendChild\(title\)[\s\S]*?group\.appendChild\(close\)[\s\S]*?toolbar\.appendChild\(group\)/);
 });
 
 test("variant input types separate cages from surface shading", function() {
@@ -87,6 +90,36 @@ test("variant modes expose both Dead or Alive arrows and the diagonal cursor", f
     assert.match(catalog, /add\("symbol", "arrow_B_W"[\s\S]*?add\("symbol", "arrow_B_G"[^;]*true\)/);
     assert.match(solver, /pu\.diagonal_consecutive_mode[\s\S]*?UserSettings\.draw_edges = true/);
     assert.match(solver, /variant === "deadoralivearrows"[\s\S]*?"White Arrow"[\s\S]*?"Grey Arrow"/);
+});
+
+test("intersection clue modes use their required Penpa primitives", function() {
+    assert.match(catalog, /\["quadmax", "quadmin"\][\s\S]*?add\("symbol", "arrow_B_B"/);
+    assert.match(catalog, /\["equalsums", "equalproducts", "equaldifferences", "equalratios"\][\s\S]*?add\("symbol", "ox_B", 4/);
+    assert.match(catalog, /variation\.value === "quadruple"[\s\S]*?add\("number", "4", 6/);
+    assert.match(app, /\["equalsums", "equalproducts", "equaldifferences", "equalratios"\][\s\S]*?value: "4", label: "×"/);
+});
+
+test("mode controls expose the active style variable name", function() {
+    const index = fs.readFileSync(path.join(root, "docs/index.html"), "utf8");
+    const puzzle = fs.readFileSync(path.join(root, "docs/js/class_p.js"), "utf8");
+    assert.match(index, /id="style_txt">Style: <span id="style_variable"/);
+    assert.match(puzzle, /style_variable[\s\S]*?textContent\s*=\s*m/);
+});
+
+test("wiki exposes stored solving examples without legacy screenshots", function() {
+    const wiki = fs.readFileSync(path.join(root, "docs/src/VariantCatalogApp.svelte"), "utf8");
+    const vite = fs.readFileSync(path.join(root, "vite.config.js"), "utf8");
+    assert.match(wiki, /<th>Has example<\/th>/);
+    assert.match(wiki, /m=solve&p=/);
+    assert.doesNotMatch(wiki, /problemImage|solutionImage/);
+    assert.match(vite, /variant\.example\s*=\s*data\.example/);
+    assert.match(wiki, /variants=.*classic/);
+    assert.match(app, /example \+=\s*[\s\S]*?&variants=/);
+});
+
+test("stored solve links tolerate the removed replay-expansion control", function() {
+    assert.match(legacyGeneral,
+        /var replayExpansion = document\.getElementById\(['"]expansion_replay['"]\);[\s\S]*?if \(replayExpansion\) replayExpansion\.style\.display/);
 });
 
 test("translation initializer and language setting are no longer loaded", function() {

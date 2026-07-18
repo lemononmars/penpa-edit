@@ -664,7 +664,7 @@ var SudokuSolver = (function() {
         if (constraints.oddEvenSums.length) {
             constraints.supported.push("odd even sum");
         }
-        if (constraints.arrows.length) {
+        if (constraints.arrows.length || variantEnabled(puzzle, "arrow")) {
             constraints.supported.push("arrow");
         }
         if (constraints.averageArrows.length) {
@@ -1292,9 +1292,7 @@ var SudokuSolver = (function() {
             connectedLinePaths(puzzle, 5).forEach(function(path) {
                 if (path.length > 1) constraints.almostPalindromes.push(path);
             });
-            if (constraints.almostPalindromes.length) {
-                constraints.supported.push("almostpalindrome");
-            }
+            constraints.supported.push("almostpalindrome");
         }
         if (variantEnabled(puzzle, "tinder")) {
             connectedLinePaths(puzzle, 5).forEach(function(path) {
@@ -3901,9 +3899,6 @@ var SudokuTools = (function() {
             }
             var isRegionGridVariant = ["irregular", "scattered", "deficit", "surplus"].indexOf(variant) !== -1;
             var setting = penpa_constraints.setting[variant];
-            if (!setting && !isRegionGridVariant) {
-                return;
-            }
             var group = document.createElement("span");
             group.className = "sudoku-variant-group";
             group.dataset.variant = variant;
@@ -3916,7 +3911,7 @@ var SudokuTools = (function() {
                 if (variant === "scattered") {
                     addVariantModeButton(group, variant, "surface", "", 1);
                 }
-            } else {
+            } else if (setting) {
                 for (var i = 0; i < setting.modeset.length; i++) {
                     if (setting.modeset[i] === "sudoku") {
                         continue;

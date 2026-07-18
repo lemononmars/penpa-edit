@@ -274,6 +274,13 @@
       ];
     } else if (
       mode === "symbol" &&
+      ["equalsums", "equalproducts", "equaldifferences", "equalratios"].includes(
+        variant,
+      )
+    ) {
+      toolPanelOptions = [{ value: "4", label: "×" }];
+    } else if (
+      mode === "symbol" &&
       [
         "diagonallyconsecutive",
         "diagonal sum is nine",
@@ -938,9 +945,7 @@
       return;
     }
     const pu = (window as any).pu;
-    const settings = (window as any).UserSettings;
-    const SudokuSolver = (window as any).SudokuSolver;
-    if (!pu || !settings || !SudokuSolver) return;
+    if (!pu?.maketext_solve) return;
 
     const variantId = metadataVariantIdForActiveVariants(
       pu.activeSudokuVariants,
@@ -954,35 +959,23 @@
       });
       return;
     }
-    const originalVisibility = settings.show_solution;
-
-    // Ensure problem is showing without solution
-    settings.show_solution = false;
-    pu.redraw();
-
-    // Set format to PNG, with border
-    const typeId = document.getElementById("nb_type1") as HTMLInputElement | null;
-    if (typeId) typeId.checked = true;
-    const border = document.getElementById("nb_margin2") as HTMLInputElement | null;
-    if (border) border.checked = true;
-
-    // Grab problem base64
-    const problemDataUrl = pu.resizecanvas();
-
-    // Apply solution and show it
-    SudokuSolver.applySolution(pu, res.solution);
-    settings.show_solution = true;
-    pu.redraw();
-
-    // Grab solution base64
-    const solutionDataUrl = pu.resizecanvas();
-
-    // Revert visually
-    settings.show_solution = originalVisibility;
-    pu.redraw();
-
-    // Grab the duplicate link
-    const link = pu.maketext_duplicate();
+    const solvingUrl = pu.maketext_solve?.() as string | undefined;
+    const marker = "#m=solve&p=";
+    const markerIndex = solvingUrl?.indexOf(marker) ?? -1;
+    if (markerIndex < 0) {
+      alert("Could not generate a solving URL for this example.");
+      return;
+    }
+    let example = solvingUrl!.slice(markerIndex + marker.length);
+    if (!/[&]variants=/.test(example)) {
+      example +=
+        "&variants=" +
+        encodeURIComponent(
+          Array.isArray(pu.activeSudokuVariants)
+            ? pu.activeSudokuVariants.join(",")
+            : `classic,${variantId}`,
+        );
+    }
 
     try {
       const response = await fetch("/api/save-example", {
@@ -990,9 +983,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           variantId,
-          problemDataUrl,
-          solutionDataUrl,
-          link
+          example
         })
       });
       if (response.ok) {

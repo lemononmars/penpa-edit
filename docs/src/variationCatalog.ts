@@ -11,7 +11,7 @@ type RawVariation = {
     tags: string[];
     isDuplicate?: boolean;
     duplicateOf?: string;
-    example?: { problemImage: string; solutionImage: string; link: string };
+    example?: string;
 };
 
 type VariantMetadata = {
@@ -145,6 +145,14 @@ function genericSetting(variation: Variation) {
     }
     if (variation.value === "determinant") {
         add("number", "4", 6, ["mo_number_lb", "sub_number4_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (["quadmax", "quadmin"].includes(variation.value)) {
+        add("symbol", "arrow_B_B", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (["equalsums", "equalproducts", "equaldifferences", "equalratios"].includes(variation.value)) {
+        add("symbol", "ox_B", 4, ["mo_symbol_lb", "ms1", "li_ox", "ms_ox_B"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "divisor" || variation.value === "eitheror") {
