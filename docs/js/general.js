@@ -3415,8 +3415,8 @@ function update_title() {
     let title = document.getElementById("saveinfotitle").value;
     let author = document.getElementById("saveinfoauthor").value;
 
-    document.getElementById("puzzletitle").innerHTML = title;
-    document.getElementById("puzzleauthor").innerHTML = author;
+    document.getElementById('puzzletitle').innerHTML = DOMPurify.sanitize(title);
+    document.getElementById('puzzleauthor').innerHTML = DOMPurify.sanitize(author);
 
     let auth_str = (author ? (title ? ' by ' + author : author) : '');
     let auth_tit_str = (title ? title : (auth_str ? '' : 'Puzzle')) + auth_str;
