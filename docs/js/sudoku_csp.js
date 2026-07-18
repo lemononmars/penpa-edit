@@ -2614,6 +2614,55 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("disguisedPalindromes", {
+        validatePartial: function(board, path) {
+            if (path.length <= 1) return true;
+            for (var k = 0; k < path.length; k++) {
+                var isPal = true;
+                var left = 0;
+                var right = path.length - 1;
+                while (left < right) {
+                    if (left === k) left++;
+                    if (right === k) right--;
+                    if (left >= right) break;
+                    var a = cellValue(board, path[left]);
+                    var b = cellValue(board, path[right]);
+                    if (a && b && a !== b) {
+                        isPal = false;
+                        break;
+                    }
+                    left++;
+                    right--;
+                }
+                if (isPal) return true;
+            }
+            return false;
+        },
+        validateComplete: function(board, path) {
+            if (path.length <= 1) return true;
+            for (var k = 0; k < path.length; k++) {
+                var isPal = true;
+                var left = 0;
+                var right = path.length - 1;
+                while (left < right) {
+                    if (left === k) left++;
+                    if (right === k) right--;
+                    if (left >= right) break;
+                    var a = cellValue(board, path[left]);
+                    var b = cellValue(board, path[right]);
+                    if (a !== b) {
+                        isPal = false;
+                        break;
+                    }
+                    left++;
+                    right--;
+                }
+                if (isPal) return true;
+            }
+            return false;
+        }
+    });
+
     // Anti-Consecutive: explicitly marked edges must NOT be consecutive
     registerConstraint("antiConsecutive", {
         validatePartial: function(board, pair) {

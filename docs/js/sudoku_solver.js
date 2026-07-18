@@ -485,6 +485,7 @@ var SudokuSolver = (function() {
             cellRelations: [],
             palindromes: [],
             almostPalindromes: [],
+            disguisedPalindromes: [],
             antiConsecutive: [],
             averageArrows: [],
             kropki: [],
@@ -1168,6 +1169,14 @@ var SudokuSolver = (function() {
             });
             if (constraints.almostPalindromes.length) {
                 constraints.supported.push("almostpalindrome");
+            }
+        }
+        if (variantEnabled(puzzle, "disguisedpalindromes")) {
+            connectedLinePaths(puzzle, 5).forEach(function(path) {
+                if (path.length > 1) constraints.disguisedPalindromes.push(path);
+            });
+            if (constraints.disguisedPalindromes.length) {
+                constraints.supported.push("disguisedpalindromes");
             }
         }
         ["renban", "paritylines", "sequence"].forEach(function(variant) {

@@ -1885,7 +1885,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules. For each grey line, there must be at least one way of removing a digit so that the remaining digits on the line form a palindrome. It is permissible that the digits on the grey line also form a palindrom before the removal step."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
