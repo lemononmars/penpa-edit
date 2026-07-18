@@ -181,6 +181,39 @@ export function cspConstraintFunctionFor(variation: Variation) {
         ,evensandwich: `validateComplete(board, clue) {\n  const values = clue.cells.map(cellValue);\n  const found = values.filter((value, index) => index > 0 && index < values.length - 1\n    && values[index - 1] % 2 === 0 && values[index + 1] % 2 === 0);\n  return sameDigits(found, clue.clues);\n}`,
         oddsandwich: `validateComplete(board, clue) {\n  const values = clue.cells.map(cellValue);\n  const found = values.filter((value, index) => index > 0 && index < values.length - 1\n    && values[index - 1] % 2 === 1 && values[index + 1] % 2 === 1);\n  return sameDigits(found, clue.clues);\n}`,
         clock: `validateComplete(board, cage) {\n  if (cage.cells.length !== 4 || !cellsFormOneHorizontalRun(cage.cells)) return true;\n  const [h1, h2, m1, m2] = cage.cells.map(cellValue);\n  return 10 * h1 + h2 < 24 && 10 * m1 + m2 < 60;\n}`,
+        lc: `validatePartial(board, clue) {
+  const [a, b, c, d] = clue.cells.map(cellValue);
+  if (a && b && c && d) {
+    const sum = (a * 10 + b) + (c * 10 + d);
+    if (clue.kind === "L") return sum === 50;
+    if (clue.kind === "C") return sum === 100;
+    return sum !== 50 && sum !== 100;
+  }
+  return true;
+}`,
+        hiddenclone: `validateComplete(board, check) {
+  const component = check.component;
+  const assigned = [];
+  for (let i = 0; i < component.length; i++) {
+    assigned.push(cellValue(board, component[i]));
+  }
+  const SIZE = board.length;
+  for (let dr = -SIZE + 1; dr < SIZE; dr++) {
+    for (let dc = -SIZE + 1; dc < SIZE; dc++) {
+      if (dr === 0 && dc === 0) continue;
+      let match = true;
+      for (let i = 0; i < component.length; i++) {
+        const cell = component[i];
+        const tr = cell.row + dr, tc = cell.col + dc;
+        if (tr < 0 || tr >= SIZE || tc < 0 || tc >= SIZE) { match = false; break; }
+        const tval = cellValue(board, { row: tr, col: tc });
+        if (tval !== assigned[i]) { match = false; break; }
+      }
+      if (match) return true;
+    }
+  }
+  return false;
+}`,
         xivi: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const sum = a + b;\n  return clue.kind === "VI" ? sum === 6 : clue.kind === "XI" ? sum === 11 : sum !== 6 && sum !== 11;\n}`,
         slotmachine: `validatePartial(board, clue) {\n  return clue.columns.slice(1).every(column => someCyclicShiftMatchesAssignedDigits(board, clue.columns[0], column));\n}`,
         wheel: `validatePartial(board, clue) {\n  return someRotationMatchesAssignedDigits(board, clue.cells, clue.digits);\n}`,
@@ -240,7 +273,7 @@ export function cspConstraintFunctionFor(variation: Variation) {
         return `function ${functionName}(board, clue) {\n  const [a, b] = clue.cells.map(cell => cellValue(board, cell));\n  return !a || !b || ${edgeRelations[variation.value]};\n}`;
     }
     const pairRelations: Record<string, string> = {
-        "anti king": "a !== b", "anti knight": "a !== b",
+        "anti king": "a !== b", "anti knight": "a !== b", knightmare: "a + b !== 5 && a + b !== 15",
         "non consecutive": "Math.abs(a - b) !== 1", diagonallynonconsecutive: "Math.abs(a - b) !== 1",
         noevenneighbours: "a % 2 !== 0 || b % 2 !== 0", queen: "a !== size || b !== size"
     };

@@ -9462,6 +9462,30 @@ class Puzzle {
         return true;
     }
 
+
+    cycleLCClue(num) {
+        if (!this.isKropkiEdge(num)) {
+            this.drawing = false;
+            this.last = -1;
+            this.cursol = -1;
+            return false;
+        }
+        let current = this[this.mode.qa].number[num];
+        let value = current && current[2] === "5" ? current[0].toString().toUpperCase() : "";
+        this.undoredo_counter++;
+        this.drawing = false;
+        this.last = -1;
+        this.cursol = -1;
+        if (value !== "L" && value !== "C") {
+            this.set_value("number", num, ["L", 6, "5"], null);
+        } else if (value === "L") {
+            this.set_value("number", num, ["C", 6, "5"], null);
+        } else {
+            this.remove_value("number", num, true);
+        }
+        return true;
+    }
+
     killerCageAnchor(num) {
         let cages = this.refreshKillerCages(this.mode.qa);
         for (let cage of cages) {
@@ -9486,6 +9510,12 @@ class Puzzle {
         if (this.mouse_mode === "down_left") {
             if (this.xv_mode && String(this.mode[this.mode.qa].number[0]) === "5") {
                 this.cycleXVClue(num);
+                this.cursol = -1;
+                this.redraw();
+                return;
+            }
+            if (this.lc_mode && String(this.mode[this.mode.qa].number[0]) === "5") {
+                this.cycleLCClue(num);
                 this.cursol = -1;
                 this.redraw();
                 return;

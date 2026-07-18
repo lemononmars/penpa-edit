@@ -44,7 +44,7 @@ function preferredRule(rules: Record<string, string>) {
 
 function getMarkPosition(value: string, tags: string[], rule: string, name: string): "no-input" | "line" | "region" | "outside" | "cell" | "edge" | "intersection" {
     const text = `${name} ${rule}`.toLowerCase();
-    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "touchy"].includes(value)) {
+    if (["anti king", "anti knight", "knightmare", "disjoint", "queen", "disparity", "touchy"].includes(value)) {
         return "no-input";
     }
     if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector", "deadoralivearrows"].includes(value)) {
@@ -56,7 +56,7 @@ function getMarkPosition(value: string, tags: string[], rule: string, name: stri
     if (value === "coded") return "intersection";
     if (value === "pencilmarks") return "cell";
     if (["xydifference", "primesums", "twodigitprimenumbers"].includes(value)) return "edge";
-    if (value === "xivi") return "edge";
+    if (value === "xivi" || value === "lc") return "edge";
     if (value === "clock") return "cell";
     if (value === "slotmachine") return "cell";
     if (["wheel", "little killer", "product little killer", "bouncing x-sums", "czech outsider"].includes(value)) {
@@ -153,7 +153,7 @@ function genericSetting(variation: Variation) {
     if (variation.inputType.categories.includes("no-input")) {
         return { show, modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["extraregion", "extralargeregions", "difference2neighbours"].includes(variation.value)) {
+    if (["extraregion", "extralargeregions", "difference2neighbours", "hiddenclone"].includes(variation.value)) {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
@@ -347,6 +347,10 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "xivi") {
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "lc") {
         add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }

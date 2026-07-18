@@ -1057,6 +1057,15 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("knightmare", {
+        validatePartial: function(board, pair) {
+            var first = cellValue(board, pair[0]);
+            var second = cellValue(board, pair[1]);
+            if (!first || !second) return true;
+            return first + second !== 5 && first + second !== 15;
+        }
+    });
+
     registerConstraint("disparity", {
         validatePartial: function(board, pair) {
             var first = cellValue(board, pair[0]);
@@ -2584,6 +2593,39 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("hiddenCloneShapeChecks", {
+        validatePartial: function() { return true; },
+        validateComplete: function(board, check) {
+            var component = check.component;
+            var assigned = [];
+            for (var i = 0; i < component.length; i++) {
+                assigned.push(cellValue(board, component[i]));
+            }
+
+            for (var dr = -SIZE + 1; dr < SIZE; dr++) {
+                for (var dc = -SIZE + 1; dc < SIZE; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    var match = true;
+                    for (var i = 0; i < component.length; i++) {
+                        var cell = component[i];
+                        var tr = cell.row + dr, tc = cell.col + dc;
+                        if (tr < 0 || tr >= SIZE || tc < 0 || tc >= SIZE) {
+                            match = false;
+                            break;
+                        }
+                        var tval = cellValue(board, { row: tr, col: tc });
+                        if (tval !== assigned[i]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) return true;
+                }
+            }
+            return false;
+        }
+    });
+
     registerConstraint("palindromes", {
         validatePartial: function(board, path) {
             for (var i = 0; i < Math.floor(path.length / 2); i++) {
@@ -2752,6 +2794,23 @@ var SudokuCSP = (function() {
                 }
             }
             return false;
+        }
+    });
+
+
+    registerConstraint("lc", {
+        validatePartial: function(board, clue) {
+            var a = cellValue(board, clue.cells[0]);
+            var b = cellValue(board, clue.cells[1]);
+            var c = cellValue(board, clue.cells[2]);
+            var d = cellValue(board, clue.cells[3]);
+            if (a && b && c && d) {
+                var sum = (a * 10 + b) + (c * 10 + d);
+                if (clue.kind === "L") return sum === 50;
+                if (clue.kind === "C") return sum === 100;
+                return sum !== 50 && sum !== 100;
+            }
+            return true;
         }
     });
 
