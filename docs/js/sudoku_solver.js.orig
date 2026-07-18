@@ -3515,12 +3515,6 @@ var SudokuTools = (function() {
                     added.push(segment);
                 }
             });
-            cells.forEach(function(cell) {
-                if (pu.pu_q.surface === undefined) pu.pu_q.surface = {};
-                if (pu.pu_q.surface[cell] === undefined || pu.pu_q.surface[cell] === 0) {
-                    pu.set_value("surface", cell, 1, null);
-                }
-            });
         });
         pu.windokuCageSegments = added;
         if (typeof pu.refreshKillerCages === "function") pu.refreshKillerCages("pu_q");
@@ -3824,14 +3818,6 @@ var SudokuTools = (function() {
         } else if (variant === "windoku" && Array.isArray(pu.windokuCageSegments)) {
             pu.windokuCageSegments.forEach(function(segment) { delete pu.pu_q.cage[segment]; });
             pu.windokuCageSegments = [];
-            [[1, 1], [1, 4], [4, 1], [4, 4]].forEach(function(start) {
-                for (var row = 0; row < 3; row++) {
-                    for (var col = 0; col < 3; col++) {
-                        var cell = cellKey(pu, start[0] + row, start[1] + col);
-                        if (pu.pu_q.surface !== undefined) delete pu.pu_q.surface[cell];
-                    }
-                }
-            });
             if (typeof pu.refreshKillerCages === "function") pu.refreshKillerCages("pu_q");
         }
         pu.activeSudokuVariant = "classic";
