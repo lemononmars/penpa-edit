@@ -89,6 +89,13 @@ const penpa_constraints = {
             "submodeset": ["1", "circle_L"],
             "styleset": ["", ""]
         },
+        "meandering diagonals": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_line_lb", "sub_line2_lb", "st_line2_lb"],
+            "modeset": ["sudoku", "line"],
+            "submodeset": ["1", "2"],
+            "styleset": ["", 2]
+        },
         "odd even bridge": {
             "show": ["mo_surface_lb",
                 "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",

@@ -2408,6 +2408,9 @@ var SudokuCSP = (function() {
                 }
                 return increasing || decreasing;
             }
+            if (clue.relation === "meandering diagonals") {
+                if (new Set(assigned).size !== assigned.length) return false;
+            }
             if (clue.relation === "alternatingstripes") {
                 if (new Set(assigned).size !== assigned.length) return false;
                 for (var stripeIndex = 1; stripeIndex < values.length - 1; stripeIndex++) {
