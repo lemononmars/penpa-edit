@@ -64,7 +64,7 @@ function has(text: string, pattern: RegExp) {
 /** Provides a conservative default that can be corrected through the dev-only editor. */
 export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     const text = `${variation.name} ${variation.rule}`.toLowerCase();
-    if (["anti king", "anti knight", "disjoint", "queen", "disparity"].includes(variation.value)) {
+    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "liardiagonal", "magicsquares"].includes(variation.value)) {
         return { position: "none", mark: "none" };
     }
     if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector"].includes(variation.value)) {
@@ -94,7 +94,7 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     }
     const multiSignals = [
         /horizontal.+vertical|vertical.+horizontal/, /black.+white|white.+black/,
-        /circle.+square|square.+circle/, /different (?:symbols|marks)/, /one of (?:the )?following/
+        /circle.+square|square.+circle/, /circle.+cross|cross.+circle/, /different (?:symbols|marks)/, /one of (?:the )?following/
     ];
     if (multiSignals.some((pattern) => has(text, pattern))) return { position: "multiple", mark: "multiple" };
     if (variation.tags?.includes("region")) return { position: "center", mark: "cage" };

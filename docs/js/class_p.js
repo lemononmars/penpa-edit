@@ -6776,7 +6776,17 @@ class Puzzle {
                     break;
                 }
                 if (a) {
-                    if ((a[0] === "thermo" ||
+                    if (a[0] === "sudokuTransaction") {
+                        var currentSudokuState = JSON.stringify({
+                            number: this.pu_a.number || {},
+                            numberCol: this.pu_a_col.number || {}
+                        });
+                        this.pu_q.command_redo.push([a[0], a[1], currentSudokuState, pu_mode]);
+                        this.pu_q_col.command_redo.push([a[0], a[1], null, pu_mode + "_col"]);
+                        var previousSudokuState = JSON.parse(a[2]);
+                        this.pu_a.number = previousSudokuState.number || {};
+                        this.pu_a_col.number = previousSudokuState.numberCol || {};
+                    } else if ((a[0] === "thermo" ||
                         a[0] === "nobulbthermo" ||
                         a[0] === "arrows" ||
                         a[0] === "direction" ||
@@ -7011,7 +7021,17 @@ class Puzzle {
                     break;
                 }
                 if (a) {
-                    if ((a[0] === "thermo" ||
+                    if (a[0] === "sudokuTransaction") {
+                        var currentSudokuState = JSON.stringify({
+                            number: this.pu_a.number || {},
+                            numberCol: this.pu_a_col.number || {}
+                        });
+                        this.pu_q.command_undo.push([a[0], a[1], currentSudokuState, pu_mode]);
+                        this.pu_q_col.command_undo.push([a[0], a[1], null, pu_mode + "_col"]);
+                        var nextSudokuState = JSON.parse(a[2]);
+                        this.pu_a.number = nextSudokuState.number || {};
+                        this.pu_a_col.number = nextSudokuState.numberCol || {};
+                    } else if ((a[0] === "thermo" ||
                         a[0] === "nobulbthermo" ||
                         a[0] === "arrows" ||
                         a[0] === "direction" ||
