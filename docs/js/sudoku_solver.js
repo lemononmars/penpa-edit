@@ -419,6 +419,7 @@ var SudokuSolver = (function() {
         var normalized = String(name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
         return ({
             elimination: "eliminate",
+            deadoralive: "deadoralivearrows",
             disjointgroups: "disjoint",
             extraregions: "extraregion",
             renbanline: "renban",
@@ -1349,7 +1350,7 @@ var SudokuSolver = (function() {
 
         var symbols = puzzle.pu_q.symbol || {};
         var directionalVariants = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious",
-            "quadmax", "quadmin", "search9", "sumdetector", "detection"].filter(function(name) {
+            "quadmax", "quadmin", "search9", "sumdetector", "detection", "deadoralivearrows"].filter(function(name) {
                 return variantEnabled(puzzle, name);
             });
         if (directionalVariants.length) {
@@ -1358,7 +1359,7 @@ var SudokuSolver = (function() {
                 [0, 1], [1, 1], [1, 0], [1, -1]
             ];
             function activeArrowDirections(entry) {
-                if (!entry || ["arrow_eight", "arrow_B_G", "arrow_B_B"].indexOf(entry[1]) === -1) return [];
+                if (!entry || ["arrow_eight", "arrow_B_G", "arrow_B_B", "arrow_B_W"].indexOf(entry[1]) === -1) return [];
                 if (Array.isArray(entry[0])) {
                     return entry[0].map(function(enabled, index) { return enabled === 1 ? index : -1; })
                         .filter(function(index) { return index >= 0; });
@@ -1370,19 +1371,20 @@ var SudokuSolver = (function() {
                 return row >= 0 && row < SIZE && col >= 0 && col < SIZE ? { row: row, col: col } : null;
             }
             function expectedDirectionalSymbol(variant) {
-                if (variant === "biggestneighbours" || variant === "smallestneighbours" || variant === "sumdetector" || variant === "detection") return "arrow_eight";
-                if (variant === "quadmax" || variant === "quadmin") return "arrow_B_B";
-                return "arrow_B_G";
+                if (variant === "biggestneighbours" || variant === "smallestneighbours" || variant === "sumdetector" || variant === "detection") return ["arrow_eight"];
+                if (variant === "quadmax" || variant === "quadmin") return ["arrow_B_B"];
+                if (variant === "deadoralivearrows") return ["arrow_B_W", "arrow_B_G"];
+                return ["arrow_B_G"];
             }
             directionalVariants.forEach(function(directionalVariant) {
               Object.keys(symbols).forEach(function(key) {
                 var entry = symbols[key];
-                if (!entry || entry[1] !== expectedDirectionalSymbol(directionalVariant)) return;
+                if (!entry || expectedDirectionalSymbol(directionalVariant).indexOf(entry[1]) === -1) return;
                 var owner = entry[3];
                 if (owner && canonicalVariantName(owner) !== canonicalVariantName(directionalVariant)) return;
                 if (!owner) {
                     var sameSymbolVariants = directionalVariants.filter(function(variant) {
-                        return expectedDirectionalSymbol(variant) === entry[1];
+                        return expectedDirectionalSymbol(variant).indexOf(entry[1]) !== -1;
                     });
                     var currentOwner = sameSymbolVariants.find(function(variant) {
                         return canonicalVariantName(variant) === canonicalVariantName(puzzle.activeSudokuVariant);
@@ -1404,11 +1406,11 @@ var SudokuSolver = (function() {
                         }
                         return ray;
                     }).filter(function(ray) { return ray.length; });
-                    var usesSightline = directionalVariant === "eliminate" || directionalVariant === "detection" ||
+                    var usesSightline = directionalVariant === "eliminate" || directionalVariant === "detection" || directionalVariant === "deadoralivearrows" ||
                         directionalVariant === "pointtonext" || directionalVariant === "pointtoprevious";
                     var targets = usesSightline ? [].concat.apply([], rays) : rays.map(function(ray) { return ray[0]; });
                     if (!targets.length) return;
-                    var clue = { relation: directionalVariant, origin: origin, targets: targets };
+                    var clue = { relation: directionalVariant, origin: origin, targets: targets, isWhite: entry[1] === "arrow_B_W" };
                     if (directionalVariant === "biggestneighbours" || directionalVariant === "smallestneighbours") {
                         clue.neighbors = directionOffsets.map(function(offset) {
                             return boardCell(origin.row + offset[0], origin.col + offset[1]);
@@ -3495,9 +3497,9 @@ var SudokuTools = (function() {
             "equalratios", "consecutivequads", "quadmax", "quadmin", "exclusion", "groupsum", "wheel", "crosssums", "determinant", "fullorhalf"].indexOf(pu.activeSudokuVariant) !== -1 &&
             (mode === "number" || mode === "symbol");
         pu.sudoku_directional_cell_mode = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious",
-            "search9", "sumdetector", "detection"].indexOf(pu.activeSudokuVariant) !== -1 && mode === "symbol";
+            "search9", "sumdetector", "detection", "deadoralivearrows"].indexOf(pu.activeSudokuVariant) !== -1 && mode === "symbol";
         pu.sudokuSymbolVariantOwner = mode === "symbol" && ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext",
-            "pointtoprevious", "quadmax", "quadmin", "search9", "sumdetector", "detection"].indexOf(pu.activeSudokuVariant) !== -1 ?
+            "pointtoprevious", "quadmax", "quadmin", "search9", "sumdetector", "detection", "deadoralivearrows"].indexOf(pu.activeSudokuVariant) !== -1 ?
             pu.activeSudokuVariant : null;
         if (pu.battenburg_mode) {
             UserSettings.draw_edges = true;

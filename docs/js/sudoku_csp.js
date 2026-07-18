@@ -1195,6 +1195,16 @@ var SudokuCSP = (function() {
             var relation = clue.relation;
             var origin = clue.origin ? cellValue(board, clue.origin) : 0;
             var targetValues = (clue.targets || []).map(function(cell) { return cellValue(board, cell); });
+            if (relation === "deadoralivearrows") {
+                if (!origin) return true;
+                if (clue.isWhite) {
+                    return targetValues.every(function(value) { return !value || value !== origin; });
+                } else {
+                    var isComplete = targetValues.every(function(value) { return !!value; });
+                    var hasMatch = targetValues.some(function(value) { return value === origin; });
+                    return !isComplete || hasMatch;
+                }
+            }
             if (relation === "eliminate") {
                 return !origin || targetValues.every(function(value) { return !value || value !== origin; });
             }
