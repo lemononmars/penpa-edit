@@ -4059,6 +4059,21 @@ var SudokuTools = (function() {
         if (typeof pu.refreshKillerCages === "function") pu.refreshKillerCages("pu_q");
     }
 
+    function ensureOneFiveNine() {
+        if (!pu || SudokuSolver.puzzleSize(pu) !== 9) return;
+        var cols = [0, 4, 8];
+        for (var row = 0; row < 9; row++) {
+            for (var i = 0; i < cols.length; i++) {
+                var col = cols[i];
+                var cell = cellKey(pu, row, col);
+                if (pu.pu_q.surface === undefined) pu.pu_q.surface = {};
+                if (pu.pu_q.surface[cell] === undefined || pu.pu_q.surface[cell] === 0) {
+                    pu.set_value("surface", cell, 1, null);
+                }
+            }
+        }
+    }
+
     function renderVariantTools() {
         var toolbar = byId("sudoku-variant-tools");
         if (!toolbar || typeof penpa_constraints === "undefined") {
@@ -4405,6 +4420,15 @@ var SudokuTools = (function() {
                 }
             });
             if (typeof pu.refreshKillerCages === "function") pu.refreshKillerCages("pu_q");
+        } else if (variant === "onefivenine") {
+            var cols = [0, 4, 8];
+            for (var row = 0; row < 9; row++) {
+                for (var i = 0; i < cols.length; i++) {
+                    var col = cols[i];
+                    var cell = cellKey(pu, row, col);
+                    if (pu.pu_q.surface !== undefined) delete pu.pu_q.surface[cell];
+                }
+            }
         } else if (["irregular", "scattered", "deficit", "surplus"].indexOf(variant) !== -1 &&
             !activeVariants().some(function(active) {
                 return ["irregular", "scattered", "deficit", "surplus"].indexOf(active) !== -1;
@@ -4484,6 +4508,14 @@ var SudokuTools = (function() {
             }
             return;
         }
+        if (variant === "onefivenine" && SudokuSolver.puzzleSize(pu) !== 9) {
+            var sizeSelectOneFiveNine = byId("constraints_settings_opt");
+            if (sizeSelectOneFiveNine) sizeSelectOneFiveNine.value = "classic";
+            if (typeof Swal !== "undefined") {
+                Swal.fire({ icon: "warning", title: "One-five-nine requires 9 × 9", text: "Create or resize the grid to 9 × 9 first." });
+            }
+            return;
+        }
         var conflict = variantConflict(variant);
         if (conflict) {
             var rejectedSelect = byId("constraints_settings_opt");
@@ -4497,6 +4529,7 @@ var SudokuTools = (function() {
         addVariant(variant);
         if (pu) pu.activeSudokuVariant = variant;
         if (variant === "windoku") ensureWindokuCages();
+        if (variant === "onefivenine") ensureOneFiveNine();
         if (["irregular", "scattered", "deficit", "surplus"].indexOf(variant) !== -1) {
             SudokuSolver.invalidateCandidateAnalysis();
             enterIrregularEditor(variant);
