@@ -6735,12 +6735,6 @@ class Puzzle {
                         text += "\n";
                     }
                 }
-            } else if (header === "test") {
-                console.log(this.pu_q);
-                console.log(this.pu_a);
-                console.log(this.pu_q_col);
-                console.log(this.pu_a_col);
-                console.log(this);
             } else {
                 text += PenpaText.get('gmp_unsupported', header);
             }
