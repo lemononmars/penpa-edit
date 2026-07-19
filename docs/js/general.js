@@ -3369,7 +3369,7 @@ function set_contestmode() {
     document.getElementById("mo_move_lb").classList.add('is_hidden');
     document.getElementById("puzzlesourcelink").style.display = "none";
     let sourceUrl = document.getElementById("saveinfosource").value;
-    document.getElementById("answer_key").innerHTML = PenpaText.get('contest_answer', sourceUrl);
+    document.getElementById("answer_key").innerHTML = DOMPurify.sanitize(PenpaText.get('contest_answer', sourceUrl));
     pu.undoredo_disable = true;
     pu.comp = true;
 }
