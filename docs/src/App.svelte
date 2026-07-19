@@ -43,6 +43,8 @@
   let newGridSize: 6 | 7 | 8 | 9 = 9;
   let keepVariants = false;
   let hoveredVariant: string | null = null;
+  let activeVariantId: string | null = null;
+  let activeVariantHasExample = false;
   let noteMode = "1";
   let variantSearch = "";
   let variantTab: VariantTab = "no-input";
@@ -191,6 +193,11 @@
         { value: "^", label: "^" },
         { value: ">", label: ">" },
         { value: "v", label: "v" },
+      ];
+    } else if (mode === "number" && variant === "wildcard") {
+      toolPanelOptions = [
+        { value: "<", label: "<" },
+        { value: ">", label: ">" },
       ];
     } else if (mode === "number" && variant === "xv") {
       toolPanelOptions = [
@@ -949,6 +956,27 @@
     studioModal = null;
   }
 
+  async function loadExample() {
+    const pu = (window as any).pu;
+    if (!pu) return;
+    const variantId = metadataVariantIdForActiveVariants(
+      pu.activeSudokuVariants,
+      variantMetadata.variants,
+    );
+    if (!variantId) return;
+    const metadataVariant = variantMetadata.variants.find((v) => v.id === variantId);
+    if (!metadataVariant?.example) return;
+    const example = metadataVariant.example;
+    const stored = /[&]variants=/.test(example)
+      ? example
+      : `${example}&variants=${encodeURIComponent(`classic,${variantId}`)}`;
+    const url = `?m=solve&p=${stored}`;
+    if (typeof (window as any).import_url === "function") {
+      await (window as any).import_url(url);
+      syncState();
+    }
+  }
+
   async function saveExample() {
     const res = verifyUniqueSolution();
     if (!res.success) {
@@ -1097,6 +1125,22 @@
 
   function syncState() {
     installVariationCatalog();
+    const pu = (window as any).pu;
+    if (pu) {
+      activeVariantId = metadataVariantIdForActiveVariants(
+        pu.activeSudokuVariants,
+        variantMetadata.variants,
+      );
+      if (activeVariantId) {
+        const metadataVariant = variantMetadata.variants.find((v) => v.id === activeVariantId);
+        activeVariantHasExample = Boolean(metadataVariant?.example);
+      } else {
+        activeVariantHasExample = false;
+      }
+    } else {
+      activeVariantId = null;
+      activeVariantHasExample = false;
+    }
     const select = document.getElementById(
       "constraints_settings_opt",
     ) as HTMLSelectElement | null;
@@ -1190,6 +1234,7 @@
     const log = document.getElementById("sudoku-solver-log");
     const autoSolver = document.getElementById("sudoku_auto_solver");
     const solveOnce = document.getElementById("sudoku_solve_once");
+    const solveClear = document.getElementById("sudoku_solve_clear");
     const logHeader = log?.querySelector(".sudoku-solver-log-header");
     if (
       !board ||
@@ -1212,6 +1257,12 @@
       solveOnce,
       document.getElementById("sudoku-solver-status"),
     );
+    if (solveClear) {
+      logHeader.insertBefore(
+        solveClear,
+        document.getElementById("sudoku-solver-status"),
+      );
+    }
     moveLegacyControls();
     syncState();
     initialized = true;
@@ -1339,6 +1390,12 @@
       </button>
       <button
         type="button"
+        on:click={() => legacyClick("sudoku_solve_clear")}
+      >
+        <span><i class="fa fa-eraser" aria-hidden="true"></i></span> Undo Sol
+      </button>
+      <button
+        type="button"
         on:click={() => legacyClick("sudoku_undo")}
       >
         <span>↶</span> Undo
@@ -1368,7 +1425,7 @@
             <button
               class:active={layer === "solution"}
               on:click={() => chooseLayer("solution")}
-              ><i class="fa fa-check" aria-hidden="true"></i>Answer</button
+              ><i class="fa fa-check" aria-hidden="true"></i>Solve</button
             >
             <button
               class:active={layer === "modes"}
@@ -1399,7 +1456,7 @@
 
         <section
           class="variant-picker"
-          style="display: none;"
+
           class:hidden-section={layer !== "problem"}
         >
           <div class="control-label" id="svelte-variant-label">Add variant</div>
@@ -1574,6 +1631,7 @@
           <button
             type="button"
             class="mobile-add-variant"
+            class:hidden-section={layer === "solution"}
             aria-expanded={inputVariantMenuOpen}
             on:click={() =>
               (inputVariantMenuOpen = !inputVariantMenuOpen)}
@@ -1884,7 +1942,11 @@
             >
           </div>
           <div class="action-group bottom-actions">
-            <button on:click={saveExample}><span>💾</span>Save Example</button>
+            {#if activeVariantHasExample}
+              <button on:click={loadExample}><span>📖</span>Load Example</button>
+            {:else}
+              <button on:click={saveExample}><span>💾</span>Save Example</button>
+            {/if}
             <button
               class="info-action"
               title="About this editor"
@@ -2943,7 +3005,8 @@ href="https://github.com/semiexp/cspuz_core"
     border-bottom: 1px solid #d9e0e6;
   }
   :global(.svelte-home .log-host #sudoku_auto_solver),
-  :global(.svelte-home .log-host #sudoku_solve_once) {
+  :global(.svelte-home .log-host #sudoku_solve_once),
+  :global(.svelte-home .log-host #sudoku_solve_clear) {
     height: 26px;
     margin: 0;
     padding: 0 8px;
@@ -3617,6 +3680,7 @@ href="https://github.com/semiexp/cspuz_core"
   }
   .studio-shell.dark :global(.log-host #sudoku_auto_solver),
   .studio-shell.dark :global(.log-host #sudoku_solve_once),
+  .studio-shell.dark :global(.log-host #sudoku_solve_clear),
   .studio-shell.dark :global(.sudoku-kropki-negative),
   .studio-shell.dark :global(.sudoku-xv-negative),
   .studio-shell.dark :global(.sudoku-battenburg-negative) {
@@ -4187,7 +4251,8 @@ href="https://github.com/semiexp/cspuz_core"
   }
 
   :global(.svelte-home .log-host #sudoku_auto_solver),
-  :global(.svelte-home .log-host #sudoku_solve_once) {
+  :global(.svelte-home .log-host #sudoku_solve_once),
+  :global(.svelte-home .log-host #sudoku_solve_clear) {
     width: auto !important;
     padding: 0 8px !important;
     display: inline-flex !important;

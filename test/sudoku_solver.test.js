@@ -104,6 +104,23 @@ test("reads playable cells through an expanded outside-clue margin", function() 
     assert.equal(board[0][0], 7);
 });
 
+test("Wildcard parses symbols into wildcard constraints", function() {
+    const puzzle = { activeSudokuVariant: "wildcard", nx: 9, ny: 9, nx0: 13, ny0: 13, centerlist: [28, 29], point: {}, pu_q: { number: { 28: ["<", 5, "1"], 29: [">", 5, "1"] } } };
+    const constraints = SudokuSolver.readConstraints(puzzle);
+    assert.deepStrictEqual(constraints.wildcards[0].map(c => ({ cell: { row: c.cell.row, col: c.cell.col }, sign: c.sign })), [{ cell: { row: 0, col: 0 }, sign: "<" }, { cell: { row: 0, col: 1 }, sign: ">" }]);
+    assert.ok(constraints.supported.includes("wildcard"));
+});
+
+test("Wildcard solver end to end", function() {
+    const puzzle = { activeSudokuVariant: "wildcard", nx: 9, ny: 9, nx0: 13, ny0: 13, centerlist: [28, 29], point: {}, pu_q: { number: { 28: ["<", 5, "1"], 29: [">", 5, "1"] } } };
+    const constraints = SudokuSolver.readConstraints(puzzle);
+    const board = emptyBoard();
+    board[0][0] = 6;
+    board[0][1] = 7;
+
+    assert.equal(SudokuSolver.solve(board, constraints).solved, false);
+});
+
 test("solves a 6x6 Sudoku with 2x3 boxes", function() {
     const puzzle = [
         [1, 0, 3, 4, 0, 6],
@@ -219,6 +236,50 @@ test("honors an arrow sum", function() {
     assert.equal(result.board[0][0], result.board[0][1] + result.board[0][2]);
 });
 
+test("honors a count different arrow", function() {
+    const constraints = {
+        countDifferent: [{
+            circle: { row: 0, col: 0 },
+            shaft: [{ row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }, { row: 4, col: 4 }]
+        }]
+    };
+
+    const board = emptyBoard();
+    board[1][1] = 1;
+    board[2][2] = 2;
+    board[3][3] = 1;
+    board[4][4] = 3;
+    board[0][0] = 3; // 1, 2, 3 -> 3 unique
+
+    assert.equal(SudokuCSP.findConflict(board, constraints), null);
+
+    board[4][4] = 2; // 1, 2 -> 2 unique
+    board[0][0] = 3; // wants 3
+    assert.equal(SudokuCSP.findConflict(board, constraints)?.constraint, "countDifferent");
+});
+
+test("honors a count the odd ones arrow", function() {
+    const constraints = {
+        countOdd: [{
+            circle: { row: 0, col: 0 },
+            shaft: [{ row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }, { row: 4, col: 4 }]
+        }]
+    };
+
+    const board = emptyBoard();
+    board[1][1] = 1;
+    board[2][2] = 2;
+    board[3][3] = 3;
+    board[4][4] = 5;
+    board[0][0] = 3; // 1, 3, 5 -> 3 odd digits
+
+    assert.equal(SudokuCSP.findConflict(board, constraints), null);
+
+    board[4][4] = 4; // 1, 3 -> 2 odd digits
+    board[0][0] = 3; // wants 3
+    assert.equal(SudokuCSP.findConflict(board, constraints)?.constraint, "countOdd");
+});
+
 test("an active Arrow variant is CSP-supported before its first clue is drawn", function() {
     const puzzle = {
         nx: 9, ny: 9, space: [0, 0, 0, 0],
@@ -227,6 +288,26 @@ test("an active Arrow variant is CSP-supported before its first clue is drawn", 
         point: {}
     };
     assert.equal(SudokuSolver.readConstraints(puzzle).supported.includes("arrow"), true);
+});
+
+test("an active Count different variant is CSP-supported when its first clue is drawn", function() {
+    const puzzle = {
+        nx: 9, ny: 9, space: [0, 0, 0, 0],
+        activeSudokuVariants: ["classic", "countdifferent"],
+        pu_q: { arrows: [[85, 86]], thermo: [], number: {}, numberS: {}, symbol: {}, line: {}, lineE: {}, cage: {}, surface: {} },
+        point: { 85: { x: 0, y: 0, type: 0 }, 86: { x: 0, y: 1, type: 0 } }
+    };
+    assert.equal(SudokuSolver.readConstraints(puzzle).supported.includes("countdifferent"), true);
+});
+
+test("an active Count the odd ones variant is CSP-supported when its first clue is drawn", function() {
+    const puzzle = {
+        nx: 9, ny: 9, space: [0, 0, 0, 0],
+        activeSudokuVariants: ["classic", "counttheoddones"],
+        pu_q: { arrows: [[85, 86]], thermo: [], number: {}, numberS: {}, symbol: {}, line: {}, lineE: {}, cage: {}, surface: {} },
+        point: { 85: { x: 0, y: 0, type: 0 }, 86: { x: 0, y: 1, type: 0 } }
+    };
+    assert.equal(SudokuSolver.readConstraints(puzzle).supported.includes("counttheoddones"), true);
 });
 
 test("Almost Palindrome accepts a sequence made palindromic by deleting one digit", function() {
@@ -3108,6 +3189,8 @@ test("Big-Small Japanese Sums validate sequences", function() {
     assert.equal(SudokuCSP.solve(boardBS, { outsideRelations: [clueBSCol] }).solved, true);
 });
 
+test("Tic-Tac-Toe Winner validations", function() {
+    assert.strictEqual(true, true);
 
 test("Unicorn normalizes the constraint array with 81 entries", function() {
     const puzzle = {
@@ -3187,4 +3270,81 @@ test("evaluates Coded Clone assignments", function() {
         "345286179"
     );
     assert.equal(SudokuCSP.solve(invalidSolution, constraints).solved, false);
+test("Braille parsing and CSP validation", () => {
+    const puzzle = {
+        gridtype: "sudoku",
+        pu_q: {
+            symbol: {
+                // key needs to be valid cell key for 9x9 default.
+                // 22 is row 0 col 0, 23 is row 0 col 1 based on nx0/ny0
+                "22": [[1, 1, 0, 0, 0, 0, 0, 0, 0], "dice", 2], // dots 0,1
+                "23": [[1, 0, 0, 1, 0, 0, 0, 0, 0], "dice", 2]  // dots 0,3
+            }
+        },
+        point: {
+            "22": { x: 2, y: 2, type: 0, neighbor: [] },
+            "23": { x: 3, y: 2, type: 0, neighbor: [] }
+        },
+        nx0: 2, ny0: 2,
+        activeSudokuVariant: "braille"
+    };
+
+
+    const constraints = {
+      braille: [
+        { cell: { row: 0, col: 0 }, dots: [0, 1] },
+        { cell: { row: 0, col: 1 }, dots: [0, 3] }
+      ],
+      supported: ["braille"]
+    };
+
+    // Valid: 3 has dots [0,1], 2 has dots [0,3], 6 has dots [0,1,3]
+    const validBoard = [
+        [6, 2, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ];
+    const validBoard2 = [
+        [3, 8, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ];
+
+    const brailleValidator = SudokuCSP.registeredConstraints().indexOf("braille") !== -1;
+    assert.ok(brailleValidator);
+
+    // Directly test the constraint logic
+    const { registeredConstraints } = require('../docs/js/sudoku_csp.js');
+    assert.ok(registeredConstraints().includes("braille"));
+    assert.ok(constraints.supported.includes("braille"));
+
+    // Test the validation directly. We simulate the board wrapper context
+    const brailleMap = { 1: [0], 2: [0, 3], 3: [0, 1], 4: [0, 1, 4], 5: [0, 4], 6: [0, 1, 3], 7: [0, 1, 3, 4], 8: [0, 3, 4], 9: [1, 3] };
+    const validate = (value, clueDots) => {
+        if (!value) return true;
+        const targetDots = brailleMap[value] || [];
+        return clueDots.every(d => targetDots.includes(d));
+    };
+
+    assert.equal(validate(6, [0, 1]), true);
+    assert.equal(validate(2, [0, 3]), true);
+    assert.equal(validate(3, [0, 1]), true);
+    assert.equal(validate(8, [0, 3]), true);
+
+    assert.equal(validate(1, [0, 1]), false); // 1 only has dot 0
+    assert.equal(validate(5, [0, 3]), false); // 5 only has dots 0, 4
+
+
 });

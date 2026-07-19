@@ -42,7 +42,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -59,7 +61,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -76,7 +80,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -93,7 +99,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -110,7 +118,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "alloddalleven",
@@ -198,7 +208,8 @@
         "9x9": "No cell that is a knight-step away can contain the same digit. A knight's move is 2 in a line and 1 to the side, as in chess."
       },
       "tags": [
-        "classiclookalike"
+        "classiclookalike",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": true,
@@ -226,7 +237,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "argyle",
@@ -301,7 +314,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -318,7 +333,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "average",
@@ -413,7 +430,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -430,7 +449,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -447,7 +468,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "between",
@@ -487,7 +510,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -504,7 +529,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "biggestneighbours",
@@ -585,7 +612,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -594,7 +623,7 @@
       "rules": {
         "9x9": "The dots given inside some cells form part (or all) of the Braille representation of the digit."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -642,7 +671,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -659,7 +690,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -705,7 +738,8 @@
         "9x9": "Each 1x4 marked area represents a digital clock that displays a valid time from left-to-right in 24-hour (HH:MM) format."
       },
       "tags": [
-        "hybrid"
+        "hybrid",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -729,7 +763,8 @@
       "tags": [
         "converse",
         "direction",
-        "neighbour"
+        "neighbour",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -775,7 +810,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -792,7 +829,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "clonedstrands",
@@ -860,7 +899,8 @@
         "9x9": "Two-cell cages marked with the same letter contain the same pair of digits in either order."
       },
       "tags": [
-        "region"
+        "region",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -901,7 +941,8 @@
       "tags": [
         "consecutive",
         "converse",
-        "neighbour"
+        "neighbour",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -927,7 +968,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "consecutiveclone",
@@ -937,7 +980,8 @@
       },
       "tags": [
         "consecutive",
-        "region"
+        "region",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -963,7 +1007,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "consecutivequads",
@@ -974,7 +1020,8 @@
       "tags": [
         "consecutive",
         "neighbour",
-        "hybrid"
+        "hybrid",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -1011,13 +1058,15 @@
       "rules": {
         "9x9": "Follow classic sudoku rules. Number in a circle tells how many distinct digits you can find along the corresponding arrow."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "line"
         ],
-        "instructions": []
+        "instructions": [
+          "Drag from the circle cell through the shaft cells to create an arrow."
+        ]
       },
       "tags": []
     },
@@ -1045,13 +1094,15 @@
       "rules": {
         "9x9": "Follow classic sudoku rules. Number in a circle tells you how many odd digits you can find along the corresponding arrow."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "line"
         ],
-        "instructions": []
+        "instructions": [
+          "Drag from the circle cell through the shaft cells to create an arrow."
+        ]
       },
       "tags": []
     },
@@ -1223,7 +1274,8 @@
       },
       "tags": [
         "outside",
-        "placement"
+        "placement",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -1239,7 +1291,7 @@
       }
     },
     {
-      "id": "detection",
+      "id": "Decection",
       "name": "Detection",
       "rules": {
         "9x9": "A diagonal arrow in a cell containing N points toward another N on that diagonal sightline. All possible arrows are drawn."
@@ -1251,7 +1303,6 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "line",
           "cell"
         ],
         "instructions": [
@@ -1318,7 +1369,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -1336,7 +1389,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "diagonal sum is nine",
@@ -1345,7 +1400,8 @@
         "9x9": "All pairs of diagonally adjacent cells that contain digits summing to nine are marked with a line; diagonally adjacent cells without a line cannot sum to nine."
       },
       "tags": [
-        "neighbour"
+        "neighbour",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -1366,7 +1422,8 @@
         "9x9": "All pairs of diagonally adjacent cells that contain digits summing to ten are marked with a line; diagonally adjacent cells without a line cannot sum to ten."
       },
       "tags": [
-        "neighbour"
+        "neighbour",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -1389,7 +1446,8 @@
       "tags": [
         "consecutive",
         "converse",
-        "neighbour"
+        "neighbour",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -1412,7 +1470,8 @@
       "tags": [
         "classiclookalike",
         "consecutive",
-        "neighbour"
+        "neighbour",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -1461,7 +1520,8 @@
         ]
       },
       "tags": [
-        "neighbour"
+        "neighbour",
+        "math"
       ]
     },
     {
@@ -1479,7 +1539,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -1492,7 +1554,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "line"
         ],
         "instructions": []
       },
@@ -1561,7 +1623,8 @@
         "9x9": "Outside clues are of the form 'X-Y:Z', which indicates that digit X comes before digit Y (from left-to-right for rows, or top-to-bottom for columns) and the distance between them is exactly Z cells (where Z=1 means X and Y are next to each other)."
       },
       "tags": [
-        "outside"
+        "outside",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -1592,7 +1655,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "divisor",
@@ -1630,7 +1695,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -1647,7 +1714,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -1664,7 +1733,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -1766,7 +1837,7 @@
       "rules": {
         "9x9": "Follow classic sudoku rules. Several cells are marked with a circle. In all four directions, the maximal possible length of a path starting from the circle is given until the sum of the digits in the cells along the path is higher than the value of the emitter."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -1774,7 +1845,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "equaldifferences",
@@ -1902,7 +1975,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "even passage",
@@ -1911,7 +1986,8 @@
         "9x9": "There must be at least one continuous path of cells containing only even digits that travels orthogonally from the top-left corner (r1c1) to the bottom-right corner (r9c9)."
       },
       "tags": [
-        "parity"
+        "parity",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -2022,7 +2098,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2039,7 +2117,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2060,7 +2140,8 @@
         ]
       },
       "tags": [
-        "region"
+        "region",
+        "math"
       ]
     },
     {
@@ -2131,7 +2212,8 @@
         "9x9": "A white dot between two adjacent cells indicates that the digits in those cells must either be consecutive (differ by 1) or have a 1:2 ratio. All possible white dots are given: cells without a dot cannot be consecutive or have a 1:2 ratio."
       },
       "tags": [
-        "neighbour"
+        "neighbour",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -2161,7 +2243,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2195,7 +2279,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "first seen odd/even",
@@ -2205,7 +2291,8 @@
       },
       "tags": [
         "outside",
-        "parity"
+        "parity",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -2228,7 +2315,8 @@
         "9x9": "Two cells separated by a diamond must contain digits that have a sum of 5 or a difference of 5. All possible diamonds are given: cells without a diamond cannot have a sum or difference of 5."
       },
       "tags": [
-        "neighbour"
+        "neighbour",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -2326,7 +2414,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "frame-diagonal",
@@ -2378,7 +2468,8 @@
         "9x9": "Each row and column forms two n-digit numbers, where n is the grid size, read in opposite directions. Each number outside the grid indicates the rank of the corresponding n-digit number, starting from the smallest."
       },
       "tags": [
-        "outside"
+        "outside",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -2421,7 +2512,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "german whispers",
@@ -2478,7 +2571,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2495,7 +2590,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2512,7 +2609,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2529,7 +2628,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "groupsum",
@@ -2564,7 +2665,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2616,7 +2719,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2667,7 +2772,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "hex",
@@ -2683,7 +2790,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "no-input"
         ],
         "instructions": []
       }
@@ -2792,7 +2899,9 @@
           "Place number clues outside the grid."
         ]
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2863,7 +2972,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2897,7 +3008,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2915,7 +3028,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "killer",
@@ -2952,7 +3067,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2969,7 +3086,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2986,7 +3105,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -2999,7 +3120,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "no-input"
         ],
         "instructions": []
       },
@@ -3015,7 +3136,8 @@
         "consecutive",
         "converse",
         "neighbour",
-        "hybrid"
+        "hybrid",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": true,
@@ -3039,11 +3161,13 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "edge"
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "lesser",
@@ -3112,7 +3236,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -3129,7 +3255,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -3163,7 +3291,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "little killer",
@@ -3205,7 +3335,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -3222,7 +3354,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -3454,7 +3588,9 @@
           "Place number clues outside the grid."
         ]
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -3471,7 +3607,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "multidiagonal",
@@ -3524,7 +3662,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "multiplication",
@@ -3600,7 +3740,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -3617,7 +3759,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "noevenneighbours",
@@ -3648,7 +3792,8 @@
       "tags": [
         "classiclookalike",
         "neighbour",
-        "parity"
+        "parity",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -3668,7 +3813,8 @@
       "tags": [
         "classiclookalike",
         "consecutive",
-        "neighbour"
+        "neighbour",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": true,
@@ -3696,7 +3842,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "Number 5 still alive Sudoku",
@@ -3713,7 +3861,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "numberedrooms",
@@ -3791,7 +3941,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -3808,7 +3960,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -3842,7 +3996,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "odd labyrinth",
@@ -3851,7 +4007,8 @@
         "9x9": "There must be at least one continuous path of cells containing only odd digits that travels orthogonally from the top-left corner (r1c1) to the bottom-right corner (r9c9)."
       },
       "tags": [
-        "parity"
+        "parity",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -3924,7 +4081,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -3975,7 +4134,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -4026,7 +4187,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -4043,7 +4206,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -4094,7 +4259,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -4111,7 +4278,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "outside",
@@ -4153,7 +4322,9 @@
           "Place number clues outside the grid."
         ]
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -4191,7 +4362,9 @@
           "Place number clues outside the grid."
         ]
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "outsideparity",
@@ -4201,7 +4374,8 @@
       },
       "tags": [
         "outside",
-        "parity"
+        "parity",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -4322,7 +4496,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "Same parity Sudoku",
@@ -4423,7 +4599,8 @@
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and outlined region. Some cells belong to multiple rows and/or columns."
       },
       "tags": [
-        "irregular"
+        "irregular",
+        "math"
       ],
       "status": "hidden",
       "scratchGeneratable": false,
@@ -4449,7 +4626,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "pencilmarks",
@@ -4480,7 +4659,8 @@
       },
       "tags": [
         "converse",
-        "neighbour"
+        "neighbour",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -4543,7 +4723,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -4560,7 +4742,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -4577,7 +4761,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "pointtonext",
@@ -4586,7 +4772,8 @@
         "9x9": "If digit N is placed in a cell with an arrow, digit N+1 must be placed in one of the cells pointed by the arrow."
       },
       "tags": [
-        "direction"
+        "direction",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -4604,7 +4791,8 @@
         "9x9": "If digit N is placed in a cell with an arrow, digit N-1 must be placed in one of the cells pointed by the arrow."
       },
       "tags": [
-        "direction"
+        "direction",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -4666,7 +4854,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -4683,7 +4873,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -4700,7 +4892,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "primesums",
@@ -4716,7 +4910,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "product",
@@ -4752,7 +4948,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "productframe",
@@ -4814,7 +5012,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "product little killer",
@@ -4856,7 +5056,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "quadmax",
@@ -4913,7 +5115,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "quadro",
@@ -4988,7 +5192,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5005,7 +5211,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5022,7 +5230,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5039,7 +5249,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5066,7 +5278,8 @@
       },
       "tags": [
         "consecutive",
-        "line"
+        "line",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -5087,7 +5300,8 @@
       },
       "tags": [
         "consecutive",
-        "region"
+        "region",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -5116,7 +5330,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5191,7 +5407,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5208,7 +5426,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "sandwich",
@@ -5267,7 +5487,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "search9",
@@ -5392,7 +5614,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5409,7 +5633,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5426,7 +5652,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5445,23 +5673,7 @@
       },
       "tags": []
     },
-    {
-      "otherNames": "",
-      "id": "singleparityskyscrapers",
-      "name": "Single Parity Skyscrapers",
-      "rules": {
-        "9x9": "Each digit represents the height of a building. The clues outside the grid indicate either the number of even-heighted buildings or number of odd-heighted buildings visible from the corresponding direction, or both. A taller building will hide any shorter buildings behind it."
-      },
-      "status": "planned",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "outside"
-        ],
-        "instructions": []
-      },
-      "tags": []
-    },
+   
     {
       "id": "skyscraper",
       "name": "Skyscraper",
@@ -5515,7 +5727,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "slotmachine",
@@ -5553,7 +5767,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "smallestneighbours",
@@ -5591,7 +5807,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "solokiller",
@@ -5648,7 +5866,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "squarewheel",
@@ -5683,7 +5903,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5710,7 +5932,8 @@
       },
       "tags": [
         "line",
-        "neighbour"
+        "neighbour",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -5793,7 +6016,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "Star Battle Sudoku",
@@ -5827,7 +6052,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "sum",
@@ -5863,7 +6090,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5880,7 +6109,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5897,7 +6128,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5915,7 +6148,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "sumdetector",
@@ -5977,7 +6212,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -5994,7 +6231,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6011,7 +6250,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6028,7 +6269,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6045,7 +6288,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6062,7 +6307,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6079,7 +6326,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6134,7 +6383,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6151,7 +6402,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "symmetricunequal",
@@ -6203,7 +6456,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "Product 1st digit Sudoku",
@@ -6220,7 +6475,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "thermo",
@@ -6258,7 +6515,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6275,7 +6534,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6292,7 +6553,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6301,15 +6564,17 @@
       "rules": {
         "9x9": "Each 3x3 box is also a grid for a Tic-Tac-Toe game. A game is won by placing three odd digits or three even digits in a horizontal, vertical or diagonal line. Each 3x3 box contains exactly one winning combination and this combination is marked by a grey line."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "line"
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "tightfit",
@@ -6364,7 +6629,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "toroidal",
@@ -6399,7 +6666,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "touchy",
@@ -6410,7 +6679,8 @@
       "tags": [
         "classiclookalike",
         "consecutive",
-        "neighbour"
+        "neighbour",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -6491,14 +6761,16 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
       "id": "twindetector",
       "name": "Twin Detector",
       "rules": {
-        "9x9": "Wherever the number in the cell equals to a total of any amount of the closest numbers in any direction, there is an arrow pointing to that direction possible arrows are given)."
+        "9x9": "Wherever the number in the cell equals to a total of any amount of the closest numbers in any direction, there is an arrow pointing to that direction. All possible arrows are given."
       },
       "status": "available",
       "scratchGeneratable": false,
@@ -6508,7 +6780,7 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": ["converse"]
     },
     {
       "id": "twodigitprimenumbers",
@@ -6524,7 +6796,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6558,7 +6832,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6592,7 +6868,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6609,7 +6887,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6644,7 +6924,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "wheel",
@@ -6692,7 +6974,7 @@
       "rules": {
         "9x9": "One wildcard. Cells with '>' contain digits greater than wildcard. Cells with '<' contain digits smaller than wildcard."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6700,7 +6982,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "windoku",
@@ -6738,7 +7022,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6755,7 +7041,9 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "otherNames": "",
@@ -6897,7 +7185,9 @@
           "Drag across cells to make a cage, then use Killer Sum on its upper-left corner."
         ]
       },
-      "tags": []
+      "tags": [
+        "math"
+      ]
     },
     {
       "id": "anti king",
@@ -6926,7 +7216,8 @@
         "9x9": "Outside clues indicate the sum of the 2nd, 3rd, and 4th cells in that row or column in that direction."
       },
       "tags": [
-        "outside"
+        "outside",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -6962,7 +7253,8 @@
         "9x9": "Outside clues indicate the sum of the immediate neighbors of the digit 9 in that row or column."
       },
       "tags": [
-        "outside"
+        "outside",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -6980,7 +7272,8 @@
         "9x9": "Outside clues indicate the count of consecutive adjacent pairs in that row or column."
       },
       "tags": [
-        "outside"
+        "outside",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -6998,7 +7291,8 @@
         "9x9": "Outside clues indicate the count of neighboring cells in that row or column that contain a digit greater than their neighbor in that direction."
       },
       "tags": [
-        "outside"
+        "outside",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -7016,7 +7310,8 @@
         "9x9": "Outside clues indicate the sum of at least one pair of neighboring cells in that row or column."
       },
       "tags": [
-        "outside"
+        "outside",
+        "math"
       ],
       "status": "available",
       "scratchGeneratable": false,
@@ -7028,6 +7323,7 @@
       }
     },
     {
+      "otherNames": "Single Parity Skyscrapers",
       "id": "parityskyscrapers",
       "name": "Parity Sky Scrapers",
       "rules": {
@@ -7069,7 +7365,9 @@
       "rules": {
         "9x9": "Place a digit from 0-8 in each empty cell in the grid such that each row, column and marked 3x3 box contains each digit exactly once."
       },
-      "tags": [],
+      "tags": [
+        "math"
+      ],
       "status": "available",
       "scratchGeneratable": false,
       "inputType": {
