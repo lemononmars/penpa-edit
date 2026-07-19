@@ -138,6 +138,12 @@ export function inputModesFor(variation: Variation) {
 
 /** Human-readable source shown on each generated variant reference page. */
 function cspImplementationFor(variation: Variation) {
+    if (variation.value === "zones") {
+        return "Returns true when every digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
+    }
+    if (variation.value === "somewhere") {
+        return "Returns true when the digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
+    }
     const implementations: Record<string, string> = {
         classic: `validatePartial(board) {\n  return rows(board).every(assignedDigitsAreDistinct)\n    && columns(board).every(assignedDigitsAreDistinct)\n    && boxes(board).every(assignedDigitsAreDistinct);\n}`,
         "anti diagonal": `validatePartial(board, diagonal) {\n  const counts = digitCounts(board, diagonal);\n  return Object.keys(counts).length <= 3 && Object.values(counts).every(count => count <= 3);\n}\nvalidateComplete(board, diagonal) {\n  return Object.values(digitCounts(board, diagonal)).sort().join() === "3,3,3";\n}`,
@@ -425,6 +431,12 @@ export function cspConstraintFunctionFor(variation: Variation) {
 
 /** Executable-style regression examples displayed on every variant detail page. */
 export function solverTestCasesFor(variation: Variation) {
+    if (variation.value === "zones") {
+        return "A cage with clue '12' must contain both a 1 and a 2. Partial assignments are valid if empty cells remain to accommodate missing digits.";
+    }
+    if (variation.value === "somewhere") {
+        return "A cage with clue '5' must contain at least one 5. Partial assignments are valid if empty cells remain to accommodate the missing digit.";
+    }
     const cases: Record<string, string> = {
         fullrank: `test("ranks complete n-digit numbers", () => {\n  const lines = [\n    { rank: 1, cells: rowCells(1) },\n    { rank: 2, cells: rowCells(2) }\n  ];\n  assert.equal(solve(boardWithRows("123456789", "234567891"), { fullRankGroups: [lines] }).solved, true);\n});`,
         evensandwich: `test("2,4,6 satisfies an outside 4 clue", () => {\n  const board = boardWith({ r1c1: 2, r1c2: 4, r1c3: 6 });\n  const clue = { relation: "evensandwich", cells: rowCells(1), clues: [4] };\n  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);\n  assert.equal(readConstraints(puzzleWithNoOutsideClues("evensandwich")).outsideRelations.every(clue => clue.clues.length === 0), true);\n});`,

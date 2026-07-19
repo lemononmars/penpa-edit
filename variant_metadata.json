@@ -5637,7 +5637,7 @@
       "rules": {
         "9x9": "In each cage, at least one cell has the indicated digit."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6901,7 +6901,7 @@
       "rules": {
         "9x9": "Digits in the top-left corner of a marked cage must all appear in the cage. Digits may repeat in cages."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
