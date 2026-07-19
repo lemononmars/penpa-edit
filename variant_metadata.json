@@ -3252,7 +3252,8 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "cell",
+          "outside"
         ],
         "instructions": []
       },
