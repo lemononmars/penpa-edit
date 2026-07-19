@@ -81,7 +81,7 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     if (variation.value === "xivi") return { position: "edge", mark: "text" };
     if (variation.value === "clock") return { position: "center", mark: "cage" };
     if (variation.value === "slotmachine") return { position: "center", mark: "surface" };
-    if (["wheel", "pinnochio", "little killer", "product little killer", "bouncing x-sums", "czech outsider"].includes(variation.value)) {
+    if (["wheel", "pinnochio", "little killer", "weighted little killer", "product little killer", "bouncing x-sums", "czech outsider"].includes(variation.value)) {
         return { position: "multiple", mark: "multiple" };
     }
     if (variation.value === "mastermind") {
@@ -175,6 +175,7 @@ function cspImplementationFor(variation: Variation) {
         numberedrooms: `validatePartial(board, clue) {\n  const x = cellValue(board, clue.cells[0]);\n  return !x || !cellValue(board, clue.cells[x - 1]) || cellValue(board, clue.cells[x - 1]) === clue.value;\n}`,
         sumframe: `validatePartial(board, clue) {\n  return sumBoundsContain(board, clue.cells, clue.value);\n}`,
         "little killer": `validatePartial(board, clue) {\n  return sumBoundsContain(board, clue.cells, clue.value);\n}`,
+        "weighted little killer": `validatePartial(board, clue) {\n  let min = 0, max = 0;\n  for (let i = 0; i < clue.cells.length; i++) {\n    const val = cellValue(board, clue.cells[i]);\n    const w = clue.weights[i];\n    min += (val || 1) * w;\n    max += (val || board.length) * w;\n  }\n  return min <= clue.value && max >= clue.value;\n}`,
         "product little killer": `validatePartial(board, clue) {\n  return productBoundsContain(board, clue.cells, clue.value);\n}`,
         descriptivepairs: `validatePartial(board, clue) {\n  const x = Math.floor(clue.value / 10), y = clue.value % 10;\n  return cellCanEqual(board, clue.cells[y - 1], x) || cellCanEqual(board, clue.cells[x - 1], y);\n}`,
         outside: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue).filter(Boolean);\n  return clue.clues.every(digit => values.includes(digit) || values.length < clue.cells.length);\n}`,

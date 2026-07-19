@@ -6644,12 +6644,12 @@
     },
     {
       "otherNames": "",
-      "id": "weightedlittlekiller",
+      "id": "weighted little killer",
       "name": "Weighted Little Killer",
       "rules": {
         "9x9": "The clues outside the grid indicate the sum of the digits contained in the cells in the direction of the corresponding arrow. Digits in gray cells have to be counted twice. Digits may repeat within a sum."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
