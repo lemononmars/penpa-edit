@@ -739,7 +739,7 @@ var SudokuSolver = (function() {
         var cages = typeof puzzle.refreshKillerCages === "function" ?
             puzzle.refreshKillerCages("pu_q") : (puzzle.pu_q.killercages || []);
         var regionVariantNames = ["clone", "consecutiveclone", "renban", "windoku",
-            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "number 5 is alive", "sumset", "zones", "somewhere", "sumorproductkiller", "tableaux", "roundoff", "ordering"];
+            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "codedclone", "number 5 is alive", "sumset", "zones", "somewhere", "sumorproductkiller", "tableaux", "roundoff", "ordering"];
         var usesCagedRegions = regionVariantNames.some(function(name) { return variantEnabled(puzzle, name); });
         var regionCages = [];
         for (var k = 0; k < cages.length; k++) {
@@ -870,7 +870,38 @@ var SudokuSolver = (function() {
             });
             constraints.supported.push("codedpairs");
         }
+        if (variantEnabled(puzzle, "codedclone")) {
+            var codedCloneGroups = {};
+            for (var codedCloneIndex = 0; codedCloneIndex < cages.length; codedCloneIndex++) {
+                var cloneCells = pathToCells(puzzle, cages[codedCloneIndex]);
+                var cloneLabel = readCageLabel(puzzle, cages[codedCloneIndex]);
+                if (cloneCells.length > 0 && cloneLabel) {
+                    (codedCloneGroups[cloneLabel] || (codedCloneGroups[cloneLabel] = [])).push(cloneCells);
+                }
+            }
+            Object.keys(codedCloneGroups).forEach(function(label) {
+                var group = codedCloneGroups[label];
+                if (group.length > 1) {
+                    var clones = group.map(function(cage) {
+                        var minRow = Math.min.apply(null, cage.map(function(cell) { return cell.row; }));
+                        var minCol = Math.min.apply(null, cage.map(function(cell) { return cell.col; }));
+                        return cage.map(function(cell) {
+                            return { rowOffset: cell.row - minRow, colOffset: cell.col - minCol, cell: cell };
+                        }).sort(function(first, second) {
+                            return first.rowOffset - second.rowOffset || first.colOffset - second.colOffset;
+                        }).map(function(item) {
+                            return item.cell;
+                        });
+                    });
+                    constraints.cellRelations.push({
+                        relation: "codedclone", clones: clones
+                    });
+                }
+            });
+            constraints.supported.push("codedclone");
+        }
         if (variantEnabled(puzzle, "multiplication")) {
+
             regionCages.forEach(function(cage) {
                 var rows = cage.map(function(cell) { return cell.row; });
                 var topRow = Math.min.apply(null, rows), bottomRow = Math.max.apply(null, rows);

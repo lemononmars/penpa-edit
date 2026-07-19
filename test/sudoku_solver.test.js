@@ -3204,6 +3204,72 @@ test("Unicorn normalizes the constraint array with 81 entries", function() {
 });
 
 
+test("parses Coded Clone", function() {
+    const puzzle = {
+        nx: 9, ny: 9, nx0: 9, ny0: 9, space: [0, 0, 0, 0],
+        activeSudokuVariants: ["classic", "codedclone"],
+        pu_q: {
+            arrows: [], thermo: [], number: {}, numberS: {
+                "404": ["A", 2, "1"],
+                "476": ["A", 2, "1"]
+            }, symbol: {}, line: {}, lineE: {}, cage: {}, surface: {},
+            killercages: [
+                [20, 21, 22],
+                [38, 39, 40]
+            ]
+        },
+        point: {}
+    };
+    const constraints = SudokuSolver.readConstraints(puzzle);
+    assert.deepEqual(constraints.cellRelations, [{
+        relation: "codedclone",
+        clones: [
+            [{ row: 0, col: 0, key: 20 }, { row: 0, col: 1, key: 21 }, { row: 0, col: 2, key: 22 }],
+            [{ row: 2, col: 0, key: 38 }, { row: 2, col: 1, key: 39 }, { row: 2, col: 2, key: 40 }]
+        ]
+    }]);
+    assert.equal(constraints.supported.includes("codedclone"), true);
+});
+
+
+
+test("evaluates Coded Clone assignments", function() {
+    const cell = function(row, col) { return { row: row, col: col }; };
+    const constraints = {
+        cellRelations: [{
+            relation: "codedclone",
+            clones: [
+                [cell(0, 0), cell(0, 1)],
+                [cell(1, 5), cell(1, 6)]
+            ]
+        }]
+    };
+    const solution = boardFromString(
+        "534678912" +
+        "672195348" +
+        "198342567" +
+        "859761423" +
+        "426853791" +
+        "713924856" +
+        "961537284" +
+        "287419635" +
+        "345286179"
+    );
+    // [0,0]=5, [0,1]=3; [1,5]=5, [1,6]=3
+    assert.equal(SudokuCSP.solve(solution, constraints).solved, true);
+
+    const invalidSolution = boardFromString(
+        "534678912" +
+        "672191348" + // changed [1,5]=5 to 1, [1,6]=3 to 3
+        "198342567" +
+        "859761423" +
+        "426853791" +
+        "713924856" +
+        "961537284" +
+        "287419635" +
+        "345286179"
+    );
+    assert.equal(SudokuCSP.solve(invalidSolution, constraints).solved, false);
 test("Braille parsing and CSP validation", () => {
     const puzzle = {
         gridtype: "sudoku",
