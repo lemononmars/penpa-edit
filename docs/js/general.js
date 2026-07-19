@@ -159,9 +159,7 @@ function add_constraints() {
 
 function init_genre_tags() {
     let genre_tags = document.getElementById('genre_tags_opt');
-    for (let child of genre_tags.childNodes) {
-        genre_tags.removeChild(child);
-    }
+    genre_tags.replaceChildren();
     penpa_tags['options_groups'].forEach(function(element, index) {
         let optgroup = document.createElement("optgroup");
         optgroup.label = element;
