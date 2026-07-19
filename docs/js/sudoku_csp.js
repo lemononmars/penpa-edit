@@ -103,7 +103,8 @@ var SudokuCSP = (function() {
         size: SIZE,
         allDigitsMask: ALL_DIGITS,
         cellValue: cellValue,
-        maskToDigits: maskToDigits
+        maskToDigits: maskToDigits,
+        isStarCell: function(cell, starCells) { return (starCells || []).some(function(sc) { return sc.row === cell.row && sc.col === cell.col; }); }
     };
 
 
@@ -181,6 +182,12 @@ var SudokuCSP = (function() {
         var byCell = {};
         var globalEntries = [];
         registeredConstraints().forEach(function(name) {
+            if (name === "outsideRelations" && constraints.starCells) {
+                // inject starCells into outsideRelations clues so they can check it
+                (constraints[name] || []).forEach(function(item) {
+                    item.starCells = constraints.starCells;
+                });
+            }
             var handler = constraintRegistry[name];
             (constraints[name] || []).forEach(function(item) {
                 var entry = { handler: handler, item: item };
@@ -1095,6 +1102,122 @@ var SudokuCSP = (function() {
         }
     });
 
+        registerConstraint("oneKnightStep", {
+        validatePartial: function(board, starts) {
+            var SIZE = board.length;
+            var knightOffsets = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+            for (var index = 0; index < starts.length; index++) {
+                var cell = starts[index];
+                var cellVal = cellValue(board, cell);
+                if (!cellVal) continue;
+                var matchCount = 0;
+                var emptyCount = 0;
+                for (var i = 0; i < knightOffsets.length; i++) {
+                    var r = cell.row + knightOffsets[i][0];
+                    var c = cell.col + knightOffsets[i][1];
+                    if (r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+                        var kVal = cellValue(board, { row: r, col: c });
+                        if (!kVal) emptyCount++;
+                        else if (kVal === cellVal) matchCount++;
+                    }
+                }
+                if (matchCount > 1) return false;
+                if (matchCount === 0 && emptyCount === 0) return false;
+            }
+            return true;
+        },
+        validateComplete: function(board, starts) {
+            var SIZE = board.length;
+            var knightOffsets = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+            for (var index = 0; index < starts.length; index++) {
+                var cell = starts[index];
+                var cellVal = cellValue(board, cell);
+                var matchCount = 0;
+                for (var i = 0; i < knightOffsets.length; i++) {
+                    var r = cell.row + knightOffsets[i][0];
+                    var c = cell.col + knightOffsets[i][1];
+                    if (r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+                        if (cellValue(board, { row: r, col: c }) === cellVal) matchCount++;
+                    }
+                }
+                if (matchCount !== 1) return false;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("repeatedNeighbors", {
+        validatePartial: function(board, shaded) {
+            var SIZE = board.length;
+            var offsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var isShaded = false;
+                    for (var i = 0; i < shaded.length; i++) {
+                        if (shaded[i].row === r && shaded[i].col === c) {
+                            isShaded = true;
+                            break;
+                        }
+                    }
+                    var counts = {};
+                    var emptyCount = 0;
+                    for (var i = 0; i < offsets.length; i++) {
+                        var nr = r + offsets[i][0];
+                        var nc = c + offsets[i][1];
+                        if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+                            var v = cellValue(board, {row: nr, col: nc});
+                            if (!v) emptyCount++;
+                            else counts[v] = (counts[v] || 0) + 1;
+                        }
+                    }
+                    var maxCount = 0;
+                    for (var k in counts) {
+                        if (counts[k] > maxCount) maxCount = counts[k];
+                    }
+                    if (isShaded) {
+                        if (maxCount + emptyCount < 2) return false;
+                    } else {
+                        if (maxCount > 1) return false;
+                    }
+                }
+            }
+            return true;
+        },
+        validateComplete: function(board, shaded) {
+            var SIZE = board.length;
+            var offsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var isShaded = false;
+                    for (var i = 0; i < shaded.length; i++) {
+                        if (shaded[i].row === r && shaded[i].col === c) {
+                            isShaded = true;
+                            break;
+                        }
+                    }
+                    var counts = {};
+                    for (var i = 0; i < offsets.length; i++) {
+                        var nr = r + offsets[i][0];
+                        var nc = c + offsets[i][1];
+                        if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+                            var v = cellValue(board, {row: nr, col: nc});
+                            if (v) counts[v] = (counts[v] || 0) + 1;
+                        }
+                    }
+                    var hasRepeated = false;
+                    for (var k in counts) {
+                        if (counts[k] > 1) {
+                            hasRepeated = true;
+                            break;
+                        }
+                    }
+                    if (isShaded !== hasRepeated) return false;
+                }
+            }
+            return true;
+        }
+    });
+
     registerConstraint("escapeStarts", {
         validatePartial: function(board, starts) {
             return true;
@@ -1716,6 +1839,62 @@ var SudokuCSP = (function() {
         }
     });
 
+    function checkSumsSequence(values, clueSequence, variant) {
+        var memo = {};
+
+        function search(index, clueIndex, currentSum) {
+            if (index === values.length) {
+                if (currentSum > 0) {
+                    if (clueIndex < clueSequence.length && currentSum === clueSequence[clueIndex]) {
+                        clueIndex++;
+                    } else {
+                        return false;
+                    }
+                }
+                return clueIndex === clueSequence.length;
+            }
+
+            var state = index + "," + clueIndex + "," + currentSum;
+            if (memo[state] !== undefined) return memo[state];
+
+            var v = values[index];
+            var possibleValues = v ? [v] : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+            for (var i = 0; i < possibleValues.length; i++) {
+                var val = possibleValues[i];
+                var canBeValid = false;
+                var canBeSeparator = false;
+
+                if (variant === "oddsums") {
+                    if (val % 2 === 1) canBeValid = true;
+                    else canBeSeparator = true;
+                } else if (variant === "japanesesums") {
+                    canBeValid = true;
+                    canBeSeparator = true;
+                }
+
+                if (canBeSeparator) {
+                    if (currentSum > 0) {
+                        if (clueIndex < clueSequence.length && currentSum === clueSequence[clueIndex]) {
+                            if (search(index + 1, clueIndex + 1, 0)) return memo[state] = true;
+                        }
+                    } else {
+                        if (search(index + 1, clueIndex, 0)) return memo[state] = true;
+                    }
+                }
+
+                if (canBeValid) {
+                    var newSum = currentSum + val;
+                    if (clueIndex < clueSequence.length && newSum <= clueSequence[clueIndex]) {
+                        if (search(index + 1, clueIndex, newSum)) return memo[state] = true;
+                    }
+                }
+            }
+            return memo[state] = false;
+        }
+
+        return search(0, 0, 0);
+    }
     registerConstraint("outsideRelations", {
         validatePartial: function(board, clue) {
             if (clue.relation === "mastermind") {
@@ -1836,6 +2015,10 @@ var SudokuCSP = (function() {
             if (clue.relation === "numberedrooms") {
                 var room = values[0];
                 return !room || room > values.length || !values[room - 1] || values[room - 1] === clue.value;
+            }
+            if (clue.relation === "oddsums" || clue.relation === "japanesesums") {
+                var values = clue.cells.map(function(cell) { return cellValue(board, cell); });
+                return checkSumsSequence(values, clue.value, clue.relation);
             }
             if (clue.relation === "xsums") {
                 var count = values[0];
@@ -1977,6 +2160,18 @@ var SudokuCSP = (function() {
                 }
                 return running > 21;
             }
+            if (clue.relation === "starproduct") {
+                var starValues = [];
+                for (var st_i = 0; st_i < clue.cells.length; st_i++) {
+                    var cell = clue.cells[st_i];
+                    if (helpers.isStarCell(cell, clue.starCells)) {
+                         starValues.push(values[st_i]);
+                    }
+                }
+                var product = starValues.reduce(function(total, value) { return total * (value || 1); }, 1);
+                var productOpen = starValues.filter(function(value) { return !value; }).length;
+                return product <= clue.value && clue.value % product === 0 && (productOpen > 0 || product === clue.value);
+            }
             if (clue.relation === "productframe") {
                 var productValues = values.slice(0, 3);
                 var product = productValues.reduce(function(total, value) { return total * (value || 1); }, 1);
@@ -2042,6 +2237,22 @@ var SudokuCSP = (function() {
                 if (extrema.some(function(value) { return !value; })) return true;
                 var highest = Math.max.apply(null, extrema), lowest = Math.min.apply(null, extrema);
                 return clue.relation === "maximin" ? highest - lowest === clue.value : highest + lowest === clue.value;
+            }
+            if (clue.relation === "weighted little killer") {
+                var wSum = 0, maxPossibleSum = 0;
+                var hasBlanks = false;
+                for (var i = 0; i < values.length; i++) {
+                    var weight = clue.weights[i];
+                    if (values[i]) {
+                        wSum += values[i] * weight;
+                        maxPossibleSum += values[i] * weight;
+                    } else {
+                        hasBlanks = true;
+                        wSum += 1 * weight;
+                        maxPossibleSum += SIZE * weight;
+                    }
+                }
+                return wSum <= clue.value && maxPossibleSum >= clue.value && (hasBlanks || wSum === clue.value);
             }
             if (clue.relation === "little killer" || clue.relation === "product little killer") {
                 if (clue.relation === "little killer") {

@@ -1411,6 +1411,48 @@ test("normalizes the newly implemented catalog variants for the solver", functio
     });
 });
 
+
+
+test("Japanese Sums and Odd Sums normalize multi-digit clues and validate sequences", function() {
+    const rawJapanese = {
+        nx0: 9, ny0: 9,
+        activeSudokuVariants: ["japanesesums"],
+        pu_q: { number: { 15: ["12 5", 1, "1"] }, numberS: {}, symbol: {}, thermo: [], nobulbthermo: [], killercages: [] }
+    };
+    const japaneseConstraints = SudokuSolver.readConstraints(rawJapanese);
+    assert.equal(japaneseConstraints.supported.includes("japanesesums"), true);
+    assert.deepEqual(japaneseConstraints.outsideRelations[0].value, [12, 5]);
+
+    const rawOdd = {
+        nx0: 9, ny0: 9,
+        activeSudokuVariants: ["oddsums"],
+        pu_q: { number: { 15: ["3, 7", 1, "10"] }, numberS: {}, symbol: {}, thermo: [], nobulbthermo: [], killercages: [] }
+    };
+    const oddConstraints = SudokuSolver.readConstraints(rawOdd);
+    assert.equal(oddConstraints.supported.includes("oddsums"), true);
+    assert.deepEqual(oddConstraints.outsideRelations[0].value, [3, 7]);
+
+    const board = Array.from({length: 9}, () => Array(9).fill(0));
+    board[0] = [5, 2, 1, 3, 4, 6, 8, 7, 9];
+
+    // Odd Sums: 5 (odd), 2 (even), 1+3=4 (odd), 4,6,8 (even), 7+9=16 (odd)
+    const oddClue = { relation: "oddsums", value: [5, 4, 16], cells: board[0].map((_, i) => ({row: 0, col: i})) };
+    assert.equal(SudokuCSP.solve(board, { outsideRelations: [oddClue] }).solved, true);
+
+    const oddWrong = { relation: "oddsums", value: [5, 4, 15], cells: board[0].map((_, i) => ({row: 0, col: i})) };
+    assert.equal(SudokuCSP.solve(board, { outsideRelations: [oddWrong] }).solved, false);
+
+    const boardJap = Array.from({length: 9}, () => Array(9).fill(0));
+    boardJap[0] = [5, 7, 1, 2, 3, 9, 8, 4, 6];
+
+    // Japanese Sums: 5+7=12 (shaded), 1 (unshaded), 2+3=5 (shaded)
+    const japClue = { relation: "japanesesums", value: [12, 5], cells: boardJap[0].map((_, i) => ({row: 0, col: i})) };
+    assert.equal(SudokuCSP.solve(boardJap, { outsideRelations: [japClue] }).solved, true);
+
+    const japWrong = { relation: "japanesesums", value: [13, 5], cells: boardJap[0].map((_, i) => ({row: 0, col: i})) };
+    assert.equal(SudokuCSP.solve(boardJap, { outsideRelations: [japWrong] }).solved, false);
+});
+
 test("reads Coded letters from the upper-left corner slot", function() {
     const puzzle = {
         nx0: 13,
@@ -1604,6 +1646,7 @@ test("validates Little Killer, unordered outside, extrema, diagonal, and multipl
         outsideRelations: [
             { relation: "little killer", value: 12, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }] },
             { relation: "product little killer", value: 35, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }] },
+            { relation: "weighted little killer", value: 19, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }], weights: [1, 2] },
             { relation: "descriptivepairs", value: 51, cells: row },
             { relation: "outside", clues: [4, 5, 3], cells: row.slice(0, 3) },
             { relation: "outside234", clues: [6, 3, 4], cells: row.slice(1, 4) },
@@ -1670,6 +1713,25 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
                 assert.equal(constraints.outsideRelations[0].relation, variant);
                 assert.deepEqual(constraints.outsideRelations[0].cells.slice(0, 2),
                     [{ row: 0, col: 0 }, { row: 1, col: 1 }]);
+            });
+        });
+    });
+
+    ["weighted little killer"].forEach(function(variant) {
+        [
+            [6, "arrow_B_G", 2],
+            [[0, 0, 0, 0, 0, 1, 0, 0], "arrow_eight", 2]
+        ].forEach(function(arrow) {
+            ["1", "10"].forEach(function(numberMode) {
+                const constraints = SudokuSolver.readConstraints(puzzle(variant, { pu_q: {
+                    number: { 14: [14, 1, numberMode] }, symbol: { 14: arrow },
+                    surface: { [ (1 + 2)*13 + (1 + 2) ]: 1 }
+                } }));
+                assert.equal(constraints.outsideRelations[0].relation, variant);
+                assert.deepEqual(constraints.outsideRelations[0].cells.slice(0, 2),
+                    [{ row: 0, col: 0 }, { row: 1, col: 1 }]);
+                assert.deepEqual(constraints.outsideRelations[0].weights.slice(0, 2),
+                    [1, 2]);
             });
         });
     });
@@ -1747,6 +1809,11 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
         pu_q: { number: { 15: ["2-5:4", 1, "6"] } }
     }));
     assert.deepEqual(distances.outsideRelations[0].value, { x: 2, y: 5, z: 4 });
+
+    const starProductParsed = SudokuSolver.readConstraints(puzzle("starproduct", {
+        pu_q: { number: { 15: ["12", 1, "1"] }, symbol: { 11: [0, "star", 2] } } // cellKey 11 is row=0, col=0
+    }));
+    assert.equal(starProductParsed.outsideRelations[0].value, 12);
 
     const fullOrHalf = SudokuSolver.readConstraints(puzzle("fullorhalf", {
         point: { 300: { neighbor: [28, 29, 41, 42] } },
@@ -2246,6 +2313,12 @@ test("validates new variants: bouncing x-sums, czech outsider, diagonal sum is n
     const distanceClue = { relation: "distances", value: { x: 5, y: 9, z: 6 }, cells: row };
     assert.equal(SudokuCSP.solve(solved, { outsideRelations: [distanceClue] }).solved, true);
     assert.equal(SudokuCSP.solve(solved, { outsideRelations: [{ ...distanceClue, value: { x: 5, y: 9, z: 5 } }] }).solved, false);
+
+    // 6. starproduct
+    const starCells = [{ row: 0, col: 0 }, { row: 0, col: 2 }]; // 5 and 4 = 20
+    const starClue = { relation: "starproduct", value: 20, cells: row };
+    assert.equal(SudokuCSP.solve(solved, { supported: ["starproduct"], outsideRelations: [starClue], starCells }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { supported: ["starproduct"], outsideRelations: [{ ...starClue, value: 30 }], starCells }).solved, false);
 });
 
 test("validates new variants: faded kropki, first seen odd/even, max ascending, fives, frame-diagonal, odd labyrinth, even passage, equal sum line, german whispers, factor lines", function() {
@@ -2695,6 +2768,26 @@ test("validates inequality triples, difference pairs, Ten/Eleven, tens products,
 });
 
 
+test("One Knight Step validates exactly one knight match", function() {
+    const solved = boardFromString(
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179" +
+        "592648317" + "178395246" + "634172598"
+    );
+    // 8 is at 0,0. Knights for 0,0 are 1,2 (6) and 2,1 (1). 8 is not a knight step away.
+    assert.equal(SudokuCSP.solve(solved, { oneKnightStep: [{row:0, col:0}] }).solved, false);
+});
+
+test("Repeated Neighbors validates duplicate orthogonal neighbors", function() {
+    const solved = boardFromString(
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179" +
+        "592648317" + "178395246" + "634172598"
+    );
+    // 8 at 0,0 has neighbors (0,1)=5, (1,0)=4. All unique.
+    assert.equal(SudokuCSP.solve(solved, { repeatedNeighbors: [{row: 0, col: 0}] }).solved, false);
+});
+
 test("validates new variants: zones, somewhere", function() {
     var board = [
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -2738,8 +2831,7 @@ test("validates new variants: zones, somewhere", function() {
         ]
     }).solved, false);
 });
-    }).solved, false);
-});
+
 test("Sum or Product Killer", function() {
     const solved = boardFromString(
         "534678912" + "672195348" + "198342567" +
@@ -2751,6 +2843,11 @@ test("Sum or Product Killer", function() {
 });
 
 test("validates ordering variants", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
 
     // Sum is 8 (5 + 3) -> 8 is valid
     assert.equal(SudokuCSP.solve(solved, {

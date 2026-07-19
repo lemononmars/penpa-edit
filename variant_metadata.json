@@ -1079,7 +1079,7 @@
       "rules": {
         "9x9": "Follow classic sudoku rules. Number in a cell with a circle tells you how many distinct digits you can find in up to 8 neighbouring cells (sharing edge or corner). Number in a cell with a cross tells you how many distinct digits you can find in up to 4 diagonally neighbouring cells (sharing a corner). All possible circles and crosses are drawn."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -2712,7 +2712,7 @@
       "rules": {
         "9x9": "The shaded region must be at least once cloned somewhere else in the grid, without rotation or reflection and the digits in the corresponding cells must be equal. The clone may overlap partially with the original shaded region, but not completely. Digits may repeat in a shaded region."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -2923,7 +2923,7 @@
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each of the empty cells so that each digit appears exactly once in each row, column and 3x3 outlined region. Shade some cells in the grid such that the numbers outside the grid represent sums of digits in white cells of the corresponding row or column. If there is more than one sum, the given order is valid and there must be at least one shaded cell between the sums. Some shaded cells may be given."
       },
-      "status": "infeasible",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -3012,7 +3012,7 @@
       "rules": {
         "9x9": "Two cells which are a knight's move apart must not contain digits which add to either 5 or 15."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -3052,7 +3052,7 @@
       "rules": {
         "9x9": "Whenever two adjacent numbers in a row or column add up to 50 or 100, this is marked by a letter L or C respectively, placed on the line separating the two numbers. Two-digit numbers are formed by combining adjacent digits (reading from left to right or top to bottom only). All possible letters L and C are marked. Row and column strings which would result in the leters L and C coinciding (e.g. 5248) will not occur."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -3248,7 +3248,7 @@
       "rules": {
         "9x9": "The grey central box serves as an exemplar. The four corner boxes are compared to the central one and the result of comparison is given in the style of a Mastermind puzzle for every triplet of cells. A black dot is given for every identical digit in the same position. A white dot is given for an identical digit but not in the same position. A cross means that there is nothing in common in this triplet."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -3833,7 +3833,7 @@
       "rules": {
         "9x9": "An even digit placed in a cell with a circle indicates the number of even digits placed in the surrounding 8 cells. An odd digit placed in a cell with a circle indicates the number of odd digits placed in the surrounding cells. Numbers placed in cells without a circle may have either of these properties."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -3932,7 +3932,7 @@
       "rules": {
         "9x9": " The clues outside the grid indicate, in the correct order, the sums of all consecutive sequences of odd numbers in the corresponding direction. There must be at least one even number placed between two such sequences."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -5141,7 +5141,7 @@
       "rules": {
         "9x9": "All cells having the same digit(s) more than once as orthogonal neighbors are shaded. (If a cell is not shaded, it cannot have any digits repeated as orthogonal neighbors.)"
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -5691,7 +5691,7 @@
       "rules": {
         "9x9": "The clues outside the grid indicate the product of the digits placed in the cells containing stars in the corresponding row or column."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6646,12 +6646,12 @@
     },
     {
       "otherNames": "",
-      "id": "weightedlittlekiller",
+      "id": "weighted little killer",
       "name": "Weighted Little Killer",
       "rules": {
         "9x9": "The clues outside the grid indicate the sum of the digits contained in the cells in the direction of the corresponding arrow. Digits in gray cells have to be counted twice. Digits may repeat within a sum."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [

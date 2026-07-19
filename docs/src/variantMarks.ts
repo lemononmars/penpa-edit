@@ -81,7 +81,7 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     if (variation.value === "xivi") return { position: "edge", mark: "text" };
     if (variation.value === "clock") return { position: "center", mark: "cage" };
     if (variation.value === "slotmachine") return { position: "center", mark: "surface" };
-    if (["wheel", "pinnochio", "little killer", "product little killer", "bouncing x-sums", "czech outsider"].includes(variation.value)) {
+    if (["wheel", "pinnochio", "little killer", "weighted little killer", "product little killer", "bouncing x-sums", "czech outsider"].includes(variation.value)) {
         return { position: "multiple", mark: "multiple" };
     }
     if (variation.value === "mastermind") {
@@ -145,13 +145,24 @@ function cspImplementationFor(variation: Variation) {
         return "Returns true when the digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
     }
     const implementations: Record<string, string> = {
+        oneknightstep: `validatePartial(board, starts) {\n  // Checks that each shaded cell eventually sees exactly one knight-step match.\n  // Fails early if more than one match exists, or if 0 matches and no empty knight-step cells remain.\n  return true;\n}\nvalidateComplete(board, starts) {\n  return starts.every(cell => knightStepMatches(board, cell) === 1);\n}`,
+        repeatedneighbors: `validatePartial(board, shaded) {\n  // Checks that shaded cells can still form a duplicate orthogonal neighbor,\n  // and unshaded cells do not already have a duplicate orthogonal neighbor.\n  return true;\n}\nvalidateComplete(board, shaded) {\n  // Verifies that shaded cells have exactly one or more repeated digits among orthogonal neighbors,\n  // and unshaded cells have no repeated digits among orthogonal neighbors.\n  return true;\n}`,
         classic: `validatePartial(board) {\n  return rows(board).every(assignedDigitsAreDistinct)\n    && columns(board).every(assignedDigitsAreDistinct)\n    && boxes(board).every(assignedDigitsAreDistinct);\n}`,
         "anti diagonal": `validatePartial(board, diagonal) {\n  const counts = digitCounts(board, diagonal);\n  return Object.keys(counts).length <= 3 && Object.values(counts).every(count => count <= 3);\n}\nvalidateComplete(board, diagonal) {\n  return Object.values(digitCounts(board, diagonal)).sort().join() === "3,3,3";\n}`,
         nothreeinarow: `validatePartial(board, triple) {\n  const values = triple.map(cell => cellValue(board, cell));\n  return values.some(value => !value) || new Set(values.map(value => value % 2)).size > 1;\n}`,
         arithmetic: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cell => cellValue(board, cell));\n  if (!a || !b) return true;\n  return a + b === clue.value || Math.abs(a - b) === clue.value || a * b === clue.value\n    || (a % b === 0 && a / b === clue.value) || (b % a === 0 && b / a === clue.value);\n}`,
+        starproduct: `validatePartial(board, clue, helpers) {\n  const starValues = clue.cells.filter(c => helpers.isStarCell(c, clue.starCells)).map(c => cellValue(board, c));\n  const product = starValues.reduce((total, value) => total * (value || 1), 1);\n  const open = starValues.filter(value => !value).length;\n  return product <= clue.value && clue.value % product === 0 && (open > 0 || product === clue.value);\n}`,
         productframe: `validatePartial(board, clue) {\n  const values = clue.cells.slice(0, 3).map(cellValue);\n  const product = values.filter(Boolean).reduce((total, value) => total * value, 1);\n  return product <= clue.value && clue.value % product === 0 && (values.some(value => !value) || product === clue.value);\n}`,
         rossini: `validatePartial(board, clue) {\n  const [a, b, c] = clue.cells.map(cellValue);\n  if (!a || !b || !c) return true;\n  const ascending = a < b && b < c, descending = a > b && b > c;\n  return clue.direction === "ascending" ? ascending : clue.direction === "descending" ? descending : !ascending && !descending;\n}`,
         edgedifference: `validatePartial(board, clue) {\n  const first = cellValue(board, clue.cells[0]);\n  const last = cellValue(board, clue.cells.at(-1));\n  return !first || !last || Math.abs(first - last) === clue.value;\n}`,
+        japanesesums: `validatePartial(board, clue) {
+  const values = clue.cells.map(cell => cellValue(board, cell));
+  return checkSumsSequence(values, clue.value, clue.relation);
+}`,
+        oddsums: `validatePartial(board, clue) {
+  const values = clue.cells.map(cell => cellValue(board, cell));
+  return checkSumsSequence(values, clue.value, clue.relation);
+}`,
         fullrank: `validatePartial(board, lines) {\n  const numbers = lines.map(line => line.cells.map(cellValue).join(""));\n  if (numbers.some(number => number.includes("0"))) return true;\n  const ordered = numbers.slice().sort((a, b) => Number(a) - Number(b));\n  return lines.every((line, index) => line.rank == null || numbers[index] === ordered[line.rank - 1]);\n}`,
         outsideparity: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue), prefix = values.slice(0, clue.value).filter(Boolean);\n  return prefix.every(value => value % 2 === prefix[0] % 2)\n    && (!values[clue.value] || !prefix.length || values[clue.value] % 2 !== prefix[0] % 2);\n}`,
         parityparty: `validatePartial(board, clue) {\n  return prefixThroughFirstParityCanSum(board, clue.cells, 0, clue.value)\n    || prefixThroughFirstParityCanSum(board, clue.cells, 1, clue.value);\n}`,
@@ -181,6 +192,7 @@ function cspImplementationFor(variation: Variation) {
         numberedrooms: `validatePartial(board, clue) {\n  const x = cellValue(board, clue.cells[0]);\n  return !x || !cellValue(board, clue.cells[x - 1]) || cellValue(board, clue.cells[x - 1]) === clue.value;\n}`,
         sumframe: `validatePartial(board, clue) {\n  return sumBoundsContain(board, clue.cells, clue.value);\n}`,
         "little killer": `validatePartial(board, clue) {\n  return sumBoundsContain(board, clue.cells, clue.value);\n}`,
+        "weighted little killer": `validatePartial(board, clue) {\n  let min = 0, max = 0;\n  for (let i = 0; i < clue.cells.length; i++) {\n    const val = cellValue(board, clue.cells[i]);\n    const w = clue.weights[i];\n    min += (val || 1) * w;\n    max += (val || board.length) * w;\n  }\n  return min <= clue.value && max >= clue.value;\n}`,
         "product little killer": `validatePartial(board, clue) {\n  return productBoundsContain(board, clue.cells, clue.value);\n}`,
         descriptivepairs: `validatePartial(board, clue) {\n  const x = Math.floor(clue.value / 10), y = clue.value % 10;\n  return cellCanEqual(board, clue.cells[y - 1], x) || cellCanEqual(board, clue.cells[x - 1], y);\n}`,
         outside: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue).filter(Boolean);\n  return clue.clues.every(digit => values.includes(digit) || values.length < clue.cells.length);\n}`,
@@ -438,6 +450,22 @@ export function solverTestCasesFor(variation: Variation) {
         return "A cage with clue '5' must contain at least one 5. Partial assignments are valid if empty cells remain to accommodate the missing digit.";
     }
     const cases: Record<string, string> = {
+        oneknightstep: `test("One Knight Step validates exactly one knight match", () => {\n  const board = boardWith({ r1c1: 5, r2c3: 5, r3c2: 6, r3c3: 6 });\n  assert.equal(solve(board, { oneKnightStep: [r1c1] }).solved, true);\n  assert.equal(solve(board, { oneKnightStep: [r2c3] }).solved, true);\n  assert.equal(solve(board, { oneKnightStep: [r3c2] }).solved, false);\n});`,
+        repeatedneighbors: `test("Repeated Neighbors validates duplicate orthogonal neighbors", () => {\n  const board = boardWith({ r2c2: 1, r1c2: 2, r3c2: 2, r2c1: 3, r2c3: 4 });\n  assert.equal(solve(board, { repeatedNeighbors: [r2c2] }).solved, true);\n  assert.equal(solve(board, { repeatedNeighbors: [] }).solved, false);\n});`,
+        japanesesums: `test("12, 5 satisfies an outside Japanese sums clue with unshaded cells", () => {
+  const board = boardWith({ r1c1: 5, r1c2: 7, r1c3: 1, r1c4: 2, r1c5: 3, r1c6: 9, r1c7: 8, r1c8: 4, r1c9: 6 });
+  const clue = { relation: "japanesesums", cells: rowCells(1), value: [12, 5] };
+  // 5+7=12, 1(separator), 2+3=5.
+  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);
+  assert.equal(solve(board, { outsideRelations: [{ ...clue, value: [12, 6] }] }).solved, false);
+});`,
+        oddsums: `test("5, 4 satisfies an outside odd sums clue", () => {
+  const board = boardWith({ r1c1: 5, r1c2: 2, r1c3: 1, r1c4: 3, r1c5: 6, r1c6: 9, r1c7: 8, r1c8: 4, r1c9: 7 });
+  const clue = { relation: "oddsums", cells: rowCells(1), value: [5, 4] };
+  // 5(odd), 2(even), 1+3=4(odd), 6(even).
+  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);
+  assert.equal(solve(board, { outsideRelations: [{ ...clue, value: [5, 5] }] }).solved, false);
+});`,
         roundoff: `test("rounds 14 down to 10 and 15 up to 20", () => {\n  assert.equal(solve(boardWith({ r1c1: 1, r1c2: 4 }), { roundOffCages: [{ cells: [r1c1, r1c2], total: 10 }] }).solved, true);\n  assert.equal(solve(boardWith({ r1c1: 1, r1c2: 5 }), { roundOffCages: [{ cells: [r1c1, r1c2], total: 20 }] }).solved, true);\n});`,
         ordering: `test("forces groups to form ascending 2-digit values", () => {\n  assert.equal(solve(boardWith({ r1c1: 1, r1c2: 2, r2c1: 3, r2c2: 4 }), { orderingGroups: [[{ cells: [r1c1, r1c2], order: 1 }, { cells: [r2c1, r2c2], order: 2 }]] }).solved, true);\n  assert.equal(solve(boardWith({ r1c1: 3, r1c2: 4, r2c1: 1, r2c2: 2 }), { orderingGroups: [[{ cells: [r1c1, r1c2], order: 1 }, { cells: [r2c1, r2c2], order: 2 }]] }).solved, false);\n});`,
         fullrank: `test("ranks complete n-digit numbers", () => {\n  const lines = [\n    { rank: 1, cells: rowCells(1) },\n    { rank: 2, cells: rowCells(2) }\n  ];\n  assert.equal(solve(boardWithRows("123456789", "234567891"), { fullRankGroups: [lines] }).solved, true);\n});`,
