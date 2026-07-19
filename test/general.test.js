@@ -61,6 +61,7 @@ test("encrypt_data and decrypt_data functionality", () => {
         assert.equal(decrypted, testCase, `Decrypted data should match original for: ${testCase.substring(0, 20)}`);
     }
 });
+
 test("request_shortlink functionality", async () => {
     // Save original global.$
     const originalDollar = global.$;
@@ -98,41 +99,51 @@ test("request_shortlink functionality", async () => {
 });
 
 test("errorMsg and infoMsg functionality", () => {
-    // Setup Identity
-    global.Identity = {
-        errorTitle: "Error Test",
-        infoTitle: "Info Test",
-        okButtonText: "OK Test"
-    };
+    // Save original globals
+    const originalSwal = global.Swal;
+    const originalIdentity = global.Identity;
 
-    let swalCalledWith = null;
+    try {
+        let lastSwalArgs = null;
 
-    // Setup Mock Swal
-    global.Swal = {
-        fire: (args) => {
-            swalCalledWith = args;
-        }
-    };
+        global.Swal = {
+            fire: (args) => {
+                lastSwalArgs = args;
+            }
+        };
 
-    // Test errorMsg
-    general.errorMsg("Error HTML content");
-    assert.deepEqual(swalCalledWith, {
-        title: global.Identity.errorTitle,
-        html: "Error HTML content",
-        icon: 'error',
-        confirmButtonText: global.Identity.okButtonText
-    });
+        global.Identity = {
+            errorTitle: "Error Title",
+            infoTitle: "Info Title",
+            okButtonText: "OK"
+        };
 
-    swalCalledWith = null;
+        // Test errorMsg
+        general.errorMsg("Test error HTML");
+        assert.deepEqual(lastSwalArgs, {
+            title: "Error Title",
+            html: "Test error HTML",
+            icon: "error",
+            confirmButtonText: "OK"
+        });
 
-    // Test infoMsg
-    general.infoMsg("Info HTML content");
-    assert.deepEqual(swalCalledWith, {
-        title: global.Identity.infoTitle,
-        html: "Info HTML content",
-        icon: 'info',
-        confirmButtonText: global.Identity.okButtonText
-    });
+        // Test infoMsg
+        lastSwalArgs = null;
+        general.infoMsg("Test info HTML");
+        assert.deepEqual(lastSwalArgs, {
+            title: "Info Title",
+            html: "Test info HTML",
+            icon: "info",
+            confirmButtonText: "OK"
+        });
+
+    } finally {
+        // Restore original globals
+        global.Swal = originalSwal;
+        global.Identity = originalIdentity;
+    }
+});
+
 test("get_download_filename functionality", () => {
     // Save original global.document
     const originalDocument = global.document;
@@ -169,6 +180,8 @@ test("get_download_filename functionality", () => {
         // Restore original global.document
         global.document = originalDocument;
     }
+});
+
 test("validate_filename functionality", () => {
     // Reset global state
     global.lastErrorMsg = null;
