@@ -312,12 +312,12 @@
 
     // 5.2 Names and labels
 
-    // TODO: Define @typedef for Encoding: {name:string,labels:Array.<string>}
+    /** @typedef {{name:string,labels:Array.<string>}} Encoding */
     // https://github.com/google/closure-compiler/issues/247
 
     /**
      * @param {string} label The encoding label.
-     * @return {?{name:string,labels:Array.<string>}}
+     * @return {?Encoding}
      */
     function getEncoding(label) {
         // 1. Remove any leading and trailing ASCII whitespace from label.
@@ -337,7 +337,7 @@
      * @const
      * @type {!Array.<{
      *          heading: string,
-     *          encodings: Array.<{name:string,labels:Array.<string>}>
+     *          encodings: Array.<Encoding>
      *        }>}
      */
     var encodings = [{
@@ -786,7 +786,7 @@
     ];
 
     // Label to encoding registry.
-    /** @type {Object.<string,{name:string,labels:Array.<string>}>} */
+    /** @type {Object.<string,Encoding>} */
     var label_to_encoding = {};
     encodings.forEach(function(category) {
         category.encodings.forEach(function(encoding) {
