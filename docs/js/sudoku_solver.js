@@ -583,6 +583,8 @@ var SudokuSolver = (function() {
             divisiblebythree: [],
             oddtapa: [],
             tictactoe: [],
+            roundOffCages: [],
+            orderingGroups: [],
             supported: ["classic"]
         };
         if (!puzzle || !puzzle.pu_q) {
@@ -683,7 +685,7 @@ var SudokuSolver = (function() {
         var cages = typeof puzzle.refreshKillerCages === "function" ?
             puzzle.refreshKillerCages("pu_q") : (puzzle.pu_q.killercages || []);
         var regionVariantNames = ["clone", "consecutiveclone", "renban", "windoku",
-            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "number 5 is alive", "sumset"];
+            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "number 5 is alive", "sumset", "roundoff", "ordering"];
         var usesCagedRegions = regionVariantNames.some(function(name) { return variantEnabled(puzzle, name); });
         var regionCages = [];
         for (var k = 0; k < cages.length; k++) {
@@ -730,6 +732,32 @@ var SudokuSolver = (function() {
         if (variantEnabled(puzzle, "sumset")) {
             if (regionCages.length) constraints.sumsetCages = [regionCages];
             constraints.supported.push("sumset");
+        }
+        if (variantEnabled(puzzle, "roundoff")) {
+            for (var k = 0; k < cages.length; k++) {
+                var cageCells = pathToCells(puzzle, cages[k]);
+                var clue = readKillerTotal(puzzle, cages[k]);
+                if (cageCells.length === 2 && clue !== undefined) {
+                    constraints.roundOffCages.push({ cells: cageCells, total: clue });
+                }
+            }
+            constraints.supported.push("roundoff");
+        }
+        if (variantEnabled(puzzle, "ordering")) {
+            var orderingCages = [];
+            for (var k = 0; k < cages.length; k++) {
+                var cageCells = pathToCells(puzzle, cages[k]);
+                var label = readCageLabel(puzzle, cages[k]);
+                var order = parseInt(label, 10);
+                if (cageCells.length >= 2 && !isNaN(order)) {
+                    orderingCages.push({ cells: cageCells, order: order });
+                }
+            }
+            if (orderingCages.length > 0) {
+                orderingCages.sort(function(a, b) { return a.order - b.order; });
+                constraints.orderingGroups.push(orderingCages);
+            }
+            constraints.supported.push("ordering");
         }
         if (variantEnabled(puzzle, "codedpairs")) {
             var codedPairGroups = {};

@@ -4102,7 +4102,7 @@
       "rules": {
         "9x9": "Follow classic sudoku rules. There is a set of 16 different two-digit numbers in the marked cages. Their order from the lowest to the highest is given by small numbers from 1 to 16."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -5199,7 +5199,7 @@
       "rules": {
         "9x9": "Each cage clue indicates the value of rounding off the two-digit number within that cage to the nearest multiple of 10. Numbers ending in digits 1-4 are rounded down, while numbers ending in digits 5-9 are rounded up."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
