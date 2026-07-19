@@ -1760,7 +1760,7 @@ async function request_shortlink(url) {
     // The # content cannot be sent to server, So if anyone wants to use automatic shorten, use ?
     url = url.replace("#", "?");
     try {
-        return $.get('https://tinyurl.com/api-create.php?url=' + url, function(link, status) {
+        return await $.get('https://tinyurl.com/api-create.php?url=' + url, function(link, status) {
             if (status === "success") {
                 return link;
             }
@@ -3458,5 +3458,5 @@ if (!String.prototype.startsWith) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { isEmpty };
+    module.exports = { isEmpty, request_shortlink };
 }
