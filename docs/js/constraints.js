@@ -1,5 +1,5 @@
 const penpa_constraints = {
-    "implemented_sudoku": ["classic", "odd even", "odd even bridge", "odd even count", "odd even sum", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv", "battenburg", "skyscraper", "sandwich", "uniquerectangles", "sumskyscrapers", "sumsandwich", "positionsums", "inequalitytriples", "oneortwodifferencepairs", "teneleven", "tenspositionproducts", "fullorhalf", "samesum", "xaverage", "triplesum"],
+    "implemented_sudoku": ["classic", "odd even", "odd even bridge", "odd even count", "odd even sum", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv", "battenburg", "skyscraper", "sandwich", "uniquerectangles", "sumskyscrapers", "sumsandwich", "positionsums", "inequalitytriples", "oneortwodifferencepairs", "teneleven", "tenspositionproducts", "fullorhalf", "samesum", "xaverage", "triplesum", "partitionedsums", "oneknightstep"],
     "options_groups": ["general", "sudoku", "puzzle"],
     "options": {
         "general": ["all"],
@@ -36,6 +36,8 @@ const penpa_constraints = {
             "samesum",
             "xaverage",
             "triplesum",
+            "partitionedsums",
+            "oneknightstep",
             "windoku",
             "odd even bridge",
             "odd even count",
@@ -288,6 +290,20 @@ const penpa_constraints = {
             "submodeset": ["1", "1"],
             "styleset": ["", 1],
             "outside": true
+        },
+        "partitionedsums": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_number_lb", "sub_number1_lb"],
+            "modeset": ["sudoku", "number"],
+            "submodeset": ["1", "1"],
+            "styleset": ["", 1],
+            "outside": true
+        },
+        "oneknightstep": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb", "mo_surface_lb"],
+            "modeset": ["sudoku", "surface"],
+            "submodeset": ["1", ""],
+            "styleset": ["", 1]
         },
         "sumsandwich": {
             "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",

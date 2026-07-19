@@ -553,6 +553,8 @@ var SudokuSolver = (function() {
             symmetricUnequal: [],
             stretchedThermos: [],
             productKillers: [],
+            sumOrProductKillers: [],
+            tableauxCages: [],
             soloKillerGroups: [],
             outsideRelations: [],
             fullRankGroups: [],
@@ -683,7 +685,7 @@ var SudokuSolver = (function() {
         var cages = typeof puzzle.refreshKillerCages === "function" ?
             puzzle.refreshKillerCages("pu_q") : (puzzle.pu_q.killercages || []);
         var regionVariantNames = ["clone", "consecutiveclone", "renban", "windoku",
-            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "number 5 is alive", "sumset"];
+            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "number 5 is alive", "sumset", "sumorproductkiller", "tableaux"];
         var usesCagedRegions = regionVariantNames.some(function(name) { return variantEnabled(puzzle, name); });
         var regionCages = [];
         for (var k = 0; k < cages.length; k++) {
@@ -713,6 +715,21 @@ var SudokuSolver = (function() {
                 if (productCells.length && productTotal) constraints.productKillers.push({ cells: productCells, total: productTotal });
             }
             constraints.supported.push("productkiller");
+        }
+        if (variantEnabled(puzzle, "sumorproductkiller")) {
+            for (var spIndex = 0; spIndex < cages.length; spIndex++) {
+                var spCells = pathToCells(puzzle, cages[spIndex]);
+                var spTotal = readKillerTotal(puzzle, cages[spIndex]);
+                if (spCells.length && spTotal) constraints.sumOrProductKillers.push({ cells: spCells, total: spTotal });
+            }
+            constraints.supported.push("sumorproductkiller");
+        }
+        if (variantEnabled(puzzle, "tableaux")) {
+            for (var tIndex = 0; tIndex < cages.length; tIndex++) {
+                var tCells = pathToCells(puzzle, cages[tIndex]);
+                if (tCells.length) constraints.tableauxCages.push({ cells: tCells });
+            }
+            constraints.supported.push("tableaux");
         }
         if (variantEnabled(puzzle, "solokiller")) {
             if (regionCages.length) constraints.soloKillerGroups.push(regionCages);
@@ -1157,10 +1174,6 @@ var SudokuSolver = (function() {
         if (variantEnabled(puzzle, "difference2neighbours")) {
             constraints.difference2Neighbours = shadedCells.slice();
             constraints.supported.push("difference2neighbours");
-        }
-        if (variantEnabled(puzzle, "offset")) {
-            constraints.offsetStarts = shadedCells.slice();
-            constraints.supported.push("offset");
         }
         if (variantEnabled(puzzle, "oneknightstep")) {
             constraints.oneKnightStep = shadedCells.slice();
@@ -2344,7 +2357,7 @@ var SudokuSolver = (function() {
             "fullrank", "outsideparity", "parityparty", "serbianframe", "median", "descriptivepairs",
             "maximin", "minimax", "ascendingstarters", "before9", "before1after9", "firstseenoddeven", "maxascending",
             "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers",
-            "position", "sumnexttonine", "wrongoutsidesum", "doublesandwich", "xaverage", "triplesum"].filter(function(name) {
+            "position", "sumnexttonine", "wrongoutsidesum", "doublesandwich", "xaverage", "triplesum", "partitionedsums"].filter(function(name) {
             return variantEnabled(puzzle, name);
         });
         if (activeOutsideVariants.length) {
@@ -2383,6 +2396,32 @@ var SudokuSolver = (function() {
                             outsideColumn, outsideBoxHeight, "column", "before1");
                         addOutsideRelation((outsideStartCol - 2) + (outsideStartRow + outsideIndex) * puzzle.nx0,
                             outsideRow, outsideBoxWidth, "row", "before1");
+                    } else if (variant === "partitionedsums") {
+                        var colClues = [];
+                        var rowClues = [];
+                        for (var layer = 0; layer < 5; layer++) {
+                            var topClue = outsideClueFromEntry(numbers[(outsideStartCol + outsideIndex) + (outsideStartRow - 1 - layer) * puzzle.nx0]);
+                            if (topClue !== null) colClues.unshift(topClue);
+
+                            var leftClue = outsideClueFromEntry(numbers[(outsideStartCol - 1 - layer) + (outsideStartRow + outsideIndex) * puzzle.nx0]);
+                            if (leftClue !== null) rowClues.unshift(leftClue);
+                        }
+                        if (colClues.length > 0) {
+                            constraints.outsideRelations.push({
+                                relation: "partitionedsums",
+                                value: colClues,
+                                cells: outsideColumn,
+                                axis: "column"
+                            });
+                        }
+                        if (rowClues.length > 0) {
+                            constraints.outsideRelations.push({
+                                relation: "partitionedsums",
+                                value: rowClues,
+                                cells: outsideRow,
+                                axis: "row"
+                            });
+                        }
                     } else if (variant === "triplesum") {
                         addOutsideRelation((outsideStartCol - 1) + (outsideStartRow + outsideIndex) * puzzle.nx0,
                             outsideRow, outsideBoxWidth, "row");
@@ -3561,7 +3600,7 @@ var SudokuTools = (function() {
         "before1after9", "ascendingstarters", "bouncing x-sums", "czech outsider", "distances",
         "firstseenoddeven", "maxascending", "framediagonal",
         "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers", "pointingdifferents",
-        "sumskyscrapers", "sumsandwich", "positionsums", "xaverage", "triplesum"];
+        "sumskyscrapers", "sumsandwich", "positionsums", "xaverage", "triplesum", "partitionedsums"];
 
     function variantConflict(variant) {
         var variants = activeVariants();
