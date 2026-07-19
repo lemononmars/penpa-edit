@@ -146,6 +146,14 @@ function cspImplementationFor(variation: Variation) {
         productframe: `validatePartial(board, clue) {\n  const values = clue.cells.slice(0, 3).map(cellValue);\n  const product = values.filter(Boolean).reduce((total, value) => total * value, 1);\n  return product <= clue.value && clue.value % product === 0 && (values.some(value => !value) || product === clue.value);\n}`,
         rossini: `validatePartial(board, clue) {\n  const [a, b, c] = clue.cells.map(cellValue);\n  if (!a || !b || !c) return true;\n  const ascending = a < b && b < c, descending = a > b && b > c;\n  return clue.direction === "ascending" ? ascending : clue.direction === "descending" ? descending : !ascending && !descending;\n}`,
         edgedifference: `validatePartial(board, clue) {\n  const first = cellValue(board, clue.cells[0]);\n  const last = cellValue(board, clue.cells.at(-1));\n  return !first || !last || Math.abs(first - last) === clue.value;\n}`,
+        japanesesums: `validatePartial(board, clue) {
+  const values = clue.cells.map(cell => cellValue(board, cell));
+  return checkSumsSequence(values, clue.value, clue.relation);
+}`,
+        oddsums: `validatePartial(board, clue) {
+  const values = clue.cells.map(cell => cellValue(board, cell));
+  return checkSumsSequence(values, clue.value, clue.relation);
+}`,
         fullrank: `validatePartial(board, lines) {\n  const numbers = lines.map(line => line.cells.map(cellValue).join(""));\n  if (numbers.some(number => number.includes("0"))) return true;\n  const ordered = numbers.slice().sort((a, b) => Number(a) - Number(b));\n  return lines.every((line, index) => line.rank == null || numbers[index] === ordered[line.rank - 1]);\n}`,
         outsideparity: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue), prefix = values.slice(0, clue.value).filter(Boolean);\n  return prefix.every(value => value % 2 === prefix[0] % 2)\n    && (!values[clue.value] || !prefix.length || values[clue.value] % 2 !== prefix[0] % 2);\n}`,
         parityparty: `validatePartial(board, clue) {\n  return prefixThroughFirstParityCanSum(board, clue.cells, 0, clue.value)\n    || prefixThroughFirstParityCanSum(board, clue.cells, 1, clue.value);\n}`,
@@ -423,6 +431,20 @@ export function cspConstraintFunctionFor(variation: Variation) {
 /** Executable-style regression examples displayed on every variant detail page. */
 export function solverTestCasesFor(variation: Variation) {
     const cases: Record<string, string> = {
+        japanesesums: `test("12, 5 satisfies an outside Japanese sums clue with unshaded cells", () => {
+  const board = boardWith({ r1c1: 5, r1c2: 7, r1c3: 1, r1c4: 2, r1c5: 3, r1c6: 9, r1c7: 8, r1c8: 4, r1c9: 6 });
+  const clue = { relation: "japanesesums", cells: rowCells(1), value: [12, 5] };
+  // 5+7=12, 1(separator), 2+3=5.
+  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);
+  assert.equal(solve(board, { outsideRelations: [{ ...clue, value: [12, 6] }] }).solved, false);
+});`,
+        oddsums: `test("5, 4 satisfies an outside odd sums clue", () => {
+  const board = boardWith({ r1c1: 5, r1c2: 2, r1c3: 1, r1c4: 3, r1c5: 6, r1c6: 9, r1c7: 8, r1c8: 4, r1c9: 7 });
+  const clue = { relation: "oddsums", cells: rowCells(1), value: [5, 4] };
+  // 5(odd), 2(even), 1+3=4(odd), 6(even).
+  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);
+  assert.equal(solve(board, { outsideRelations: [{ ...clue, value: [5, 5] }] }).solved, false);
+});`,
         fullrank: `test("ranks complete n-digit numbers", () => {\n  const lines = [\n    { rank: 1, cells: rowCells(1) },\n    { rank: 2, cells: rowCells(2) }\n  ];\n  assert.equal(solve(boardWithRows("123456789", "234567891"), { fullRankGroups: [lines] }).solved, true);\n});`,
         evensandwich: `test("2,4,6 satisfies an outside 4 clue", () => {\n  const board = boardWith({ r1c1: 2, r1c2: 4, r1c3: 6 });\n  const clue = { relation: "evensandwich", cells: rowCells(1), clues: [4] };\n  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);\n  assert.equal(readConstraints(puzzleWithNoOutsideClues("evensandwich")).outsideRelations.every(clue => clue.clues.length === 0), true);\n});`,
         coded: `test("Coded reads the upper-left numberS corner", () => {\n  const constraints = readConstraints(codedPuzzle({ r1c1: "A", r1c2: "A", r2c1: "B" }));\n  assert.deepEqual(constraints.codedGroups[0].groups, [[r1c1, r1c2], [r2c1]]);\n});`,

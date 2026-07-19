@@ -360,6 +360,21 @@ var SudokuSolver = (function() {
         return 0;
     }
 
+
+    function outsideSequenceFromEntry(entry) {
+        if (!entry || ["1", "6", "10"].indexOf(String(entry[2])) === -1) return null;
+        var str = String(entry[0]).trim();
+        if (!str) return null;
+        var parts = str.split(/[\s,\n]+/);
+        var seq = [];
+        for (var i = 0; i < parts.length; i++) {
+            var val = parseInt(parts[i], 10);
+            if (!Number.isFinite(val) || val < 0) return null;
+            seq.push(val);
+        }
+        return seq;
+    }
+
     function outsideClueFromEntry(entry) {
         // entry[2] "1" = normal number, "10" = long (multi-digit) number
         if (!entry || ["1", "6", "10"].indexOf(entry[2]) === -1) return null;
@@ -2344,7 +2359,7 @@ var SudokuSolver = (function() {
             "fullrank", "outsideparity", "parityparty", "serbianframe", "median", "descriptivepairs",
             "maximin", "minimax", "ascendingstarters", "before9", "before1after9", "firstseenoddeven", "maxascending",
             "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers",
-            "position", "sumnexttonine", "wrongoutsidesum", "doublesandwich", "xaverage", "triplesum"].filter(function(name) {
+            "position", "sumnexttonine", "wrongoutsidesum", "doublesandwich", "xaverage", "triplesum", "japanesesums", "oddsums"].filter(function(name) {
             return variantEnabled(puzzle, name);
         });
         if (activeOutsideVariants.length) {
@@ -2358,7 +2373,7 @@ var SudokuSolver = (function() {
             var fullRankEntries = [];
             activeOutsideVariants.forEach(function(variant) {
                 function addOutsideRelation(key, cells, frameLength, axis, relation) {
-                    var clue = outsideClueFromEntry(numbers[key]);
+                    var clue = (variant === "japanesesums" || variant === "oddsums") ? outsideSequenceFromEntry(numbers[key]) : outsideClueFromEntry(numbers[key]);
                     if (variant === "fullrank") {
                         fullRankEntries.push({ rank: clue, cells: cells });
                         return;
@@ -2391,7 +2406,7 @@ var SudokuSolver = (function() {
                             outsideColumn, outsideBoxHeight, "column");
                         addOutsideRelation((outsideStartCol - 1) + (outsideStartRow + outsideIndex) * puzzle.nx0,
                             outsideRow, outsideBoxWidth, "row");
-                        var leftTopOnly = ["edgedifference", "before9", "nextto9", "outsideconsecutive", "outsidekiller", "parityskyscrapers"].indexOf(variant) !== -1;
+                        var leftTopOnly = ["edgedifference", "before9", "nextto9", "outsideconsecutive", "outsidekiller", "parityskyscrapers", "japanesesums", "oddsums"].indexOf(variant) !== -1;
                         if (!leftTopOnly) {
                             addOutsideRelation((outsideStartCol + outsideIndex) + (outsideStartRow + SIZE) * puzzle.nx0,
                                 outsideColumn.slice().reverse(), outsideBoxHeight, "column");
@@ -3561,7 +3576,7 @@ var SudokuTools = (function() {
         "before1after9", "ascendingstarters", "bouncing x-sums", "czech outsider", "distances",
         "firstseenoddeven", "maxascending", "framediagonal",
         "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers", "pointingdifferents",
-        "sumskyscrapers", "sumsandwich", "positionsums", "xaverage", "triplesum"];
+        "sumskyscrapers", "sumsandwich", "positionsums", "xaverage", "triplesum", "japanesesums", "oddsums"];
 
     function variantConflict(variant) {
         var variants = activeVariants();

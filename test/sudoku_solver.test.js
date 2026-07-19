@@ -1411,6 +1411,48 @@ test("normalizes the newly implemented catalog variants for the solver", functio
     });
 });
 
+
+
+test("Japanese Sums and Odd Sums normalize multi-digit clues and validate sequences", function() {
+    const rawJapanese = {
+        nx0: 9, ny0: 9,
+        activeSudokuVariants: ["japanesesums"],
+        pu_q: { number: { 15: ["12 5", 1, "1"] }, numberS: {}, symbol: {}, thermo: [], nobulbthermo: [], killercages: [] }
+    };
+    const japaneseConstraints = SudokuSolver.readConstraints(rawJapanese);
+    assert.equal(japaneseConstraints.supported.includes("japanesesums"), true);
+    assert.deepEqual(japaneseConstraints.outsideRelations[0].value, [12, 5]);
+
+    const rawOdd = {
+        nx0: 9, ny0: 9,
+        activeSudokuVariants: ["oddsums"],
+        pu_q: { number: { 15: ["3, 7", 1, "10"] }, numberS: {}, symbol: {}, thermo: [], nobulbthermo: [], killercages: [] }
+    };
+    const oddConstraints = SudokuSolver.readConstraints(rawOdd);
+    assert.equal(oddConstraints.supported.includes("oddsums"), true);
+    assert.deepEqual(oddConstraints.outsideRelations[0].value, [3, 7]);
+
+    const board = Array.from({length: 9}, () => Array(9).fill(0));
+    board[0] = [5, 2, 1, 3, 4, 6, 8, 7, 9];
+
+    // Odd Sums: 5 (odd), 2 (even), 1+3=4 (odd), 4,6,8 (even), 7+9=16 (odd)
+    const oddClue = { relation: "oddsums", value: [5, 4, 16], cells: board[0].map((_, i) => ({row: 0, col: i})) };
+    assert.equal(SudokuCSP.solve(board, { outsideRelations: [oddClue] }).solved, true);
+
+    const oddWrong = { relation: "oddsums", value: [5, 4, 15], cells: board[0].map((_, i) => ({row: 0, col: i})) };
+    assert.equal(SudokuCSP.solve(board, { outsideRelations: [oddWrong] }).solved, false);
+
+    const boardJap = Array.from({length: 9}, () => Array(9).fill(0));
+    boardJap[0] = [5, 7, 1, 2, 3, 9, 8, 4, 6];
+
+    // Japanese Sums: 5+7=12 (shaded), 1 (unshaded), 2+3=5 (shaded)
+    const japClue = { relation: "japanesesums", value: [12, 5], cells: boardJap[0].map((_, i) => ({row: 0, col: i})) };
+    assert.equal(SudokuCSP.solve(boardJap, { outsideRelations: [japClue] }).solved, true);
+
+    const japWrong = { relation: "japanesesums", value: [13, 5], cells: boardJap[0].map((_, i) => ({row: 0, col: i})) };
+    assert.equal(SudokuCSP.solve(boardJap, { outsideRelations: [japWrong] }).solved, false);
+});
+
 test("reads Coded letters from the upper-left corner slot", function() {
     const puzzle = {
         nx0: 13,
