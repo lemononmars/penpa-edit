@@ -3458,5 +3458,5 @@ if (!String.prototype.startsWith) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { isEmpty };
+    module.exports = { isEmpty, encrypt_data, decrypt_data };
 }
