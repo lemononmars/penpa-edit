@@ -907,52 +907,61 @@ class Puzzle_square extends Puzzle {
             let xdirection, ydirection, commonend; // x is column, y is row
             let reduce_straight = 0.44 * this.size,
                 reduce_diagonal = 0.316 * this.size;
-            for (var i = 0; i < this[pu].thermo.length; i++) {
-                if (this[pu].thermo[i] && this[pu].thermo[i][0]) {
+            let thermos = this[pu].thermo;
+            let thermos_col = this[pu + "_col"].thermo;
+            for (var i = 0; i < thermos.length; i++) {
+                let curr_thermo = thermos[i];
+                if (curr_thermo && curr_thermo[0]) {
                     this.ctx.strokeStyle = Color.TRANSPARENTBLACK;
-                    if (UserSettings.custom_colors_on && this[pu + "_col"].thermo[i]) {
-                        this.ctx.fillStyle = this[pu + "_col"].thermo[i];
+                    let thermo_col = UserSettings.custom_colors_on && thermos_col && thermos_col[i] ? thermos_col[i] : null;
+                    if (thermo_col) {
+                        this.ctx.fillStyle = thermo_col;
                     } else {
                         this.ctx.fillStyle = Color.GREY_LIGHT;
                     }
-                    this.draw_circle(this.ctx, this.point[this[pu].thermo[i][0]].x, this.point[this[pu].thermo[i][0]].y, 0.4);
+                    let p0 = this.point[curr_thermo[0]];
+                    this.draw_circle(this.ctx, p0.x, p0.y, 0.4);
                     this.ctx.setLineDash([]);
                     this.ctx.lineCap = "square";
-                    if (UserSettings.custom_colors_on && this[pu + "_col"].thermo[i]) {
-                        this.ctx.strokeStyle = this[pu + "_col"].thermo[i];
+                    if (thermo_col) {
+                        this.ctx.strokeStyle = thermo_col;
                     } else {
                         this.ctx.strokeStyle = Color.GREY_LIGHT;
                     }
                     this.ctx.lineWidth = this.size * 0.4;
                     this.ctx.beginPath();
-                    this.ctx.moveTo(this.point[this[pu].thermo[i][0]].x, this.point[this[pu].thermo[i][0]].y);
-                    for (var j = 1; j < this[pu].thermo[i].length; j++) {
-                        if (j < (this[pu].thermo[i].length - 1)) {
-                            this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x, this.point[this[pu].thermo[i][j]].y);
+                    this.ctx.moveTo(p0.x, p0.y);
+                    let curr_len = curr_thermo.length;
+                    for (var j = 1; j < curr_len; j++) {
+                        let th_i_j = curr_thermo[j];
+                        let pj = this.point[th_i_j];
+                        if (j < (curr_len - 1)) {
+                            this.ctx.lineTo(pj.x, pj.y);
                         } else {
-                            commonend = this.find_common(pu, i, this[pu].thermo[i][j], "thermo");
+                            commonend = this.find_common(pu, i, th_i_j, "thermo");
                             if (commonend) {
-                                xdirection = this.point[this[pu].thermo[i][j]].x - this.point[this[pu].thermo[i][j - 1]].x;
-                                ydirection = this.point[this[pu].thermo[i][j]].y - this.point[this[pu].thermo[i][j - 1]].y;
+                                let pj_prev = this.point[curr_thermo[j - 1]];
+                                xdirection = pj.x - pj_prev.x;
+                                ydirection = pj.y - pj_prev.y;
                                 if (xdirection == 0 && ydirection < 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x, this.point[this[pu].thermo[i][j]].y + reduce_straight);
+                                    this.ctx.lineTo(pj.x, pj.y + reduce_straight);
                                 } else if (xdirection < 0 && ydirection > 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x + reduce_diagonal, this.point[this[pu].thermo[i][j]].y - reduce_diagonal);
+                                    this.ctx.lineTo(pj.x + reduce_diagonal, pj.y - reduce_diagonal);
                                 } else if (xdirection > 0 && ydirection == 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x - reduce_straight, this.point[this[pu].thermo[i][j]].y);
+                                    this.ctx.lineTo(pj.x - reduce_straight, pj.y);
                                 } else if (xdirection > 0 && ydirection > 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x - reduce_diagonal, this.point[this[pu].thermo[i][j]].y - reduce_diagonal);
+                                    this.ctx.lineTo(pj.x - reduce_diagonal, pj.y - reduce_diagonal);
                                 } else if (xdirection == 0 && ydirection > 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x, this.point[this[pu].thermo[i][j]].y - reduce_straight);
+                                    this.ctx.lineTo(pj.x, pj.y - reduce_straight);
                                 } else if (xdirection > 0 && ydirection < 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x - reduce_diagonal, this.point[this[pu].thermo[i][j]].y + reduce_diagonal);
+                                    this.ctx.lineTo(pj.x - reduce_diagonal, pj.y + reduce_diagonal);
                                 } else if (xdirection < 0 && ydirection == 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x + reduce_straight, this.point[this[pu].thermo[i][j]].y);
+                                    this.ctx.lineTo(pj.x + reduce_straight, pj.y);
                                 } else if (xdirection < 0 && ydirection < 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x + reduce_diagonal, this.point[this[pu].thermo[i][j]].y + reduce_diagonal);
+                                    this.ctx.lineTo(pj.x + reduce_diagonal, pj.y + reduce_diagonal);
                                 }
                             } else {
-                                this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x, this.point[this[pu].thermo[i][j]].y);
+                                this.ctx.lineTo(pj.x, pj.y);
                             }
                         }
                     }
