@@ -1163,7 +1163,7 @@ class Puzzle {
     // - conflicts
     // - all pu_q and pu_a puzzle elements
     // - embedded solution (single and multiple)
-    // 
+    //
     // Currently used for resizing the board.
     // Or in the future to insert or delete a row/col, given the proper translate function.
     translate_puzzle_elements(translate_fn) {
@@ -1632,8 +1632,6 @@ class Puzzle {
             document.getElementById('mode_' + mode).style.display = 'inline-block';
         }
         let m = mode === 'multicolor' ? 'surface' : mode;
-        const styleVariable = document.getElementById('style_variable');
-        if (styleVariable) styleVariable.textContent = m;
         if (document.getElementById('style_' + m)) {
             document.getElementById('style_' + m).style.display = 'inline-block';
         }
@@ -1716,6 +1714,9 @@ class Puzzle {
     submode_check(name, skipredraw = false) {
         if (document.getElementById(name)) {
             document.getElementById(name).checked = true;
+            const subVariable = document.getElementById('sub_variable');
+            const subLabel = document.getElementById(name + '_lb');
+            if (subVariable && subLabel) subVariable.textContent = subLabel.textContent;
             this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] = document.getElementById(name).value;
             this.cursolcheck(); // override
 
@@ -1739,6 +1740,9 @@ class Puzzle {
     stylemode_check(name) {
         if (document.getElementById(name)) {
             document.getElementById(name).checked = true;
+            const styleVariable = document.getElementById('style_variable');
+            const styleLabel = document.getElementById(name + '_lb');
+            if (styleVariable && styleLabel) styleVariable.textContent = styleLabel.textContent;
             this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1] = parseInt(document.getElementById(name).value);
             panel_pu.draw_panel(); // Panel update
         }
@@ -1821,6 +1825,10 @@ class Puzzle {
     }
 
     submode_reset() {
+        const subVariable = document.getElementById('sub_variable');
+        if (subVariable) subVariable.textContent = '';
+        const styleVariable = document.getElementById('style_variable');
+        if (styleVariable) styleVariable.textContent = '';
         document.getElementById('mode_line').style.display = 'none';
         document.getElementById('mode_lineE').style.display = 'none';
         document.getElementById('mode_number').style.display = 'none';
@@ -13035,7 +13043,7 @@ class Puzzle {
 
             // Kinda weird hack: if there's too few colors, duplicate each of them. This
             // is because the basic drawing technique we use for multi-color where each color
-            // gets a triangle. If there's too few colors, the outer edges of the triangles 
+            // gets a triangle. If there's too few colors, the outer edges of the triangles
             // might be inside the cell, leaving some blank area.
             while (colors.length < 3) {
                 let new_colors = [],
@@ -13147,7 +13155,7 @@ class Puzzle {
             if (i2 != -1) {
                 this.draw_circle(this.ctx, this.point[i2].x, this.point[i2].y, 0.3);
             }
-            // Preview the line 
+            // Preview the line
             if (i1 != -1 && i2 != -1) {
                 this.ctx.beginPath();
                 this.ctx.moveTo(this.point[i1].x, this.point[i1].y);

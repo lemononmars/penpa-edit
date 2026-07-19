@@ -99,11 +99,13 @@ test("intersection clue modes use their required Penpa primitives", function() {
     assert.match(app, /\["equalsums", "equalproducts", "equaldifferences", "equalratios"\][\s\S]*?value: "4", label: "×"/);
 });
 
-test("mode controls expose the active style variable name", function() {
+test("mode controls expose the active style and sub variable names", function() {
     const index = fs.readFileSync(path.join(root, "docs/index.html"), "utf8");
     const puzzle = fs.readFileSync(path.join(root, "docs/js/class_p.js"), "utf8");
     assert.match(index, /id="style_txt">Style: <span id="style_variable"/);
-    assert.match(puzzle, /style_variable[\s\S]*?textContent\s*=\s*m/);
+    assert.match(index, /id="sub_txt">Sub: <span id="sub_variable"/);
+    assert.match(puzzle, /styleVariable[\s\S]*?textContent\s*=\s*styleLabel/);
+    assert.match(puzzle, /subVariable[\s\S]*?textContent\s*=\s*subLabel/);
 });
 
 test("wiki exposes stored solving examples without legacy screenshots", function() {
