@@ -3375,5 +3375,5 @@ if (!String.prototype.startsWith) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { isEmpty, request_shortlink };
+    module.exports = { isEmpty, encrypt_data, decrypt_data, request_shortlink };
 }
