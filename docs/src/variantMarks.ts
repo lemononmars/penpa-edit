@@ -138,6 +138,48 @@ export function inputModesFor(variation: Variation) {
 
 /** Human-readable source shown on each generated variant reference page. */
 function cspImplementationFor(variation: Variation) {
+    if (variation.value === "threedigitnumberskiller") {
+        return `validatePartial: function(board, cage, helpers) {
+            var seen = 0;
+            for (var i = 0; i < cage.cells.length; i++) {
+                var digit = cellValue(board, cage.cells[i]);
+                if (digit) {
+                    var bit = 1 << digit;
+                    if (seen & bit) return false;
+                    seen |= bit;
+                }
+            }
+
+            if (cage.total === null || isNaN(cage.total) || !cage.lines || !cage.lines.length) return true;
+
+            for (var i = 0; i < cage.lines.length; i++) {
+                if (cage.lines[i].length !== 3) return false;
+            }
+
+            var allLineCellsFilled = true;
+            for (var i = 0; i < cage.lines.length; i++) {
+                for (var j = 0; j < cage.lines[i].length; j++) {
+                    if (!cellValue(board, cage.lines[i][j])) {
+                        allLineCellsFilled = false;
+                        break;
+                    }
+                }
+            }
+            if (!allLineCellsFilled) return true;
+
+            function checkSum(index, currentSum) {
+                if (index === cage.lines.length) return currentSum === cage.total;
+                var line = cage.lines[index];
+                var num1 = cellValue(board, line[0]) * 100 + cellValue(board, line[1]) * 10 + cellValue(board, line[2]);
+                var num2 = cellValue(board, line[2]) * 100 + cellValue(board, line[1]) * 10 + cellValue(board, line[0]);
+                if (checkSum(index + 1, currentSum + num1)) return true;
+                if (num1 !== num2 && checkSum(index + 1, currentSum + num2)) return true;
+                return false;
+            }
+
+            return checkSum(0, 0);
+        }`;
+    }
     if (variation.value === "zones") {
         return "Returns true when every digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
     }
@@ -468,6 +510,9 @@ export function cspConstraintFunctionFor(variation: Variation) {
 
 /** Executable-style regression examples displayed on every variant detail page. */
 export function solverTestCasesFor(variation: Variation) {
+    if (variation.value === "threedigitnumberskiller") {
+        return "A cage without a total must have unique digits. A cage with a total must have unique digits, and if all its 3-cell gray lines are fully populated, their values (read in either direction) must sum to the cage's total.";
+    }
     if (variation.value === "zones") {
         return "A cage with clue '12' must contain both a 1 and a 2. Partial assignments are valid if empty cells remain to accommodate missing digits.";
     }

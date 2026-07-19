@@ -250,6 +250,83 @@ test("an active Almost Palindrome remains CSP-supported after its final line is 
     assert.equal(SudokuSolver.readConstraints(puzzle).supported.includes("almostpalindrome"), true);
 });
 
+test("Three-Digit Numbers Killer constraint parsing and evaluation", function() {
+    var nx0 = 13, ny0 = 13;
+    const puzzle = {
+        gridtype: "sudoku",
+        nx: 9, ny: 9,
+        nx0: nx0, ny0: ny0,
+        activeSudokuVariant: "threedigitnumberskiller",
+        pu_q: {
+            killercages: [[28, 29, 30, 41, 42, 43]],
+            numberS: {},
+            line: {
+                "28,29": 5, "29,30": 5,
+                "41,42": 5, "42,43": 5
+            }
+        },
+        centerlist: ["28", "29", "30", "41", "42", "43"],
+        refreshKillerCages: function() { return [[28, 29, 30, 41, 42, 43]]; }
+    };
+    puzzle.pu_q.numberS[String((28 + nx0*ny0)*4)] = ["1048", "1"];
+    puzzle.activeSudokuVariants = ["threedigitnumberskiller"];
+
+    // Parse
+    const constraints = SudokuSolver.readConstraints(puzzle);
+    assert.equal(constraints.supported.includes("threedigitnumberskiller"), true);
+
+    // Evaluate via CSP wrapper
+    const board = emptyBoard();
+    const mockState = {
+        board: board,
+        sudokuCSP: SudokuCSP,
+        size: 9,
+        cellValue: function(b, c) { return b[c.row][c.col]; }
+    };
+
+    // For unit testing purposes, we test the actual logic inside the CSP's evaluate functions through solve or manual calling
+    // SudokuCSP uses the parsed constraints directly via createProblem
+    const constraintList = constraints;
+
+    // We can also extract the handler directly for unit testing
+    const constraintHandler = SudokuCSP.registeredConstraints ? SudokuCSP.registeredConstraints["threeDigitNumbersKillers"] : null;
+
+    // But since registeredConstraints might not be exported in the way we expect, let's create a problem
+    // and let CSP evaluate. Alternatively, we can use the `findConflict` method.
+    board[0][0] = 6; board[0][1] = 5; board[0][2] = 1;
+    board[1][0] = 3; board[1][1] = 9; board[1][2] = 7;
+    assert.equal(SudokuCSP.findConflict(board, constraintList), null, "Valid fully filled cage");
+
+    board[1][0] = 2; board[1][1] = 3; board[1][2] = 6; // digits not unique
+    board[0][0] = 8; board[0][1] = 1; board[0][2] = 2;
+    assert.notEqual(SudokuCSP.findConflict(board, constraintList), null, "Duplicate digits in cage");
+
+    // Partial evaluation
+    board[1][0] = 0; // Partial
+    assert.equal(SudokuCSP.findConflict(board, constraintList), null, "Partial evaluation");
+
+    var cage = {
+        cells: [{row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: 2}, {row: 1, col: 0}, {row: 1, col: 1}, {row: 1, col: 2}],
+        total: 1048,
+        lines: [
+            [{row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: 2}],
+            [{row: 1, col: 0}, {row: 1, col: 1}, {row: 1, col: 2}]
+        ]
+    };
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
 test("honors killer totals and distinct digits", function() {
     const constraints = {
         killers: [{
