@@ -53,6 +53,9 @@ test("encrypt_data and decrypt_data functionality", () => {
         assert.equal(typeof encrypted, "string", "Encrypted data should be a string");
         assert.notEqual(encrypted, testCase, "Encrypted data should not be the original string (except empty maybe)");
         assert.equal(decrypted, testCase, `Decrypted data should match original for: ${testCase.substring(0, 20)}`);
+    }
+});
+
 test("request_shortlink functionality", async () => {
     // Save original global.$
     const originalDollar = global.$;
@@ -87,4 +90,42 @@ test("request_shortlink functionality", async () => {
         // Restore original global.$
         global.$ = originalDollar;
     }
+});
+
+test("errorMsg and infoMsg functionality", () => {
+    // Setup Identity
+    global.Identity = {
+        errorTitle: "Error Test",
+        infoTitle: "Info Test",
+        okButtonText: "OK Test"
+    };
+
+    let swalCalledWith = null;
+
+    // Setup Mock Swal
+    global.Swal = {
+        fire: (args) => {
+            swalCalledWith = args;
+        }
+    };
+
+    // Test errorMsg
+    general.errorMsg("Error HTML content");
+    assert.deepEqual(swalCalledWith, {
+        title: global.Identity.errorTitle,
+        html: "Error HTML content",
+        icon: 'error',
+        confirmButtonText: global.Identity.okButtonText
+    });
+
+    swalCalledWith = null;
+
+    // Test infoMsg
+    general.infoMsg("Info HTML content");
+    assert.deepEqual(swalCalledWith, {
+        title: global.Identity.infoTitle,
+        html: "Info HTML content",
+        icon: 'info',
+        confirmButtonText: global.Identity.okButtonText
+    });
 });
