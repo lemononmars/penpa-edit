@@ -624,7 +624,7 @@ var SudokuSolver = (function() {
             return constraints;
         }
 
-        var regionIdVariant = ["irregular", "scattered", "deficit", "surplus"].find(function(name) {
+        var regionIdVariant = ["irregular", "scattered", "deficit", "surplus", "toroidal"].find(function(name) {
             return variantEnabled(puzzle, name);
         });
         if (regionIdVariant) {
@@ -3759,7 +3759,7 @@ var SudokuTools = (function() {
 
     function variantConflict(variant) {
         var variants = activeVariants();
-        var regionGridVariants = ["irregular", "scattered", "deficit", "surplus"];
+        var regionGridVariants = ["irregular", "scattered", "deficit", "surplus", "toroidal"];
         if (regionGridVariants.indexOf(variant) !== -1) {
             var otherRegionGrid = variants.find(function(active) {
                 return active !== variant && regionGridVariants.indexOf(active) !== -1;
@@ -4115,6 +4115,40 @@ var SudokuTools = (function() {
         return SudokuSolver.irregularBoundaryEdges(pu, regionIds);
     }
 
+    function toroidalEdges(regionIds) {
+        if (!SudokuSolver.variantEnabled(pu, "toroidal")) return [];
+        var size = SudokuSolver.puzzleSize(pu);
+        if (!pu || !size || !Array.isArray(regionIds)) return [];
+        var top = Number(pu.space && pu.space[0] || 0);
+        var left = Number(pu.space && pu.space[2] || 0);
+        var firstRow = 1 + top;
+        var firstCol = 1 + left;
+        var base = pu.nx0 * pu.ny0;
+        var edges = [];
+        function outerVertical(row, isLeft) {
+            var latticeCol = firstCol + (isLeft ? 0 : size);
+            var first = base + (firstRow + row) * pu.nx0 + latticeCol;
+            return first + "," + (first + pu.nx0);
+        }
+        function outerHorizontal(col, isTop) {
+            var first = base + (firstRow + (isTop ? 0 : size)) * pu.nx0 + firstCol + col;
+            return first + "," + (first + 1);
+        }
+        for (var row = 0; row < size; row++) {
+            if (String(regionIds[row * size + 0]) === String(regionIds[row * size + size - 1])) {
+                edges.push(outerVertical(row, true));
+                edges.push(outerVertical(row, false));
+            }
+        }
+        for (var col = 0; col < size; col++) {
+            if (String(regionIds[0 * size + col]) === String(regionIds[(size - 1) * size + col])) {
+                edges.push(outerHorizontal(col, true));
+                edges.push(outerHorizontal(col, false));
+            }
+        }
+        return edges;
+    }
+
     function redrawIrregularBoundaries() {
         if (!pu || !pu.pu_q || !pu.pu_q.lineE) return;
         var size = SudokuSolver.puzzleSize(pu);
@@ -4123,9 +4157,25 @@ var SudokuTools = (function() {
         oldEdges.forEach(function(edge) {
             if (pu.pu_q.lineE[edge] === 2) delete pu.pu_q.lineE[edge];
         });
-        var newEdges = irregularBoundaryEdges(ensureIrregularRegions());
+
+        var oldToroidal = Array.isArray(pu.pu_q.toroidalEdges) ? pu.pu_q.toroidalEdges : [];
+        oldToroidal.forEach(function(edge) {
+            if (pu.pu_q.deletelineE[edge] === 1) delete pu.pu_q.deletelineE[edge];
+            if (pu.pu_q.lineE[edge] === 1) delete pu.pu_q.lineE[edge];
+        });
+
+        var regionIds = ensureIrregularRegions();
+        var newEdges = irregularBoundaryEdges(regionIds);
         newEdges.forEach(function(edge) { pu.pu_q.lineE[edge] = 2; });
         pu.pu_q.irregularRegionEdges = newEdges;
+
+        var newToroidal = toroidalEdges(regionIds);
+        newToroidal.forEach(function(edge) {
+            pu.pu_q.deletelineE[edge] = 1;
+            pu.pu_q.lineE[edge] = 1;
+        });
+        pu.pu_q.toroidalEdges = newToroidal;
+
         SudokuSolver.invalidateCandidateAnalysis();
         pu.redraw();
     }
@@ -4208,8 +4258,8 @@ var SudokuTools = (function() {
 
     function enterIrregularEditor(variant) {
         if (!pu || !SudokuSolver.puzzleSize(pu)) return;
-        variant = ["irregular", "scattered", "deficit", "surplus"].indexOf(variant) !== -1 ? variant :
-            (["irregular", "scattered", "deficit", "surplus"].indexOf(pu.activeSudokuVariant) !== -1 ?
+        variant = ["irregular", "scattered", "deficit", "surplus", "toroidal"].indexOf(variant) !== -1 ? variant :
+            (["irregular", "scattered", "deficit", "surplus", "toroidal"].indexOf(pu.activeSudokuVariant) !== -1 ?
                 pu.activeSudokuVariant : "irregular");
         addVariant(variant);
         ensureIrregularRegions();
@@ -4320,7 +4370,7 @@ var SudokuTools = (function() {
             if (variant === "classic") {
                 return;
             }
-            var isRegionGridVariant = ["irregular", "scattered", "deficit", "surplus"].indexOf(variant) !== -1;
+            var isRegionGridVariant = ["irregular", "scattered", "deficit", "surplus", "toroidal"].indexOf(variant) !== -1;
             var setting = penpa_constraints.setting[variant];
             var group = document.createElement("span");
             group.className = "sudoku-variant-group";
@@ -4621,9 +4671,9 @@ var SudokuTools = (function() {
                     if (pu.pu_q.surface !== undefined) delete pu.pu_q.surface[cell];
                 }
             }
-        } else if (["irregular", "scattered", "deficit", "surplus"].indexOf(variant) !== -1 &&
+        } else if (["irregular", "scattered", "deficit", "surplus", "toroidal"].indexOf(variant) !== -1 &&
             !activeVariants().some(function(active) {
-                return ["irregular", "scattered", "deficit", "surplus"].indexOf(active) !== -1;
+                return ["irregular", "scattered", "deficit", "surplus", "toroidal"].indexOf(active) !== -1;
             })) {
             removeIrregularEditor();
             pu.irregular_mode = false;
@@ -4633,12 +4683,18 @@ var SudokuTools = (function() {
             irregularEdges.forEach(function(edge) {
                 if (pu.pu_q.lineE[edge] === 2) delete pu.pu_q.lineE[edge];
             });
+            var oldToroidal = Array.isArray(pu.pu_q.toroidalEdges) ? pu.pu_q.toroidalEdges : [];
+            oldToroidal.forEach(function(edge) {
+                if (pu.pu_q.deletelineE[edge] === 1) delete pu.pu_q.deletelineE[edge];
+                if (pu.pu_q.lineE[edge] === 1) delete pu.pu_q.lineE[edge];
+            });
             var size = SudokuSolver.puzzleSize(pu);
             irregularBoundaryEdges(SudokuSolver.defaultIrregularRegions(size)).forEach(function(edge) {
                 pu.pu_q.lineE[edge] = 2;
             });
             delete pu.pu_q.irregularRegions;
             delete pu.pu_q.irregularRegionEdges;
+            delete pu.pu_q.toroidalEdges;
         }
         pu.activeSudokuVariant = "classic";
         pu.kropki_mode = false;
@@ -4722,7 +4778,7 @@ var SudokuTools = (function() {
         if (pu) pu.activeSudokuVariant = variant;
         if (variant === "windoku") ensureWindokuCages();
         if (variant === "onefivenine") ensureOneFiveNine();
-        if (["irregular", "scattered", "deficit", "surplus"].indexOf(variant) !== -1) {
+        if (["irregular", "scattered", "deficit", "surplus", "toroidal"].indexOf(variant) !== -1) {
             SudokuSolver.invalidateCandidateAnalysis();
             enterIrregularEditor(variant);
             return;

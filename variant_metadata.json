@@ -6375,11 +6375,11 @@
       "tags": [
         "irregular"
       ],
-      "status": "planned",
-      "scratchGeneratable": false,
+      "status": "available",
+      "scratchGeneratable": true,
       "inputType": {
         "categories": [
-          "cell"
+          "no-input"
         ],
         "instructions": []
       }

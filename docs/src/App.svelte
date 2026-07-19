@@ -485,7 +485,7 @@
   }
 
   function conflictingVariant(value: string) {
-    const regionGridVariants = ["irregular", "scattered", "deficit", "surplus"];
+    const regionGridVariants = ["irregular", "scattered", "deficit", "surplus", "toroidal"];
     if (regionGridVariants.includes(value)) {
       return (
         activeVariantValues().find(
@@ -558,7 +558,7 @@
 
   function chooseVariant(value: string) {
     if (conflictingVariant(value) || unavailableVariant(value)) return;
-    if (!["irregular", "scattered", "deficit", "surplus"].includes(value)) {
+    if (!["irregular", "scattered", "deficit", "surplus", "toroidal"].includes(value)) {
       (window as any).SudokuTools?.finishIrregularEditor?.();
     }
     selectedVariant = value;
