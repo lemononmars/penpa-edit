@@ -1,0 +1,41 @@
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const test = require("node:test");
+
+const root = path.resolve(__dirname, "..");
+const app = fs.readFileSync(path.join(root, "docs/src/App.svelte"), "utf8");
+const solver = fs.readFileSync(path.join(root, "docs/js/sudoku_solver.js"), "utf8");
+const general = fs.readFileSync(path.join(root, "docs/js/general.js"), "utf8");
+const puzzle = fs.readFileSync(path.join(root, "docs/js/class_p.js"), "utf8");
+
+test("New grid offers every supported size from 6 through 9", function() {
+    assert.match(app, /let newGridSize:\s*6\s*\|\s*7\s*\|\s*8\s*\|\s*9/);
+    [6, 7, 8, 9].forEach(function(size) {
+        assert.match(app, new RegExp("requestNewGrid\\(" + size + "\\)"));
+    });
+    assert.match(general, /requestedSudokuSize\s*=\s*Number\(window\.sudotokuNewGridSize\)/);
+    assert.match(general, /requestedSudokuSize\s*===\s*7[\s\S]*?rows\s*=\s*\[3,\s*4,\s*5,\s*6,\s*7,\s*8\][\s\S]*?cols\s*=\s*\[\]/);
+});
+
+test("Generate opens the existing-grid confirmation directly", function() {
+    assert.doesNotMatch(app, /actionMenu:\s*[^;]*"generate"/);
+    assert.match(app, /<button on:click=\{requestGenerator\}[\s\S]*?<span>✦<\/span>Generate[\s\S]*?<\/button>/);
+    assert.doesNotMatch(app, /requestGenerator\("(?:new|existing)"\)/);
+});
+
+test("confirmation and About surfaces use explicit readable theme colors", function() {
+    assert.match(app, /--modal-primary-background:\s*#[0-9a-f]{6}/i);
+    assert.match(app, /--modal-primary-foreground:\s*#[0-9a-f]{6}/i);
+    assert.match(app, /--about-background:\s*#[0-9a-f]{6}/i);
+    assert.match(app, /--about-foreground:\s*#[0-9a-f]{6}/i);
+    assert.match(app, /background:\s*var\(--modal-primary-background\)/);
+    assert.match(app, /color:\s*var\(--modal-primary-foreground\)/);
+});
+
+test("Clear Mark and Solve record a Penpa undo transaction", function() {
+    assert.match(solver, /function applySolution\([^)]*\)[\s\S]*?beginPenpaUndoTransaction\(puzzle,\s*"Solve"\)/);
+    assert.match(solver, /function clearAutoSolution\([^)]*\)[\s\S]*?beginPenpaUndoTransaction\(puzzle,\s*"Clear Mark"\)/);
+    assert.match(puzzle, /undo\(replay = false\)[\s\S]*?a\[0\]\s*===\s*"sudokuTransaction"/);
+    assert.match(puzzle, /redo\(replay = false\)[\s\S]*?a\[0\]\s*===\s*"sudokuTransaction"/);
+});

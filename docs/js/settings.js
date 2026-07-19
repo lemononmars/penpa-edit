@@ -90,12 +90,9 @@ const UserSettings = {
 
     // Toggle language
     _language: 'EN',
-    set app_language(newValue) {
-        this._language = newValue;
-
-        document.getElementById("language_opt").value = newValue;
-        trans();
-        this.attemptSave();
+    set app_language(_newValue) {
+        // Translation initialization is disabled; retain English for legacy callers.
+        this._language = 'EN';
     },
     get app_language() {
         return this._language;
@@ -499,7 +496,6 @@ const UserSettings = {
     can_save: [
         'auto_save_history',
         'check_pencil_marks',
-        'app_language',
         'color_theme',
         'conflict_detection',
         'custom_colors_on',
