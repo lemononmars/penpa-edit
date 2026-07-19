@@ -84,7 +84,7 @@ const penpa_constraints = {
             "show": ["mo_surface_lb",
                 "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
                 "mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb",
-                "mo_number_lb", "sub_number11_lb", "sub_number3_lb"
+                "mo_number_lb", "sub_number11_lb"
             ],
             "modeset": ["sudoku", "cage", "number"],
             "submodeset": ["1", "1", "11"],
