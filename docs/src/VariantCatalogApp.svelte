@@ -15,6 +15,25 @@
   let status = "all";
   let tag = "all";
   let darkTheme = false;
+  let fontScale = 1;
+
+  $: if (typeof document !== "undefined") {
+    document.documentElement.style.setProperty("--font-scale", fontScale.toString());
+  }
+
+  function toggleTheme() {
+    darkTheme = !darkTheme;
+    document.cookie = `color_theme=${darkTheme ? "2" : "1"};path=/;max-age=${60 * 60 * 24 * 365}`;
+    document.documentElement.classList.toggle("dark", darkTheme);
+  }
+
+  function increaseFontSize() {
+    fontScale += 0.1;
+  }
+
+  function decreaseFontSize() {
+    fontScale = Math.max(0.5, fontScale - 0.1);
+  }
 
   onMount(() => {
     const cookies = document.cookie.split(";");
@@ -155,11 +174,18 @@
 
 <header class="site-header">
   <a class="brand" href="./">Back to editor</a>
-  <nav aria-label="Reference pages">
+  <nav aria-label="Reference pages" class="site-nav">
     <a
       class:active={page === "variants" || page === "detail"}
       href="./list.html">Variant wiki</a
     >
+    <div class="nav-controls">
+      <button type="button" class="nav-btn" on:click={decreaseFontSize} aria-label="Decrease font size">A-</button>
+      <button type="button" class="nav-btn" on:click={increaseFontSize} aria-label="Increase font size">A+</button>
+      <button type="button" class="nav-btn" on:click={toggleTheme} aria-label="Toggle light/dark theme">
+        {darkTheme ? "☀️" : "🌙"}
+      </button>
+    </div>
   </nav>
 </header>
 
@@ -207,24 +233,26 @@
             {#each inputModesFor(detailVariation) as mode}<li>{mode}</li>{/each}
           </ul>
         </section>
-        <section>
-          <h2>CSP constraint function</h2>
-          <p>{cspApproachFor(detailVariation)}</p>
-          <h3>Partial validator</h3>
-          <pre><code>{cspConstraintFunctionsFor(detailVariation).partial}</code></pre>
-          <h3>Full validator</h3>
-          <pre><code>{cspConstraintFunctionsFor(detailVariation).full}</code></pre>
-          {#if detailVariation.status !== "available"}<p class="blocker">
-              {automaticBlockerFor(detailVariation)}
-            </p>{/if}
-        </section>
-        <section>
-          <h2>Solver regression tests</h2>
-          <p>
-            The valid case must solve; the paired violation must be rejected.
-          </p>
-          <pre><code>{solverTestCasesFor(detailVariation)}</code></pre>
-        </section>
+        {#if detailVariation.status !== "planned"}
+          <section>
+            <h2>CSP constraint function</h2>
+            <p>{cspApproachFor(detailVariation)}</p>
+            <h3>Partial validator</h3>
+            <pre><code>{cspConstraintFunctionsFor(detailVariation).partial}</code></pre>
+            <h3>Full validator</h3>
+            <pre><code>{cspConstraintFunctionsFor(detailVariation).full}</code></pre>
+            {#if detailVariation.status !== "available"}<p class="blocker">
+                {automaticBlockerFor(detailVariation)}
+              </p>{/if}
+          </section>
+          <section>
+            <h2>Solver regression tests</h2>
+            <p>
+              The valid case must solve; the paired violation must be rejected.
+            </p>
+            <pre><code>{solverTestCasesFor(detailVariation)}</code></pre>
+          </section>
+        {/if}
       </article>
     {:else}
       <section class="hero">
@@ -315,7 +343,7 @@
                   class="variant-link"
                   href={`./list.html?id=${encodeURIComponent(variation.value)}`}
                   ><strong>{variation.name}</strong></a
-                ><code>{variation.value}</code></th
+                ><span>{variation.otherNames || ""}</span></th
               >
               <td class="rule">{variation.rule}</td>
               <td>
@@ -331,7 +359,7 @@
                   </span>
                 {/if}
               </td>
-              <td>{variation.example ? "Yes" : "No"}</td>
+              <td style="text-align: center;">{variation.example ? "✅" : "❌"}</td>
               <td class="tags">
                 {#each variation.tags as variantTag}
                   <button type="button" class="tag" on:click={() => (tag = variantTag)}>{variantTag}</button>
@@ -426,7 +454,7 @@
   }
   .brand {
     color: inherit;
-    font-size: 15px;
+    font-size: calc(15px * var(--font-scale, 1));
     font-weight: 760;
     letter-spacing: 0.02em;
     text-decoration: none;
@@ -437,6 +465,7 @@
   nav {
     display: flex;
     align-self: stretch;
+    flex-grow: 1;
   }
   nav a {
     display: grid;
@@ -444,13 +473,31 @@
     padding: 0 16px;
     color: #bcd0d8;
     border-bottom: 3px solid transparent;
-    font-size: 13px;
+    font-size: calc(13px * var(--font-scale, 1));
     text-decoration: none;
   }
   nav a:hover,
   nav a.active {
     color: #fff;
     border-bottom-color: #e5b858;
+  }
+  .nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .nav-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #eaf3f5;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: calc(13px * var(--font-scale, 1));
+  }
+  .nav-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
   }
   main {
     width: min(1480px, calc(100% - 40px));
@@ -464,7 +511,7 @@
   .eyebrow {
     margin: 0 0 8px;
     color: #b16c24;
-    font-size: 12px;
+    font-size: calc(12px * var(--font-scale, 1));
     font-weight: 800;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -481,7 +528,7 @@
     max-width: 760px;
     margin: 14px 0 0;
     color: #526773;
-    font-size: 18px;
+    font-size: calc(18px * var(--font-scale, 1));
     line-height: 1.55;
   }
   .summary {
@@ -496,12 +543,12 @@
     border: 1px solid #ccdadc;
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.6);
-    font-size: 12px;
+    font-size: calc(12px * var(--font-scale, 1));
   }
   .summary strong {
     margin-right: 4px;
     color: #183a4d;
-    font-size: 15px;
+    font-size: calc(15px * var(--font-scale, 1));
   }
   .notes {
     display: grid;
@@ -518,12 +565,12 @@
   .notes h2 {
     margin: 0 0 6px;
     color: #183a4d;
-    font-size: 15px;
+    font-size: calc(15px * var(--font-scale, 1));
   }
   .notes p {
     margin: 0;
     color: #5a6e77;
-    font-size: 13px;
+    font-size: calc(13px * var(--font-scale, 1));
     line-height: 1.55;
   }
   .toolbar {
@@ -543,7 +590,7 @@
     display: grid;
     gap: 5px;
     color: #536872;
-    font-size: 11px;
+    font-size: calc(11px * var(--font-scale, 1));
     font-weight: 750;
   }
   input,
@@ -566,7 +613,7 @@
   .result-count {
     margin: 0 auto 9px 0;
     color: #657982;
-    font-size: 12px;
+    font-size: calc(12px * var(--font-scale, 1));
   }
   .table-wrap {
     width: 100%;
@@ -579,7 +626,7 @@
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: calc(12px * var(--font-scale, 1));
     line-height: 1.45;
   }
   th,
@@ -596,7 +643,7 @@
     z-index: 2;
     color: #e9f3f5;
     background: #1d4658;
-    font-size: 10px;
+    font-size: calc(10px * var(--font-scale, 1));
     letter-spacing: 0.07em;
     text-transform: uppercase;
   }
@@ -624,7 +671,7 @@
     border-radius: 999px;
     color: #315968;
     background: #edf5f6;
-    font-size: 10px;
+    font-size: calc(10px * var(--font-scale, 1));
     cursor: pointer;
   }
   .tag:hover {
@@ -640,7 +687,7 @@
     margin-top: 4px;
     color: #75878e;
     font-family: "SFMono-Regular", Consolas, monospace;
-    font-size: 10px;
+    font-size: calc(10px * var(--font-scale, 1));
     font-weight: 500;
   }
   .status {
@@ -650,7 +697,7 @@
     padding: 3px 7px;
     border-radius: 999px;
     white-space: nowrap;
-    font-size: 10px;
+    font-size: calc(10px * var(--font-scale, 1));
     font-weight: 750;
   }
   .status.implemented {
@@ -677,12 +724,12 @@
     display: inline-block;
     margin-bottom: 24px;
     color: #267f95;
-    font-size: 13px;
+    font-size: calc(13px * var(--font-scale, 1));
   }
   .variant-detail h2 {
     margin: 0 0 12px;
     color: #183a4d;
-    font-size: 18px;
+    font-size: calc(18px * var(--font-scale, 1));
   }
   .variant-detail > section {
     margin-top: 22px;
@@ -731,7 +778,7 @@
     display: inline;
     margin: 0;
     color: inherit;
-    font-size: 12px;
+    font-size: calc(12px * var(--font-scale, 1));
     line-height: 1.6;
   }
   .variant-detail .blocker {
@@ -745,7 +792,7 @@
     color: #708088;
     background: #dde7e8;
     text-align: center;
-    font-size: 11px;
+    font-size: calc(11px * var(--font-scale, 1));
   }
   @media (max-width: 900px) {
     .site-header {
@@ -778,7 +825,7 @@
       display: grid;
     }
     .hero > p:last-of-type {
-      font-size: 16px;
+      font-size: calc(16px * var(--font-scale, 1));
     }
     input {
       width: 100%;
@@ -927,7 +974,7 @@
   .dev-form-card h2 {
     margin: 0 0 8px;
     color: #102938;
-    font-size: 20px;
+    font-size: calc(20px * var(--font-scale, 1));
     font-family: Georgia, serif;
   }
   :global(html.dark) .dev-form-card h2 {
@@ -936,7 +983,7 @@
   .dev-form-desc {
     margin: 0 0 20px;
     color: #526773;
-    font-size: 13px;
+    font-size: calc(13px * var(--font-scale, 1));
   }
   :global(html.dark) .dev-form-desc {
     color: #aebdca;
@@ -944,7 +991,7 @@
   .metadata-editor-label {
     display: block;
     margin-bottom: 7px;
-    font-size: 13px;
+    font-size: calc(13px * var(--font-scale, 1));
     font-weight: 700;
   }
   .metadata-editor {
@@ -1007,7 +1054,7 @@
     margin-top: 16px;
     padding: 12px;
     border-radius: 4px;
-    font-size: 13px;
+    font-size: calc(13px * var(--font-scale, 1));
     font-weight: 600;
   }
   .save-status.success {
