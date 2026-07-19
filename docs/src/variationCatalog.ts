@@ -13,6 +13,7 @@ type RawVariation = {
     duplicateOf?: string;
     example?: string;
     otherNames?: string;
+    wikiOnly?: boolean;
 };
 
 type VariantMetadata = {
@@ -77,7 +78,7 @@ export const outsideVariationValues = new Set(variations.filter((item) =>
     item.value !== "xydifference" && (item.inputType.categories.includes("outside") ||
         item.tags?.includes("outside"))
 ).map((item) => item.value));
-const regionGridVariants = ["irregular", "scattered", "deficit", "surplus"];
+const regionGridVariants = ["irregular", "scattered", "deficit", "surplus", "toroidal"];
 
 function genericSetting(variation: Variation) {
     const text = variation.rule.toLowerCase();
@@ -112,6 +113,10 @@ function genericSetting(variation: Variation) {
     }
     if (variation.value === "alternatingstripes") {
         add("line", "1", 2, ["mo_line_lb", "sub_line1_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "tictactoewinner") {
+        add("line", "2", 5, ["mo_line_lb", "sub_line2_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "meandering diagonals") {
@@ -187,7 +192,7 @@ if (variation.value === "threedigitnumberskiller") {
             return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
         }
         const isQuad = variation.value === "quadmax" || variation.value === "quadmin";
-        const allowsMultiple = variation.value === "biggestneighbours" || variation.value === "smallestneighbours";
+        const allowsMultiple = variation.value === "biggestneighbours" || variation.value === "smallestneighbours" || variation.value === "twindetector";
         add("symbol", isQuad ? "arrow_B_B" : allowsMultiple ? "arrow_eight" : "arrow_B_G", 2,
             isQuad || !allowsMultiple
                 ? ["mo_symbol_lb", "ms3", "li_arrow_B"]
@@ -244,6 +249,10 @@ if (variation.value === "threedigitnumberskiller") {
         add("line", "2", 5, ["mo_line_lb", "sub_line2_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
+    if (variation.value === "upanddown") {
+        add("line", "2", 5, ["mo_line_lb", "sub_line2_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
     if (variation.value === "anticonsecutive") {
         add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
@@ -268,11 +277,11 @@ if (variation.value === "threedigitnumberskiller") {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["inequality", "xydifference", "perfectsquares", "primesums", "twodigitprimenumbers", "fives"].includes(variation.value)) {
-        add(variation.value === "inequality" ? "number" : "symbol",
-            variation.value === "inequality" ? "5" : "diamond_SS",
-            variation.value === "inequality" ? 6 : 2,
-            variation.value === "inequality" ? ["mo_number_lb", "sub_number5_lb"] :
+    if (["inequality", "xydifference", "perfectsquares", "primesums", "twodigitprimenumbers", "fives", "wildcard"].includes(variation.value)) {
+        add((variation.value === "inequality" || variation.value === "wildcard") ? "number" : "symbol",
+            (variation.value === "inequality" || variation.value === "wildcard") ? "5" : "diamond_SS",
+            (variation.value === "inequality" || variation.value === "wildcard") ? 6 : 2,
+            (variation.value === "inequality" || variation.value === "wildcard") ? ["mo_number_lb", "sub_number5_lb"] :
                 ["mo_symbol_lb", "ms1", "li_diamond"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
@@ -348,6 +357,10 @@ if (variation.value === "threedigitnumberskiller") {
     if (variation.value === "wheel") {
         add("number", "4", 1, ["mo_number_lb", "sub_number4_lb"]);
         add("symbol", "circle_L", 2, ["mo_symbol_lb", "ms1", "li_circle_L"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "braille") {
+        add("symbol", "dice", 2, ["mo_symbol_lb", "ms", "ms_dice"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
 

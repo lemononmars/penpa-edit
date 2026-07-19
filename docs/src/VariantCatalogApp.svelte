@@ -14,6 +14,7 @@
   let query = "";
   let status = "all";
   let tag = "all";
+  let hasExampleFilter = "all";
   let darkTheme = false;
   let fontScale = 1;
 
@@ -59,12 +60,37 @@
   $: normalizedQuery = query.trim().toLowerCase();
   $: availableTags = [...new Set(variations.flatMap((variation) => variation.tags))]
     .sort((first, second) => first.localeCompare(second));
+
+  function handleFeelingLucky() {
+    query = "";
+    // Wait for the reactive statement to clear the query filter from `filteredVariations`,
+    // or manually filter here. Since Svelte reactivity is async (microtask), it's easier
+    // to manually get the filtered variants without the query.
+    const luckyCandidates = variations.filter((variation) => {
+      const matchesStatus = status === "all" || variation.status === status;
+      const matchesTag = tag === "all" || variation.tags.includes(tag);
+      const matchesExample = hasExampleFilter === "all" ||
+        (hasExampleFilter === "yes" && variation.example) ||
+        (hasExampleFilter === "no" && !variation.example);
+      return matchesStatus && matchesTag && matchesExample;
+    });
+
+    if (luckyCandidates.length > 0) {
+      const randomIndex = Math.floor(Math.random() * luckyCandidates.length);
+      query = luckyCandidates[randomIndex].name;
+    }
+  }
+
   $: filteredVariations = variations.filter((variation) => {
     const matchesStatus = status === "all" || variation.status === status;
     const matchesTag = tag === "all" || variation.tags.includes(tag);
+    const matchesExample = hasExampleFilter === "all" ||
+      (hasExampleFilter === "yes" && variation.example) ||
+      (hasExampleFilter === "no" && !variation.example);
     return (
       matchesStatus &&
       matchesTag &&
+      matchesExample &&
       (!normalizedQuery ||
         [variation.name, variation.value, variation.rule, ...variation.tags].some((value) =>
           value.toLowerCase().includes(normalizedQuery),
@@ -82,7 +108,7 @@
     const stored = /[&]variants=/.test(example)
       ? example
       : `${example}&variants=${encodeURIComponent(`classic,${variant}`)}`;
-    base.hash = `m=solve&p=${stored}`;
+    base.hash = `m=solve&tab=solve&v=0&p=${stored}`;
     return base.href;
   }
 
@@ -199,27 +225,19 @@
         <h1>{detailVariation.name}</h1>
         <div class="detail-status">
           {#if detailVariation.status === "available"}
-            <span class="status implemented">CSP implemented</span>
+            <span class="status implemented">available</span>
           {:else}
             <span
               class:backlog={detailVariation.status === "planned"}
               class:infeasible={detailVariation.status === "infeasible"}
               class="status"
             >
-              {detailVariation.status === "infeasible" ? "Infeasible" : "CSP backlog"}
+              {detailVariation.status === "infeasible" ? "infeasible" : "planned"}
             </span>
           {/if}
         </div>
         <div class="detail-layout">
           <div>
-            {#if detailVariation.example}
-              <section>
-                <h2>Example</h2>
-                <p style="margin-top: 14px; font-weight: 500;">
-                  <a href={exampleUrl(detailVariation.example, detailVariation.value)} target="_blank" rel="noreferrer">Open this example puzzle ↗</a>
-                </p>
-              </section>
-            {/if}
         <section>
           <h2>Rules</h2>
           {#each Object.entries(detailVariation.rules) as [size, rule]}
@@ -321,6 +339,9 @@
           placeholder="Name, rule, tag…"
         />
       </label>
+      <button type="button" class="lucky-btn" on:click={handleFeelingLucky}>
+        Feeling lucky!
+      </button>
       <label for="variant-csp-status-select">
         <span>Status</span>
         <select id="variant-csp-status-select" bind:value={status}>
@@ -339,7 +360,16 @@
           {/each}
         </select>
       </label>
+      <label for="variant-has-example-select">
+        <span>Has example</span>
+        <select id="variant-has-example-select" bind:value={hasExampleFilter}>
+          <option value="all">All</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </label>
       <span class="result-count">{filteredVariations.length} shown</span>
+      <a class="suggest-link" href="https://github.com/lemononmars/penpa-edit/pulls" target="_blank" rel="noreferrer">Suggest a variant</a>
     </section>
 
     <div class="table-wrap">
@@ -361,8 +391,15 @@
                   class="variant-link"
                   href={`./list.html?id=${encodeURIComponent(variation.value)}`}
                   ><strong>{variation.name}</strong></a
-                ><span>{variation.otherNames || ""}</span></th
-              >
+                >
+                <div class="other-names">
+                  {#if variation.otherNames}
+                    {#each variation.otherNames.split(",") as otherName}
+                      <div class="other-name">{otherName.trim()}</div>
+                    {/each}
+                  {/if}
+                </div>
+              </th>
               <td class="rule">{variation.rule}</td>
               <td>
                 {#if variation.status === "available"}
@@ -736,7 +773,7 @@
     text-underline-offset: 3px;
   }
   .variant-detail {
-    width: min(920px, 100%);
+    width: 100%;
   }
   .variant-detail .back-link {
     display: inline-block;
@@ -759,7 +796,7 @@
     min-width: 0; /* allows shrinking */
   }
   .variant-examples {
-    width: 400px;
+    width: 50%;
     flex-shrink: 0;
     position: sticky;
     top: 24px;
@@ -797,7 +834,7 @@
     min-width: 0; /* allows shrinking */
   }
   .variant-examples {
-    width: 400px;
+    width: 50%;
     flex-shrink: 0;
     position: sticky;
     top: 24px;
@@ -888,6 +925,7 @@
     text-align: center;
     font-size: calc(11px * var(--font-scale, 1));
   }
+  /* Mobile-friendly stacked layout */
   @media (max-width: 1100px) {
     .detail-layout {
       flex-direction: column;
@@ -895,7 +933,7 @@
     .variant-examples {
       width: 100%;
       position: static;
-      max-width: 920px;
+      max-width: 100%;
     }
   }
   @media (max-width: 900px) {
@@ -1028,6 +1066,45 @@
   }
   :global(html.dark) .variant-link {
     color: #2b8bc7 !important;
+  }
+  :global(html.dark) .other-name {
+    color: #8c9ba5 !important;
+  }
+  .other-name {
+    font-weight: normal;
+    font-size: 0.9em;
+    color: #526773;
+  }
+  .lucky-btn {
+    padding: 6px 12px;
+    background: #267f95;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .lucky-btn:hover {
+    background: #1d6375;
+  }
+  :global(html.dark) .lucky-btn {
+    background: #176fae;
+  }
+  :global(html.dark) .lucky-btn:hover {
+    background: #12588b;
+  }
+  .suggest-link {
+    margin-left: auto;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2b8bc7;
+    text-decoration: none;
+  }
+  .suggest-link:hover {
+    text-decoration: underline;
+  }
+  :global(html.dark) .suggest-link {
+    color: #4da6bd !important;
   }
   :global(html.dark) .variant-detail h2 {
     color: #dde6ed !important;

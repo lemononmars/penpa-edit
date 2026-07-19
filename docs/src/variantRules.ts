@@ -24,7 +24,7 @@ export function guideFor(variant: string): VariantGuide {
     const metadataGuide = variantRules[variant];
     return catalog ? {
         title: catalog.name,
-        rule: catalogRule,
+        rule: catalogRule || "",
         usage: metadataGuide?.usage || "Use the clue tools shown for this variation; marks remain native Penpa objects for SVG and URL export."
     } : {
         title: variant.replace(/\b\w/g, (letter) => letter.toUpperCase()),
