@@ -1536,6 +1536,69 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("sumOrProductKillers", {
+        validatePartial: function(board, cage) {
+            var sum = 0;
+            var product = 1;
+            var blanks = 0;
+            for (var index = 0; index < cage.cells.length; index++) {
+                var value = cellValue(board, cage.cells[index]);
+                if (!value) { blanks++; continue; }
+                sum += value;
+                product *= value;
+            }
+            if (!cage.total) return true;
+            var minSum = sum + blanks * 1;
+            var maxSum = sum + blanks * SIZE;
+            var minProduct = product * 1;
+            var maxProduct = product * Math.pow(SIZE, blanks);
+            var possibleSum = cage.total >= minSum && cage.total <= maxSum;
+            var possibleProduct = cage.total >= minProduct && cage.total <= maxProduct && (blanks > 0 ? cage.total % product === 0 : cage.total === product);
+            return possibleSum || possibleProduct;
+        },
+        validateComplete: function(board, cage) {
+            if (!cage.total) return true;
+            var sum = 0;
+            var product = 1;
+            for (var index = 0; index < cage.cells.length; index++) {
+                var value = cellValue(board, cage.cells[index]);
+                sum += value;
+                product *= value;
+            }
+            return sum === cage.total || product === cage.total;
+        }
+    });
+
+    registerConstraint("tableauxCages", {
+        validatePartial: function(board, cage) {
+            var seen = {};
+            for (var i = 0; i < cage.cells.length; i++) {
+                var value = cellValue(board, cage.cells[i]);
+                if (value) {
+                    if (seen[value]) return false;
+                    seen[value] = true;
+                }
+            }
+            for (var j = 0; j < cage.cells.length; j++) {
+                var cell1 = cage.cells[j];
+                var val1 = cellValue(board, cell1);
+                if (!val1) continue;
+                for (var k = j + 1; k < cage.cells.length; k++) {
+                    var cell2 = cage.cells[k];
+                    var val2 = cellValue(board, cell2);
+                    if (!val2) continue;
+                    if (cell1.row === cell2.row && cell1.col < cell2.col) {
+                        if (val1 >= val2) return false;
+                    }
+                    if (cell1.col === cell2.col && cell1.row < cell2.row) {
+                        if (val1 >= val2) return false;
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
     registerConstraint("soloKillerGroups", {
         validatePartial: function(board, cages) {
             var target = 0;
