@@ -2043,6 +2043,22 @@ var SudokuCSP = (function() {
                 var highest = Math.max.apply(null, extrema), lowest = Math.min.apply(null, extrema);
                 return clue.relation === "maximin" ? highest - lowest === clue.value : highest + lowest === clue.value;
             }
+            if (clue.relation === "weighted little killer") {
+                var wSum = 0, maxPossibleSum = 0;
+                var hasBlanks = false;
+                for (var i = 0; i < values.length; i++) {
+                    var weight = clue.weights[i];
+                    if (values[i]) {
+                        wSum += values[i] * weight;
+                        maxPossibleSum += values[i] * weight;
+                    } else {
+                        hasBlanks = true;
+                        wSum += 1 * weight;
+                        maxPossibleSum += SIZE * weight;
+                    }
+                }
+                return wSum <= clue.value && maxPossibleSum >= clue.value && (hasBlanks || wSum === clue.value);
+            }
             if (clue.relation === "little killer" || clue.relation === "product little killer") {
                 if (clue.relation === "little killer") {
                     var littleSum = values.reduce(function(total, value) { return total + value; }, 0);

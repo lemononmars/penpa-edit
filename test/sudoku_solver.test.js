@@ -1604,6 +1604,7 @@ test("validates Little Killer, unordered outside, extrema, diagonal, and multipl
         outsideRelations: [
             { relation: "little killer", value: 12, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }] },
             { relation: "product little killer", value: 35, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }] },
+            { relation: "weighted little killer", value: 19, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }], weights: [1, 2] },
             { relation: "descriptivepairs", value: 51, cells: row },
             { relation: "outside", clues: [4, 5, 3], cells: row.slice(0, 3) },
             { relation: "outside234", clues: [6, 3, 4], cells: row.slice(1, 4) },
@@ -1670,6 +1671,25 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
                 assert.equal(constraints.outsideRelations[0].relation, variant);
                 assert.deepEqual(constraints.outsideRelations[0].cells.slice(0, 2),
                     [{ row: 0, col: 0 }, { row: 1, col: 1 }]);
+            });
+        });
+    });
+
+    ["weighted little killer"].forEach(function(variant) {
+        [
+            [6, "arrow_B_G", 2],
+            [[0, 0, 0, 0, 0, 1, 0, 0], "arrow_eight", 2]
+        ].forEach(function(arrow) {
+            ["1", "10"].forEach(function(numberMode) {
+                const constraints = SudokuSolver.readConstraints(puzzle(variant, { pu_q: {
+                    number: { 14: [14, 1, numberMode] }, symbol: { 14: arrow },
+                    surface: { [ (1 + 2)*13 + (1 + 2) ]: 1 }
+                } }));
+                assert.equal(constraints.outsideRelations[0].relation, variant);
+                assert.deepEqual(constraints.outsideRelations[0].cells.slice(0, 2),
+                    [{ row: 0, col: 0 }, { row: 1, col: 1 }]);
+                assert.deepEqual(constraints.outsideRelations[0].weights.slice(0, 2),
+                    [1, 2]);
             });
         });
     });

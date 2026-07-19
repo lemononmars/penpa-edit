@@ -270,7 +270,7 @@ function genericSetting(variation: Variation) {
         add("symbol", "circle_SS", 2, ["mo_symbol_lb", "ms1", "ms1_circle", "li_circle_SS"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["little killer", "product little killer", "productframe", "bouncing x-sums", "czech outsider", "framediagonal", "pointingdifferents"].includes(variation.value)) {
+    if (["little killer", "weighted little killer", "product little killer", "productframe", "bouncing x-sums", "czech outsider", "framediagonal", "pointingdifferents"].includes(variation.value)) {
         const mediumProduct = variation.value === "product little killer" || variation.value === "productframe";
         add("number", mediumProduct ? "6" : "1", 1,
             mediumProduct ? ["mo_number_lb", "sub_number6_lb"] : ["mo_number_lb", "sub_number1_lb"]);
