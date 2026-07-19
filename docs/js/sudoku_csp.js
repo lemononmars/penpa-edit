@@ -1839,7 +1839,7 @@ var SudokuCSP = (function() {
         }
     });
 
-    function checkSumsSequence(values, clueSequence, variant) {
+    function checkSumsSequence(values, clueSequence, variant, axis) {
         var memo = {};
 
         function search(index, clueIndex, currentSum) {
@@ -1871,6 +1871,14 @@ var SudokuCSP = (function() {
                 } else if (variant === "japanesesums") {
                     canBeValid = true;
                     canBeSeparator = true;
+                } else if (variant === "bigsmalljapanesesums") {
+                    if (axis === "column") {
+                        if (val >= 5 && val <= 9) canBeValid = true;
+                        else if (val >= 1 && val <= 4) canBeSeparator = true;
+                    } else if (axis === "row") {
+                        if (val >= 1 && val <= 4) canBeValid = true;
+                        else if (val >= 5 && val <= 9) canBeSeparator = true;
+                    }
                 }
 
                 if (canBeSeparator) {
@@ -2016,9 +2024,9 @@ var SudokuCSP = (function() {
                 var room = values[0];
                 return !room || room > values.length || !values[room - 1] || values[room - 1] === clue.value;
             }
-            if (clue.relation === "oddsums" || clue.relation === "japanesesums") {
+            if (clue.relation === "oddsums" || clue.relation === "japanesesums" || clue.relation === "bigsmalljapanesesums") {
                 var values = clue.cells.map(function(cell) { return cellValue(board, cell); });
-                return checkSumsSequence(values, clue.value, clue.relation);
+                return checkSumsSequence(values, clue.value, clue.relation, clue.axis);
             }
             if (clue.relation === "xsums") {
                 var count = values[0];

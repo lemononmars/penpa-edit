@@ -159,6 +159,10 @@ function cspImplementationFor(variation: Variation) {
   const values = clue.cells.map(cell => cellValue(board, cell));
   return checkSumsSequence(values, clue.value, clue.relation);
 }`,
+        bigsmalljapanesesums: `validatePartial(board, clue) {
+  const values = clue.cells.map(cell => cellValue(board, cell));
+  return checkSumsSequence(values, clue.value, clue.relation, clue.axis);
+}`,
         oddsums: `validatePartial(board, clue) {
   const values = clue.cells.map(cell => cellValue(board, cell));
   return checkSumsSequence(values, clue.value, clue.relation);
@@ -466,6 +470,12 @@ export function solverTestCasesFor(variation: Variation) {
   // 5(odd), 2(even), 1+3=4(odd), 6(even).
   assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);
   assert.equal(solve(board, { outsideRelations: [{ ...clue, value: [5, 5] }] }).solved, false);
+});`,
+        bigsmalljapanesesums: `test("Big-Small Japanese Sums clues", () => {
+  const board = boardWith({ r1c1: 5, r1c2: 2, r1c3: 6, r1c4: 1, r1c5: 7, r1c6: 8, r1c7: 3, r1c8: 9, r1c9: 4 });
+  const clueRow = { relation: "bigsmalljapanesesums", axis: "row", cells: rowCells(1), value: [2, 1, 3, 4] };
+  assert.equal(solve(board, { outsideRelations: [clueRow] }).solved, true);
+  assert.equal(solve(board, { outsideRelations: [{ ...clueRow, value: [2, 1, 3, 5] }] }).solved, false);
 });`,
         roundoff: `test("rounds 14 down to 10 and 15 up to 20", () => {\n  assert.equal(solve(boardWith({ r1c1: 1, r1c2: 4 }), { roundOffCages: [{ cells: [r1c1, r1c2], total: 10 }] }).solved, true);\n  assert.equal(solve(boardWith({ r1c1: 1, r1c2: 5 }), { roundOffCages: [{ cells: [r1c1, r1c2], total: 20 }] }).solved, true);\n});`,
         ordering: `test("forces groups to form ascending 2-digit values", () => {\n  assert.equal(solve(boardWith({ r1c1: 1, r1c2: 2, r2c1: 3, r2c2: 4 }), { orderingGroups: [[{ cells: [r1c1, r1c2], order: 1 }, { cells: [r2c1, r2c2], order: 2 }]] }).solved, true);\n  assert.equal(solve(boardWith({ r1c1: 3, r1c2: 4, r2c1: 1, r2c2: 2 }), { orderingGroups: [[{ cells: [r1c1, r1c2], order: 1 }, { cells: [r2c1, r2c2], order: 2 }]] }).solved, false);\n});`,

@@ -2451,7 +2451,7 @@ var SudokuSolver = (function() {
             "fullrank", "outsideparity", "parityparty", "serbianframe", "median", "descriptivepairs",
             "maximin", "minimax", "ascendingstarters", "before9", "oddevenbigsmall", "before1after9", "firstseenoddeven", "maxascending",
             "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers",
-            "position", "sumnexttonine", "wrongoutsidesum", "doublesandwich", "xaverage", "triplesum", "japanesesums", "oddsums", "partitionedsums"].filter(function(name) {
+            "position", "sumnexttonine", "wrongoutsidesum", "doublesandwich", "xaverage", "triplesum", "japanesesums", "oddsums", "partitionedsums", "bigsmalljapanesesums"].filter(function(name) {
             return variantEnabled(puzzle, name);
         });
         if (activeOutsideVariants.length) {
@@ -2490,7 +2490,7 @@ var SudokuSolver = (function() {
                             outsideColumn, outsideBoxHeight, "column", "before1");
                         addOutsideRelation((outsideStartCol - 2) + (outsideStartRow + outsideIndex) * puzzle.nx0,
                             outsideRow, outsideBoxWidth, "row", "before1");
-                    } else if (variant === "partitionedsums") {
+                    } else if (variant === "partitionedsums" || variant === "bigsmalljapanesesums") {
                         var colClues = [];
                         var rowClues = [];
                         for (var layer = 0; layer < 5; layer++) {
@@ -2502,7 +2502,7 @@ var SudokuSolver = (function() {
                         }
                         if (colClues.length > 0) {
                             constraints.outsideRelations.push({
-                                relation: "partitionedsums",
+                                relation: variant,
                                 value: colClues,
                                 cells: outsideColumn,
                                 axis: "column"
@@ -2510,7 +2510,7 @@ var SudokuSolver = (function() {
                         }
                         if (rowClues.length > 0) {
                             constraints.outsideRelations.push({
-                                relation: "partitionedsums",
+                                relation: variant,
                                 value: rowClues,
                                 cells: outsideRow,
                                 axis: "row"
@@ -2524,7 +2524,7 @@ var SudokuSolver = (function() {
                             outsideColumn, outsideBoxHeight, "column");
                         addOutsideRelation((outsideStartCol - 1) + (outsideStartRow + outsideIndex) * puzzle.nx0,
                             outsideRow, outsideBoxWidth, "row");
-                        var leftTopOnly = ["starproduct", "edgedifference", "before9", "nextto9", "outsideconsecutive", "outsidekiller", "parityskyscrapers", "japanesesums", "oddsums"].indexOf(variant) !== -1;
+                        var leftTopOnly = ["starproduct", "edgedifference", "before9", "nextto9", "outsideconsecutive", "outsidekiller", "parityskyscrapers", "japanesesums", "oddsums", "bigsmalljapanesesums"].indexOf(variant) !== -1;
                         if (!leftTopOnly) {
                             addOutsideRelation((outsideStartCol + outsideIndex) + (outsideStartRow + SIZE) * puzzle.nx0,
                                 outsideColumn.slice().reverse(), outsideBoxHeight, "column");

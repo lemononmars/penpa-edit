@@ -585,6 +585,9 @@
         "outsidekiller",
         "parityskyscrapers",
         "positionsums",
+        "japanesesums",
+        "oddsums",
+        "bigsmalljapanesesums",
       ].includes(selectedVariant);
       let layers = [
         "outside",
@@ -597,6 +600,7 @@
         : 1;
       if (selectedVariant === "before1after9") layers = 2;
       if (selectedVariant === "positionsums") layers = 2;
+      if (selectedVariant === "bigsmalljapanesesums") layers = 5;
       ensureOutsideSpace(
         layers,
         selectedVariant === "triplesum"

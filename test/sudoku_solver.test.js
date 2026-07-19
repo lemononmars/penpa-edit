@@ -2920,3 +2920,24 @@ test("Tableaux", function() {
         tableauxCages: [{ cells: [{ row: 0, col: 2 }, { row: 3, col: 6 }] }]
     }).solved, false);
 });
+
+test("Big-Small Japanese Sums validate sequences", function() {
+    const rawBS = {
+        nx0: 9, ny0: 9,
+        activeSudokuVariants: ["bigsmalljapanesesums"],
+        pu_q: { number: {
+            15: ["2", 1, "1"],
+            6: ["1", 1, "1"]
+         }, numberS: {}, symbol: {}, thermo: [], nobulbthermo: [], killercages: [] }
+    };
+    const bsConstraints = SudokuSolver.readConstraints(rawBS);
+    assert.equal(bsConstraints.supported.includes("bigsmalljapanesesums"), true);
+
+    const boardBS = Array.from({length: 9}, () => Array(9).fill(0));
+    boardBS[0] = [5, 2, 6, 1, 7, 8, 3, 9, 4];
+    const clueBSRow = { relation: "bigsmalljapanesesums", value: [2, 1, 3, 4], cells: boardBS[0].map((_, i) => ({row: 0, col: i})), axis: "row" };
+    assert.equal(SudokuCSP.solve(boardBS, { outsideRelations: [clueBSRow] }).solved, true);
+
+    const clueBSCol = { relation: "bigsmalljapanesesums", value: [5, 6, 15, 9], cells: boardBS[0].map((_, i) => ({row: 0, col: i})), axis: "column" };
+    assert.equal(SudokuCSP.solve(boardBS, { outsideRelations: [clueBSCol] }).solved, true);
+});
