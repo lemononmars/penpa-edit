@@ -195,7 +195,7 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "quadruple" || variation.value === "exclusion") {
-        add("number", "4", 6, ["mo_number_lb", "sub_number4_lb"]);
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "groupsum") {
