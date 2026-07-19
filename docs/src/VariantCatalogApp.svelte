@@ -82,7 +82,7 @@
     const stored = /[&]variants=/.test(example)
       ? example
       : `${example}&variants=${encodeURIComponent(`classic,${variant}`)}`;
-    base.hash = `m=solve&tab=answer&v=0&p=${stored}`;
+    base.hash = `m=solve&tab=solve&v=0&p=${stored}`;
     return base.href;
   }
 
@@ -789,7 +789,7 @@
     min-width: 0; /* allows shrinking */
   }
   .variant-examples {
-    width: 400px;
+    width: 50%;
     flex-shrink: 0;
     position: sticky;
     top: 24px;
