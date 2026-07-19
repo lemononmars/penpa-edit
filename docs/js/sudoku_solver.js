@@ -438,11 +438,12 @@ var SudokuSolver = (function() {
     function connectedLinePaths(puzzle, style) {
         var active = {};
         (puzzle.centerlist || []).forEach(function(key) { active[key] = true; });
+
         var adjacency = {};
         Object.keys(puzzle.pu_q.line || {}).forEach(function(edge) {
             if (puzzle.pu_q.line[edge] !== style) return;
             var endpoints = edge.split(",").map(Number);
-            if (endpoints.length !== 2 || !active[endpoints[0]] || !active[endpoints[1]]) return;
+            if (endpoints.length !== 2 || !active[endpoints[0]] || !active[endpoints[1]]) { return; }
             (adjacency[endpoints[0]] || (adjacency[endpoints[0]] = [])).push(endpoints[1]);
             (adjacency[endpoints[1]] || (adjacency[endpoints[1]] = [])).push(endpoints[0]);
         });
@@ -588,7 +589,8 @@ var SudokuSolver = (function() {
             symmetricUnequal: [],
             stretchedThermos: [],
             productKillers: [],
-            sumOrProductKillers: [],
+sumOrProductKillers: [],
+            threeDigitNumbersKillers: [],
             tableauxCages: [],
             soloKillerGroups: [],
             outsideRelations: [],
@@ -739,7 +741,7 @@ var SudokuSolver = (function() {
         var cages = typeof puzzle.refreshKillerCages === "function" ?
             puzzle.refreshKillerCages("pu_q") : (puzzle.pu_q.killercages || []);
         var regionVariantNames = ["clone", "consecutiveclone", "renban", "windoku",
-            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "codedclone", "number 5 is alive", "sumset", "zones", "somewhere", "sumorproductkiller", "tableaux", "roundoff", "ordering"];
+            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "codedclone", "number 5 is alive", "sumset", "zones", "somewhere", "sumorproductkiller", "tableaux", "roundoff", "ordering","threedigitnumberskiller"];
         var usesCagedRegions = regionVariantNames.some(function(name) { return variantEnabled(puzzle, name); });
         var regionCages = [];
         for (var k = 0; k < cages.length; k++) {
@@ -796,7 +798,7 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push("productkiller");
         }
-        if (variantEnabled(puzzle, "sumorproductkiller")) {
+if (variantEnabled(puzzle, "sumorproductkiller")) {
             for (var spIndex = 0; spIndex < cages.length; spIndex++) {
                 var spCells = pathToCells(puzzle, cages[spIndex]);
                 var spTotal = readKillerTotal(puzzle, cages[spIndex]);
@@ -804,6 +806,53 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push("sumorproductkiller");
         }
+
+
+
+
+
+
+        if (variantEnabled(puzzle, "threedigitnumberskiller")) {
+            var lines = connectedLinePaths(puzzle, 5);
+            for (var tIndex = 0; tIndex < cages.length; tIndex++) {
+                var tCells = pathToCells(puzzle, cages[tIndex]);
+                var tTotal = readKillerTotal(puzzle, cages[tIndex]);
+                if (tCells.length) {
+                    var intersectingLines = [];
+                    for (var lg = 0; lg < lines.length; lg++) {
+                        var lineGroup = lines[lg];
+                        if (lineGroup.length === 3) {
+                            var allInCage = true;
+                            for (var lgc = 0; lgc < lineGroup.length; lgc++) {
+                                var found = false;
+                                for (var tc = 0; tc < tCells.length; tc++) {
+                                    if (lineGroup[lgc].row === tCells[tc].row && lineGroup[lgc].col === tCells[tc].col) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                                if (!found) {
+                                    allInCage = false;
+                                    break;
+                                }
+                            }
+                            if (allInCage) {
+                                intersectingLines.push(lineGroup);
+                            }
+                        }
+                    }
+                    constraints.threeDigitNumbersKillers.push({ cells: tCells, total: tTotal, lines: intersectingLines });
+                }
+            }
+            constraints.supported.push("threedigitnumberskiller");
+        }
+
+
+
+
+
+
+
         if (variantEnabled(puzzle, "tableaux")) {
             for (var tIndex = 0; tIndex < cages.length; tIndex++) {
                 var tCells = pathToCells(puzzle, cages[tIndex]);
@@ -3378,6 +3427,7 @@ var SudokuSolver = (function() {
         AUTO_RUN_LIMIT_MS: AUTO_RUN_LIMIT_MS,
         TEST_BOARD_URL: TEST_BOARD_URL,
         isClassicSudoku: isClassicSudoku,
+
         cellKey: cellKey,
         digitFromEntry: digitFromEntry,
         readBoard: readBoard,
