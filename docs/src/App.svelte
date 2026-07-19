@@ -27,7 +27,7 @@
   let legacyControlsHost: HTMLElement;
   let variants: VariantOption[] = [];
   let selectedVariant = "classic";
-  let layer = "problem";
+  let layer = "solution";
   let autoEnabled = false;
   let initialized = false;
   let zoom = 1;
@@ -1326,57 +1326,23 @@
     <div class="mobile-header-row">
       <button
         type="button"
-        class:active={mobileActiveTab === "controls"}
-        on:click={() =>
-          (mobileActiveTab =
-            mobileActiveTab === "controls" ? "none" : "controls")}
+        on:click={() => legacyClick("sudoku_solve_once")}
       >
-        🔧 Rules & Controls
+        <span><i class="fa fa-magic" aria-hidden="true"></i></span> Solve
       </button>
       <button
         type="button"
-        class:active={mobileActiveTab === "actions"}
-        on:click={() =>
-          (mobileActiveTab =
-            mobileActiveTab === "actions" ? "none" : "actions")}
+        on:click={() => legacyClick("sudoku_undo")}
       >
-        📊 Actions
+        <span>↶</span> Undo
       </button>
-    </div>
-    <div class="mobile-header-row solver-row">
       <button
         type="button"
-        class="solver-btn"
-        class:active={autoEnabled}
-        on:click={() => legacyClick("sudoku_auto_solver")}
+        on:click={clearMarks}
       >
-        <i class="fa fa-refresh" aria-hidden="true"></i>
-        {autoEnabled ? "ON" : "OFF"}
+        <span>↺</span> Clear mark
       </button>
-      {#if !autoEnabled}
-        <button
-          type="button"
-          class="solver-btn"
-          on:click={() => legacyClick("sudoku_solve_once")}
-        >
-          <i class="fa fa-magic" aria-hidden="true"></i> Solve
-        </button>
-      {/if}
-      <div class="solver-status">
-        <span class="status-indicator" class:running={solverRunning}></span>
-        <span class="log-text">{lastLogLine}</span>
-        <button
-          type="button"
-          class="expand-btn"
-          aria-expanded={fullLogExpanded}
-          on:click={() => (fullLogExpanded = !fullLogExpanded)}
-          >{fullLogExpanded ? "Close" : "Log"}</button
-        >
-      </div>
     </div>
-    {#if fullLogExpanded}
-      <pre class="full-log-box">{fullLogContent || "No solver log yet."}</pre>
-    {/if}
   </div>
   <main class="studio-grid">
     <aside class="column controls" aria-label="Puzzle controls">

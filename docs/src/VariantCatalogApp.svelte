@@ -268,32 +268,6 @@
               </iframe>
             </div>
 
-            <div class="iframe-container" style="margin-top: 24px;">
-              <div class="iframe-header">
-                <h2>Solved State</h2>
-              </div>
-              <iframe
-                src={exampleUrl(detailVariation.example, detailVariation.value)}
-                title="Solved {detailVariation.name} Example"
-                style="width: 100%; height: 500px; border: none;"
-                on:load={function(e) {
-                  const iframe = e.target;
-                  if (iframe && iframe.contentWindow) {
-                    const checkInterval = setInterval(() => {
-                      if (iframe.contentWindow.SudokuTools) {
-                        clearInterval(checkInterval);
-                        iframe.contentWindow.SudokuTools.solveOnceAutoEnabled = true;
-
-                        const solveBtn = iframe.contentWindow.document.getElementById('sudoku_solve_once');
-                        if (solveBtn) {
-                          solveBtn.click();
-                        }
-                      }
-                    }, 500);
-                  }
-                }}>
-              </iframe>
-            </div>
           </aside>
         {/if}
         </div>
