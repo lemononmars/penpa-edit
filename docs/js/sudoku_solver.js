@@ -555,6 +555,7 @@ var SudokuSolver = (function() {
             somewhere: [],
             regionAllDifferent: [],
             regionCoverage: [],
+            watchtowers: [],
             scatteredAllDifferent: [],
             invalidRegions: [],
             extraLargeRegions: [],
@@ -1201,6 +1202,10 @@ var SudokuSolver = (function() {
             var cell = keyToCell(puzzle, Number(key));
             if (cell) shadedCells.push(cell);
         });
+        if (variantEnabled(puzzle, "watchtowers")) {
+            constraints.watchtowers.push(shadedCells);
+            constraints.supported.push("watchtowers");
+        }
         if (variantEnabled(puzzle, "scattered")) {
             if (shadedCells.length === SIZE) {
                 constraints.scatteredAllDifferent.push(shadedCells);
