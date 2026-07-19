@@ -560,6 +560,7 @@ var SudokuSolver = (function() {
             edgeRelations: [],
             catalogLines: [],
             quadRelations: [],
+            mathdoku: [],
             directionalMarks: [],
             sumDetectorGroups: [],
             shadedParityGroups: [],
@@ -1634,7 +1635,7 @@ var SudokuSolver = (function() {
             constraints.supported.push(diagVariant);
         }
         var quadVariant = ["quadruple", "equalsums", "equaldifferences", "equalproducts", "equalratios",
-            "consecutivequads", "clockfaces", "exclusion", "groupsum", "crosssums", "determinant", "fullorhalf"].find(function(name) { return variantEnabled(puzzle, name); });
+            "consecutivequads", "clockfaces", "exclusion", "groupsum", "crosssums", "determinant", "fullorhalf", "mathrax"].find(function(name) { return variantEnabled(puzzle, name); });
         if (quadVariant) {
             function quadCells(key) {
                 var point = puzzle.point && puzzle.point[key];
@@ -1643,14 +1644,19 @@ var SudokuSolver = (function() {
                     .map(function(neighbor) { return keyToCell(puzzle, neighbor); }).filter(Boolean)
                     .sort(function(first, second) { return first.row - second.row || first.col - second.col; });
             }
-            if (quadVariant === "quadruple" || quadVariant === "exclusion" || quadVariant === "groupsum" || quadVariant === "determinant") {
+            if (quadVariant === "quadruple" || quadVariant === "exclusion" || quadVariant === "groupsum" || quadVariant === "determinant" || quadVariant === "mathrax") {
                 Object.keys(puzzle.pu_q.number || {}).forEach(function(key) {
                     var cells = quadCells(key);
                     if (cells.length !== 4) return;
-                    var digits = String(puzzle.pu_q.number[key][0]).split("").map(Number).filter(function(value) {
+                    var text = String(puzzle.pu_q.number[key][0]).trim();
+                    if (quadVariant === "mathrax") {
+                        constraints.quadRelations.push({ cells: cells, relation: quadVariant, text: text });
+                        return;
+                    }
+                    var digits = text.split("").map(Number).filter(function(value) {
                         return value >= 1 && value <= SIZE;
                     });
-                    var total = parseInt(puzzle.pu_q.number[key][0], 10);
+                    var total = parseInt(text, 10);
                     if ((quadVariant === "groupsum" || quadVariant === "determinant") && Number.isFinite(total)) {
                         constraints.quadRelations.push({ cells: cells, relation: quadVariant, total: total });
                     } else if (digits.length) constraints.quadRelations.push({ cells: cells, relation: quadVariant, digits: digits });
@@ -2250,6 +2256,64 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push("lc");
         }
+        if (variantEnabled(puzzle, "mathdoku")) {
+            var mathdokuEdges = [];
+            function catalogEdgeCellsMathdoku(key) {
+                var point = puzzle.point && puzzle.point[key];
+                if (!point || !Array.isArray(point.neighbor)) return [];
+                return point.neighbor.filter(function(neighbor) { return activeCells[neighbor]; })
+                    .map(function(neighbor) { return keyToCell(puzzle, neighbor); }).filter(Boolean);
+            }
+            Object.keys(numbers).forEach(function(key) {
+                var cells = catalogEdgeCellsMathdoku(key);
+                if (cells.length === 2) {
+                    var target = numbers[key] && parseInt(numbers[key][0], 10);
+                    if (Number.isFinite(target)) {
+                        cells.sort(function(first, second) { return first.row - second.row || first.col - second.col; });
+                        mathdokuEdges.push({ cells: cells, target: target });
+                    }
+                }
+            });
+            var blockDimensions = boxDimensions(SIZE);
+            var blockHeight = blockDimensions.height, blockWidth = blockDimensions.width;
+            var boxClues = {};
+            mathdokuEdges.forEach(function(clue) {
+                var row = clue.cells[0].row;
+                var col = clue.cells[0].col;
+                var boxRow = Math.floor(row / blockHeight);
+                var boxCol = Math.floor(col / blockWidth);
+                var boxIndex = boxRow * (SIZE / blockWidth) + boxCol;
+                // If it's a horizontal edge, both cells have same row. If vertical, same col.
+                var isInternal = false;
+                if (clue.cells[0].row === clue.cells[1].row) {
+                    if (Math.floor(clue.cells[1].col / blockWidth) === boxCol) isInternal = true;
+                } else if (clue.cells[0].col === clue.cells[1].col) {
+                    if (Math.floor(clue.cells[1].row / blockHeight) === boxRow) isInternal = true;
+                }
+                if (isInternal) {
+                    boxClues[boxIndex] = boxClues[boxIndex] || [];
+                    boxClues[boxIndex].push(clue);
+                }
+            });
+            Object.keys(boxClues).forEach(function(boxIndex) {
+                if (boxClues[boxIndex].length === 4) {
+                    var cellMap = {};
+                    var cells = [];
+                    boxClues[boxIndex].forEach(function(clue) {
+                        clue.cells.forEach(function(cell) {
+                            var cellKey = cell.row + "," + cell.col;
+                            if (!cellMap[cellKey]) {
+                                cellMap[cellKey] = true;
+                                cells.push(cell);
+                            }
+                        });
+                    });
+                    constraints.mathdoku.push({ cells: cells, clues: boxClues[boxIndex] });
+                }
+            });
+            constraints.supported.push("mathdoku");
+        }
+
         var catalogEdgeVariant = ["difference", "sum", "product", "arithmetic", "greater", "lesser", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts",
             "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares",
             "primesums", "twodigitprimenumbers", "fives", "oneortwodifferencepairs", "teneleven"].find(function(name) {
