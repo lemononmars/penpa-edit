@@ -2818,6 +2818,16 @@ test("validates new variants: position, sum next to nine, wrong outside sum, mul
         { relation: "multiples", cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }], target: 7 }
     ] }).solved, false);
 
+    // ratio: edge relation.
+    // r0c1 (3) and r0c3 (6). Ratio is 1:2.
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "ratio", cells: [{ row: 0, col: 1 }, { row: 0, col: 3 }], sign: "1:2" }
+    ] }).solved, true);
+    // Ratio of 3 and 6 is not 1:3
+    assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
+        { relation: "ratio", cells: [{ row: 0, col: 1 }, { row: 0, col: 3 }], sign: "1:3" }
+    ] }).solved, false);
+
     // 5. double sandwich: in row0 (5,3,4,6,7,8,9,1,2), positions of 1, 5, 9 are:
     // 5 at index 0, 9 at index 6, 1 at index 7.
     // Sorted indices: 0 (5) < 6 (9) < 7 (1).
@@ -3350,4 +3360,5 @@ test("Braille parsing and CSP validation", () => {
     assert.equal(validate(5, [0, 3]), false); // 5 only has dots 0, 4
 
 
+});
 });

@@ -2250,7 +2250,7 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push("lc");
         }
-        var catalogEdgeVariant = ["difference", "sum", "product", "arithmetic", "greater", "lesser", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts",
+        var catalogEdgeVariant = ["difference", "sum", "product", "arithmetic", "greater", "lesser", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts", "ratio",
             "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares",
             "primesums", "twodigitprimenumbers", "fives", "oneortwodifferencepairs", "teneleven"].find(function(name) {
                 return variantEnabled(puzzle, name);
@@ -2263,14 +2263,15 @@ var SudokuSolver = (function() {
                 return point.neighbor.filter(function(neighbor) { return activeCells[neighbor]; })
                     .map(function(neighbor) { return keyToCell(puzzle, neighbor); }).filter(Boolean);
             }
-            if (["difference", "sum", "product", "arithmetic", "greater", "lesser", "inequality", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts"].indexOf(catalogEdgeVariant) !== -1) {
+            if (["difference", "sum", "product", "arithmetic", "greater", "lesser", "inequality", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts", "ratio"].indexOf(catalogEdgeVariant) !== -1) {
                 Object.keys(numbers).forEach(function(key) {
                     var cells = catalogEdgeCells(key);
                     var target = numbers[key] && parseInt(numbers[key][0], 10);
                     var text = numbers[key] && String(numbers[key][0]).trim();
                     if (cells.length === 2 && (Number.isFinite(target) ||
                         ((catalogEdgeVariant === "inequality" || catalogEdgeVariant === "blocksumrelations") &&
-                            (text === "<" || text === ">" || text === "^" || text === "v" || text === "V")))) {
+                            (text === "<" || text === ">" || text === "^" || text === "v" || text === "V")) ||
+                        (catalogEdgeVariant === "ratio" && text.indexOf(":") !== -1))) {
                         cells.sort(function(first, second) { return first.row - second.row || first.col - second.col; });
                         var sign = text;
                         if (text === "^") sign = "<";

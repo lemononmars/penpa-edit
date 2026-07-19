@@ -1755,6 +1755,13 @@ registerConstraint("emitters", {
                 case "divisor":
                 case "multiples": return clue.target > 0 && (first * 10 + second) % clue.target === 0;
                 case "eitheror": return first === clue.target || second === clue.target;
+                case "ratio":
+                    var parts = clue.sign.split(":");
+                    var x = parseInt(parts[0], 10);
+                    var y = parseInt(parts[1], 10);
+                    var v1 = board.isZeroEight ? first - 1 : first;
+                    var v2 = board.isZeroEight ? second - 1 : second;
+                    return (v1 * y === v2 * x) || (v1 * x === v2 * y);
                 case "blocksumrelations":
                     var groupValues = (clue.groups || []).map(function(group) {
                         var values = group.map(function(cell) { return cellValue(board, cell); });

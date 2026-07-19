@@ -382,7 +382,8 @@ function cspImplementationFor(variation: Variation) {
         lesser: "Math.min(a, b) === clue.value",
         consecutive: "Math.abs(a - b) === 1",
         evensumpairs: "((board.isZeroEight?a-1:a) + (board.isZeroEight?b-1:b)) % 2 === 0",
-        oddsumpairs: "((board.isZeroEight?a-1:a) + (board.isZeroEight?b-1:b)) % 2 === 1"
+        oddsumpairs: "((board.isZeroEight?a-1:a) + (board.isZeroEight?b-1:b)) % 2 === 1",
+        ratio: "(() => { const [x, y] = clue.sign.split(':').map(Number); const v1 = board.isZeroEight?a-1:a; const v2 = board.isZeroEight?b-1:b; return v1 * y === v2 * x || v1 * x === v2 * y; })()"
     };
     if (edgeRelations[variation.value]) {
         return `function ${functionName}(board, clue) {\n  const [a, b] = clue.cells.map(cell => cellValue(board, cell));\n  return !a || !b || ${edgeRelations[variation.value]};\n}`;
