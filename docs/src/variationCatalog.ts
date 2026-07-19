@@ -266,11 +266,11 @@ function genericSetting(variation: Variation) {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["inequality", "xydifference", "perfectsquares", "primesums", "twodigitprimenumbers", "fives"].includes(variation.value)) {
-        add(variation.value === "inequality" ? "number" : "symbol",
-            variation.value === "inequality" ? "5" : "diamond_SS",
-            variation.value === "inequality" ? 6 : 2,
-            variation.value === "inequality" ? ["mo_number_lb", "sub_number5_lb"] :
+    if (["inequality", "xydifference", "perfectsquares", "primesums", "twodigitprimenumbers", "fives", "wildcard"].includes(variation.value)) {
+        add((variation.value === "inequality" || variation.value === "wildcard") ? "number" : "symbol",
+            (variation.value === "inequality" || variation.value === "wildcard") ? "5" : "diamond_SS",
+            (variation.value === "inequality" || variation.value === "wildcard") ? 6 : 2,
+            (variation.value === "inequality" || variation.value === "wildcard") ? ["mo_number_lb", "sub_number5_lb"] :
                 ["mo_symbol_lb", "ms1", "li_diamond"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }

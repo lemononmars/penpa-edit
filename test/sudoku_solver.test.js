@@ -104,6 +104,23 @@ test("reads playable cells through an expanded outside-clue margin", function() 
     assert.equal(board[0][0], 7);
 });
 
+test("Wildcard parses symbols into wildcard constraints", function() {
+    const puzzle = { activeSudokuVariant: "wildcard", nx: 9, ny: 9, nx0: 13, ny0: 13, centerlist: [28, 29], point: {}, pu_q: { number: { 28: ["<", 5, "1"], 29: [">", 5, "1"] } } };
+    const constraints = SudokuSolver.readConstraints(puzzle);
+    assert.deepStrictEqual(constraints.wildcards[0].map(c => ({ cell: { row: c.cell.row, col: c.cell.col }, sign: c.sign })), [{ cell: { row: 0, col: 0 }, sign: "<" }, { cell: { row: 0, col: 1 }, sign: ">" }]);
+    assert.ok(constraints.supported.includes("wildcard"));
+});
+
+test("Wildcard solver end to end", function() {
+    const puzzle = { activeSudokuVariant: "wildcard", nx: 9, ny: 9, nx0: 13, ny0: 13, centerlist: [28, 29], point: {}, pu_q: { number: { 28: ["<", 5, "1"], 29: [">", 5, "1"] } } };
+    const constraints = SudokuSolver.readConstraints(puzzle);
+    const board = emptyBoard();
+    board[0][0] = 6;
+    board[0][1] = 7;
+
+    assert.equal(SudokuSolver.solve(board, constraints).solved, false);
+});
+
 test("solves a 6x6 Sudoku with 2x3 boxes", function() {
     const puzzle = [
         [1, 0, 3, 4, 0, 6],

@@ -1078,6 +1078,24 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("wildcards", {
+        validatePartial: function(board, clue) {
+            var SIZE = board.length;
+            var maxLessThan = 0;
+            var minGreaterThan = SIZE + 1;
+            for (var index = 0; index < clue.length; index++) {
+                var value = cellValue(board, clue[index].cell);
+                if (!value) continue;
+                if (clue[index].sign === "<") {
+                    maxLessThan = Math.max(maxLessThan, value);
+                } else if (clue[index].sign === ">") {
+                    minGreaterThan = Math.min(minGreaterThan, value);
+                }
+            }
+            return maxLessThan <= minGreaterThan - 2;
+        }
+    });
+
     registerConstraint("inequalityTriples", {
         validatePartial: function(board) {
             if (SIZE !== 9) return false;

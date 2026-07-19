@@ -220,6 +220,7 @@ function cspImplementationFor(variation: Variation) {
         twodigitprimenumbers: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const value = 10 * a + b;\n  const isPrime = [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97].includes(value);\n  return clue.marked ? isPrime : !isPrime;\n}`,
         average: `validatePartial(board, clue) {\n  const center = cellValue(board, clue.center), ends = clue.ends.map(cellValue);\n  if (!center || ends.some(value => !value)) return true;\n  return clue.marked === (center * 2 === ends[0] + ends[1]);\n}`,
         fortress: `validatePartial(board, clue) {\n  const shaded = cellValue(board, clue.shaded), unshaded = cellValue(board, clue.unshaded);\n  return !shaded || !unshaded || shaded > unshaded;\n}`,
+        wildcard: `validatePartial(board, clue) {\n  let maxLessThan = 0, minGreaterThan = board.length + 1;\n  for (const c of clue) {\n    const value = cellValue(board, c.cell);\n    if (value && c.sign === "<") maxLessThan = Math.max(maxLessThan, value);\n    if (value && c.sign === ">") minGreaterThan = Math.min(minGreaterThan, value);\n  }\n  return maxLessThan <= minGreaterThan - 2;\n}`,
         inequality: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  return !a || !b || (clue.sign === "<" ? a < b : a > b);\n}`,
         trio: `validatePartial(board, clue) {\n  const value = cellValue(board, clue.cell);\n  return !value || (value >= clue.minimum && value <= clue.maximum);\n}`,
         watchtowers: `validatePartial(board, shadedCells) {\n  // Implementation omitted\n}`,
@@ -528,6 +529,8 @@ test("Braille rejects invalid dots", () => {
         return "A cage with clue '5' must contain at least one 5. Partial assignments are valid if empty cells remain to accommodate the missing digit.";
     }
     const cases: Record<string, string> = {
+        wildcard: `test("Wildcard enforces consistent values relative to a hidden wildcard digit", () => {\n  let board = boardWith({});\n  board[0][0] = 5;\n  board[0][1] = 7;\n  expect(validatePartial(board, [{ cell: { row: 0, col: 0 }, sign: "<" }, { cell: { row: 0, col: 1 }, sign: ">" }])).toBe(true);\n  board[0][0] = 6;\n  expect(validatePartial(board, [{ cell: { row: 0, col: 0 }, sign: "<" }, { cell: { row: 0, col: 1 }, sign: ">" }])).toBe(false);\n});`,
+
         chesskings: `test("Chess Kings rejects a board if no 2 king digits are possible", () => {
   const board = boardWith({}); // Empty board
   const pairs = [];

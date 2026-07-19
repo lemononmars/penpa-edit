@@ -621,6 +621,7 @@ var SudokuSolver = (function() {
             tictactoe: [],
             roundOffCages: [],
             orderingGroups: [],
+            wildcards: [],
             braille: [],
             supported: ["classic"]
         };
@@ -2395,6 +2396,25 @@ var SudokuSolver = (function() {
         if (variantEnabled(puzzle, "uniquerectangles")) {
             constraints.uniqueRectangles.push({});
             constraints.supported.push("uniquerectangles");
+        }
+        if (variantEnabled(puzzle, "wildcard")) {
+            var wildcardCells = [];
+            Object.keys(puzzle.pu_q.number || {}).forEach(function(key) {
+                if (!activeCells[key]) return;
+                var entry = puzzle.pu_q.number[key];
+                var text = entry && String(entry[0]).trim();
+                if (text === "<" || text === ">" || text === "^" || text === "v" || text === "V") {
+                    var sign = text;
+                    if (text === "^") sign = "<";
+                    if (text === "v" || text === "V") sign = ">";
+                    var cell = keyToCell(puzzle, Number(key));
+                    if (cell) wildcardCells.push({ cell: cell, sign: sign });
+                }
+            });
+            if (wildcardCells.length) {
+                constraints.wildcards.push(wildcardCells);
+                constraints.supported.push("wildcard");
+            }
         }
         if (variantEnabled(puzzle, "inequalitytriples")) {
             constraints.inequalityTriples.push({});
