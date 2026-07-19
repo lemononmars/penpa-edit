@@ -1365,14 +1365,15 @@ var SudokuSolver = (function() {
             if (clonedStrands.length) constraints.cellRelations.push({ relation: "clonedstrands", strands: clonedStrands });
             constraints.supported.push("clonedstrands");
         }
-        ["equal sum line", "german whispers", "factor lines"].forEach(function(variant) {
+        ["equal sum line", "german whispers", "factor lines", "24-trio"].forEach(function(variant) {
             if (!variantEnabled(puzzle, variant)) return;
             connectedLinePaths(puzzle, 3).forEach(function(path) {
-                if (path.length > 1) {
+                if (path.length > 1 && !(variant === "24-trio" && path.length !== 3)) {
                     var relationMap = {
                         "equal sum line": "equalsumline",
                         "german whispers": "germanwhispers",
-                        "factor lines": "factorlines"
+                        "factor lines": "factorlines",
+                        "24-trio": "24trio"
                     };
                     constraints.catalogLines.push({ path: path, relation: relationMap[variant] });
                 }
@@ -1380,7 +1381,8 @@ var SudokuSolver = (function() {
             var mappedSupported = {
                 "equal sum line": "equalsumline",
                 "german whispers": "germanwhispers",
-                "factor lines": "factorlines"
+                "factor lines": "factorlines",
+                "24-trio": "24trio"
             };
             constraints.supported.push(mappedSupported[variant]);
         });

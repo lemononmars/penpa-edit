@@ -85,7 +85,7 @@
       "rules": {
         "9x9": "The three numbers placed along marked lines must result in 24 after applying two of the arithmetic operations (+, x, -, /). The order of these numbers along the line does not matter. E.g. 395 can be combined as 24 = (3 x 5) + 9."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
