@@ -363,7 +363,7 @@ var SudokuSolver = (function() {
 
     function outsideSequenceFromEntry(entry) {
         if (!entry || ["1", "6", "10"].indexOf(String(entry[2])) === -1) return null;
-        var str = String(entry[0]).trim();
+        var str = String(entry[0]).trim().toUpperCase();;
         if (!str) return null;
         var parts = str.split(/[\s,\n]+/);
         var seq = [];
@@ -2449,7 +2449,7 @@ var SudokuSolver = (function() {
         }
         var activeOutsideVariants = ["starproduct", "bust", "xsums", "numberedrooms", "sumframe", "edgedifference",
             "fullrank", "outsideparity", "parityparty", "serbianframe", "median", "descriptivepairs",
-            "maximin", "minimax", "ascendingstarters", "before9", "before1after9", "firstseenoddeven", "maxascending",
+            "maximin", "minimax", "ascendingstarters", "before9", "oddevenbigsmall", "before1after9", "firstseenoddeven", "maxascending",
             "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers",
             "position", "sumnexttonine", "wrongoutsidesum", "doublesandwich", "xaverage", "triplesum", "japanesesums", "oddsums", "partitionedsums"].filter(function(name) {
             return variantEnabled(puzzle, name);
@@ -2465,7 +2465,7 @@ var SudokuSolver = (function() {
             var fullRankEntries = [];
             activeOutsideVariants.forEach(function(variant) {
                 function addOutsideRelation(key, cells, frameLength, axis, relation) {
-                    var clue = (variant === "japanesesums" || variant === "oddsums") ? outsideSequenceFromEntry(numbers[key]) : outsideClueFromEntry(numbers[key]);
+                    var clue = (variant === "japanesesums" || variant === "oddsums" || variant === "oddevenbigsmall") ? outsideSequenceFromEntry(numbers[key]) : outsideClueFromEntry(numbers[key]);
                     if (variant === "fullrank") {
                         fullRankEntries.push({ rank: clue, cells: cells });
                         return;
@@ -3701,7 +3701,7 @@ var SudokuTools = (function() {
         "numberedrooms", "sumframe", "productframe", "edgedifference", "fullrank", "outsideparity",
         "parityparty", "serbianframe", "median", "rossini", "before9",
         "before1after9", "ascendingstarters", "bouncing x-sums", "czech outsider", "distances",
-        "firstseenoddeven", "maxascending", "framediagonal",
+        "oddevenbigsmall", "firstseenoddeven", "maxascending", "framediagonal",
         "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers", "pointingdifferents",
         "sumskyscrapers", "sumsandwich", "positionsums", "xaverage", "triplesum",  "japanesesums", "oddsums", "partitionedsums"];
 
