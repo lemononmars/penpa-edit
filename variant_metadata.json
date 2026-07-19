@@ -6034,7 +6034,7 @@
       "rules": {
         "9x9": "The number in each cage shows either the sum or the product (or both) of all digits inside the cage. Digits may be repeated within a cage."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6192,7 +6192,7 @@
       "rules": {
         "9x9": "Apply class sudoku rules. Within cages, digits must increase from top to bottom along columns and increase along rows from left to right, even if there is a gap between two cells in a cage. Digits within a cage must be distinct."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [

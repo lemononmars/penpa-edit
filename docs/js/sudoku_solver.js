@@ -553,6 +553,8 @@ var SudokuSolver = (function() {
             symmetricUnequal: [],
             stretchedThermos: [],
             productKillers: [],
+            sumOrProductKillers: [],
+            tableauxCages: [],
             soloKillerGroups: [],
             outsideRelations: [],
             fullRankGroups: [],
@@ -683,7 +685,7 @@ var SudokuSolver = (function() {
         var cages = typeof puzzle.refreshKillerCages === "function" ?
             puzzle.refreshKillerCages("pu_q") : (puzzle.pu_q.killercages || []);
         var regionVariantNames = ["clone", "consecutiveclone", "renban", "windoku",
-            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "number 5 is alive", "sumset"];
+            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "number 5 is alive", "sumset", "sumorproductkiller", "tableaux"];
         var usesCagedRegions = regionVariantNames.some(function(name) { return variantEnabled(puzzle, name); });
         var regionCages = [];
         for (var k = 0; k < cages.length; k++) {
@@ -713,6 +715,21 @@ var SudokuSolver = (function() {
                 if (productCells.length && productTotal) constraints.productKillers.push({ cells: productCells, total: productTotal });
             }
             constraints.supported.push("productkiller");
+        }
+        if (variantEnabled(puzzle, "sumorproductkiller")) {
+            for (var spIndex = 0; spIndex < cages.length; spIndex++) {
+                var spCells = pathToCells(puzzle, cages[spIndex]);
+                var spTotal = readKillerTotal(puzzle, cages[spIndex]);
+                if (spCells.length && spTotal) constraints.sumOrProductKillers.push({ cells: spCells, total: spTotal });
+            }
+            constraints.supported.push("sumorproductkiller");
+        }
+        if (variantEnabled(puzzle, "tableaux")) {
+            for (var tIndex = 0; tIndex < cages.length; tIndex++) {
+                var tCells = pathToCells(puzzle, cages[tIndex]);
+                if (tCells.length) constraints.tableauxCages.push({ cells: tCells });
+            }
+            constraints.supported.push("tableaux");
         }
         if (variantEnabled(puzzle, "solokiller")) {
             if (regionCages.length) constraints.soloKillerGroups.push(regionCages);
