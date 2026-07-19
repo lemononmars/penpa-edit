@@ -680,32 +680,6 @@ var SudokuSolver = (function() {
                     constraints.arrows.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
                 }
 
-                                if (variantEnabled(puzzle, "zones")) {
-                    var label = readCageLabel(puzzle, cages[k]);
-                    if (label) {
-                        var digits = (label.match(/\d/g) || []).map(Number).filter(function(d) { return d > 0; });
-                        if (digits.length) {
-                            constraints.zones.push({ cells: cageCells, digits: digits });
-                        }
-                    }
-                }
-
-                if (variantEnabled(puzzle, "somewhere")) {
-                    var label = readCageLabel(puzzle, cages[k]);
-                    if (label) {
-                        var num = Number(label);
-                        if (!isNaN(num) && num > 0) {
-                            constraints.somewhere.push({ cells: cageCells, digit: num });
-                        }
-                    }
-                }
-
-                if (variantEnabled(puzzle, "odd even sum")) {
-                    var label = readCageLabel(puzzle, cages[k]);
-                    if (label === "O" || label === "E") {
-                        constraints.oddEvenSums.push({ cells: cageCells, parity: label === "O" ? "odd" : "even" });
-                    }
-                }
             }
         }
                 if (constraints.zones.length) {
@@ -739,6 +713,32 @@ var SudokuSolver = (function() {
             var cageCells = pathToCells(puzzle, cages[k]);
             if (cageCells.length) {
                 regionCages.push(cageCells);
+                                if (variantEnabled(puzzle, "zones")) {
+                    var label = readCageLabel(puzzle, cages[k]);
+                    if (label) {
+                        var digits = (label.match(/\d/g) || []).map(Number).filter(function(d) { return d > 0; });
+                        if (digits.length) {
+                            constraints.zones.push({ cells: cageCells, digits: digits });
+                        }
+                    }
+                }
+
+                if (variantEnabled(puzzle, "somewhere")) {
+                    var label = readCageLabel(puzzle, cages[k]);
+                    if (label) {
+                        var num = Number(label);
+                        if (!isNaN(num) && num > 0) {
+                            constraints.somewhere.push({ cells: cageCells, digit: num });
+                        }
+                    }
+                }
+
+                if (variantEnabled(puzzle, "odd even sum")) {
+                    var label = readCageLabel(puzzle, cages[k]);
+                    if (label === "O" || label === "E") {
+                        constraints.oddEvenSums.push({ cells: cageCells, parity: label === "O" ? "odd" : "even" });
+                    }
+                }
                 if (variantEnabled(puzzle, "killer") || (!usesCagedRegions && !variantEnabled(puzzle, "extraregion"))) {
                     constraints.killers.push({ cells: cageCells, total: readKillerTotal(puzzle, cages[k]) });
                 }

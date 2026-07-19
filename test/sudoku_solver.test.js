@@ -2786,7 +2786,8 @@ test("Repeated Neighbors validates duplicate orthogonal neighbors", function() {
     );
     // 8 at 0,0 has neighbors (0,1)=5, (1,0)=4. All unique.
     assert.equal(SudokuCSP.solve(solved, { repeatedNeighbors: [{row: 0, col: 0}] }).solved, false);
-test("validates round off variants", function() {
+});
+
 test("validates new variants: zones, somewhere", function() {
     var board = [
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
