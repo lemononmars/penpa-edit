@@ -301,6 +301,7 @@ export function cspConstraintFunctionFor(variation: Variation) {
     const markBodies: Record<string, string> = {
         "odd even": `const value = cellValue(board, mark.cell);\n  return !value || value % 2 === (mark.parity === "odd" ? 1 : 0);`,
         kropki: `const [a, b] = mark.cells.map(cell => cellValue(board, cell));\n  if (!a || !b) return true;\n  return mark.kind === "white" ? Math.abs(a - b) === 1 : Math.max(a, b) === 2 * Math.min(a, b);`,
+        doublekropki: `const [a, b] = mark.cells.map(cell => cellValue(board, cell));\n  if (!a || !b) return true;\n  return mark.kind === "white" ? Math.abs(a - b) === 2 : Math.max(a, b) === 4 * Math.min(a, b);`,
         xv: `const [a, b] = mark.cells.map(cell => cellValue(board, cell));\n  return !a || !b || a + b === (mark.kind === "V" ? 5 : 10);`,
         battenburg: `const parity = mark.cells.map(cell => { const value = cellValue(board, cell); return value ? value % 2 : null; });\n  return parity.some(value => value === null) || (parity[0] === parity[3] && parity[1] === parity[2] && parity[0] !== parity[1]);`,
         quadruple: `const values = mark.cells.map(cell => cellValue(board, cell));\n  return mark.digits.every(digit => values.includes(digit) || values.some(value => !value));`,

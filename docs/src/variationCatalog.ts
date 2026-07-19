@@ -256,6 +256,10 @@ function genericSetting(variation: Variation) {
         add("symbol", "circle_SS", 2, ["mo_symbol_lb", "ms1", "ms1_circle", "li_circle_SS", "ms1_bars", "li_circle", "li_bars", "ul_bars"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
+    if (variation.value === "doublekropki") {
+        add("symbol", "diamond_SS", 2, ["mo_symbol_lb", "ms1", "li_diamond"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
     if (variation.value === "averagearrows") {
         add("special", "arrow", "", ["mo_special_lb", "sub_specialarrow_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };

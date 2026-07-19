@@ -1457,13 +1457,20 @@ test("normalizes the next catalog batch into concrete CSP constraints", function
         };
     }
 
-    ["productframe", "edgedifference", "fullrank", "outsideparity", "parityparty",
+    ["edgedifference", "fullrank", "outsideparity", "parityparty",
         "serbianframe", "median", "ascendingstarters"].forEach(function(variant) {
         const constraints = SudokuSolver.readConstraints(puzzleFor(variant, { number: { 15: [4, 1, "1"] } }));
         assert.equal(constraints.supported.includes(variant), true);
         assert.equal(variant === "fullrank" ? constraints.fullRankGroups.length : constraints.outsideRelations.length, 1);
         if (variant === "fullrank") assert.equal(constraints.fullRankGroups[0].length, 36);
     });
+
+    const productFrameConstraints = SudokuSolver.readConstraints(puzzleFor("productframe", {
+        number: { 15: [4, 1, "1"] },
+        symbol: { 15: [[0, 0, 0, 0, 0, 1, 0, 0], "arrow_eight", 2] }
+    }));
+    assert.equal(productFrameConstraints.supported.includes("productframe"), true);
+    assert.equal(productFrameConstraints.outsideRelations.length, 1);
 
     const edgePoint = { 200: { neighbor: [28, 29] } };
     const inequality = SudokuSolver.readConstraints(puzzleFor("inequality", {
@@ -1974,9 +1981,9 @@ test("validates new variants: bouncing x-sums, czech outsider, diagonal sum is n
     ] }).solved, true);
     // r0c0 (5) and r1c1 (7) -> sum is 12 (not 10).
     // r1c1 (7) and r2c2 (8) -> sum is 15 (not 10).
-    // Let's find a pair summing to 10: r0c4 (7) and r1c5 (3) -> sum is 10.
+    // Let's find a pair summing to 10: r3c0 (8) and r4c1 (2) -> sum is 10.
     assert.equal(SudokuCSP.solve(solved, { edgeRelations: [
-        { relation: "diagonalTens", cells: [{ row: 0, col: 4 }, { row: 1, col: 5 }] }
+        { relation: "diagonalTens", cells: [{ row: 3, col: 0 }, { row: 4, col: 1 }] }
     ] }).solved, true);
 
     // 4. disparity
@@ -2079,12 +2086,12 @@ test("validates new variants: faded kropki, first seen odd/even, max ascending, 
     ] }).solved, false);
 
     // 5. frame-diagonal
-    // cells: r0c0 (5), r1c1 (7), r2c2 (8) -> sum of first 3 is 20.
+    // cells: r0c0 (5), r1c1 (7), r2c2 (8), r3c3 (7) -> sum of first 4 is 27.
     assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
-        { relation: "framediagonal", value: 20, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }] }
+        { relation: "framediagonal", value: 27, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }] }
     ] }).solved, true);
     assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
-        { relation: "framediagonal", value: 21, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }] }
+        { relation: "framediagonal", value: 28, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }] }
     ] }).solved, false);
 
     // 6. odd labyrinth & even passage
@@ -2097,20 +2104,17 @@ test("validates new variants: faded kropki, first seen odd/even, max ascending, 
     // 1 (0,0) -> 5 (1,1)? No, path must be orthogonal.
     // Orthogonal: 1 (0,0) -> no adjacent odd cell because (0,1) is 2, (1,0) is 4.
     // So no orthogonal odd path.
-    // Let's construct a small valid 2x2 board:
-    // [ [1, 3],
-    //   [2, 5] ]
-    // Odd path from (0,0) to (1,1): 1 -> 3 -> 5. Valid.
-    assert.equal(SudokuCSP.solve([[1, 3], [2, 5]], { oddLabyrinth: [true], baseBoxes: false }).solved, true);
-    assert.equal(SudokuCSP.solve([[1, 2], [4, 5]], { oddLabyrinth: [true], baseBoxes: false }).solved, false);
+    // Let's construct a small valid 4x4 board:
+    const validOddLabyrinth = [[1, 2, 4, 3], [3, 1, 2, 4], [4, 3, 1, 2], [2, 4, 3, 1]];
+    const invalidOddLabyrinth = [[1, 2, 4, 3], [4, 3, 1, 2], [3, 1, 2, 4], [2, 4, 3, 1]];
+    assert.equal(SudokuCSP.solve(validOddLabyrinth, { oddLabyrinth: [true], baseBoxes: false }).solved, true);
+    assert.equal(SudokuCSP.solve(invalidOddLabyrinth, { oddLabyrinth: [true], baseBoxes: false }).solved, false);
 
     // even passage
-    // [ [2, 1],
-    //   [4, 3] ] -> even path from (0,0) to (1,1): 2 -> 4? Wait, (1,1) is 3 (odd). So invalid.
-    // [ [2, 4],
-    //   [1, 6] ] -> even path from (0,0) to (1,1): 2 -> 4 -> 6. Valid.
-    assert.equal(SudokuCSP.solve([[2, 4], [1, 6]], { evenPassage: [true], baseBoxes: false }).solved, true);
-    assert.equal(SudokuCSP.solve([[2, 1], [1, 6]], { evenPassage: [true], baseBoxes: false }).solved, false);
+    const validEvenPassage = [[2, 1, 3, 4], [4, 2, 1, 3], [3, 4, 2, 1], [1, 3, 4, 2]];
+    const invalidEvenPassage = [[2, 1, 3, 4], [3, 4, 2, 1], [4, 2, 1, 3], [1, 3, 4, 2]];
+    assert.equal(SudokuCSP.solve(validEvenPassage, { evenPassage: [true], baseBoxes: false }).solved, true);
+    assert.equal(SudokuCSP.solve(invalidEvenPassage, { evenPassage: [true], baseBoxes: false }).solved, false);
 
     // 7. equal sum line
     // path: (0,0) [5] and (0,1) [3] (in box 0, sum 8) and (0,3) [6] and (0,4) [7]? No.
