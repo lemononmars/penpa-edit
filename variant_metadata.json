@@ -1256,7 +1256,7 @@
       }
     },
     {
-      "id": "detection",
+      "id": "Decection",
       "name": "Detection",
       "rules": {
         "9x9": "A diagonal arrow in a cell containing N points toward another N on that diagonal sightline. All possible arrows are drawn."
@@ -1268,7 +1268,6 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "line",
           "cell"
         ],
         "instructions": [
@@ -1509,7 +1508,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "line"
         ],
         "instructions": []
       },
@@ -2700,7 +2699,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "no-input"
         ],
         "instructions": []
       }
@@ -3016,7 +3015,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "no-input"
         ],
         "instructions": []
       },
@@ -3056,7 +3055,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "edge"
         ],
         "instructions": []
       },
@@ -3252,7 +3251,7 @@
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "outside"
         ],
         "instructions": []
       },
@@ -5461,23 +5460,7 @@
       },
       "tags": []
     },
-    {
-      "otherNames": "",
-      "id": "singleparityskyscrapers",
-      "name": "Single Parity Skyscrapers",
-      "rules": {
-        "9x9": "Each digit represents the height of a building. The clues outside the grid indicate either the number of even-heighted buildings or number of odd-heighted buildings visible from the corresponding direction, or both. A taller building will hide any shorter buildings behind it."
-      },
-      "status": "planned",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "outside"
-        ],
-        "instructions": []
-      },
-      "tags": []
-    },
+   
     {
       "id": "skyscraper",
       "name": "Skyscraper",
@@ -6512,7 +6495,7 @@
       "id": "twindetector",
       "name": "Twin Detector",
       "rules": {
-        "9x9": "Wherever the number in the cell equals to a total of any amount of the closest numbers in any direction, there is an arrow pointing to that direction possible arrows are given)."
+        "9x9": "Wherever the number in the cell equals to a total of any amount of the closest numbers in any direction, there is an arrow pointing to that direction. All possible arrows are given."
       },
       "status": "planned",
       "scratchGeneratable": false,
@@ -6522,7 +6505,7 @@
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": ["converse"]
     },
     {
       "id": "twodigitprimenumbers",
@@ -7040,6 +7023,7 @@
       }
     },
     {
+      "otherNames": "Single Parity Skyscrapers",
       "id": "parityskyscrapers",
       "name": "Parity Sky Scrapers",
       "rules": {
