@@ -2848,6 +2848,24 @@ test("One Knight Step validates exactly one knight match", function() {
     assert.equal(SudokuCSP.solve(solved, { oneKnightStep: [{row:0, col:0}] }).solved, false);
 });
 
+
+test("Escape verifies valid disjoint paths to edge", function() {
+    const validBoard = boardFromString(
+        "543216789" +
+        "126789345" +
+        "789345126" +
+        "251673894" +
+        "834591267" +
+        "967428513" +
+        "312954678" +
+        "475862931" +
+        "698137452"
+    );
+    assert.equal(SudokuCSP.solve(validBoard, { escapeStarts: [[{row: 0, col: 0}]] }).solved, true);
+    // Overlapping paths:
+    assert.equal(SudokuCSP.solve(validBoard, { escapeStarts: [[{row: 0, col: 0}, {row: 0, col: 1}]] }).solved, false);
+});
+
 test("Repeated Neighbors validates duplicate orthogonal neighbors", function() {
     const solved = boardFromString(
         "859761423" + "426853791" + "713924856" +

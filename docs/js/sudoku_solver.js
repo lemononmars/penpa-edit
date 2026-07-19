@@ -2339,7 +2339,7 @@ var SudokuSolver = (function() {
             constraints.supported.push("samesum");
         }
         if (variantEnabled(puzzle, "escape") && shadedCells.length) {
-            constraints.escapeStarts = shadedCells;
+            constraints.escapeStarts.push(shadedCells);
             constraints.supported.push("escape");
         }
         if (variantEnabled(puzzle, "sumskyscrapers")) {
