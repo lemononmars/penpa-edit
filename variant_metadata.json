@@ -5203,11 +5203,11 @@
       "rules": {
         "9x9": "The digits placed in adjacent cells must satisfy the given ratios."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "edge"
         ],
         "instructions": []
       },
