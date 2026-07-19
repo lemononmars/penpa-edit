@@ -320,6 +320,11 @@
         value: String(index + 1),
         label,
       }));
+    } else if (mode === "number" && variant === "killer") {
+      toolPanelOptions = Array.from({ length: 10 }, (_, index) => ({
+        value: String(index),
+        label: String(index),
+      }));
     } else if (["symbol", "number", "sudoku"].includes(mode)) {
       toolPanelOptions = Array.from(
         { length: mode === "symbol" ? 9 : size },
