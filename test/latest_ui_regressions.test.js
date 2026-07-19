@@ -39,7 +39,7 @@ test("mobile input modes expose a keyboard-free Add variant menu", function() {
 test("region-family variants are available as no-input rules", function() {
     const metadata = JSON.parse(fs.readFileSync(path.join(root, "variant_metadata.json"), "utf8"));
     const byId = new Map(metadata.variants.map((variant) => [variant.id, variant]));
-    ["scattered", "deficit", "surplus"].forEach(function(id) {
+    ["scattered", "deficit", "surplus", "toroidal"].forEach(function(id) {
         assert.equal(byId.get(id).status, "available");
         assert.deepEqual(byId.get(id).inputType.categories, ["no-input"]);
     });

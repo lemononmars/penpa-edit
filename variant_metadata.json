@@ -594,7 +594,7 @@
       "rules": {
         "9x9": "The dots given inside some cells form part (or all) of the Braille representation of the digit."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -719,23 +719,6 @@
           "Draw a cage around each horizontal group of four clock digits; other cage shapes are ignored."
         ]
       }
-    },
-    {
-      "otherNames": "",
-      "id": "clock08",
-      "name": "Clock 0-8",
-      "rules": {
-        "9x9": "Place a digit from 0-8 in each empty cell in the grid such that each row, column and marked 3x3 box contains each digit exactly once. Some digital clocks are shown. When the puzzle is completed, all clocks should display a valid time in 24-hour format (HH:MM); i.e. a clock cannot display 43:65."
-      },
-      "status": "planned",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "cell"
-        ],
-        "instructions": []
-      },
-      "tags": []
     },
     {
       "id": "clockfaces",
@@ -936,7 +919,7 @@
       "rules": {
         "9x9": "Digits in the grey areas must form a chain of consecutive digits from 1 to 9 by moving horizontally or vertically from one cell to the next."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -1028,13 +1011,15 @@
       "rules": {
         "9x9": "Follow classic sudoku rules. Number in a circle tells how many distinct digits you can find along the corresponding arrow."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "line"
         ],
-        "instructions": []
+        "instructions": [
+          "Drag from the circle cell through the shaft cells to create an arrow."
+        ]
       },
       "tags": []
     },
@@ -1062,13 +1047,15 @@
       "rules": {
         "9x9": "Follow classic sudoku rules. Number in a circle tells you how many odd digits you can find along the corresponding arrow."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "line"
         ],
-        "instructions": []
+        "instructions": [
+          "Drag from the circle cell through the shaft cells to create an arrow."
+        ]
       },
       "tags": []
     },
@@ -6392,11 +6379,11 @@
       "tags": [
         "irregular"
       ],
-      "status": "planned",
-      "scratchGeneratable": false,
+      "status": "available",
+      "scratchGeneratable": true,
       "inputType": {
         "categories": [
-          "cell"
+          "no-input"
         ],
         "instructions": []
       }
@@ -6517,7 +6504,7 @@
       "rules": {
         "9x9": "Wherever the number in the cell equals to a total of any amount of the closest numbers in any direction, there is an arrow pointing to that direction possible arrows are given)."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6550,11 +6537,11 @@
       "rules": {
         "9x9": "Chess Knights, placed in cells with number 9, must attack only different numbers."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "no-input"
         ],
         "instructions": []
       },
@@ -6618,7 +6605,7 @@
       "rules": {
         "9x9": "The digits along a grey line goes alternately up and down while the difference between the two neighbouring digits is at least 4."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6635,7 +6622,7 @@
       "rules": {
         "9x9": "A digit N in a grey cell represents a watchtower, that can overlook exactly N cells, including itself, with digits smaller than N in all four directions up to the first larger digit in that direction. All possible watchtowers are given."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -7079,6 +7066,26 @@
         ],
         "instructions": []
       }
+    },
+    {
+      "id": "0to8",
+      "name": "0 to 8",
+      "rules": {
+        "9x9": "Place a digit from 0-8 in each empty cell in the grid such that each row, column and marked 3x3 box contains each digit exactly once."
+      },
+      "tags": [],
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "aliases": [
+        "0 to 8",
+        "0-8"
+      ]
     }
   ]
 }
