@@ -98,6 +98,69 @@ test("request_shortlink functionality", async () => {
     }
 });
 
+test("update_textarea functionality", async () => {
+    // Setup globals
+    const originalUserSettings = global.UserSettings;
+    const originalDocument = global.document;
+    const originalPu = global.pu;
+    const originalDollar = global.$;
+
+    try {
+        global.UserSettings = { shorten_links: false };
+        const mockTextarea = { value: "" };
+        global.document = {
+            getElementById: (id) => {
+                if (id === "savetextarea") return mockTextarea;
+                return null;
+            }
+        };
+        global.pu = { isReplay: false };
+
+        // Test 1: shorten_links is false
+        await general.update_textarea("original_text");
+        assert.equal(mockTextarea.value, "original_text");
+
+        // Mock $.get
+        global.$ = {
+            get: (url, callback) => {
+                if (url.includes("success")) {
+                    const link = "https://tinyurl.com/success";
+                    callback(link, "success");
+                    return Promise.resolve(link);
+                } else if (url.includes("fail")) {
+                    return Promise.reject(new Error("Network fail"));
+                } else {
+                    callback(null, "error");
+                    return Promise.resolve(null);
+                }
+            }
+        };
+
+        // Test 2: shorten_links is true, shortlink succeeds
+        global.UserSettings.shorten_links = true;
+        await general.update_textarea("http://example.com/success");
+        assert.equal(mockTextarea.value, "https://tinyurl.com/success");
+
+        // Test 3: shorten_links is true, shortlink fails (resolves null)
+        await general.update_textarea("http://example.com/error");
+        assert.equal(mockTextarea.value, "http://example.com/error");
+
+        // Test 4: shorten_links is true, shortlink succeeds, pu.isReplay is true
+        global.pu.isReplay = true;
+        await general.update_textarea("http://example.com/success");
+        assert.equal(mockTextarea.value, "https://tinyurl.com/success#Replay");
+        assert.equal(global.pu.isReplay, false);
+
+        // Test 5: shorten_links is true, shortlink exception (mock fail)
+        await general.update_textarea("http://example.com/fail");
+        assert.equal(mockTextarea.value, "http://example.com/fail");
+
+    } finally {
+        global.UserSettings = originalUserSettings;
+        global.document = originalDocument;
+        global.pu = originalPu;
+        global.$ = originalDollar;
+    }
 test("errorMsg and infoMsg functionality", () => {
     // Save original globals
     const originalSwal = global.Swal;
