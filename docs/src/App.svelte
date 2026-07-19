@@ -189,6 +189,11 @@
         { value: ">", label: ">" },
         { value: "v", label: "v" },
       ];
+    } else if (mode === "number" && variant === "wildcard") {
+      toolPanelOptions = [
+        { value: "<", label: "<" },
+        { value: ">", label: ">" },
+      ];
     } else if (mode === "number" && variant === "xv") {
       toolPanelOptions = [
         { value: "V", label: "V" },
