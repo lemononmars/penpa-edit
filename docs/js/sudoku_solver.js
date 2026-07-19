@@ -532,6 +532,8 @@ var SudokuSolver = (function() {
             directionalMarks: [],
             sumDetectorGroups: [],
             shadedParityGroups: [],
+            zones: [],
+            somewhere: [],
             regionAllDifferent: [],
             regionCoverage: [],
             scatteredAllDifferent: [],
@@ -657,6 +659,26 @@ var SudokuSolver = (function() {
                     constraints.arrows.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
                 }
 
+                                if (variantEnabled(puzzle, "zones")) {
+                    var label = readCageLabel(puzzle, cages[k]);
+                    if (label) {
+                        var digits = (label.match(/\d/g) || []).map(Number).filter(function(d) { return d > 0; });
+                        if (digits.length) {
+                            constraints.zones.push({ cells: cageCells, digits: digits });
+                        }
+                    }
+                }
+
+                if (variantEnabled(puzzle, "somewhere")) {
+                    var label = readCageLabel(puzzle, cages[k]);
+                    if (label) {
+                        var num = Number(label);
+                        if (!isNaN(num) && num > 0) {
+                            constraints.somewhere.push({ cells: cageCells, digit: num });
+                        }
+                    }
+                }
+
                 if (variantEnabled(puzzle, "odd even sum")) {
                     var label = readCageLabel(puzzle, cages[k]);
                     if (label === "O" || label === "E") {
@@ -664,6 +686,12 @@ var SudokuSolver = (function() {
                     }
                 }
             }
+        }
+                if (constraints.zones.length) {
+            constraints.supported.push("zones");
+        }
+        if (constraints.somewhere.length) {
+            constraints.supported.push("somewhere");
         }
         if (constraints.oddEvenSums.length) {
             constraints.supported.push("odd even sum");
@@ -683,7 +711,7 @@ var SudokuSolver = (function() {
         var cages = typeof puzzle.refreshKillerCages === "function" ?
             puzzle.refreshKillerCages("pu_q") : (puzzle.pu_q.killercages || []);
         var regionVariantNames = ["clone", "consecutiveclone", "renban", "windoku",
-            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "number 5 is alive", "sumset"];
+            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "number 5 is alive", "sumset", "zones", "somewhere"];
         var usesCagedRegions = regionVariantNames.some(function(name) { return variantEnabled(puzzle, name); });
         var regionCages = [];
         for (var k = 0; k < cages.length; k++) {

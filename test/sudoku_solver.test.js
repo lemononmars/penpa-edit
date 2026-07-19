@@ -2694,3 +2694,47 @@ test("validates inequality triples, difference pairs, Ten/Eleven, tens products,
     ] }).solved, false);
 });
 
+
+test("validates new variants: zones, somewhere", function() {
+    var board = [
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [4, 5, 6, 7, 8, 9, 1, 2, 3],
+        [7, 8, 9, 1, 2, 3, 4, 5, 6],
+        [2, 3, 1, 5, 6, 4, 8, 9, 7],
+        [5, 6, 4, 8, 9, 7, 2, 3, 1],
+        [8, 9, 7, 2, 3, 1, 5, 6, 4],
+        [3, 1, 2, 6, 4, 5, 9, 7, 8],
+        [6, 4, 5, 9, 7, 8, 3, 1, 2],
+        [9, 7, 8, 3, 1, 2, 6, 4, 5]
+    ];
+
+    // zones
+    assert.strictEqual(SudokuSolver.solve(board, {
+        supported: ["zones"],
+        zones: [
+            { cells: [{row: 0, col: 0}, {row: 0, col: 1}, {row: 1, col: 0}, {row: 1, col: 1}], digits: [1, 2, 4, 5] }
+        ]
+    }).solved, true);
+
+    assert.strictEqual(SudokuSolver.solve(board, {
+        supported: ["zones"],
+        zones: [
+            { cells: [{row: 0, col: 0}, {row: 0, col: 1}, {row: 1, col: 0}, {row: 1, col: 1}], digits: [1, 2, 4, 9] }
+        ]
+    }).solved, false);
+
+    // somewhere
+    assert.strictEqual(SudokuSolver.solve(board, {
+        supported: ["somewhere"],
+        somewhere: [
+            { cells: [{row: 0, col: 0}, {row: 0, col: 1}], digit: 1 }
+        ]
+    }).solved, true);
+
+    assert.strictEqual(SudokuSolver.solve(board, {
+        supported: ["somewhere"],
+        somewhere: [
+            { cells: [{row: 0, col: 0}, {row: 0, col: 1}], digit: 9 }
+        ]
+    }).solved, false);
+});

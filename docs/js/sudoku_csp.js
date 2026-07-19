@@ -773,6 +773,43 @@ var SudokuCSP = (function() {
         }
     });
 
+
+    registerConstraint("zones", {
+        validatePartial: function(board, cage) {
+            var missing = cage.digits.slice();
+            var emptyCount = 0;
+            for (var i = 0; i < cage.cells.length; i++) {
+                var val = cellValue(board, cage.cells[i]);
+                if (val) {
+                    var idx = missing.indexOf(val);
+                    if (idx !== -1) {
+                        missing.splice(idx, 1);
+                    }
+                } else {
+                    emptyCount++;
+                }
+            }
+            return emptyCount >= missing.length;
+        }
+    });
+
+    registerConstraint("somewhere", {
+        validatePartial: function(board, cage) {
+            var emptyCount = 0;
+            var found = false;
+            for (var i = 0; i < cage.cells.length; i++) {
+                var val = cellValue(board, cage.cells[i]);
+                if (val === cage.digit) {
+                    found = true;
+                    break;
+                } else if (!val) {
+                    emptyCount++;
+                }
+            }
+            return found || emptyCount > 0;
+        }
+    });
+
     registerConstraint("oddEven", {
         validatePartial: function(board, mark) {
             var value = cellValue(board, mark.cell);
