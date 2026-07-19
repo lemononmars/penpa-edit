@@ -2898,3 +2898,56 @@ test("Tableaux", function() {
         tableauxCages: [{ cells: [{ row: 0, col: 2 }, { row: 3, col: 6 }] }]
     }).solved, false);
 });
+
+
+
+
+test("Consecutive Chains", () => {
+    // boardWith and solve are not helpers in this file. It uses SudokuCSP or SudokuSolver.
+    // The easiest way is to use SudokuCSP.solve directly with a 9x9 board.
+
+    // We only need to test the CSP constraint behavior.
+    const emptyBoard = () => Array.from({length: 9}, () => Array(9).fill(0));
+
+    const chain4 = [{row:0, col:0}, {row:0, col:1}, {row:0, col:2}, {row:0, col:3}];
+
+    const boardValid = emptyBoard();
+    // A fully populated 9x9 board that satisfies normal Sudoku rules
+    boardValid[0] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    boardValid[1] = [4, 5, 6, 7, 8, 9, 1, 2, 3];
+    boardValid[2] = [7, 8, 9, 1, 2, 3, 4, 5, 6];
+    boardValid[3] = [2, 3, 4, 5, 6, 7, 8, 9, 1];
+    boardValid[4] = [5, 6, 7, 8, 9, 1, 2, 3, 4];
+    boardValid[5] = [8, 9, 1, 2, 3, 4, 5, 6, 7];
+    boardValid[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
+    boardValid[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
+    boardValid[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
+    // Our chain is {0,0}, {0,1}, {0,2}, {0,3} which has values 1, 2, 3, 4 in this board.
+    // This forms a valid connected chain of consecutive numbers!
+    assert.strictEqual(SudokuCSP.solve(boardValid, {consecutiveChains: [chain4]}).solved, true);
+
+    const boardInvalidSet = emptyBoard();
+    boardInvalidSet[0] = [1, 2, 3, 5, 4, 6, 7, 8, 9]; // values 1, 2, 3, 5 => not consecutive set
+    boardInvalidSet[1] = [4, 5, 6, 7, 8, 9, 1, 2, 3];
+    boardInvalidSet[2] = [7, 8, 9, 1, 2, 3, 4, 5, 6];
+    boardInvalidSet[3] = [2, 3, 4, 5, 6, 7, 8, 9, 1];
+    boardInvalidSet[4] = [5, 6, 7, 8, 9, 1, 2, 3, 4];
+    boardInvalidSet[5] = [8, 9, 1, 2, 3, 4, 5, 6, 7];
+    boardInvalidSet[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
+    boardInvalidSet[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
+    boardInvalidSet[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
+    assert.strictEqual(SudokuCSP.solve(boardInvalidSet, {consecutiveChains: [chain4]}).solved, false);
+
+    const boardInvalidPath = emptyBoard();
+    // values 1, 3, 2, 4. It's a consecutive set, but path is invalid (1 is next to 3).
+    boardInvalidPath[0] = [1, 3, 2, 4, 5, 6, 7, 8, 9];
+    boardInvalidPath[1] = [4, 5, 6, 7, 8, 9, 1, 2, 3];
+    boardInvalidPath[2] = [7, 8, 9, 1, 2, 3, 4, 5, 6];
+    boardInvalidPath[3] = [2, 3, 4, 5, 6, 7, 8, 9, 1];
+    boardInvalidPath[4] = [5, 6, 7, 8, 9, 1, 2, 3, 4];
+    boardInvalidPath[5] = [8, 9, 1, 2, 3, 4, 5, 6, 7];
+    boardInvalidPath[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
+    boardInvalidPath[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
+    boardInvalidPath[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
+    assert.strictEqual(SudokuCSP.solve(boardInvalidPath, {consecutiveChains: [chain4]}).solved, false);
+});
