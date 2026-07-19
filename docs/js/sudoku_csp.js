@@ -841,6 +841,44 @@ var SudokuCSP = (function() {
             { solved: false, reason: unresolvedConflict(source).message, conflict: unresolvedConflict(source) };
     }
 
+registerConstraint("emitters", {
+        validatePartial: function(board, emitter) {
+            var eVal = cellValue(board, emitter.cell);
+
+            for (var i = 0; i < emitter.lines.length; i++) {
+                var line = emitter.lines[i];
+                var minSum = 0;
+                var filledSum = 0;
+                var allCellsFilled = true;
+
+                for (var j = 0; j < line.cells.length; j++) {
+                    var v = cellValue(board, line.cells[j]);
+                    if (v) {
+                        minSum += v;
+                        filledSum += v;
+                    } else {
+                        minSum += 1; // Minimum possible digit is 1
+                        allCellsFilled = false;
+                    }
+                }
+
+                if (eVal && minSum > eVal) return false;
+                if (!eVal && minSum > SIZE) return false; // assuming max digit is SIZE
+
+                if (eVal && allCellsFilled && line.nextCell) {
+                    var nextV = cellValue(board, line.nextCell);
+                    if (nextV) {
+                        if (filledSum + nextV <= eVal) return false;
+                    } else {
+                        // nextV is unknown, its max value is SIZE
+                        if (filledSum + SIZE <= eVal) return false;
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
     registerConstraint("thermos", {
         validatePartial: function(board, path) {
             for (var i = 0; i < path.length; i++) {
