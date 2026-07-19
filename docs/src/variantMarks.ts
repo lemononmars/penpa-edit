@@ -81,7 +81,7 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     if (variation.value === "xivi") return { position: "edge", mark: "text" };
     if (variation.value === "clock") return { position: "center", mark: "cage" };
     if (variation.value === "slotmachine") return { position: "center", mark: "surface" };
-    if (["wheel", "pinnochio", "little killer", "product little killer", "bouncing x-sums", "czech outsider"].includes(variation.value)) {
+    if (["wheel", "pinnochio", "little killer", "weighted little killer", "product little killer", "bouncing x-sums", "czech outsider"].includes(variation.value)) {
         return { position: "multiple", mark: "multiple" };
     }
     if (variation.value === "mastermind") {
@@ -149,6 +149,7 @@ function cspImplementationFor(variation: Variation) {
         "anti diagonal": `validatePartial(board, diagonal) {\n  const counts = digitCounts(board, diagonal);\n  return Object.keys(counts).length <= 3 && Object.values(counts).every(count => count <= 3);\n}\nvalidateComplete(board, diagonal) {\n  return Object.values(digitCounts(board, diagonal)).sort().join() === "3,3,3";\n}`,
         nothreeinarow: `validatePartial(board, triple) {\n  const values = triple.map(cell => cellValue(board, cell));\n  return values.some(value => !value) || new Set(values.map(value => value % 2)).size > 1;\n}`,
         arithmetic: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cell => cellValue(board, cell));\n  if (!a || !b) return true;\n  return a + b === clue.value || Math.abs(a - b) === clue.value || a * b === clue.value\n    || (a % b === 0 && a / b === clue.value) || (b % a === 0 && b / a === clue.value);\n}`,
+        starproduct: `validatePartial(board, clue, helpers) {\n  const starValues = clue.cells.filter(c => helpers.isStarCell(c, clue.starCells)).map(c => cellValue(board, c));\n  const product = starValues.reduce((total, value) => total * (value || 1), 1);\n  const open = starValues.filter(value => !value).length;\n  return product <= clue.value && clue.value % product === 0 && (open > 0 || product === clue.value);\n}`,
         productframe: `validatePartial(board, clue) {\n  const values = clue.cells.slice(0, 3).map(cellValue);\n  const product = values.filter(Boolean).reduce((total, value) => total * value, 1);\n  return product <= clue.value && clue.value % product === 0 && (values.some(value => !value) || product === clue.value);\n}`,
         rossini: `validatePartial(board, clue) {\n  const [a, b, c] = clue.cells.map(cellValue);\n  if (!a || !b || !c) return true;\n  const ascending = a < b && b < c, descending = a > b && b > c;\n  return clue.direction === "ascending" ? ascending : clue.direction === "descending" ? descending : !ascending && !descending;\n}`,
         edgedifference: `validatePartial(board, clue) {\n  const first = cellValue(board, clue.cells[0]);\n  const last = cellValue(board, clue.cells.at(-1));\n  return !first || !last || Math.abs(first - last) === clue.value;\n}`,
@@ -189,6 +190,7 @@ function cspImplementationFor(variation: Variation) {
         numberedrooms: `validatePartial(board, clue) {\n  const x = cellValue(board, clue.cells[0]);\n  return !x || !cellValue(board, clue.cells[x - 1]) || cellValue(board, clue.cells[x - 1]) === clue.value;\n}`,
         sumframe: `validatePartial(board, clue) {\n  return sumBoundsContain(board, clue.cells, clue.value);\n}`,
         "little killer": `validatePartial(board, clue) {\n  return sumBoundsContain(board, clue.cells, clue.value);\n}`,
+        "weighted little killer": `validatePartial(board, clue) {\n  let min = 0, max = 0;\n  for (let i = 0; i < clue.cells.length; i++) {\n    const val = cellValue(board, clue.cells[i]);\n    const w = clue.weights[i];\n    min += (val || 1) * w;\n    max += (val || board.length) * w;\n  }\n  return min <= clue.value && max >= clue.value;\n}`,
         "product little killer": `validatePartial(board, clue) {\n  return productBoundsContain(board, clue.cells, clue.value);\n}`,
         descriptivepairs: `validatePartial(board, clue) {\n  const x = Math.floor(clue.value / 10), y = clue.value % 10;\n  return cellCanEqual(board, clue.cells[y - 1], x) || cellCanEqual(board, clue.cells[x - 1], y);\n}`,
         outside: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue).filter(Boolean);\n  return clue.clues.every(digit => values.includes(digit) || values.length < clue.cells.length);\n}`,

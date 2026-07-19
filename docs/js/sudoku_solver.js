@@ -525,6 +525,7 @@ var SudokuSolver = (function() {
     function readConstraints(puzzle) {
         SIZE = puzzleSize(puzzle) || SIZE;
         var constraints = {
+            starCells: [],
             thermos: [],
             arrows: [],
             killers: [],
@@ -1580,6 +1581,21 @@ var SudokuSolver = (function() {
         }
 
         var symbols = puzzle.pu_q.symbol || {};
+
+        if (variantEnabled(puzzle, "starproduct") || variantEnabled(puzzle, "sudokuwithstars")) {
+            var starCells = [];
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                if (entry[1] === "star") {
+                    var cell = keyToCell(puzzle, Number(key));
+                    if (cell) starCells.push(cell);
+                }
+            });
+            if (starCells.length > 0) {
+                constraints.starCells = starCells;
+            }
+            if (variantEnabled(puzzle, "sudokuwithstars")) constraints.supported.push("sudokuwithstars");
+        }
         var directionalVariants = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious",
             "quadmax", "quadmin", "search9", "sumdetector", "detection", "deadoralivearrows"].filter(function(name) {
                 return variantEnabled(puzzle, name);
@@ -2426,7 +2442,7 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push(paritySandwichVariant);
         }
-        var activeOutsideVariants = ["bust", "xsums", "numberedrooms", "sumframe", "edgedifference",
+        var activeOutsideVariants = ["starproduct", "bust", "xsums", "numberedrooms", "sumframe", "edgedifference",
             "fullrank", "outsideparity", "parityparty", "serbianframe", "median", "descriptivepairs",
             "maximin", "minimax", "ascendingstarters", "before9", "before1after9", "firstseenoddeven", "maxascending",
             "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers",
@@ -2503,7 +2519,7 @@ var SudokuSolver = (function() {
                             outsideColumn, outsideBoxHeight, "column");
                         addOutsideRelation((outsideStartCol - 1) + (outsideStartRow + outsideIndex) * puzzle.nx0,
                             outsideRow, outsideBoxWidth, "row");
-                        var leftTopOnly = ["edgedifference", "before9", "nextto9", "outsideconsecutive", "outsidekiller", "parityskyscrapers", "japanesesums", "oddsums"].indexOf(variant) !== -1;
+                        var leftTopOnly = ["starproduct", "edgedifference", "before9", "nextto9", "outsideconsecutive", "outsidekiller", "parityskyscrapers", "japanesesums", "oddsums"].indexOf(variant) !== -1;
                         if (!leftTopOnly) {
                             addOutsideRelation((outsideStartCol + outsideIndex) + (outsideStartRow + SIZE) * puzzle.nx0,
                                 outsideColumn.slice().reverse(), outsideBoxHeight, "column");
@@ -2627,7 +2643,7 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push("mastermind");
         }
-        var activeDiagVariants = ["little killer", "product little killer", "productframe", "bouncing x-sums", "czech outsider", "framediagonal", "pointingdifferents"].filter(function(name) {
+        var activeDiagVariants = ["little killer", "weighted little killer", "product little killer", "productframe", "bouncing x-sums", "czech outsider", "framediagonal", "pointingdifferents"].filter(function(name) {
             return variantEnabled(puzzle, name);
         });
         if (activeDiagVariants.length) {
@@ -2687,11 +2703,20 @@ var SudokuSolver = (function() {
                             }
                         }
                         if (cells.length) {
-                            if (variant === "framediagonal") {
-                                cells = cells.slice(0, 3);
+                            if (variant === "weighted little killer") {
+                                var weights = cells.map(function(cell) {
+                                    var key = (cell.row + littleStartRow) * puzzle.nx0 + (cell.col + littleStartCol);
+                                    return puzzle.pu_q.surface && puzzle.pu_q.surface[key] ? 2 : 1;
+                                });
+                                constraints.outsideRelations.push({ relation: variant,
+                                    value: value, cells: cells, weights: weights });
+                            } else {
+                                if (variant === "framediagonal") {
+                                    cells = cells.slice(0, 3);
+                                }
+                                constraints.outsideRelations.push({ relation: variant,
+                                    value: value, cells: cells });
                             }
-                            constraints.outsideRelations.push({ relation: variant,
-                                value: value, cells: cells });
                         }
                     });
                 });
@@ -3599,7 +3624,7 @@ var SudokuTools = (function() {
                 submode === "circle_SS" ? (variant === "consecutive" ? "White Dot" : "Kropki Dot") :
                 variant === "odd even" || variant === "odd even count" || variant === "odd even bridge" ? "Odd / Even Mark" :
                     variant === "battenburg" ? "Battenburg Mark" :
-                        variant === "little killer" || variant === "product little killer" || variant === "productframe" || variant === "bouncing x-sums" || variant === "czech outsider" || variant === "pointingdifferents" ? "Arrow" :
+                        variant === "little killer" || variant === "weighted little killer" || variant === "product little killer" || variant === "productframe" || variant === "bouncing x-sums" || variant === "czech outsider" || variant === "pointingdifferents" ? "Arrow" :
                             variant === "diagonallyconsecutive" || variant === "diagonal sum is nine" || variant === "diagonal tens" ? "Bars" : "Mark",
             special: submode === "arrows" ? "Arrow" : submode === "thermo" ? "Thermo" :
                 submode === "nobulbthermo" ? "No-bulb Thermo" : "Special",
@@ -3609,7 +3634,7 @@ var SudokuTools = (function() {
             number: variant === "xv" && submode === "5" ? "XV Clue" :
                 variant === "multiplication" ? "Multiplication Sign" :
                     variant === "product little killer" || variant === "productframe" ? "Product" :
-                        variant === "little killer" || variant === "bouncing x-sums" || variant === "pointingdifferents" ? "Total" :
+                        variant === "little killer" || variant === "weighted little killer" || variant === "bouncing x-sums" || variant === "pointingdifferents" ? "Total" :
                             ["innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers"].indexOf(variant) !== -1 ? "Outside Clue" :
                                 variant === "czech outsider" ? "Outsider" :
                 submode === "11" ? "Killer Sum" : variant === "skyscraper" ? "Skyscraper Clue" :
@@ -3666,7 +3691,7 @@ var SudokuTools = (function() {
         }
     }
 
-    var outsideVariants = ["little killer", "product little killer", "sandwich", "evensandwich", "oddsandwich", "skyscraper",
+    var outsideVariants = ["little killer", "weighted little killer", "product little killer", "sandwich", "evensandwich", "oddsandwich", "skyscraper",
         "descriptivepairs", "outside", "outside234", "maximin", "minimax", "bust", "xsums",
         "numberedrooms", "sumframe", "productframe", "edgedifference", "fullrank", "outsideparity",
         "parityparty", "serbianframe", "median", "rossini", "before9",

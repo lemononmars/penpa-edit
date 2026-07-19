@@ -103,7 +103,8 @@ var SudokuCSP = (function() {
         size: SIZE,
         allDigitsMask: ALL_DIGITS,
         cellValue: cellValue,
-        maskToDigits: maskToDigits
+        maskToDigits: maskToDigits,
+        isStarCell: function(cell, starCells) { return (starCells || []).some(function(sc) { return sc.row === cell.row && sc.col === cell.col; }); }
     };
 
 
@@ -181,6 +182,12 @@ var SudokuCSP = (function() {
         var byCell = {};
         var globalEntries = [];
         registeredConstraints().forEach(function(name) {
+            if (name === "outsideRelations" && constraints.starCells) {
+                // inject starCells into outsideRelations clues so they can check it
+                (constraints[name] || []).forEach(function(item) {
+                    item.starCells = constraints.starCells;
+                });
+            }
             var handler = constraintRegistry[name];
             (constraints[name] || []).forEach(function(item) {
                 var entry = { handler: handler, item: item };
@@ -2037,6 +2044,18 @@ var SudokuCSP = (function() {
                 }
                 return running > 21;
             }
+            if (clue.relation === "starproduct") {
+                var starValues = [];
+                for (var st_i = 0; st_i < clue.cells.length; st_i++) {
+                    var cell = clue.cells[st_i];
+                    if (helpers.isStarCell(cell, clue.starCells)) {
+                         starValues.push(values[st_i]);
+                    }
+                }
+                var product = starValues.reduce(function(total, value) { return total * (value || 1); }, 1);
+                var productOpen = starValues.filter(function(value) { return !value; }).length;
+                return product <= clue.value && clue.value % product === 0 && (productOpen > 0 || product === clue.value);
+            }
             if (clue.relation === "productframe") {
                 var productValues = values.slice(0, 3);
                 var product = productValues.reduce(function(total, value) { return total * (value || 1); }, 1);
@@ -2102,6 +2121,22 @@ var SudokuCSP = (function() {
                 if (extrema.some(function(value) { return !value; })) return true;
                 var highest = Math.max.apply(null, extrema), lowest = Math.min.apply(null, extrema);
                 return clue.relation === "maximin" ? highest - lowest === clue.value : highest + lowest === clue.value;
+            }
+            if (clue.relation === "weighted little killer") {
+                var wSum = 0, maxPossibleSum = 0;
+                var hasBlanks = false;
+                for (var i = 0; i < values.length; i++) {
+                    var weight = clue.weights[i];
+                    if (values[i]) {
+                        wSum += values[i] * weight;
+                        maxPossibleSum += values[i] * weight;
+                    } else {
+                        hasBlanks = true;
+                        wSum += 1 * weight;
+                        maxPossibleSum += SIZE * weight;
+                    }
+                }
+                return wSum <= clue.value && maxPossibleSum >= clue.value && (hasBlanks || wSum === clue.value);
             }
             if (clue.relation === "little killer" || clue.relation === "product little killer") {
                 if (clue.relation === "little killer") {
