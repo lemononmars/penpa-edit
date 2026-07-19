@@ -1636,7 +1636,7 @@ var SudokuSolver = (function() {
             if (variantEnabled(puzzle, "sudokuwithstars")) constraints.supported.push("sudokuwithstars");
         }
         var directionalVariants = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious",
-            "quadmax", "quadmin", "search9", "sumdetector", "detection", "deadoralivearrows"].filter(function(name) {
+            "quadmax", "quadmin", "search9", "sumdetector", "detection", "deadoralivearrows", "twindetector"].filter(function(name) {
                 return variantEnabled(puzzle, name);
             });
         if (directionalVariants.length) {
@@ -1657,7 +1657,7 @@ var SudokuSolver = (function() {
                 return row >= 0 && row < SIZE && col >= 0 && col < SIZE ? { row: row, col: col } : null;
             }
             function expectedDirectionalSymbol(variant) {
-                if (variant === "biggestneighbours" || variant === "smallestneighbours" || variant === "sumdetector" || variant === "detection") return ["arrow_eight"];
+                if (variant === "biggestneighbours" || variant === "smallestneighbours" || variant === "sumdetector" || variant === "detection" || variant === "twindetector") return ["arrow_eight"];
                 if (variant === "quadmax" || variant === "quadmin") return ["arrow_B_B"];
                 if (variant === "deadoralivearrows") return ["arrow_B_W", "arrow_B_G"];
                 return ["arrow_B_G"];
@@ -1693,6 +1693,7 @@ var SudokuSolver = (function() {
                         return ray;
                     }).filter(function(ray) { return ray.length; });
                     var usesSightline = directionalVariant === "eliminate" || directionalVariant === "detection" || directionalVariant === "deadoralivearrows" ||
+                        directionalVariant === "twindetector" ||
                         directionalVariant === "pointtonext" || directionalVariant === "pointtoprevious";
                     var targets = usesSightline ? [].concat.apply([], rays) : rays.map(function(ray) { return ray[0]; });
                     if (!targets.length) return;
@@ -1706,6 +1707,17 @@ var SudokuSolver = (function() {
                         clue.rays = rays;
                     } else if (directionalVariant === "sumdetector") {
                         clue.rays = rays;
+                    } else if (directionalVariant === "twindetector") {
+                        clue.rays = rays;
+                        clue.allRays = [0, 1, 2, 3, 4, 5, 6, 7].map(function(direction) {
+                            var offset = directionOffsets[direction], ray = [];
+                            for (var distance = 1; distance < SIZE; distance++) {
+                                var rayCell = boardCell(origin.row + offset[0] * distance, origin.col + offset[1] * distance);
+                                if (!rayCell) break;
+                                ray.push(rayCell);
+                            }
+                            return ray;
+                        });
                     } else if (directionalVariant === "detection") {
                         clue.rays = rays;
                         clue.allDiagonalRays = [1, 3, 5, 7].map(function(direction) {
@@ -4061,9 +4073,9 @@ var SudokuTools = (function() {
             "equalratios", "consecutivequads", "quadmax", "quadmin", "exclusion", "groupsum", "wheel", "crosssums", "determinant", "fullorhalf"].indexOf(pu.activeSudokuVariant) !== -1 &&
             (mode === "number" || mode === "symbol");
         pu.sudoku_directional_cell_mode = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious",
-            "search9", "sumdetector", "detection", "deadoralivearrows"].indexOf(pu.activeSudokuVariant) !== -1 && mode === "symbol";
+            "search9", "sumdetector", "detection", "deadoralivearrows", "twindetector"].indexOf(pu.activeSudokuVariant) !== -1 && mode === "symbol";
         pu.sudokuSymbolVariantOwner = mode === "symbol" && ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext",
-            "pointtoprevious", "quadmax", "quadmin", "search9", "sumdetector", "detection", "deadoralivearrows"].indexOf(pu.activeSudokuVariant) !== -1 ?
+            "pointtoprevious", "quadmax", "quadmin", "search9", "sumdetector", "detection", "deadoralivearrows", "twindetector"].indexOf(pu.activeSudokuVariant) !== -1 ?
             pu.activeSudokuVariant : null;
         if (pu.battenburg_mode) {
             UserSettings.draw_edges = true;

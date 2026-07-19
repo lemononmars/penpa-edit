@@ -181,7 +181,7 @@ function genericSetting(variation: Variation) {
             return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
         }
         const isQuad = variation.value === "quadmax" || variation.value === "quadmin";
-        const allowsMultiple = variation.value === "biggestneighbours" || variation.value === "smallestneighbours";
+        const allowsMultiple = variation.value === "biggestneighbours" || variation.value === "smallestneighbours" || variation.value === "twindetector";
         add("symbol", isQuad ? "arrow_B_B" : allowsMultiple ? "arrow_eight" : "arrow_B_G", 2,
             isQuad || !allowsMultiple
                 ? ["mo_symbol_lb", "ms3", "li_arrow_B"]

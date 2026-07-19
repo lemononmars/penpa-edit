@@ -69,7 +69,7 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     if (["anti king", "anti knight", "disjoint", "queen", "disparity", "liardiagonal", "magicsquares", "onefivenine"].includes(variation.value)) {
         return { position: "none", mark: "none" };
     }
-    if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector"].includes(variation.value)) {
+    if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector", "twindetector"].includes(variation.value)) {
         return { position: "center", mark: "direction" };
     }
     if (["quadmax", "quadmin"].includes(variation.value)) {
@@ -143,6 +143,9 @@ function cspImplementationFor(variation: Variation) {
     }
     if (variation.value === "zones") {
         return "Returns true when every digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
+    }
+    if (variation.value === "twindetector") {
+        return `validatePartial(board, clue) {\n  const origin = cellValue(board, clue.origin);\n  if (!origin) return true;\n  const markedRays = new Set(clue.rays.map(r => r[0].row + ":" + r[0].col));\n  return clue.allRays.every(ray => {\n    if (!ray.length) return true;\n    const marked = markedRays.has(ray[0].row + ":" + ray[0].col);\n    let sum = 0, blanks = 0, hasMatch = false, canMatch = false;\n    for (const cell of ray) {\n      const value = cellValue(board, cell);\n      if (value) sum += value; else blanks++;\n      if (sum === origin && blanks === 0) hasMatch = true;\n      if (sum + blanks <= origin && sum + blanks * board.length >= origin && (blanks > 0 || sum === origin)) canMatch = true;\n    }\n    return marked ? canMatch : !hasMatch;\n  });\n}`;
     }
     if (variation.value === "somewhere") {
         return "Returns true when the digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
@@ -528,6 +531,7 @@ export function solverTestCasesFor(variation: Variation) {
         evensandwich: `test("2,4,6 satisfies an outside 4 clue", () => {\n  const board = boardWith({ r1c1: 2, r1c2: 4, r1c3: 6 });\n  const clue = { relation: "evensandwich", cells: rowCells(1), clues: [4] };\n  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);\n  assert.equal(readConstraints(puzzleWithNoOutsideClues("evensandwich")).outsideRelations.every(clue => clue.clues.length === 0), true);\n});`,
         coded: `test("Coded reads the upper-left numberS corner", () => {\n  const constraints = readConstraints(codedPuzzle({ r1c1: "A", r1c2: "A", r2c1: "B" }));\n  assert.deepEqual(constraints.codedGroups[0].groups, [[r1c1, r1c2], [r2c1]]);\n});`,
         pencilmarks: `test("one Pencilmark remains a candidate clue", () => {\n  const clue = { cell: r1c1, allowed: [4] };\n  assert.equal(solve(boardWith({ r1c1: 4 }), { pencilmarkCells: [clue] }).solved, true);\n  assert.equal(solve(boardWith({ r1c1: 5 }), { pencilmarkCells: [clue] }).solved, false);\n});`,
+        twindetector: `test("requires an arrow when the sum condition is met", () => {\n  const clue = {\n    relation: "twindetector", origin: { row: 1, col: 1 },\n    rays: [[{ row: 0, col: 1 }]],\n    allRays: [[{ row: 0, col: 1 }], [{ row: 1, col: 2 }], [{ row: 2, col: 1 }]]\n  };\n  assert.equal(solve(boardWith({ r2c2: 3, r1c2: 3, r3c2: 4, r2c3: 5 }), { directionalMarks: [clue] }).solved, true);\n  assert.equal(solve(boardWith({ r2c2: 3, r1c2: 3, r3c2: 3, r2c3: 5 }), { directionalMarks: [clue] }).solved, false);\n});`,
         sumdetector: `test("every arrow uses the same n", () => {\n  const group = sumDetectorGroupWithTwoArrows();\n  assert.equal(solve(boardWhereBothArrowsUseN(2), { sumDetectorGroups: [group] }).solved, true);\n  assert.equal(solve(boardWhereArrowsNeedDifferentN(), { sumDetectorGroups: [group] }).solved, false);\n});`,
         windoku: `test("four generated cages become extra regions", () => {\n  const constraints = readConstraints(windokuPuzzleWithGeneratedCages());\n  assert.equal(constraints.regionAllDifferent.length, 4);\n  assert.equal(constraints.regionAllDifferent.every(region => region.length === 9), true);\n});`,
         creasing: `test("a no-bulb thermo is only a Creasing line", () => {\n  const constraints = readConstraints(creasingPuzzle([[r1c1, r1c2, r1c3]]));\n  assert.equal(constraints.catalogLines[0].relation, "creasing");\n  assert.equal(constraints.thermos.length, 0);\n});`,
