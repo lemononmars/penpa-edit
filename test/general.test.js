@@ -61,7 +61,6 @@ test("encrypt_data and decrypt_data functionality", () => {
         assert.equal(decrypted, testCase, `Decrypted data should match original for: ${testCase.substring(0, 20)}`);
     }
 });
-
 test("request_shortlink functionality", async () => {
     // Save original global.$
     const originalDollar = global.$;
@@ -98,6 +97,42 @@ test("request_shortlink functionality", async () => {
     }
 });
 
+test("get_download_filename functionality", () => {
+    // Save original global.document
+    const originalDocument = global.document;
+
+    try {
+        // We will modify these in our tests
+        let elements = {
+            "testInputID": { value: "" },
+            "saveinfotitle": { value: "" },
+            "saveinfoauthor": { value: "" }
+        };
+
+        global.document = {
+            getElementById: (id) => elements[id]
+        };
+
+        // Test 1: Valid filename provided in input
+        elements["testInputID"].value = "my_custom_filename";
+        assert.equal(general.get_download_filename("testInputID"), "my_custom_filename");
+
+        // Test 2: Empty input, generates default name without bad characters
+        elements["testInputID"].value = "";
+        elements["saveinfotitle"].value = "My Puzzle Title";
+        elements["saveinfoauthor"].value = "Puzzle Author";
+        assert.equal(general.get_download_filename("testInputID"), "penpa-Puzzle-Author-My-Puzzle-Title");
+
+        // Test 3: Empty input, sanitizes bad characters
+        elements["testInputID"].value = "";
+        elements["saveinfotitle"].value = "Title with <bad> chars | and * symbols?";
+        elements["saveinfoauthor"].value = "Author / Name \\";
+        assert.equal(general.get_download_filename("testInputID"), "penpa-Author-Name-Title-with-bad-chars-and-symbols-");
+
+    } finally {
+        // Restore original global.document
+        global.document = originalDocument;
+    }
 test("validate_filename functionality", () => {
     // Reset global state
     global.lastErrorMsg = null;
