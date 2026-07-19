@@ -3,11 +3,7 @@
 
 <head>
     <script>
-        // Decide the rendering surface before the browser can paint the legacy
-        // document. The /penpa iframe explicitly opts into the native UI.
-        if (new URLSearchParams(window.location.search).get("penpa") !== "legacy") {
-            document.documentElement.classList.add("svelte-home");
-        }
+        document.documentElement.classList.add("svelte-home");
     </script>
     <style>
         html.svelte-home:not(.svelte-mounted) {
@@ -149,7 +145,7 @@
             "./js/sudoku_solver.js",
             "./js/general.js",
             "./js/customcolor.js",
-            "./js/translate.js"
+            "./js/penpa_text.js"
         ];
         for (let i = 0; i < script_sources.length; i++) {
             let script = document.createElement("script");
@@ -628,7 +624,7 @@
                 </div>
                 <div id="stylemode_button">
                     <span>
-                        <label class="label_mode tooltip" id="style_txt">Style:<span id="style_text"
+                        <label class="label_mode tooltip" id="style_txt">Style: <span id="style_variable"></span><span id="style_text"
                                                                                      class="tooltiptext">Choose one
                             style</span></label>
                     </span>
@@ -1629,7 +1625,7 @@
                         </select>
                     </td>
                 </tr>
-                <tr>
+                <tr class="permanently-hidden-control">
                     <td>
                         <i class="fa fa-globe"></i>
                     </td>

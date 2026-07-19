@@ -22,10 +22,18 @@ var SudokuCSP = (function() {
         });
     }
 
+    function boxDimensions(size) {
+        if (size === 6) return { height: 2, width: 3 };
+        if (size === 8) return { height: 2, width: 4 };
+        if (size === 9) return { height: 3, width: 3 };
+        return { height: 1, width: size };
+    }
+
     function boxIndex(row, col, size) {
         size = size || SIZE;
-        var boxHeight = size === 6 ? 2 : 3;
-        var boxWidth = size / boxHeight;
+        var dimensions = boxDimensions(size);
+        var boxHeight = dimensions.height;
+        var boxWidth = dimensions.width;
         return ((row / boxHeight) | 0) * (size / boxWidth) + ((col / boxWidth) | 0);
     }
 
@@ -189,8 +197,9 @@ var SudokuCSP = (function() {
             }) });
         }
         if (!constraints || constraints.baseBoxes !== false) {
-            var boxHeight = SIZE === 6 ? 2 : 3;
-            var boxWidth = SIZE / boxHeight;
+            var dimensions = boxDimensions(SIZE);
+            var boxHeight = dimensions.height;
+            var boxWidth = dimensions.width;
             for (var boxRow = 0; boxRow < SIZE; boxRow += boxHeight) {
                 for (var boxCol = 0; boxCol < SIZE; boxCol += boxWidth) {
                     var boxCells = [];
@@ -231,7 +240,8 @@ var SudokuCSP = (function() {
             antiKing: "Anti King", antiKnight: "Anti Knight", nonConsecutive: "Non-Consecutive",
             edgeRelations: "edge clue", quadRelations: "quad clue", catalogLines: "line clue",
             diagonalAllDifferent: "diagonal/region", regionAllDifferent: "region", extraLargeRegions: "extra large regions", difference2Neighbours: "difference 2 neighbours",
-            regionCoverage: "region coverage", kropki: "Kropki", xv: "XV", battenburg: "Battenburg"
+            regionCoverage: "region coverage", scatteredAllDifferent: "Scattered shaded cells",
+            invalidRegions: "region layout", kropki: "Kropki", xv: "XV", battenburg: "Battenburg"
         };
         return labels[name] || name.replace(/([a-z])([A-Z])/g, "$1 $2");
     }
@@ -253,8 +263,9 @@ var SudokuCSP = (function() {
                         kind: "constraint",
                         constraint: name,
                         cells: cells,
-                        message: "Constraint conflict: " + constraintLabel(name, items[itemIndex]) + " conflicts with the current digits" +
-                            (cells.length ? " at " + cells.map(cellName).join(", ") : "") + "."
+                        message: name === "invalidRegions" && items[itemIndex].message ? items[itemIndex].message :
+                            "Constraint conflict: " + constraintLabel(name, items[itemIndex]) + " conflicts with the current digits" +
+                                (cells.length ? " at " + cells.map(cellName).join(", ") : "") + "."
                     };
                 }
             }
@@ -930,6 +941,151 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("offsetStarts", {
+        validatePartial: function(board, starts) {
+            var SIZE = board.length;
+            for (var index = 0; index < starts.length; index++) {
+                var cell = starts[index];
+                if (cell.row + 1 >= SIZE || cell.col + 1 >= SIZE) continue;
+                var nVal = cellValue(board, { row: cell.row, col: cell.col + 1 });
+                if (!nVal) continue;
+                var cellVal = cellValue(board, cell);
+                var targetVal = cellValue(board, { row: cell.row + 1, col: nVal - 1 });
+                if (cellVal && targetVal && cellVal !== targetVal) return false;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("oneKnightStep", {
+        validatePartial: function(board, starts) {
+            var SIZE = board.length;
+            var knightOffsets = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+            for (var index = 0; index < starts.length; index++) {
+                var cell = starts[index];
+                var cellVal = cellValue(board, cell);
+                if (!cellVal) continue;
+                var matchCount = 0;
+                var emptyCount = 0;
+                for (var i = 0; i < knightOffsets.length; i++) {
+                    var r = cell.row + knightOffsets[i][0];
+                    var c = cell.col + knightOffsets[i][1];
+                    if (r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+                        var kVal = cellValue(board, { row: r, col: c });
+                        if (!kVal) emptyCount++;
+                        else if (kVal === cellVal) matchCount++;
+                    }
+                }
+                if (matchCount > 1) return false;
+                if (matchCount === 0 && emptyCount === 0) return false;
+            }
+            return true;
+        },
+        validateComplete: function(board, starts) {
+            var SIZE = board.length;
+            var knightOffsets = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+            for (var index = 0; index < starts.length; index++) {
+                var cell = starts[index];
+                var cellVal = cellValue(board, cell);
+                var matchCount = 0;
+                for (var i = 0; i < knightOffsets.length; i++) {
+                    var r = cell.row + knightOffsets[i][0];
+                    var c = cell.col + knightOffsets[i][1];
+                    if (r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+                        if (cellValue(board, { row: r, col: c }) === cellVal) matchCount++;
+                    }
+                }
+                if (matchCount !== 1) return false;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("escapeStarts", {
+        validatePartial: function(board, starts) {
+            return true;
+        },
+        validateComplete: function(board, starts) {
+            if (!starts.length) return true;
+
+            var SIZE = board.length;
+            var numNodes = 2 + 2 * SIZE * SIZE;
+            var S = 0, T = 1;
+            var capacity = [];
+            var adj = [];
+            for (var i = 0; i < numNodes; i++) {
+                capacity[i] = [];
+                adj[i] = [];
+            }
+            function addEdge(u, v, cap) {
+                adj[u].push(v);
+                adj[v].push(u);
+                capacity[u][v] = cap;
+                capacity[v][u] = 0;
+            }
+            function inNode(r, c) { return 2 + 2 * (r * SIZE + c); }
+            function outNode(r, c) { return 3 + 2 * (r * SIZE + c); }
+
+            for (var i = 0; i < starts.length; i++) {
+                addEdge(S, inNode(starts[i].row, starts[i].col), 1);
+            }
+
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var uIn = inNode(r, c);
+                    var uOut = outNode(r, c);
+                    addEdge(uIn, uOut, 1);
+
+                    var valU = cellValue(board, {row: r, col: c});
+                    if (valU === 1 && (r === 0 || r === SIZE - 1 || c === 0 || c === SIZE - 1)) {
+                        addEdge(uOut, T, 1);
+                    }
+
+                    var neighbors = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                    for (var i = 0; i < neighbors.length; i++) {
+                        var nr = r + neighbors[i][0];
+                        var nc = c + neighbors[i][1];
+                        if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+                            var valV = cellValue(board, {row: nr, col: nc});
+                            if (valV === valU - 1) {
+                                addEdge(uOut, inNode(nr, nc), 1);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var flow = 0;
+            while (true) {
+                var parent = new Array(numNodes).fill(-1);
+                var queue = [S];
+                parent[S] = S;
+                while (queue.length > 0 && parent[T] === -1) {
+                    var u = queue.shift();
+                    for (var i = 0; i < adj[u].length; i++) {
+                        var v = adj[u][i];
+                        if (parent[v] === -1 && capacity[u][v] > 0) {
+                            parent[v] = u;
+                            queue.push(v);
+                        }
+                    }
+                }
+                if (parent[T] === -1) break;
+
+                var push = 1;
+                var curr = T;
+                while (curr !== S) {
+                    var prev = parent[curr];
+                    capacity[prev][curr] -= push;
+                    capacity[curr][prev] += push;
+                    curr = prev;
+                }
+                flow += push;
+            }
+            return flow === starts.length;
+        }
+    });
+
     registerConstraint("sameSumGroups", {
         validatePartial: function(board, groups) {
             var completedSum = null;
@@ -1054,6 +1210,15 @@ var SudokuCSP = (function() {
     registerConstraint("antiKnight", {
         validatePartial: function(board, pair) {
             return pairValuesDiffer(board, pair);
+        }
+    });
+
+    registerConstraint("knightmare", {
+        validatePartial: function(board, pair) {
+            var first = cellValue(board, pair[0]);
+            var second = cellValue(board, pair[1]);
+            if (!first || !second) return true;
+            return first + second !== 5 && first + second !== 15;
         }
     });
 
@@ -1396,6 +1561,52 @@ var SudokuCSP = (function() {
 
     registerConstraint("outsideRelations", {
         validatePartial: function(board, clue) {
+            if (clue.relation === "mastermind") {
+                var dimensions = boxDimensions(SIZE);
+                var centerTriplet = clue.cells.map(function(cell) {
+                    var r = cell.row, c = cell.col;
+                    r = r < dimensions.height ? r + dimensions.height : (r >= SIZE - dimensions.height ? r - dimensions.height : r);
+                    c = c < dimensions.width ? c + dimensions.width : (c >= SIZE - dimensions.width ? c - dimensions.width : c);
+                    return { row: r, col: c };
+                });
+                var cornerValues = clue.cells.map(function(cell) { return cellValue(board, cell); });
+                var centerValues = centerTriplet.map(function(cell) { return cellValue(board, cell); });
+
+                if (cornerValues.some(function(v) { return !v; }) || centerValues.some(function(v) { return !v; })) {
+                    return true;
+                }
+
+                var blackCount = 0, whiteCount = 0, crossCount = 0;
+                clue.clues.forEach(function(c) {
+                    if (c === "black") blackCount++;
+                    else if (c === "white") whiteCount++;
+                    else if (c === "cross") crossCount++;
+                });
+
+                var actualBlack = 0;
+                var actualWhite = 0;
+                var cornerCounts = {};
+                var centerCounts = {};
+                for (var i = 0; i < cornerValues.length; i++) {
+                    if (cornerValues[i] === centerValues[i]) {
+                        actualBlack++;
+                    } else {
+                        cornerCounts[cornerValues[i]] = (cornerCounts[cornerValues[i]] || 0) + 1;
+                        centerCounts[centerValues[i]] = (centerCounts[centerValues[i]] || 0) + 1;
+                    }
+                }
+
+                Object.keys(cornerCounts).forEach(function(digit) {
+                    actualWhite += Math.min(cornerCounts[digit], centerCounts[digit] || 0);
+                });
+
+                if (crossCount > 0) {
+                    if (actualBlack > 0 || actualWhite > 0) return false;
+                } else {
+                    if (actualBlack !== blackCount || actualWhite !== whiteCount) return false;
+                }
+                return true;
+            }
             var values = clue.cells.map(function(cell) { return cellValue(board, cell); });
             if (clue.relation === "positionsums") {
                 var hasFirstTwoSum = Number.isInteger(clue.firstTwoSum);
@@ -2219,6 +2430,31 @@ var SudokuCSP = (function() {
                 });
                 return mismatches <= 1 && (mismatches === 1 || open > 0);
             }
+            if (clue.relation === "countingneighbours") {
+                var cellVal = cellValue(board, clue.cell);
+                if (!cellVal) return true;
+                var diagVals = clue.diagonals.map(function(c) { return cellValue(board, c); });
+                var orthoVals = clue.orthogonals.map(function(c) { return cellValue(board, c); });
+                if (diagVals.indexOf(0) !== -1 || orthoVals.indexOf(0) !== -1) return true;
+
+                var countDistinct = function(arr) {
+                    return arr.filter(function(v, i, a) { return a.indexOf(v) === i; }).length;
+                };
+                var diagDistinct = countDistinct(diagVals);
+                var allDistinct = countDistinct(diagVals.concat(orthoVals));
+
+                var satisfiesCircle = cellVal === allDistinct;
+                var satisfiesCross = cellVal === diagDistinct;
+
+                if (clue.kind === "circle") return satisfiesCircle;
+                if (clue.kind === "cross") return satisfiesCross && !satisfiesCircle;
+                if (clue.kind === "none" && !satisfiesCircle && !satisfiesCross) return true;
+                // Since this validation could be called while not all digits are filled out or during setup, wait, if there's no symbol, and it's evaluated for a partial board, and the numbers DO match, it will be rejected.
+                // However, `validatePartial` can reject valid partial states if we evaluate negative constraints strictly on partials. Wait, `diagVals.indexOf(0) !== -1` ensures we only evaluate this when ALL neighbors are filled!
+                // Ah, what if neighbors are all filled, but the current cell value matches the circle/cross condition, but the user DID NOT place a circle/cross?
+                // Then the negative constraint is violated, and we return false! That is correct.
+                return !satisfiesCircle && !satisfiesCross;
+            }
             if (clue.relation === "wheel") {
                 var wheelValues = clue.cells.map(function(cell) { return cellValue(board, cell); });
                 for (var rotation = 0; rotation < 4; rotation++) {
@@ -2262,6 +2498,9 @@ var SudokuCSP = (function() {
                 }
                 return increasing || decreasing;
             }
+            if (clue.relation === "meandering diagonals") {
+                if (new Set(assigned).size !== assigned.length) return false;
+            }
             if (clue.relation === "alternatingstripes") {
                 if (new Set(assigned).size !== assigned.length) return false;
                 for (var stripeIndex = 1; stripeIndex < values.length - 1; stripeIndex++) {
@@ -2277,6 +2516,17 @@ var SudokuCSP = (function() {
                 var low = Math.min(values[0], values[values.length - 1]);
                 var high = Math.max(values[0], values[values.length - 1]);
                 return values.slice(1, -1).every(function(value) { return !value || (value > low && value < high); });
+            }
+            if (clue.relation === "tinder") {
+                var counts = {};
+                assigned.forEach(function(value) { counts[value] = (counts[value] || 0) + 1; });
+                var pairs = 0;
+                var digits = Object.keys(counts);
+                for (var tinderIndex = 0; tinderIndex < digits.length; tinderIndex++) {
+                    if (counts[digits[tinderIndex]] > 2) return false;
+                    if (counts[digits[tinderIndex]] === 2) pairs++;
+                }
+                return pairs <= 1 && (assigned.length < values.length || pairs === 1);
             }
             if (clue.relation === "equalsumline") {
                 var groups = {};
@@ -2438,6 +2688,27 @@ var SudokuCSP = (function() {
             }
             return true;
         }
+    });
+
+    registerConstraint("scatteredAllDifferent", {
+        validatePartial: function(board, cells) {
+            var seen = 0;
+            for (var index = 0; index < cells.length; index++) {
+                var value = cellValue(board, cells[index]);
+                if (!value) continue;
+                var bit = 1 << value;
+                if (seen & bit) return false;
+                seen |= bit;
+            }
+            return true;
+        }
+    });
+
+    // Region editors can describe an invalid partition. Keep that failure in
+    // the CSP itself so solve, candidate analysis, and generation all stop
+    // before starting an otherwise enormous Latin-square search.
+    registerConstraint("invalidRegions", {
+        validatePartial: function() { return false; }
     });
 
     registerConstraint("extraLargeRegions", {
@@ -2619,6 +2890,39 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("hiddenCloneShapeChecks", {
+        validatePartial: function() { return true; },
+        validateComplete: function(board, check) {
+            var component = check.component;
+            var assigned = [];
+            for (var i = 0; i < component.length; i++) {
+                assigned.push(cellValue(board, component[i]));
+            }
+
+            for (var dr = -SIZE + 1; dr < SIZE; dr++) {
+                for (var dc = -SIZE + 1; dc < SIZE; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    var match = true;
+                    for (var i = 0; i < component.length; i++) {
+                        var cell = component[i];
+                        var tr = cell.row + dr, tc = cell.col + dc;
+                        if (tr < 0 || tr >= SIZE || tc < 0 || tc >= SIZE) {
+                            match = false;
+                            break;
+                        }
+                        var tval = cellValue(board, { row: tr, col: tc });
+                        if (tval !== assigned[i]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) return true;
+                }
+            }
+            return false;
+        }
+    });
+
     registerConstraint("palindromes", {
         validatePartial: function(board, path) {
             for (var i = 0; i < Math.floor(path.length / 2); i++) {
@@ -2632,29 +2936,6 @@ var SudokuCSP = (function() {
         }
     });
 
-
-    registerConstraint("tinder", {
-        validatePartial: function(board, path) {
-            var values = [];
-            for (var i = 0; i < path.length; i++) {
-                var v = cellValue(board, path[i]);
-                if (v) values.push(v);
-            }
-            var counts = {};
-            for (var i = 0; i < values.length; i++) {
-                var v = values[i];
-                counts[v] = (counts[v] || 0) + 1;
-            }
-            var multiples = 0;
-            var keys = Object.keys(counts);
-            for (var i = 0; i < keys.length; i++) {
-                if (counts[keys[i]] > 1) multiples++;
-            }
-            if (multiples > 1) return false;
-            if (values.length === path.length && multiples !== 1) return false;
-            return true;
-        }
-    });
 
     registerConstraint("sumsetCages", {
         validatePartial: function(board, cages) {
@@ -2695,30 +2976,77 @@ var SudokuCSP = (function() {
         }
     });
 
-    // Almost Palindrome: exactly one mismatched pair across the whole line
-    registerConstraint("almostPalindromes", {
-        validatePartial: function(board, path) {
-            var mismatches = 0;
-            var half = Math.floor(path.length / 2);
-            for (var i = 0; i < half; i++) {
-                var a = cellValue(board, path[i]);
-                var b = cellValue(board, path[path.length - 1 - i]);
-                if (a && b && a !== b) {
-                    mismatches++;
-                    if (mismatches > 1) return false;
-                }
+    function canDeleteOneForPalindrome(values) {
+        function isPalindromeWithout(skipped) {
+            var filtered = values.filter(function(_, index) { return index !== skipped; });
+            for (var left = 0, right = filtered.length - 1; left < right; left++, right--) {
+                if (filtered[left] !== filtered[right]) return false;
             }
             return true;
+        }
+        for (var skipped = 0; skipped < values.length; skipped++) {
+            if (isPalindromeWithout(skipped)) return true;
+        }
+        return false;
+    }
+
+    // Almost Palindrome: removing exactly one digit leaves a palindrome.
+    registerConstraint("almostPalindromes", {
+        validatePartial: function(board, path) {
+            var values = path.map(function(cell) { return cellValue(board, cell); });
+            return values.some(function(value) { return !value; }) || canDeleteOneForPalindrome(values);
         },
         validateComplete: function(board, path) {
-            var mismatches = 0;
-            var half = Math.floor(path.length / 2);
-            for (var i = 0; i < half; i++) {
-                var a = cellValue(board, path[i]);
-                var b = cellValue(board, path[path.length - 1 - i]);
-                if (a !== b) mismatches++;
+            return canDeleteOneForPalindrome(path.map(function(cell) { return cellValue(board, cell); }));
+        }
+    });
+
+    registerConstraint("disguisedPalindromes", {
+        validatePartial: function(board, path) {
+            if (path.length <= 1) return true;
+            for (var k = 0; k < path.length; k++) {
+                var isPal = true;
+                var left = 0;
+                var right = path.length - 1;
+                while (left < right) {
+                    if (left === k) left++;
+                    if (right === k) right--;
+                    if (left >= right) break;
+                    var a = cellValue(board, path[left]);
+                    var b = cellValue(board, path[right]);
+                    if (a && b && a !== b) {
+                        isPal = false;
+                        break;
+                    }
+                    left++;
+                    right--;
+                }
+                if (isPal) return true;
             }
-            return mismatches === 1;
+            return false;
+        },
+        validateComplete: function(board, path) {
+            if (path.length <= 1) return true;
+            for (var k = 0; k < path.length; k++) {
+                var isPal = true;
+                var left = 0;
+                var right = path.length - 1;
+                while (left < right) {
+                    if (left === k) left++;
+                    if (right === k) right--;
+                    if (left >= right) break;
+                    var a = cellValue(board, path[left]);
+                    var b = cellValue(board, path[right]);
+                    if (a !== b) {
+                        isPal = false;
+                        break;
+                    }
+                    left++;
+                    right--;
+                }
+                if (isPal) return true;
+            }
+            return false;
         }
     });
 
@@ -2787,6 +3115,23 @@ var SudokuCSP = (function() {
                 }
             }
             return false;
+        }
+    });
+
+
+    registerConstraint("lc", {
+        validatePartial: function(board, clue) {
+            var a = cellValue(board, clue.cells[0]);
+            var b = cellValue(board, clue.cells[1]);
+            var c = cellValue(board, clue.cells[2]);
+            var d = cellValue(board, clue.cells[3]);
+            if (a && b && c && d) {
+                var sum = (a * 10 + b) + (c * 10 + d);
+                if (clue.kind === "L") return sum === 50;
+                if (clue.kind === "C") return sum === 100;
+                return sum !== 50 && sum !== 100;
+            }
+            return true;
         }
     });
 

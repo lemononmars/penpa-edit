@@ -1632,6 +1632,8 @@ class Puzzle {
             document.getElementById('mode_' + mode).style.display = 'inline-block';
         }
         let m = mode === 'multicolor' ? 'surface' : mode;
+        const styleVariable = document.getElementById('style_variable');
+        if (styleVariable) styleVariable.textContent = m;
         if (document.getElementById('style_' + m)) {
             document.getElementById('style_' + m).style.display = 'inline-block';
         }
@@ -6776,7 +6778,17 @@ class Puzzle {
                     break;
                 }
                 if (a) {
-                    if ((a[0] === "thermo" ||
+                    if (a[0] === "sudokuTransaction") {
+                        var currentSudokuState = JSON.stringify({
+                            number: this.pu_a.number || {},
+                            numberCol: this.pu_a_col.number || {}
+                        });
+                        this.pu_q.command_redo.push([a[0], a[1], currentSudokuState, pu_mode]);
+                        this.pu_q_col.command_redo.push([a[0], a[1], null, pu_mode + "_col"]);
+                        var previousSudokuState = JSON.parse(a[2]);
+                        this.pu_a.number = previousSudokuState.number || {};
+                        this.pu_a_col.number = previousSudokuState.numberCol || {};
+                    } else if ((a[0] === "thermo" ||
                         a[0] === "nobulbthermo" ||
                         a[0] === "arrows" ||
                         a[0] === "direction" ||
@@ -7011,7 +7023,17 @@ class Puzzle {
                     break;
                 }
                 if (a) {
-                    if ((a[0] === "thermo" ||
+                    if (a[0] === "sudokuTransaction") {
+                        var currentSudokuState = JSON.stringify({
+                            number: this.pu_a.number || {},
+                            numberCol: this.pu_a_col.number || {}
+                        });
+                        this.pu_q.command_undo.push([a[0], a[1], currentSudokuState, pu_mode]);
+                        this.pu_q_col.command_undo.push([a[0], a[1], null, pu_mode + "_col"]);
+                        var nextSudokuState = JSON.parse(a[2]);
+                        this.pu_a.number = nextSudokuState.number || {};
+                        this.pu_a_col.number = nextSudokuState.numberCol || {};
+                    } else if ((a[0] === "thermo" ||
                         a[0] === "nobulbthermo" ||
                         a[0] === "arrows" ||
                         a[0] === "direction" ||
@@ -9462,6 +9484,30 @@ class Puzzle {
         return true;
     }
 
+
+    cycleLCClue(num) {
+        if (!this.isKropkiEdge(num)) {
+            this.drawing = false;
+            this.last = -1;
+            this.cursol = -1;
+            return false;
+        }
+        let current = this[this.mode.qa].number[num];
+        let value = current && current[2] === "5" ? current[0].toString().toUpperCase() : "";
+        this.undoredo_counter++;
+        this.drawing = false;
+        this.last = -1;
+        this.cursol = -1;
+        if (value !== "L" && value !== "C") {
+            this.set_value("number", num, ["L", 6, "5"], null);
+        } else if (value === "L") {
+            this.set_value("number", num, ["C", 6, "5"], null);
+        } else {
+            this.remove_value("number", num, true);
+        }
+        return true;
+    }
+
     killerCageAnchor(num) {
         let cages = this.refreshKillerCages(this.mode.qa);
         for (let cage of cages) {
@@ -9486,6 +9532,12 @@ class Puzzle {
         if (this.mouse_mode === "down_left") {
             if (this.xv_mode && String(this.mode[this.mode.qa].number[0]) === "5") {
                 this.cycleXVClue(num);
+                this.cursol = -1;
+                this.redraw();
+                return;
+            }
+            if (this.lc_mode && String(this.mode[this.mode.qa].number[0]) === "5") {
+                this.cycleLCClue(num);
                 this.cursol = -1;
                 this.redraw();
                 return;

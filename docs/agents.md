@@ -1,5 +1,9 @@
 # Penpa-Edit Architecture & Codebase Overview
 
+> Jules and other coding agents: read [`../JULES.md`](../JULES.md) before adding
+> or declaring support for a Sudoku variant. It contains the repository-specific
+> editor, parser, CSP, generation, metadata, wiki, and test checklist.
+
 This document outlines the high-level architecture and structure of the `penpa-edit` project, which is a web application for creating and solving Sudokus and other logic puzzles.
 
 ## AI Agent Instructions
