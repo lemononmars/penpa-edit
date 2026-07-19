@@ -97,6 +97,42 @@ test("request_shortlink functionality", async () => {
     }
 });
 
+test("errorMsg and infoMsg functionality", () => {
+    // Setup Identity
+    global.Identity = {
+        errorTitle: "Error Test",
+        infoTitle: "Info Test",
+        okButtonText: "OK Test"
+    };
+
+    let swalCalledWith = null;
+
+    // Setup Mock Swal
+    global.Swal = {
+        fire: (args) => {
+            swalCalledWith = args;
+        }
+    };
+
+    // Test errorMsg
+    general.errorMsg("Error HTML content");
+    assert.deepEqual(swalCalledWith, {
+        title: global.Identity.errorTitle,
+        html: "Error HTML content",
+        icon: 'error',
+        confirmButtonText: global.Identity.okButtonText
+    });
+
+    swalCalledWith = null;
+
+    // Test infoMsg
+    general.infoMsg("Info HTML content");
+    assert.deepEqual(swalCalledWith, {
+        title: global.Identity.infoTitle,
+        html: "Info HTML content",
+        icon: 'info',
+        confirmButtonText: global.Identity.okButtonText
+    });
 test("get_download_filename functionality", () => {
     // Save original global.document
     const originalDocument = global.document;
