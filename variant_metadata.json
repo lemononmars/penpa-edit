@@ -6618,7 +6618,7 @@
       "rules": {
         "9x9": "The digits along a grey line goes alternately up and down while the difference between the two neighbouring digits is at least 4."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
