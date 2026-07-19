@@ -1641,6 +1641,41 @@ var SudokuCSP = (function() {
                 var thirdPart = Number(values.slice(7, 9).join(""));
                 return firstPart + secondPart + thirdPart === clue.value;
             }
+            if (clue.relation === "partitionedsums") {
+                function canPartitionSums(values, expectedSums) {
+                    function solve(valIndex, sumIndex) {
+                        if (sumIndex === expectedSums.length) {
+                            return valIndex === values.length;
+                        }
+                        if (valIndex >= values.length) {
+                            return false;
+                        }
+                        var currentSum = 0;
+                        var hasBlanks = false;
+                        var maxPossibleSum = 0;
+                        for (var i = valIndex; i < values.length; i++) {
+                            if (values[i] === 0) {
+                                hasBlanks = true;
+                                maxPossibleSum += 9;
+                            } else {
+                                currentSum += values[i];
+                                maxPossibleSum += values[i];
+                            }
+                            if (!hasBlanks && currentSum > expectedSums[sumIndex]) {
+                                break;
+                            }
+                            if (hasBlanks && maxPossibleSum >= expectedSums[sumIndex] && currentSum <= expectedSums[sumIndex]) {
+                                if (solve(i + 1, sumIndex + 1)) return true;
+                            } else if (!hasBlanks && currentSum === expectedSums[sumIndex]) {
+                                if (solve(i + 1, sumIndex + 1)) return true;
+                            }
+                        }
+                        return false;
+                    }
+                    return solve(0, 0);
+                }
+                return canPartitionSums(values, clue.value);
+            }
             if (clue.relation === "numberedrooms") {
                 var room = values[0];
                 return !room || room > values.length || !values[room - 1] || values[room - 1] === clue.value;
@@ -3310,6 +3345,35 @@ var SudokuCSP = (function() {
                         if (v1 && v2 && v3 && (v1 + v2 + v3) % 3 !== 0) return false;
                     }
                 }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("oneKnightStep", {
+        validatePartial: function(board, cells) {
+            return true;
+        },
+        validateComplete: function(board, cells) {
+            for (var i = 0; i < cells.length; i++) {
+                var cell = cells[i];
+                var val = cellValue(board, cell);
+                if (!val) continue;
+                var matchCount = 0;
+                var knightMoves = [
+                    [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+                    [1, -2], [1, 2], [2, -1], [2, 1]
+                ];
+                for (var j = 0; j < knightMoves.length; j++) {
+                    var r = cell.row + knightMoves[j][0];
+                    var c = cell.col + knightMoves[j][1];
+                    if (r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+                        if (cellValue(board, {row: r, col: c}) === val) {
+                            matchCount++;
+                        }
+                    }
+                }
+                if (matchCount !== 1) return false;
             }
             return true;
         }
