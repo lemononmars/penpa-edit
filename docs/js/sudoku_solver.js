@@ -536,6 +536,9 @@ var SudokuSolver = (function() {
             antiDiagonals: [],
             antiKing: [],
             antiKnight: [],
+            chessKings: [],
+            chessKings: [],
+            chessKings: [],
             nonConsecutive: [],
             diagonalNonConsecutive: [],
             noEvenNeighbours: [],
@@ -997,6 +1000,18 @@ var SudokuSolver = (function() {
         if (variantEnabled(puzzle, "anti knight")) {
             addGridPairs(constraints.antiKnight, [[1, -2], [1, 2], [2, -1], [2, 1]]);
             constraints.supported.push("anti knight");
+        }
+        if (variantEnabled(puzzle, "chess kings")) {
+            var pairs = [];
+            addGridPairs(pairs, [[0, 1], [1, -1], [1, 0], [1, 1]]);
+            constraints.chessKings.push({ pairs: pairs });
+            constraints.supported.push("chess kings");
+        }
+        if (variantEnabled(puzzle, "chess kings")) {
+            var pairs = [];
+            addGridPairs(pairs, [[0, 1], [1, -1], [1, 0], [1, 1]]);
+            constraints.chessKings.push({ pairs: pairs });
+            constraints.supported.push("chess kings");
         }
         if (variantEnabled(puzzle, "knightmare")) {
             addGridPairs(constraints.knightmare, [[1, -2], [1, 2], [2, -1], [2, 1]]);
