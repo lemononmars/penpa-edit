@@ -106,6 +106,63 @@ var SudokuCSP = (function() {
         maskToDigits: maskToDigits
     };
 
+
+    registerConstraint("roundOffCages", {
+        validatePartial: function(board, cage) {
+            if (cage.cells.length !== 2) return true;
+            var tens = cellValue(board, cage.cells[0]);
+            var units = cellValue(board, cage.cells[1]);
+
+            if (tens && units) {
+                var rounded = units < 5 ? tens * 10 : tens * 10 + 10;
+                return rounded === cage.total;
+            } else if (tens) {
+                var possible1 = tens * 10;
+                var possible2 = tens * 10 + 10;
+                return possible1 === cage.total || possible2 === cage.total;
+            } else if (units) {
+                var expectedTens = units < 5 ? Math.floor(cage.total / 10) : Math.floor(cage.total / 10) - 1;
+                return expectedTens >= 1 && expectedTens <= SIZE;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("orderingGroups", {
+        validatePartial: function(board, group) {
+            var minPossibles = [];
+            var maxPossibles = [];
+            for (var i = 0; i < group.length; i++) {
+                var min = 0, max = 0;
+                for (var j = 0; j < group[i].cells.length; j++) {
+                    var v = cellValue(board, group[i].cells[j]);
+                    if (v) {
+                        min = min * 10 + v;
+                        max = max * 10 + v;
+                    } else {
+                        min = min * 10 + 1;
+                        max = max * 10 + SIZE;
+                    }
+                }
+                minPossibles.push(min);
+                maxPossibles.push(max);
+            }
+
+            var currentMin = 0;
+            for (var i = 0; i < group.length; i++) {
+                currentMin = Math.max(currentMin + 1, minPossibles[i]);
+                if (currentMin > maxPossibles[i]) return false;
+            }
+
+            var currentMax = Infinity;
+            for (var i = group.length - 1; i >= 0; i--) {
+                currentMax = Math.min(currentMax - 1, maxPossibles[i]);
+                if (currentMax < minPossibles[i]) return false;
+            }
+            return true;
+        }
+    });
+
     function registerConstraint(name, handler) {
         if (!name || !handler || typeof handler.validatePartial !== "function") {
             throw new Error("A CSP constraint requires a name and validatePartial(board, constraint, helpers).");

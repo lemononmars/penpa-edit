@@ -2695,6 +2695,7 @@ test("validates inequality triples, difference pairs, Ten/Eleven, tens products,
 });
 
 
+test("validates round off variants", function() {
 test("validates new variants: zones, somewhere", function() {
     var board = [
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -2742,6 +2743,11 @@ test("Sum or Product Killer", function() {
         "859761423" + "426853791" + "713924856" +
         "961537284" + "287419635" + "345286179"
     );
+    assert.equal(SudokuCSP.solve(solved, { roundOffCages: [{ cells: [{row: 0, col: 0}, {row: 0, col: 1}], total: 50 }] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { roundOffCages: [{ cells: [{row: 0, col: 0}, {row: 0, col: 1}], total: 60 }] }).solved, false);
+});
+
+test("validates ordering variants", function() {
 
     // Sum is 8 (5 + 3) -> 8 is valid
     assert.equal(SudokuCSP.solve(solved, {
@@ -2765,6 +2771,16 @@ test("Tableaux", function() {
         "859761423" + "426853791" + "713924856" +
         "961537284" + "287419635" + "345286179"
     );
+    assert.equal(SudokuCSP.solve(solved, { orderingGroups: [[
+        { cells: [{row: 2, col: 0}, {row: 2, col: 1}], order: 1 }, // 19
+        { cells: [{row: 7, col: 0}, {row: 7, col: 1}], order: 2 }, // 28
+        { cells: [{row: 8, col: 0}, {row: 8, col: 1}], order: 3 }, // 34
+    ]] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { orderingGroups: [[
+        { cells: [{row: 7, col: 0}, {row: 7, col: 1}], order: 1 }, // 28
+        { cells: [{row: 2, col: 0}, {row: 2, col: 1}], order: 2 }, // 19
+        { cells: [{row: 8, col: 0}, {row: 8, col: 1}], order: 3 }, // 34
+    ]] }).solved, false);
 
     // R0C1=3, R0C2=4 (3 < 4, L->R)
     // R0C1=3, R1C1=7 (3 < 7, T->B)
