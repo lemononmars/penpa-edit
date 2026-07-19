@@ -3375,5 +3375,5 @@ if (!String.prototype.startsWith) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { isEmpty, encrypt_data, decrypt_data, request_shortlink, get_download_filename, get_filename_base, filename_bad_chars };
+    module.exports = { isEmpty, encrypt_data, decrypt_data, request_shortlink, get_download_filename, get_filename_base, filename_bad_chars, validate_filename };
 }
