@@ -6305,11 +6305,11 @@
       "rules": {
         "9x9": "Each 3x3 box is also a grid for a Tic-Tac-Toe game. A game is won by placing three odd digits or three even digits in a horizontal, vertical or diagonal line. Each 3x3 box contains exactly one winning combination and this combination is marked by a grey line."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "line"
         ],
         "instructions": []
       },

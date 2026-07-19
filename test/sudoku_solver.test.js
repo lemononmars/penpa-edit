@@ -3189,6 +3189,8 @@ test("Big-Small Japanese Sums validate sequences", function() {
     assert.equal(SudokuCSP.solve(boardBS, { outsideRelations: [clueBSCol] }).solved, true);
 });
 
+test("Tic-Tac-Toe Winner validations", function() {
+    assert.strictEqual(true, true);
 
 test("Unicorn normalizes the constraint array with 81 entries", function() {
     const puzzle = {

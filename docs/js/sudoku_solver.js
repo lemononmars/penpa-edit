@@ -619,6 +619,7 @@ var SudokuSolver = (function() {
             divisiblebythree: [],
             oddtapa: [],
             tictactoe: [],
+            tictactoewinner: [],
             roundOffCages: [],
             orderingGroups: [],
             wildcards: [],
@@ -1080,6 +1081,23 @@ var SudokuSolver = (function() {
         if (variantEnabled(puzzle, "tic-tac-toe")) {
             constraints.tictactoe.push(true);
             constraints.supported.push("tictactoe");
+        }
+        if (variantEnabled(puzzle, "tic-tac-toe winner")) {
+            var tictactoeLines = connectedLinePaths(puzzle, 5);
+            var boxLines = [[], [], [], [], [], [], [], [], []];
+            tictactoeLines.forEach(function(path) {
+                if (path.length > 0) {
+                    var box = Math.floor(path[0].row / 3) * 3 + Math.floor(path[0].col / 3);
+                    boxLines[box].push(path);
+                }
+            });
+            for (var i = 0; i < 9; i++) {
+                if (boxLines[i].length !== 1) {
+                    throw new Error("Tic-Tac-Toe Winner requires exactly one gray line per 3x3 box.");
+                }
+            }
+            constraints.tictactoewinner = [boxLines];
+            constraints.supported.push("tictactoewinner");
         }
         if (variantEnabled(puzzle, "mirror")) {
             var mirrorDimensions = boxDimensions(SIZE);
