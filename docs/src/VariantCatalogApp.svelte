@@ -82,7 +82,7 @@
     const stored = /[&]variants=/.test(example)
       ? example
       : `${example}&variants=${encodeURIComponent(`classic,${variant}`)}`;
-    base.hash = `m=solve&p=${stored}`;
+    base.hash = `m=solve&tab=answer&v=0&p=${stored}`;
     return base.href;
   }
 
@@ -199,27 +199,19 @@
         <h1>{detailVariation.name}</h1>
         <div class="detail-status">
           {#if detailVariation.status === "available"}
-            <span class="status implemented">CSP implemented</span>
+            <span class="status implemented">available</span>
           {:else}
             <span
               class:backlog={detailVariation.status === "planned"}
               class:infeasible={detailVariation.status === "infeasible"}
               class="status"
             >
-              {detailVariation.status === "infeasible" ? "Infeasible" : "CSP backlog"}
+              {detailVariation.status === "infeasible" ? "infeasible" : "planned"}
             </span>
           {/if}
         </div>
         <div class="detail-layout">
           <div>
-            {#if detailVariation.example}
-              <section>
-                <h2>Example</h2>
-                <p style="margin-top: 14px; font-weight: 500;">
-                  <a href={exampleUrl(detailVariation.example, detailVariation.value)} target="_blank" rel="noreferrer">Open this example puzzle ↗</a>
-                </p>
-              </section>
-            {/if}
         <section>
           <h2>Rules</h2>
           {#each Object.entries(detailVariation.rules) as [size, rule]}
@@ -736,7 +728,7 @@
     text-underline-offset: 3px;
   }
   .variant-detail {
-    width: min(920px, 100%);
+    width: 100%;
   }
   .variant-detail .back-link {
     display: inline-block;
@@ -759,7 +751,7 @@
     min-width: 0; /* allows shrinking */
   }
   .variant-examples {
-    width: 400px;
+    width: 50%;
     flex-shrink: 0;
     position: sticky;
     top: 24px;
@@ -888,6 +880,7 @@
     text-align: center;
     font-size: calc(11px * var(--font-scale, 1));
   }
+  /* Mobile-friendly stacked layout */
   @media (max-width: 1100px) {
     .detail-layout {
       flex-direction: column;
@@ -895,7 +888,7 @@
     .variant-examples {
       width: 100%;
       position: static;
-      max-width: 920px;
+      max-width: 100%;
     }
   }
   @media (max-width: 900px) {
