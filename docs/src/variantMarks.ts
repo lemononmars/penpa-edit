@@ -66,7 +66,7 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     const text = `${variation.name} ${variation.rule}`.toLowerCase();
     if (variation.inputType.categories.includes("shading")) return { position: "center", mark: "surface" };
     if (variation.inputType.categories.includes("cage")) return { position: "center", mark: "cage" };
-    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "liardiagonal", "magicsquares", "onefivenine"].includes(variation.value)) {
+    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "liardiagonal", "magicsquares", "onefivenine", "unicorn"].includes(variation.value)) {
         return { position: "none", mark: "none" };
     }
     if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector", "twindetector"].includes(variation.value)) {
@@ -138,6 +138,13 @@ export function inputModesFor(variation: Variation) {
 
 /** Human-readable source shown on each generated variant reference page. */
 function cspImplementationFor(variation: Variation) {
+    if (variation.value === "unicorn") {
+        return `function validatePartial(board, item) {
+  const value = cellValue(board, item.cell);
+  if (value !== 9) return true;
+  const neighbors = item.neighbors.map(cell => cellValue(board, cell)).filter(Boolean);
+  return new Set(neighbors).size === neighbors.length;
+}`;
     if (variation.value === "watchtowers") {
         return "A watchtower digit N overlooks exactly N cells. If N=3, it sees itself and 2 others.";
     }
@@ -476,6 +483,14 @@ export function cspConstraintFunctionFor(variation: Variation) {
 
 /** Executable-style regression examples displayed on every variant detail page. */
 export function solverTestCasesFor(variation: Variation) {
+    if (variation.value === "unicorn") {
+        return `test("Unicorn rejects a 9 that attacks two identical digits", () => {
+  const board = boardWith({ 1: { 0: 9 }, 0: { 2: 3 }, 2: { 2: 3 } });
+  assert.equal(validatePartial(board, {
+    cell: { row: 1, col: 0 },
+    neighbors: [{ row: 0, col: 2 }, { row: 2, col: 2 }]
+  }), false);
+});`;
     if (variation.value === "watchtowers") {
         return "A watchtower digit N overlooks exactly N cells. If N=3, it sees itself and 2 others.";
     }

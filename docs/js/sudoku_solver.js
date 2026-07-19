@@ -553,6 +553,7 @@ var SudokuSolver = (function() {
             noThreeInRow: [],
             queenDigits: [],
             touchyCells: [],
+            unicorn: [],
             edgeRelations: [],
             catalogLines: [],
             quadRelations: [],
@@ -1169,6 +1170,22 @@ var SudokuSolver = (function() {
                 }
             }
             constraints.supported.push("touchy");
+        }
+        if (variantEnabled(puzzle, "unicorn")) {
+            for (var unicornRow = 0; unicornRow < SIZE; unicornRow++) {
+                for (var unicornCol = 0; unicornCol < SIZE; unicornCol++) {
+                    var neighbors = [];
+                    [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]].forEach(function(offset) {
+                        var nRow = unicornRow + offset[0];
+                        var nCol = unicornCol + offset[1];
+                        if (nRow >= 0 && nRow < SIZE && nCol >= 0 && nCol < SIZE) {
+                            neighbors.push({ row: nRow, col: nCol });
+                        }
+                    });
+                    constraints.unicorn.push({ cell: { row: unicornRow, col: unicornCol }, neighbors: neighbors });
+                }
+            }
+            constraints.supported.push("unicorn");
         }
         if (variantEnabled(puzzle, "disjoint")) {
             var dimensions = boxDimensions(SIZE);
