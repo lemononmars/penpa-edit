@@ -53,6 +53,9 @@ test("encrypt_data and decrypt_data functionality", () => {
         assert.equal(typeof encrypted, "string", "Encrypted data should be a string");
         assert.notEqual(encrypted, testCase, "Encrypted data should not be the original string (except empty maybe)");
         assert.equal(decrypted, testCase, `Decrypted data should match original for: ${testCase.substring(0, 20)}`);
+    }
+});
+
 test("request_shortlink functionality", async () => {
     // Save original global.$
     const originalDollar = global.$;
@@ -86,5 +89,51 @@ test("request_shortlink functionality", async () => {
     } finally {
         // Restore original global.$
         global.$ = originalDollar;
+    }
+});
+
+test("errorMsg and infoMsg functionality", () => {
+    // Save original globals
+    const originalSwal = global.Swal;
+    const originalIdentity = global.Identity;
+
+    try {
+        let lastSwalArgs = null;
+
+        global.Swal = {
+            fire: (args) => {
+                lastSwalArgs = args;
+            }
+        };
+
+        global.Identity = {
+            errorTitle: "Error Title",
+            infoTitle: "Info Title",
+            okButtonText: "OK"
+        };
+
+        // Test errorMsg
+        general.errorMsg("Test error HTML");
+        assert.deepEqual(lastSwalArgs, {
+            title: "Error Title",
+            html: "Test error HTML",
+            icon: "error",
+            confirmButtonText: "OK"
+        });
+
+        // Test infoMsg
+        lastSwalArgs = null;
+        general.infoMsg("Test info HTML");
+        assert.deepEqual(lastSwalArgs, {
+            title: "Info Title",
+            html: "Test info HTML",
+            icon: "info",
+            confirmButtonText: "OK"
+        });
+
+    } finally {
+        // Restore original globals
+        global.Swal = originalSwal;
+        global.Identity = originalIdentity;
     }
 });
