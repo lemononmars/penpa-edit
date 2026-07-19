@@ -129,6 +129,71 @@ var SudokuCSP = (function() {
         }
     });
 
+        registerConstraint("watchtowers", {
+        validatePartial: function(board, shadedCells) {
+            var size = board.length;
+            var isShaded = {};
+            for (var i = 0; i < shadedCells.length; i++) {
+                isShaded[shadedCells[i].row + ":" + shadedCells[i].col] = true;
+            }
+            var dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            for (var r = 0; r < size; r++) {
+                for (var c = 0; c < size; c++) {
+                    var N = cellValue(board, {row: r, col: c});
+                    if (!N) continue;
+                    var minSeen = 1;
+                    var maxSeen = 1;
+                    for (var d = 0; d < 4; d++) {
+                        var nr = r + dirs[d][0], nc = c + dirs[d][1];
+                        var blockedMin = false, blockedMax = false;
+                        while (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                            var v = cellValue(board, {row: nr, col: nc});
+                            if (v) {
+                                if (v >= N) {
+                                    blockedMin = true;
+                                    blockedMax = true;
+                                    break;
+                                } else {
+                                    if (!blockedMin) minSeen++;
+                                    if (!blockedMax) maxSeen++;
+                                }
+                            } else {
+                                var mask = board[nr][nc].mask;
+                                var canBeSmaller = false;
+                                var mustBeSmaller = true;
+                                var canBeLargerOrEqual = false;
+                                var mustBeLargerOrEqual = true;
+                                for (var bit = 1; bit <= size; bit++) {
+                                    if ((mask & (1 << bit)) === 0) continue;
+                                    if (bit < N) {
+                                        canBeSmaller = true;
+                                        mustBeLargerOrEqual = false;
+                                    }
+                                    if (bit >= N) {
+                                        canBeLargerOrEqual = true;
+                                        mustBeSmaller = false;
+                                    }
+                                }
+                                if (mustBeSmaller && !blockedMin) minSeen++;
+                                if (canBeSmaller && !blockedMax) maxSeen++;
+                                if (canBeLargerOrEqual) blockedMin = true;
+                                if (mustBeLargerOrEqual) blockedMax = true;
+                            }
+                            nr += dirs[d][0];
+                            nc += dirs[d][1];
+                        }
+                    }
+                    if (isShaded[r + ":" + c]) {
+                        if (maxSeen < N || minSeen > N) return false;
+                    } else {
+                        if (minSeen === N && maxSeen === N) return false;
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
     registerConstraint("orderingGroups", {
         validatePartial: function(board, group) {
             var minPossibles = [];

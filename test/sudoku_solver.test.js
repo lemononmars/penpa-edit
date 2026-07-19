@@ -2084,6 +2084,21 @@ test("normalizes Irregular Sudoku regions on 7x7 and 8x8 grids", function() {
     });
 });
 
+
+test("Watchtowers Sudoku parses shaded cells and enforces visible cells count", function() {
+    const shadedKeys = [28, 29]; // {0, 0} and {0, 1}
+    const surface = Object.fromEntries(shadedKeys.map(function(key) { return [key, 1]; }));
+    const constraints = SudokuSolver.readConstraints({
+        nx: 9, ny: 9, nx0: 13, space: [0, 0, 0, 0], centerlist: Array.from({ length: 81 }, (_, i) => 28 + (i % 9) + Math.floor(i / 9) * 13), point: {},
+        activeSudokuVariants: ["watchtowers"],
+        pu_q: { surface: surface, line: {}, lineE: {}, number: {}, symbol: {}, cage: {} }
+    });
+    assert.equal(constraints.supported.includes("watchtowers"), true);
+    assert.equal(constraints.watchtowers.length, 1);
+    assert.equal(constraints.watchtowers[0].length, 2);
+});
+
+
 test("Irregular Sudoku replaces fixed boxes with persisted region-number groups", function() {
     const regionIds = Array.from({ length: 36 }, function(_, index) {
         return 1 + ((index / 6) | 0);

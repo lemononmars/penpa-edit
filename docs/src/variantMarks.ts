@@ -138,6 +138,9 @@ export function inputModesFor(variation: Variation) {
 
 /** Human-readable source shown on each generated variant reference page. */
 function cspImplementationFor(variation: Variation) {
+    if (variation.value === "watchtowers") {
+        return "A watchtower digit N overlooks exactly N cells. If N=3, it sees itself and 2 others.";
+    }
     if (variation.value === "zones") {
         return "Returns true when every digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
     }
@@ -199,6 +202,7 @@ function cspImplementationFor(variation: Variation) {
         fortress: `validatePartial(board, clue) {\n  const shaded = cellValue(board, clue.shaded), unshaded = cellValue(board, clue.unshaded);\n  return !shaded || !unshaded || shaded > unshaded;\n}`,
         inequality: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  return !a || !b || (clue.sign === "<" ? a < b : a > b);\n}`,
         trio: `validatePartial(board, clue) {\n  const value = cellValue(board, clue.cell);\n  return !value || (value >= clue.minimum && value <= clue.maximum);\n}`,
+        watchtowers: `validatePartial(board, shadedCells) {\n  // Implementation omitted\n}`,
         perfectsquares: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const perfect = [16, 25, 36, 49, 64, 81].includes(10 * a + b);\n  return clue.marked ? perfect : !perfect;\n}`,
         clockfaces: `validateComplete(board, clue) {\n  const clockwise = clockwiseCells(clue.cells).map(cellValue);\n  const increasingClockwise = circularDescentCount(clockwise) === 1;\n  const increasingCounterclockwise = circularDescentCount(clockwise.toReversed()) === 1;\n  return clue.kind === "white" ? increasingClockwise : clue.kind === "black" ? increasingCounterclockwise\n    : !increasingClockwise && !increasingCounterclockwise;\n}`,
         exclusion: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue).filter(Boolean);\n  return clue.digits.every(digit => !values.includes(digit));\n}`,
@@ -468,6 +472,9 @@ export function cspConstraintFunctionFor(variation: Variation) {
 
 /** Executable-style regression examples displayed on every variant detail page. */
 export function solverTestCasesFor(variation: Variation) {
+    if (variation.value === "watchtowers") {
+        return "A watchtower digit N overlooks exactly N cells. If N=3, it sees itself and 2 others.";
+    }
     if (variation.value === "zones") {
         return "A cage with clue '12' must contain both a 1 and a 2. Partial assignments are valid if empty cells remain to accommodate missing digits.";
     }
