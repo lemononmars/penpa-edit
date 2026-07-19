@@ -510,6 +510,7 @@ var SudokuSolver = (function() {
     function readConstraints(puzzle) {
         SIZE = puzzleSize(puzzle) || SIZE;
         var constraints = {
+            starCells: [],
             thermos: [],
             arrows: [],
             killers: [],
@@ -1565,6 +1566,21 @@ var SudokuSolver = (function() {
         }
 
         var symbols = puzzle.pu_q.symbol || {};
+
+        if (variantEnabled(puzzle, "starproduct") || variantEnabled(puzzle, "sudokuwithstars")) {
+            var starCells = [];
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                if (entry[1] === "star") {
+                    var cell = keyToCell(puzzle, Number(key));
+                    if (cell) starCells.push(cell);
+                }
+            });
+            if (starCells.length > 0) {
+                constraints.starCells = starCells;
+            }
+            if (variantEnabled(puzzle, "sudokuwithstars")) constraints.supported.push("sudokuwithstars");
+        }
         var directionalVariants = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious",
             "quadmax", "quadmin", "search9", "sumdetector", "detection", "deadoralivearrows"].filter(function(name) {
                 return variantEnabled(puzzle, name);
@@ -2411,7 +2427,7 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push(paritySandwichVariant);
         }
-        var activeOutsideVariants = ["bust", "xsums", "numberedrooms", "sumframe", "edgedifference",
+        var activeOutsideVariants = ["starproduct", "bust", "xsums", "numberedrooms", "sumframe", "edgedifference",
             "fullrank", "outsideparity", "parityparty", "serbianframe", "median", "descriptivepairs",
             "maximin", "minimax", "ascendingstarters", "before9", "before1after9", "firstseenoddeven", "maxascending",
             "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers",
@@ -2488,7 +2504,7 @@ var SudokuSolver = (function() {
                             outsideColumn, outsideBoxHeight, "column");
                         addOutsideRelation((outsideStartCol - 1) + (outsideStartRow + outsideIndex) * puzzle.nx0,
                             outsideRow, outsideBoxWidth, "row");
-                        var leftTopOnly = ["edgedifference", "before9", "nextto9", "outsideconsecutive", "outsidekiller", "parityskyscrapers"].indexOf(variant) !== -1;
+                        var leftTopOnly = ["starproduct", "edgedifference", "before9", "nextto9", "outsideconsecutive", "outsidekiller", "parityskyscrapers"].indexOf(variant) !== -1;
                         if (!leftTopOnly) {
                             addOutsideRelation((outsideStartCol + outsideIndex) + (outsideStartRow + SIZE) * puzzle.nx0,
                                 outsideColumn.slice().reverse(), outsideBoxHeight, "column");

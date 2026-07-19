@@ -211,6 +211,11 @@ function genericSetting(variation: Variation) {
         if (variation.value === "productkiller") add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
+    if (variation.value === "starproduct") {
+        add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
+        add("symbol", "star", 2, ["mo_symbol_lb", "ms4", "li_star", "ms_star"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
+    }
     if (["bust", "xsums", "numberedrooms", "sumframe", "edgedifference", "fullrank",
         "outsideparity", "parityparty", "serbianframe", "median", "ascendingstarters",
         "before9", "before1after9"].includes(variation.value)) {

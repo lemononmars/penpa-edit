@@ -1768,6 +1768,11 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
     }));
     assert.deepEqual(distances.outsideRelations[0].value, { x: 2, y: 5, z: 4 });
 
+    const starProductParsed = SudokuSolver.readConstraints(puzzle("starproduct", {
+        pu_q: { number: { 15: ["12", 1, "1"] }, symbol: { 11: [0, "star", 2] } } // cellKey 11 is row=0, col=0
+    }));
+    assert.equal(starProductParsed.outsideRelations[0].value, 12);
+
     const fullOrHalf = SudokuSolver.readConstraints(puzzle("fullorhalf", {
         point: { 300: { neighbor: [28, 29, 41, 42] } },
         pu_q: { symbol: { 300: [1, "square_SS", 2] } }
@@ -2266,6 +2271,12 @@ test("validates new variants: bouncing x-sums, czech outsider, diagonal sum is n
     const distanceClue = { relation: "distances", value: { x: 5, y: 9, z: 6 }, cells: row };
     assert.equal(SudokuCSP.solve(solved, { outsideRelations: [distanceClue] }).solved, true);
     assert.equal(SudokuCSP.solve(solved, { outsideRelations: [{ ...distanceClue, value: { x: 5, y: 9, z: 5 } }] }).solved, false);
+
+    // 6. starproduct
+    const starCells = [{ row: 0, col: 0 }, { row: 0, col: 2 }]; // 5 and 4 = 20
+    const starClue = { relation: "starproduct", value: 20, cells: row };
+    assert.equal(SudokuCSP.solve(solved, { supported: ["starproduct"], outsideRelations: [starClue], starCells }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { supported: ["starproduct"], outsideRelations: [{ ...starClue, value: 30 }], starCells }).solved, false);
 });
 
 test("validates new variants: faded kropki, first seen odd/even, max ascending, fives, frame-diagonal, odd labyrinth, even passage, equal sum line, german whispers, factor lines", function() {
