@@ -1430,6 +1430,12 @@ var SudokuSolver = (function() {
             });
             constraints.supported.push("tinder");
         }
+        if (variantEnabled(puzzle, "upanddown")) {
+            connectedLinePaths(puzzle, 5).forEach(function(path) {
+                if (path.length > 1) constraints.catalogLines.push({ path: path, relation: "upanddown" });
+            });
+            constraints.supported.push("upanddown");
+        }
         if (variantEnabled(puzzle, "topheavy")) {
             constraints.supported.push("topheavy");
             constraints.topheavy = [{}];

@@ -3080,6 +3080,26 @@ var SudokuCSP = (function() {
                 }
                 return true;
             }
+            if (clue.relation === "upanddown") {
+                var pattern0Valid = true;
+                var pattern1Valid = true;
+                for (var i = 0; i < values.length - 1; i++) {
+                    var a = values[i];
+                    var b = values[i+1];
+                    if (a && b) {
+                        var diff = b - a;
+                        if (Math.abs(diff) < 4) return false;
+                        if (diff > 0) {
+                            if (i % 2 !== 0) pattern0Valid = false;
+                            if (i % 2 === 0) pattern1Valid = false;
+                        } else {
+                            if (i % 2 === 0) pattern0Valid = false;
+                            if (i % 2 !== 0) pattern1Valid = false;
+                        }
+                    }
+                }
+                return pattern0Valid || pattern1Valid;
+            }
             if (clue.relation === "factorlines") {
                 for (var i = 0; i < values.length - 1; i++) {
                     if (values[i] && values[i+1] && values[i] % values[i+1] !== 0 && values[i+1] % values[i] !== 0) return false;

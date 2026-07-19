@@ -2555,6 +2555,20 @@ test("validates new variants: faded kropki, first seen odd/even, max ascending, 
         { relation: "equalsumline", path: [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 3 }] }
     ], baseBoxes: false }).solved, true);
 
+
+    // upanddown
+    // 1 -> 9 -> 5 (up, down, diff >= 4)
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "upanddown", path: [{ row: 0, col: 7 }, { row: 0, col: 6 }, { row: 0, col: 0 }] }
+    ] }).solved, true);
+    // 1 -> 5 -> 9 (up, up, diff >= 4 but not alternating)
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "upanddown", path: [{ row: 0, col: 7 }, { row: 0, col: 0 }, { row: 0, col: 6 }] }
+    ] }).solved, false);
+    // 5 -> 6 (diff < 4)
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "upanddown", path: [{ row: 0, col: 0 }, { row: 0, col: 3 }] }
+    ] }).solved, false);
     // 8. german whispers
     // diff >= 5
     // path: r0c0 (5) and r0c7 (1) -> not adjacent.
