@@ -2768,6 +2768,24 @@ test("validates inequality triples, difference pairs, Ten/Eleven, tens products,
 });
 
 
+test("One Knight Step validates exactly one knight match", function() {
+    const solved = boardFromString(
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179" +
+        "592648317" + "178395246" + "634172598"
+    );
+    // 8 is at 0,0. Knights for 0,0 are 1,2 (6) and 2,1 (1). 8 is not a knight step away.
+    assert.equal(SudokuCSP.solve(solved, { oneKnightStep: [{row:0, col:0}] }).solved, false);
+});
+
+test("Repeated Neighbors validates duplicate orthogonal neighbors", function() {
+    const solved = boardFromString(
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179" +
+        "592648317" + "178395246" + "634172598"
+    );
+    // 8 at 0,0 has neighbors (0,1)=5, (1,0)=4. All unique.
+    assert.equal(SudokuCSP.solve(solved, { repeatedNeighbors: [{row: 0, col: 0}] }).solved, false);
 test("validates round off variants", function() {
 test("validates new variants: zones, somewhere", function() {
     var board = [
@@ -2810,6 +2828,9 @@ test("validates new variants: zones, somewhere", function() {
         somewhere: [
             { cells: [{row: 0, col: 0}, {row: 0, col: 1}], digit: 9 }
         ]
+    }).solved, false);
+});
+
 test("Sum or Product Killer", function() {
     const solved = boardFromString(
         "534678912" + "672195348" + "198342567" +
@@ -2821,6 +2842,11 @@ test("Sum or Product Killer", function() {
 });
 
 test("validates ordering variants", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
 
     // Sum is 8 (5 + 3) -> 8 is valid
     assert.equal(SudokuCSP.solve(solved, {
