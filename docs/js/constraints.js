@@ -211,6 +211,13 @@ const penpa_constraints = {
             "submodeset": ["1", "2"],
             "styleset": ["", 5]
         },
+        "tictactoewinner": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_line_lb", "sub_line2_lb", "st_line5_lb"],
+            "modeset": ["sudoku", "line"],
+            "submodeset": ["1", "2"],
+            "styleset": ["", 5]
+        },
         "sandwich": {
             "show": ["mo_surface_lb",
                 "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",

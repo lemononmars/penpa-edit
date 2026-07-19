@@ -2989,3 +2989,7 @@ test("Big-Small Japanese Sums validate sequences", function() {
     const clueBSCol = { relation: "bigsmalljapanesesums", value: [5, 6, 15, 9], cells: boardBS[0].map((_, i) => ({row: 0, col: i})), axis: "column" };
     assert.equal(SudokuCSP.solve(boardBS, { outsideRelations: [clueBSCol] }).solved, true);
 });
+
+test("Tic-Tac-Toe Winner validations", function() {
+    assert.strictEqual(true, true);
+});

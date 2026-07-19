@@ -3943,6 +3943,82 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("tictactoewinner", {
+        validatePartial: function(board, constraint) {
+            if (board.length !== 9) return true;
+            for (var b = 0; b < 9; b++) {
+                var startRow = Math.floor(b / 3) * 3;
+                var startCol = (b % 3) * 3;
+                var lines = [
+                    [{ r: startRow, c: startCol }, { r: startRow, c: startCol + 1 }, { r: startRow, c: startCol + 2 }],
+                    [{ r: startRow + 1, c: startCol }, { r: startRow + 1, c: startCol + 1 }, { r: startRow + 1, c: startCol + 2 }],
+                    [{ r: startRow + 2, c: startCol }, { r: startRow + 2, c: startCol + 1 }, { r: startRow + 2, c: startCol + 2 }],
+                    [{ r: startRow, c: startCol }, { r: startRow + 1, c: startCol }, { r: startRow + 2, c: startCol }],
+                    [{ r: startRow, c: startCol + 1 }, { r: startRow + 1, c: startCol + 1 }, { r: startRow + 2, c: startCol + 1 }],
+                    [{ r: startRow, c: startCol + 2 }, { r: startRow + 1, c: startCol + 2 }, { r: startRow + 2, c: startCol + 2 }],
+                    [{ r: startRow, c: startCol }, { r: startRow + 1, c: startCol + 1 }, { r: startRow + 2, c: startCol + 2 }],
+                    [{ r: startRow, c: startCol + 2 }, { r: startRow + 1, c: startCol + 1 }, { r: startRow + 2, c: startCol }]
+                ];
+                var grayLinePath = constraint[b] ? constraint[b][0] : undefined;
+                var isGrayLineValidWinner = false;
+
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i];
+
+                    var isGray = false;
+                    if (grayLinePath && grayLinePath.length === 3) {
+                        var m1 = line.find(function(c) { return c.r === grayLinePath[0].row && c.c === grayLinePath[0].col; });
+                        var m2 = line.find(function(c) { return c.r === grayLinePath[1].row && c.c === grayLinePath[1].col; });
+                        var m3 = line.find(function(c) { return c.r === grayLinePath[2].row && c.c === grayLinePath[2].col; });
+                        var m1r = line.find(function(c) { return c.r === grayLinePath[2].row && c.c === grayLinePath[2].col; });
+                        var m2r = line.find(function(c) { return c.r === grayLinePath[1].row && c.c === grayLinePath[1].col; });
+                        var m3r = line.find(function(c) { return c.r === grayLinePath[0].row && c.c === grayLinePath[0].col; });
+                        // wait, line is array of length 3, e.g. {r:0,c:0},{r:0,c:1},{r:0,c:2}.
+                        // grayLinePath is {row:0, col:0},{row:0, col:1},{row:0, col:2}.
+                        if ((m1 && m2 && m3) || (m1r && m2r && m3r)) {
+                            isGray = true;
+                        }
+                    }
+
+                    var oddCount = 0;
+                    var evenCount = 0;
+                    for (var j = 0; j < 3; j++) {
+                        var val = cellValue(board, { row: line[j].r, col: line[j].c });
+                        if (val) {
+                            if (val % 2 !== 0) oddCount++;
+                            else evenCount++;
+                        }
+                    }
+
+                    if (isGray) {
+                        // We must only fail if the line is fully populated and has mixed parity,
+                        // OR if a cell is filled that breaks the possibility of 3 matching.
+                        // Wait. If oddCount > 0 and evenCount > 0, then the line CAN NEVER be all odd or all even. So it's correct to return false!
+                        if (oddCount > 0 && evenCount > 0) return false;
+                        if (oddCount === 3 || evenCount === 3) {
+                            isGrayLineValidWinner = true;
+                        }
+                    } else {
+                        if (oddCount === 3 || evenCount === 3) return false;
+                    }
+                }
+
+                if (grayLinePath && grayLinePath.length === 3) {
+                    var boxComplete = true;
+                    for (var r = startRow; r < startRow + 3; r++) {
+                        for (var c = startCol; c < startCol + 3; c++) {
+                            if (!cellValue(board, { row: r, col: c })) boxComplete = false;
+                        }
+                    }
+                    if (boxComplete && !isGrayLineValidWinner) return false;
+                } else {
+                    return false;
+                }
+            }
+            return true;
+        }
+    });
+
     registerConstraint("tictactoe", {
         validatePartial: function(board) {
             if (board.length !== 9) return true;

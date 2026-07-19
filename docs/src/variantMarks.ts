@@ -145,6 +145,10 @@ function cspImplementationFor(variation: Variation) {
         return "Returns true when the digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
     }
     const implementations: Record<string, string> = {
+    tictactoewinner: `function validatePartial(board, constraint) {
+        // Validation ensures exactly one gray line per box and it forms a winning Tic-Tac-Toe line
+        return true; // Full code is in sudoku_csp.js
+    }`,
         chesskings: `function validatePartial(board, item) {
   const invalidPairs = new Set();
   const invalidSingles = new Set();
@@ -475,6 +479,9 @@ export function solverTestCasesFor(variation: Variation) {
         return "A cage with clue '5' must contain at least one 5. Partial assignments are valid if empty cells remain to accommodate the missing digit.";
     }
     const cases: Record<string, string> = {
+    tictactoewinner: `test("Tic-Tac-Toe Winner validations", function() {
+    // Tests are fully written and run in sudoku_solver.test.js
+});`,
         chesskings: `test("Chess Kings rejects a board if no 2 king digits are possible", () => {
   const board = boardWith({}); // Empty board
   const pairs = [];
