@@ -410,6 +410,12 @@ function cspImplementationFor(variation: Variation) {
     if (variation.value === "arrow") {
         return `function ${functionName}(board, clue) {\n  const circle = cellValue(board, clue.circle);\n  const shaft = clue.shaft.map(cell => cellValue(board, cell));\n  const sum = shaft.reduce((total, value) => total + value, 0);\n  const blanks = shaft.filter(value => !value).length;\n  return !circle || (sum <= circle && sum + blanks * board.length >= circle && (blanks || sum === circle));\n}`;
     }
+    if (variation.value === "countdifferent") {
+        return `function ${functionName}(board, clue) {\n  const circle = cellValue(board, clue.circle);\n  const shaft = clue.shaft.map(cell => cellValue(board, cell));\n  const assigned = shaft.filter(Boolean);\n  const blanks = shaft.length - assigned.length;\n  const uniqueAssigned = new Set(assigned).size;\n  return !circle || (uniqueAssigned <= circle && uniqueAssigned + blanks >= circle);\n}`;
+    }
+    if (variation.value === "counttheoddones") {
+        return `function ${functionName}(board, clue) {\n  const circle = cellValue(board, clue.circle);\n  const shaft = clue.shaft.map(cell => cellValue(board, cell));\n  const assigned = shaft.filter(Boolean);\n  const blanks = shaft.length - assigned.length;\n  const oddCount = assigned.filter(v => v % 2 !== 0).length;\n  return !circle || (oddCount <= circle && oddCount + blanks >= circle);\n}`;
+    }
     if (variation.value === "killer") {
         return `function ${functionName}(board, cage) {\n  const values = cage.cells.map(cell => cellValue(board, cell));\n  const assigned = values.filter(Boolean);\n  const sum = assigned.reduce((total, value) => total + value, 0);\n  return new Set(assigned).size === assigned.length && sum <= cage.total\n    && (values.some(value => !value) || sum === cage.total);\n}`;
     }

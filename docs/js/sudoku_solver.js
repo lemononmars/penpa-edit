@@ -598,6 +598,8 @@ var SudokuSolver = (function() {
             disguisedPalindromes: [],
             antiConsecutive: [],
             averageArrows: [],
+            countDifferent: [],
+            countOdd: [],
             kropki: [],
             fadedKropki: [],
             fives: [],
@@ -689,6 +691,10 @@ var SudokuSolver = (function() {
             if (arrowCells.length > 1) {
                 if (variantEnabled(puzzle, "averagearrows")) {
                     constraints.averageArrows.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
+                } else if (variantEnabled(puzzle, "countdifferent")) {
+                    constraints.countDifferent.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
+                } else if (variantEnabled(puzzle, "counttheoddones")) {
+                    constraints.countOdd.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
                 } else {
                     constraints.arrows.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
                 }
@@ -709,6 +715,12 @@ var SudokuSolver = (function() {
         }
         if (constraints.averageArrows.length) {
             constraints.supported.push("averagearrows");
+        }
+        if (constraints.countDifferent.length || variantEnabled(puzzle, "countdifferent")) {
+            constraints.supported.push("countdifferent");
+        }
+        if (constraints.countOdd.length || variantEnabled(puzzle, "counttheoddones")) {
+            constraints.supported.push("counttheoddones");
         }
 
         var activeCells = {};
