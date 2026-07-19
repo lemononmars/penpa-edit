@@ -229,6 +229,20 @@ var SudokuCSP = (function() {
         }
     });
 
+
+    registerConstraint("braille", {
+        validatePartial: function(board, clue) {
+            var value = cellValue(board, clue.cell);
+            if (!value) return true;
+            var brailleMap = { 1: [0], 2: [0, 3], 3: [0, 1], 4: [0, 1, 4], 5: [0, 4], 6: [0, 1, 3], 7: [0, 1, 3, 4], 8: [0, 3, 4], 9: [1, 3] };
+            var targetDots = brailleMap[value] || [];
+            for (var i = 0; i < clue.dots.length; i++) {
+                if (targetDots.indexOf(clue.dots[i]) === -1) return false;
+            }
+            return true;
+        }
+    });
+
     function registerConstraint(name, handler) {
         if (!name || !handler || typeof handler.validatePartial !== "function") {
             throw new Error("A CSP constraint requires a name and validatePartial(board, constraint, helpers).");

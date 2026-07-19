@@ -138,6 +138,15 @@ export function inputModesFor(variation: Variation) {
 
 /** Human-readable source shown on each generated variant reference page. */
 function cspImplementationFor(variation: Variation) {
+    if (variation.value === "braille") {
+        return `function validatePartial(board, clue) {
+  const value = cellValue(board, clue.cell);
+  if (!value) return true;
+  const brailleMap = { 1: [0], 2: [0, 3], 3: [0, 1], 4: [0, 1, 4], 5: [0, 4], 6: [0, 1, 3], 7: [0, 1, 3, 4], 8: [0, 3, 4], 9: [1, 3] };
+  const targetDots = brailleMap[value] || [];
+  return clue.dots.every(d => targetDots.includes(d));
+}`;
+    }
     if (variation.value === "unicorn") {
         return `function validatePartial(board, item) {
   const value = cellValue(board, item.cell);
@@ -490,6 +499,16 @@ export function cspConstraintFunctionFor(variation: Variation) {
 
 /** Executable-style regression examples displayed on every variant detail page. */
 export function solverTestCasesFor(variation: Variation) {
+    if (variation.value === "braille") {
+        return `test("Braille allows subset of dots", () => {
+  const board = boardWith({ 0: { 0: 6 } });
+  assert.equal(validatePartial(board, { cell: { row: 0, col: 0 }, dots: [0, 1] }), true);
+});
+test("Braille rejects invalid dots", () => {
+  const board = boardWith({ 0: { 0: 1 } });
+  assert.equal(validatePartial(board, { cell: { row: 0, col: 0 }, dots: [0, 3] }), false);
+});`;
+    }
     if (variation.value === "unicorn") {
         return `test("Unicorn rejects a 9 that attacks two identical digits", () => {
   const board = boardWith({ 1: { 0: 9 }, 0: { 2: 3 }, 2: { 2: 3 } });

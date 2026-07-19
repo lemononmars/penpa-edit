@@ -621,6 +621,7 @@ var SudokuSolver = (function() {
             tictactoe: [],
             roundOffCages: [],
             orderingGroups: [],
+            braille: [],
             supported: ["classic"]
         };
         if (!puzzle || !puzzle.pu_q) {
@@ -1966,6 +1967,22 @@ var SudokuSolver = (function() {
             if (constraints.fadedKropki.length || puzzle.kropkiNegativeConstraint === true) {
                 constraints.supported.push("fadedkropki");
             }
+        }
+
+        if (variantEnabled(puzzle, "braille")) {
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                var point = puzzle.point && puzzle.point[key];
+                if (!entry || entry[1] !== "dice" || !point) return;
+                var cell = keyToCell(puzzle, Number(key));
+                if (!cell) return;
+                var dots = [];
+                for (var i = 0; i < 9; i++) {
+                    if (entry[0][i] === 1) dots.push(i);
+                }
+                constraints.braille.push({ cell: cell, dots: dots });
+            });
+            constraints.supported.push("braille");
         }
 
         var numbers = puzzle.pu_q.number || {};
