@@ -129,6 +129,71 @@ var SudokuCSP = (function() {
         }
     });
 
+        registerConstraint("watchtowers", {
+        validatePartial: function(board, shadedCells) {
+            var size = board.length;
+            var isShaded = {};
+            for (var i = 0; i < shadedCells.length; i++) {
+                isShaded[shadedCells[i].row + ":" + shadedCells[i].col] = true;
+            }
+            var dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            for (var r = 0; r < size; r++) {
+                for (var c = 0; c < size; c++) {
+                    var N = cellValue(board, {row: r, col: c});
+                    if (!N) continue;
+                    var minSeen = 1;
+                    var maxSeen = 1;
+                    for (var d = 0; d < 4; d++) {
+                        var nr = r + dirs[d][0], nc = c + dirs[d][1];
+                        var blockedMin = false, blockedMax = false;
+                        while (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                            var v = cellValue(board, {row: nr, col: nc});
+                            if (v) {
+                                if (v >= N) {
+                                    blockedMin = true;
+                                    blockedMax = true;
+                                    break;
+                                } else {
+                                    if (!blockedMin) minSeen++;
+                                    if (!blockedMax) maxSeen++;
+                                }
+                            } else {
+                                var mask = board[nr][nc].mask;
+                                var canBeSmaller = false;
+                                var mustBeSmaller = true;
+                                var canBeLargerOrEqual = false;
+                                var mustBeLargerOrEqual = true;
+                                for (var bit = 1; bit <= size; bit++) {
+                                    if ((mask & (1 << bit)) === 0) continue;
+                                    if (bit < N) {
+                                        canBeSmaller = true;
+                                        mustBeLargerOrEqual = false;
+                                    }
+                                    if (bit >= N) {
+                                        canBeLargerOrEqual = true;
+                                        mustBeSmaller = false;
+                                    }
+                                }
+                                if (mustBeSmaller && !blockedMin) minSeen++;
+                                if (canBeSmaller && !blockedMax) maxSeen++;
+                                if (canBeLargerOrEqual) blockedMin = true;
+                                if (mustBeLargerOrEqual) blockedMax = true;
+                            }
+                            nr += dirs[d][0];
+                            nc += dirs[d][1];
+                        }
+                    }
+                    if (isShaded[r + ":" + c]) {
+                        if (maxSeen < N || minSeen > N) return false;
+                    } else {
+                        if (minSeen === N && maxSeen === N) return false;
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
     registerConstraint("orderingGroups", {
         validatePartial: function(board, group) {
             var minPossibles = [];
@@ -1668,6 +1733,29 @@ var SudokuCSP = (function() {
                     return !isComplete || hasMatch;
                 }
             }
+            if (relation === "twindetector") {
+                if (!origin) return true;
+                var markedRays = {};
+                (clue.rays || []).forEach(function(ray) {
+                    if (ray.length) markedRays[ray[0].row + ":" + ray[0].col] = true;
+                });
+                return (clue.allRays || []).every(function(ray) {
+                    if (!ray.length) return true;
+                    var marked = !!markedRays[ray[0].row + ":" + ray[0].col];
+                    var hasMatch = false, canMatch = false, sum = 0, blanks = 0;
+                    for (var i = 0; i < ray.length; i++) {
+                        var value = cellValue(board, ray[i]);
+                        if (value) sum += value;
+                        else blanks++;
+
+                        if (sum === origin && blanks === 0) hasMatch = true;
+                        if (sum + blanks <= origin && sum + blanks * SIZE >= origin && (blanks > 0 || sum === origin)) {
+                            canMatch = true;
+                        }
+                    }
+                    return marked ? canMatch : !hasMatch;
+                });
+            }
             if (relation === "eliminate") {
                 return !origin || targetValues.every(function(value) { return !value || value !== origin; });
             }
@@ -3033,6 +3121,26 @@ var SudokuCSP = (function() {
                     if (values[i] && values[i+1] && Math.abs(values[i] - values[i+1]) < 5) return false;
                 }
                 return true;
+            }
+            if (clue.relation === "upanddown") {
+                var pattern0Valid = true;
+                var pattern1Valid = true;
+                for (var i = 0; i < values.length - 1; i++) {
+                    var a = values[i];
+                    var b = values[i+1];
+                    if (a && b) {
+                        var diff = b - a;
+                        if (Math.abs(diff) < 4) return false;
+                        if (diff > 0) {
+                            if (i % 2 !== 0) pattern0Valid = false;
+                            if (i % 2 === 0) pattern1Valid = false;
+                        } else {
+                            if (i % 2 === 0) pattern0Valid = false;
+                            if (i % 2 !== 0) pattern1Valid = false;
+                        }
+                    }
+                }
+                return pattern0Valid || pattern1Valid;
             }
             if (clue.relation === "factorlines") {
                 for (var i = 0; i < values.length - 1; i++) {

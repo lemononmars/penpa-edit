@@ -1345,6 +1345,14 @@ test("validates all directional shape relations", function() {
         neighbors: [{ row: 0, col: 3 }, { row: 0, col: 4 }, { row: 0, col: 5 }] }), true);
     assert.equal(accepted({ relation: "biggestneighbours", targets: [{ row: 0, col: 3 }],
         neighbors: [{ row: 0, col: 3 }, { row: 0, col: 4 }] }), false);
+    assert.equal(accepted({ relation: "twindetector", origin: { row: 5, col: 3 },
+        rays: [[{ row: 6, col: 3 }, { row: 7, col: 3 }]],
+        allRays: [[{ row: 6, col: 3 }, { row: 7, col: 3 }]]
+    }), true);
+    assert.equal(accepted({ relation: "twindetector", origin: { row: 5, col: 3 },
+        rays: [],
+        allRays: [[{ row: 6, col: 3 }, { row: 7, col: 3 }]]
+    }), false);
     assert.equal(accepted({ relation: "smallestneighbours", targets: [{ row: 0, col: 1 }],
         neighbors: [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 3 }] }), true);
     assert.equal(accepted({ relation: "smallestneighbours", targets: [{ row: 0, col: 0 }],
@@ -1443,6 +1451,16 @@ test("normalizes the newly implemented catalog variants for the solver", functio
         assert.equal(clue.targets.length, 8, `${variant} should inspect the complete arrow sightline`);
         assert.deepEqual(clue.targets[7], { row: 0, col: 8 });
     });
+
+    const twindetectorSightline = puzzleFor("twindetector", {
+        centerlist: fullCenterList,
+        pu_q: { number: {}, numberS: {}, symbol: {
+            28: [[0, 0, 0, 0, 1, 0, 0, 0], "arrow_eight", 2]
+        }, thermo: [], nobulbthermo: [], killercages: [] }
+    });
+    const twindetectorClue = SudokuSolver.readConstraints(twindetectorSightline).directionalMarks[0];
+    assert.equal(twindetectorClue.targets.length, 8, `twindetector should inspect the complete arrow sightline`);
+    assert.equal(twindetectorClue.allRays.length, 8, `twindetector should inspect all 8 rays`);
 
     const stretched = puzzleFor("stretchedthermo", {
         pu_q: { number: {}, numberS: {}, symbol: {}, thermo: [[28, 29, 30]], nobulbthermo: [], killercages: [] }
@@ -2084,6 +2102,21 @@ test("normalizes Irregular Sudoku regions on 7x7 and 8x8 grids", function() {
     });
 });
 
+
+test("Watchtowers Sudoku parses shaded cells and enforces visible cells count", function() {
+    const shadedKeys = [28, 29]; // {0, 0} and {0, 1}
+    const surface = Object.fromEntries(shadedKeys.map(function(key) { return [key, 1]; }));
+    const constraints = SudokuSolver.readConstraints({
+        nx: 9, ny: 9, nx0: 13, space: [0, 0, 0, 0], centerlist: Array.from({ length: 81 }, (_, i) => 28 + (i % 9) + Math.floor(i / 9) * 13), point: {},
+        activeSudokuVariants: ["watchtowers"],
+        pu_q: { surface: surface, line: {}, lineE: {}, number: {}, symbol: {}, cage: {} }
+    });
+    assert.equal(constraints.supported.includes("watchtowers"), true);
+    assert.equal(constraints.watchtowers.length, 1);
+    assert.equal(constraints.watchtowers[0].length, 2);
+});
+
+
 test("Irregular Sudoku replaces fixed boxes with persisted region-number groups", function() {
     const regionIds = Array.from({ length: 36 }, function(_, index) {
         return 1 + ((index / 6) | 0);
@@ -2540,6 +2573,20 @@ test("validates new variants: faded kropki, first seen odd/even, max ascending, 
         { relation: "equalsumline", path: [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 3 }] }
     ], baseBoxes: false }).solved, true);
 
+
+    // upanddown
+    // 1 -> 9 -> 5 (up, down, diff >= 4)
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "upanddown", path: [{ row: 0, col: 7 }, { row: 0, col: 6 }, { row: 0, col: 0 }] }
+    ] }).solved, true);
+    // 1 -> 5 -> 9 (up, up, diff >= 4 but not alternating)
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "upanddown", path: [{ row: 0, col: 7 }, { row: 0, col: 0 }, { row: 0, col: 6 }] }
+    ] }).solved, false);
+    // 5 -> 6 (diff < 4)
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "upanddown", path: [{ row: 0, col: 0 }, { row: 0, col: 3 }] }
+    ] }).solved, false);
     // 8. german whispers
     // diff >= 5
     // path: r0c0 (5) and r0c7 (1) -> not adjacent.
@@ -2969,6 +3016,57 @@ test("Tableaux", function() {
     }).solved, false);
 });
 
+
+
+
+test("Consecutive Chains", () => {
+    // boardWith and solve are not helpers in this file. It uses SudokuCSP or SudokuSolver.
+    // The easiest way is to use SudokuCSP.solve directly with a 9x9 board.
+
+    // We only need to test the CSP constraint behavior.
+    const emptyBoard = () => Array.from({length: 9}, () => Array(9).fill(0));
+
+    const chain4 = [{row:0, col:0}, {row:0, col:1}, {row:0, col:2}, {row:0, col:3}];
+
+    const boardValid = emptyBoard();
+    // A fully populated 9x9 board that satisfies normal Sudoku rules
+    boardValid[0] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    boardValid[1] = [4, 5, 6, 7, 8, 9, 1, 2, 3];
+    boardValid[2] = [7, 8, 9, 1, 2, 3, 4, 5, 6];
+    boardValid[3] = [2, 3, 4, 5, 6, 7, 8, 9, 1];
+    boardValid[4] = [5, 6, 7, 8, 9, 1, 2, 3, 4];
+    boardValid[5] = [8, 9, 1, 2, 3, 4, 5, 6, 7];
+    boardValid[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
+    boardValid[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
+    boardValid[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
+    // Our chain is {0,0}, {0,1}, {0,2}, {0,3} which has values 1, 2, 3, 4 in this board.
+    // This forms a valid connected chain of consecutive numbers!
+    assert.strictEqual(SudokuCSP.solve(boardValid, {consecutiveChains: [chain4]}).solved, true);
+
+    const boardInvalidSet = emptyBoard();
+    boardInvalidSet[0] = [1, 2, 3, 5, 4, 6, 7, 8, 9]; // values 1, 2, 3, 5 => not consecutive set
+    boardInvalidSet[1] = [4, 5, 6, 7, 8, 9, 1, 2, 3];
+    boardInvalidSet[2] = [7, 8, 9, 1, 2, 3, 4, 5, 6];
+    boardInvalidSet[3] = [2, 3, 4, 5, 6, 7, 8, 9, 1];
+    boardInvalidSet[4] = [5, 6, 7, 8, 9, 1, 2, 3, 4];
+    boardInvalidSet[5] = [8, 9, 1, 2, 3, 4, 5, 6, 7];
+    boardInvalidSet[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
+    boardInvalidSet[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
+    boardInvalidSet[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
+    assert.strictEqual(SudokuCSP.solve(boardInvalidSet, {consecutiveChains: [chain4]}).solved, false);
+
+    const boardInvalidPath = emptyBoard();
+    // values 1, 3, 2, 4. It's a consecutive set, but path is invalid (1 is next to 3).
+    boardInvalidPath[0] = [1, 3, 2, 4, 5, 6, 7, 8, 9];
+    boardInvalidPath[1] = [4, 5, 6, 7, 8, 9, 1, 2, 3];
+    boardInvalidPath[2] = [7, 8, 9, 1, 2, 3, 4, 5, 6];
+    boardInvalidPath[3] = [2, 3, 4, 5, 6, 7, 8, 9, 1];
+    boardInvalidPath[4] = [5, 6, 7, 8, 9, 1, 2, 3, 4];
+    boardInvalidPath[5] = [8, 9, 1, 2, 3, 4, 5, 6, 7];
+    boardInvalidPath[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
+    boardInvalidPath[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
+    boardInvalidPath[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
+    assert.strictEqual(SudokuCSP.solve(boardInvalidPath, {consecutiveChains: [chain4]}).solved, false);
 test("Big-Small Japanese Sums validate sequences", function() {
     const rawBS = {
         nx0: 9, ny0: 9,

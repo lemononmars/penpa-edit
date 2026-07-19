@@ -161,6 +161,7 @@
     const setting = pu?.mode?.[pu?.mode?.qa]?.[mode] || [];
     const submode = String(setting[0] || "");
     const variant = String(pu?.activeSudokuVariant || "classic");
+
     const size = Math.max(
       1,
       Math.min(
@@ -170,6 +171,8 @@
           Number(pu?.space?.[1] || 0),
       ),
     );
+    const isZeroEight = ["0to8", "08arrow", "08skyscrapers"].includes(variant);
+
     const arrows = ["←", "↖", "↑", "↗", "→", "↘", "↓", "↙"];
     toolPanelMode =
       mode === "symbol"
@@ -335,8 +338,8 @@
       toolPanelOptions = Array.from(
         { length: mode === "symbol" ? 9 : size },
         (_, index) => ({
-          value: String(index + 1),
-          label: String(index + 1),
+          value: String(isZeroEight ? index : index + 1),
+          label: String(isZeroEight ? index : index + 1),
         }),
       );
     } else {
@@ -482,7 +485,7 @@
   }
 
   function conflictingVariant(value: string) {
-    const regionGridVariants = ["irregular", "scattered", "deficit", "surplus"];
+    const regionGridVariants = ["irregular", "scattered", "deficit", "surplus", "toroidal"];
     if (regionGridVariants.includes(value)) {
       return (
         activeVariantValues().find(
@@ -555,7 +558,7 @@
 
   function chooseVariant(value: string) {
     if (conflictingVariant(value) || unavailableVariant(value)) return;
-    if (!["irregular", "scattered", "deficit", "surplus"].includes(value)) {
+    if (!["irregular", "scattered", "deficit", "surplus", "toroidal"].includes(value)) {
       (window as any).SudokuTools?.finishIrregularEditor?.();
     }
     selectedVariant = value;
