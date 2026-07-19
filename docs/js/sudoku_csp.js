@@ -301,7 +301,7 @@ var SudokuCSP = (function() {
             return item.relation.replace(/([a-z])([0-9])/g, "$1 $2").replace(/([a-z])([A-Z])/g, "$1 $2");
         }
         var labels = {
-            antiKing: "Anti King", antiKnight: "Anti Knight", nonConsecutive: "Non-Consecutive",
+            antiKing: "Anti King", antiKnight: "Anti Knight", chessKings: "Chess Kings", nonConsecutive: "Non-Consecutive",
             edgeRelations: "edge clue", quadRelations: "quad clue", catalogLines: "line clue",
             diagonalAllDifferent: "diagonal/region", regionAllDifferent: "region", extraLargeRegions: "extra large regions", difference2Neighbours: "difference 2 neighbours",
             regionCoverage: "region coverage", scatteredAllDifferent: "Scattered shaded cells",
@@ -1421,6 +1421,68 @@ var SudokuCSP = (function() {
     registerConstraint("antiKing", {
         validatePartial: function(board, pair) {
             return pairValuesDiffer(board, pair);
+        }
+    });
+
+    registerConstraint("chessKings", {
+        validatePartial: function(board, item) {
+            var pairs = item.pairs;
+            var invalidPairs = new Set();
+            var invalidSingles = new Set();
+            for (var i = 0; i < pairs.length; i++) {
+                var first = cellValue(board, pairs[i][0]);
+                var second = cellValue(board, pairs[i][1]);
+                if (first && second) {
+                    if (first === second) {
+                        invalidSingles.add(first);
+                    } else {
+                        var min = Math.min(first, second);
+                        var max = Math.max(first, second);
+                        invalidPairs.add(min + "-" + max);
+                    }
+                }
+            }
+            for (var x = 1; x <= SIZE; x++) {
+                if (invalidSingles.has(x)) continue;
+                for (var y = x + 1; y <= SIZE; y++) {
+                    if (invalidSingles.has(y)) continue;
+                    if (!invalidPairs.has(x + "-" + y)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    });
+
+    registerConstraint("chessKings", {
+        validatePartial: function(board, item) {
+            var pairs = item.pairs;
+            var invalidPairs = new Set();
+            var invalidSingles = new Set();
+            for (var i = 0; i < pairs.length; i++) {
+                var first = cellValue(board, pairs[i][0]);
+                var second = cellValue(board, pairs[i][1]);
+                if (first && second) {
+                    if (first === second) {
+                        invalidSingles.add(first);
+                    } else {
+                        var min = Math.min(first, second);
+                        var max = Math.max(first, second);
+                        invalidPairs.add(min + "-" + max);
+                    }
+                }
+            }
+            for (var x = 1; x <= SIZE; x++) {
+                if (invalidSingles.has(x)) continue;
+                for (var y = x + 1; y <= SIZE; y++) {
+                    if (invalidSingles.has(y)) continue;
+                    if (!invalidPairs.has(x + "-" + y)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     });
 

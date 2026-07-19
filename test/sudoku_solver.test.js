@@ -502,6 +502,52 @@ test("anti-king rejects equal digits a king move apart", function() {
     assert.equal(result.solved, false);
 });
 
+test("chess kings rejects a board if no 2 king digits are possible", function() {
+    const board = emptyBoard();
+    const pairs = [];
+    let pairIdx = 0;
+    // We want to simulate every possible digit pair touching
+    for (let x = 1; x <= 9; x++) {
+        for (let y = x + 1; y <= 9; y++) {
+            let row = Math.floor(pairIdx / 4);
+            let col = (pairIdx % 4) * 2;
+            board[row][col] = x;
+            board[row][col + 1] = y;
+            pairs.push([{ row: row, col: col }, { row: row, col: col + 1 }]);
+            pairIdx++;
+        }
+    }
+
+    const result = SudokuSolver.solve(board, {
+        chessKings: [{ pairs: pairs }]
+    });
+
+    assert.equal(result.solved, false);
+});
+
+test("chess kings rejects a board if no 2 king digits are possible", function() {
+    const board = emptyBoard();
+    const pairs = [];
+    let pairIdx = 0;
+    // We want to simulate every possible digit pair touching
+    for (let x = 1; x <= 9; x++) {
+        for (let y = x + 1; y <= 9; y++) {
+            let row = Math.floor(pairIdx / 4);
+            let col = (pairIdx % 4) * 2;
+            board[row][col] = x;
+            board[row][col + 1] = y;
+            pairs.push([{ row: row, col: col }, { row: row, col: col + 1 }]);
+            pairIdx++;
+        }
+    }
+
+    const result = SudokuSolver.solve(board, {
+        chessKings: [{ pairs: pairs }]
+    });
+
+    assert.equal(result.solved, false);
+});
+
 test("anti-knight rejects equal digits a knight move apart", function() {
     const board = emptyBoard();
     board[0][1] = 5;
@@ -1017,10 +1063,10 @@ test("normalizes multiple selected variants at once", function() {
     assert.equal(constraints.supported.includes("anti diagonal"), true);
 });
 
-test("normalizes anti-king, anti-knight, and non-consecutive global pairs", function() {
+test("normalizes anti-king, anti-knight, chess kings, and non-consecutive global pairs", function() {
     const puzzle = {
         nx0: 13,
-        activeSudokuVariants: ["classic", "anti king", "anti knight", "non consecutive"],
+        activeSudokuVariants: ["classic", "anti king", "anti knight", "chess kings", "non consecutive"],
         centerlist: [],
         point: {},
         pu_q: { line: {}, number: {}, symbol: {} }
@@ -1030,9 +1076,11 @@ test("normalizes anti-king, anti-knight, and non-consecutive global pairs", func
 
     assert.equal(constraints.antiKing.length, 272);
     assert.equal(constraints.antiKnight.length, 224);
+    assert.equal(constraints.chessKings[0].pairs.length, 272);
     assert.equal(constraints.nonConsecutive.length, 144);
     assert.equal(constraints.supported.includes("anti king"), true);
     assert.equal(constraints.supported.includes("anti knight"), true);
+    assert.equal(constraints.supported.includes("chess kings"), true);
     assert.equal(constraints.supported.includes("non consecutive"), true);
 });
 

@@ -668,11 +668,11 @@
       "rules": {
         "9x9": "Two numbers are white and black chess Kings. As in real chess, Kings can not touch other Kings, not even diagonally, even if they are not in opposite color. It is a part of solving to find which numbers are chess Kings."
       },
-      "status": "planned",
-      "scratchGeneratable": false,
+      "status": "available",
+      "scratchGeneratable": true,
       "inputType": {
         "categories": [
-          "cell"
+          "no-input"
         ],
         "instructions": []
       },
