@@ -66,10 +66,10 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     const text = `${variation.name} ${variation.rule}`.toLowerCase();
     if (variation.inputType.categories.includes("shading")) return { position: "center", mark: "surface" };
     if (variation.inputType.categories.includes("cage")) return { position: "center", mark: "cage" };
-    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "liardiagonal", "magicsquares", "onefivenine"].includes(variation.value)) {
+    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "liardiagonal", "magicsquares", "onefivenine", "unicorn"].includes(variation.value)) {
         return { position: "none", mark: "none" };
     }
-    if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector"].includes(variation.value)) {
+    if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector", "twindetector"].includes(variation.value)) {
         return { position: "center", mark: "direction" };
     }
     if (["quadmax", "quadmin"].includes(variation.value)) {
@@ -138,8 +138,31 @@ export function inputModesFor(variation: Variation) {
 
 /** Human-readable source shown on each generated variant reference page. */
 function cspImplementationFor(variation: Variation) {
+    if (variation.value === "braille") {
+        return `function validatePartial(board, clue) {
+  const value = cellValue(board, clue.cell);
+  if (!value) return true;
+  const brailleMap = { 1: [0], 2: [0, 3], 3: [0, 1], 4: [0, 1, 4], 5: [0, 4], 6: [0, 1, 3], 7: [0, 1, 3, 4], 8: [0, 3, 4], 9: [1, 3] };
+  const targetDots = brailleMap[value] || [];
+  return clue.dots.every(d => targetDots.includes(d));
+}`;
+    }
+    if (variation.value === "unicorn") {
+        return `function validatePartial(board, item) {
+  const value = cellValue(board, item.cell);
+  if (value !== 9) return true;
+  const neighbors = item.neighbors.map(cell => cellValue(board, cell)).filter(Boolean);
+  return new Set(neighbors).size === neighbors.length;
+}`;
+    }
+    if (variation.value === "watchtowers") {
+        return "A watchtower digit N overlooks exactly N cells. If N=3, it sees itself and 2 others.";
+    }
     if (variation.value === "zones") {
         return "Returns true when every digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
+    }
+    if (variation.value === "twindetector") {
+        return `validatePartial(board, clue) {\n  const origin = cellValue(board, clue.origin);\n  if (!origin) return true;\n  const markedRays = new Set(clue.rays.map(r => r[0].row + ":" + r[0].col));\n  return clue.allRays.every(ray => {\n    if (!ray.length) return true;\n    const marked = markedRays.has(ray[0].row + ":" + ray[0].col);\n    let sum = 0, blanks = 0, hasMatch = false, canMatch = false;\n    for (const cell of ray) {\n      const value = cellValue(board, cell);\n      if (value) sum += value; else blanks++;\n      if (sum === origin && blanks === 0) hasMatch = true;\n      if (sum + blanks <= origin && sum + blanks * board.length >= origin && (blanks > 0 || sum === origin)) canMatch = true;\n    }\n    return marked ? canMatch : !hasMatch;\n  });\n}`;
     }
     if (variation.value === "somewhere") {
         return "Returns true when the digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
@@ -201,8 +224,10 @@ function cspImplementationFor(variation: Variation) {
         twodigitprimenumbers: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const value = 10 * a + b;\n  const isPrime = [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97].includes(value);\n  return clue.marked ? isPrime : !isPrime;\n}`,
         average: `validatePartial(board, clue) {\n  const center = cellValue(board, clue.center), ends = clue.ends.map(cellValue);\n  if (!center || ends.some(value => !value)) return true;\n  return clue.marked === (center * 2 === ends[0] + ends[1]);\n}`,
         fortress: `validatePartial(board, clue) {\n  const shaded = cellValue(board, clue.shaded), unshaded = cellValue(board, clue.unshaded);\n  return !shaded || !unshaded || shaded > unshaded;\n}`,
+        wildcard: `validatePartial(board, clue) {\n  let maxLessThan = 0, minGreaterThan = board.length + 1;\n  for (const c of clue) {\n    const value = cellValue(board, c.cell);\n    if (value && c.sign === "<") maxLessThan = Math.max(maxLessThan, value);\n    if (value && c.sign === ">") minGreaterThan = Math.min(minGreaterThan, value);\n  }\n  return maxLessThan <= minGreaterThan - 2;\n}`,
         inequality: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  return !a || !b || (clue.sign === "<" ? a < b : a > b);\n}`,
         trio: `validatePartial(board, clue) {\n  const value = cellValue(board, clue.cell);\n  return !value || (value >= clue.minimum && value <= clue.maximum);\n}`,
+        watchtowers: `validatePartial(board, shadedCells) {\n  // Implementation omitted\n}`,
         perfectsquares: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const perfect = [16, 25, 36, 49, 64, 81].includes(10 * a + b);\n  return clue.marked ? perfect : !perfect;\n}`,
         clockfaces: `validateComplete(board, clue) {\n  const clockwise = clockwiseCells(clue.cells).map(cellValue);\n  const increasingClockwise = circularDescentCount(clockwise) === 1;\n  const increasingCounterclockwise = circularDescentCount(clockwise.toReversed()) === 1;\n  return clue.kind === "white" ? increasingClockwise : clue.kind === "black" ? increasingCounterclockwise\n    : !increasingClockwise && !increasingCounterclockwise;\n}`,
         exclusion: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue).filter(Boolean);\n  return clue.digits.every(digit => !values.includes(digit));\n}`,
@@ -329,6 +354,7 @@ function cspImplementationFor(variation: Variation) {
         "even passage": `validatePartial(board) {\n  return hasEvenPath(board, board.length);\n}`,
         "equal sum line": `validatePartial(board, clue) {\n  const groups = {};\n  clue.cells.forEach(cell => {\n    const box = boxIndex(cell.row, cell.col, board.length);\n    (groups[box] || (groups[box] = [])).push(cell);\n  });\n  let minPossible = -Infinity, maxPossible = Infinity;\n  for (const box of Object.keys(groups)) {\n    const cells = groups[box], sum = cells.map(cellValue).reduce((t, v) => t + v, 0);\n    const blanks = cells.filter(cell => !cellValue(board, cell)).length;\n    let minS = sum + blanks, maxS = sum + blanks * board.length;\n    if (blanks === 0) { minS = sum; maxS = sum; }\n    minPossible = Math.max(minPossible, minS);\n    maxPossible = Math.min(maxPossible, maxS);\n  }\n  return minPossible <= maxPossible;\n}`,
         "german whispers": `validatePartial(board, line) {\n  const values = line.cells.map(cellValue);\n  for (let i = 0; i < values.length - 1; i++) {\n    if (values[i] && values[i+1] && Math.abs(values[i] - values[i+1]) < 5) return false;\n  }\n  return true;\n}`,
+        upanddown: `validatePartial(board, line) {\n  const values = line.cells.map(cellValue);\n  let pattern0Valid = true, pattern1Valid = true;\n  for (let i = 0; i < values.length - 1; i++) {\n    const a = values[i], b = values[i+1];\n    if (a && b) {\n      const diff = b - a;\n      if (Math.abs(diff) < 4) return false;\n      if (diff > 0) {\n        if (i % 2 !== 0) pattern0Valid = false;\n        if (i % 2 === 0) pattern1Valid = false;\n      } else {\n        if (i % 2 === 0) pattern0Valid = false;\n        if (i % 2 !== 0) pattern1Valid = false;\n      }\n    }\n  }\n  return pattern0Valid || pattern1Valid;\n}`,
         "factor lines": `validatePartial(board, line) {\n  const values = line.cells.map(cellValue);\n  for (let i = 0; i < values.length - 1; i++) {\n    if (values[i] && values[i+1] && values[i] % values[i+1] !== 0 && values[i+1] % values[i] !== 0) return false;\n  }\n  return true;\n}`,
         "24-trio": `validatePartial(board, line) {\n  const values = line.cells.map(cellValue);\n  if (values.length !== 3) return false;\n  const filled = values.filter(Boolean).sort((a, b) => a - b);\n  if (filled.length === 0) return true;\n  const tuples = [[1, 2, 8], [1, 3, 6], [1, 3, 7], [1, 3, 8], [1, 3, 9], [1, 4, 5], [1, 4, 6], [1, 4, 7], [1, 4, 8], [1, 5, 5], [1, 5, 6], [2, 2, 6], [2, 3, 4], [2, 3, 6], [2, 3, 9], [2, 4, 4], [2, 4, 8], [2, 5, 7], [2, 5, 8], [2, 6, 6], [2, 6, 8], [2, 6, 9], [2, 8, 8], [3, 3, 4], [3, 3, 5], [3, 3, 7], [3, 3, 9], [3, 4, 4], [3, 4, 9], [3, 5, 9], [3, 6, 6], [3, 6, 7], [3, 6, 8], [3, 8, 9], [4, 4, 5], [4, 4, 7], [4, 4, 8], [4, 6, 8], [4, 7, 8], [4, 8, 8], [5, 6, 6], [5, 6, 9], [5, 8, 8], [6, 8, 9], [6, 9, 9], [7, 8, 9], [8, 8, 8]];\n  return tuples.some(t => {\n    let match = true;\n    let tCopy = t.slice();\n    for (let i = 0; i < filled.length; i++) {\n      let idx = tCopy.indexOf(filled[i]);\n      if (idx !== -1) {\n        tCopy.splice(idx, 1);\n      } else {\n        match = false;\n        break;\n      }\n    }\n    return match;\n  });\n}`,
         innerframesum: `validatePartial(board, clue) {\n  const values = clue.cells.slice(1, 4).map(cellValue);\n  return sumBoundsContain(board, clue.cells.slice(1, 4), clue.value);\n}`,
@@ -397,6 +423,12 @@ function cspImplementationFor(variation: Variation) {
     }
     if (variation.value === "arrow") {
         return `function ${functionName}(board, clue) {\n  const circle = cellValue(board, clue.circle);\n  const shaft = clue.shaft.map(cell => cellValue(board, cell));\n  const sum = shaft.reduce((total, value) => total + value, 0);\n  const blanks = shaft.filter(value => !value).length;\n  return !circle || (sum <= circle && sum + blanks * board.length >= circle && (blanks || sum === circle));\n}`;
+    }
+    if (variation.value === "countdifferent") {
+        return `function ${functionName}(board, clue) {\n  const circle = cellValue(board, clue.circle);\n  const shaft = clue.shaft.map(cell => cellValue(board, cell));\n  const assigned = shaft.filter(Boolean);\n  const blanks = shaft.length - assigned.length;\n  const uniqueAssigned = new Set(assigned).size;\n  return !circle || (uniqueAssigned <= circle && uniqueAssigned + blanks >= circle);\n}`;
+    }
+    if (variation.value === "counttheoddones") {
+        return `function ${functionName}(board, clue) {\n  const circle = cellValue(board, clue.circle);\n  const shaft = clue.shaft.map(cell => cellValue(board, cell));\n  const assigned = shaft.filter(Boolean);\n  const blanks = shaft.length - assigned.length;\n  const oddCount = assigned.filter(v => v % 2 !== 0).length;\n  return !circle || (oddCount <= circle && oddCount + blanks >= circle);\n}`;
     }
     if (variation.value === "killer") {
         return `function ${functionName}(board, cage) {\n  const values = cage.cells.map(cell => cellValue(board, cell));\n  const assigned = values.filter(Boolean);\n  const sum = assigned.reduce((total, value) => total + value, 0);\n  return new Set(assigned).size === assigned.length && sum <= cage.total\n    && (values.some(value => !value) || sum === cage.total);\n}`;
@@ -472,6 +504,28 @@ export function cspConstraintFunctionFor(variation: Variation) {
 
 /** Executable-style regression examples displayed on every variant detail page. */
 export function solverTestCasesFor(variation: Variation) {
+    if (variation.value === "braille") {
+        return `test("Braille allows subset of dots", () => {
+  const board = boardWith({ 0: { 0: 6 } });
+  assert.equal(validatePartial(board, { cell: { row: 0, col: 0 }, dots: [0, 1] }), true);
+});
+test("Braille rejects invalid dots", () => {
+  const board = boardWith({ 0: { 0: 1 } });
+  assert.equal(validatePartial(board, { cell: { row: 0, col: 0 }, dots: [0, 3] }), false);
+});`;
+    }
+    if (variation.value === "unicorn") {
+        return `test("Unicorn rejects a 9 that attacks two identical digits", () => {
+  const board = boardWith({ 1: { 0: 9 }, 0: { 2: 3 }, 2: { 2: 3 } });
+  assert.equal(validatePartial(board, {
+    cell: { row: 1, col: 0 },
+    neighbors: [{ row: 0, col: 2 }, { row: 2, col: 2 }]
+  }), false);
+});`;
+    }
+    if (variation.value === "watchtowers") {
+        return "A watchtower digit N overlooks exactly N cells. If N=3, it sees itself and 2 others.";
+    }
     if (variation.value === "zones") {
         return "A cage with clue '12' must contain both a 1 and a 2. Partial assignments are valid if empty cells remain to accommodate missing digits.";
     }
@@ -482,6 +536,8 @@ export function solverTestCasesFor(variation: Variation) {
     tictactoewinner: `test("Tic-Tac-Toe Winner validations", function() {
     // Tests are fully written and run in sudoku_solver.test.js
 });`,
+        wildcard: `test("Wildcard enforces consistent values relative to a hidden wildcard digit", () => {\n  let board = boardWith({});\n  board[0][0] = 5;\n  board[0][1] = 7;\n  expect(validatePartial(board, [{ cell: { row: 0, col: 0 }, sign: "<" }, { cell: { row: 0, col: 1 }, sign: ">" }])).toBe(true);\n  board[0][0] = 6;\n  expect(validatePartial(board, [{ cell: { row: 0, col: 0 }, sign: "<" }, { cell: { row: 0, col: 1 }, sign: ">" }])).toBe(false);\n});`,
+
         chesskings: `test("Chess Kings rejects a board if no 2 king digits are possible", () => {
   const board = boardWith({}); // Empty board
   const pairs = [];
@@ -499,6 +555,7 @@ export function solverTestCasesFor(variation: Variation) {
   assert.equal(solve(board, { chessKings: [{ pairs: pairs }] }).solved, false);
 });`,
         oneknightstep: `test("One Knight Step validates exactly one knight match", () => {\n  const board = boardWith({ r1c1: 5, r2c3: 5, r3c2: 6, r3c3: 6 });\n  assert.equal(solve(board, { oneKnightStep: [r1c1] }).solved, true);\n  assert.equal(solve(board, { oneKnightStep: [r2c3] }).solved, true);\n  assert.equal(solve(board, { oneKnightStep: [r3c2] }).solved, false);\n});`,
+        upanddown: `test("Up and down validates alternating sequence with difference >= 4", () => {\n  const board = boardWith({ r1c1: 1, r1c2: 9, r1c3: 5, r2c1: 1, r2c2: 5, r2c3: 9 });\n  assert.equal(solve(board, { catalogLines: [{ relation: "upanddown", path: [r1c1, r1c2, r1c3] }] }).solved, true);\n  assert.equal(solve(board, { catalogLines: [{ relation: "upanddown", path: [r2c1, r2c2, r2c3] }] }).solved, false);\n});`,
         repeatedneighbors: `test("Repeated Neighbors validates duplicate orthogonal neighbors", () => {\n  const board = boardWith({ r2c2: 1, r1c2: 2, r3c2: 2, r2c1: 3, r2c3: 4 });\n  assert.equal(solve(board, { repeatedNeighbors: [r2c2] }).solved, true);\n  assert.equal(solve(board, { repeatedNeighbors: [] }).solved, false);\n});`,
         japanesesums: `test("12, 5 satisfies an outside Japanese sums clue with unshaded cells", () => {
   const board = boardWith({ r1c1: 5, r1c2: 7, r1c3: 1, r1c4: 2, r1c5: 3, r1c6: 9, r1c7: 8, r1c8: 4, r1c9: 6 });
@@ -526,6 +583,7 @@ export function solverTestCasesFor(variation: Variation) {
         evensandwich: `test("2,4,6 satisfies an outside 4 clue", () => {\n  const board = boardWith({ r1c1: 2, r1c2: 4, r1c3: 6 });\n  const clue = { relation: "evensandwich", cells: rowCells(1), clues: [4] };\n  assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);\n  assert.equal(readConstraints(puzzleWithNoOutsideClues("evensandwich")).outsideRelations.every(clue => clue.clues.length === 0), true);\n});`,
         coded: `test("Coded reads the upper-left numberS corner", () => {\n  const constraints = readConstraints(codedPuzzle({ r1c1: "A", r1c2: "A", r2c1: "B" }));\n  assert.deepEqual(constraints.codedGroups[0].groups, [[r1c1, r1c2], [r2c1]]);\n});`,
         pencilmarks: `test("one Pencilmark remains a candidate clue", () => {\n  const clue = { cell: r1c1, allowed: [4] };\n  assert.equal(solve(boardWith({ r1c1: 4 }), { pencilmarkCells: [clue] }).solved, true);\n  assert.equal(solve(boardWith({ r1c1: 5 }), { pencilmarkCells: [clue] }).solved, false);\n});`,
+        twindetector: `test("requires an arrow when the sum condition is met", () => {\n  const clue = {\n    relation: "twindetector", origin: { row: 1, col: 1 },\n    rays: [[{ row: 0, col: 1 }]],\n    allRays: [[{ row: 0, col: 1 }], [{ row: 1, col: 2 }], [{ row: 2, col: 1 }]]\n  };\n  assert.equal(solve(boardWith({ r2c2: 3, r1c2: 3, r3c2: 4, r2c3: 5 }), { directionalMarks: [clue] }).solved, true);\n  assert.equal(solve(boardWith({ r2c2: 3, r1c2: 3, r3c2: 3, r2c3: 5 }), { directionalMarks: [clue] }).solved, false);\n});`,
         sumdetector: `test("every arrow uses the same n", () => {\n  const group = sumDetectorGroupWithTwoArrows();\n  assert.equal(solve(boardWhereBothArrowsUseN(2), { sumDetectorGroups: [group] }).solved, true);\n  assert.equal(solve(boardWhereArrowsNeedDifferentN(), { sumDetectorGroups: [group] }).solved, false);\n});`,
         windoku: `test("four generated cages become extra regions", () => {\n  const constraints = readConstraints(windokuPuzzleWithGeneratedCages());\n  assert.equal(constraints.regionAllDifferent.length, 4);\n  assert.equal(constraints.regionAllDifferent.every(region => region.length === 9), true);\n});`,
         creasing: `test("a no-bulb thermo is only a Creasing line", () => {\n  const constraints = readConstraints(creasingPuzzle([[r1c1, r1c2, r1c3]]));\n  assert.equal(constraints.catalogLines[0].relation, "creasing");\n  assert.equal(constraints.thermos.length, 0);\n});`,

@@ -1,9 +1,9 @@
 const penpa_constraints = {
-    "implemented_sudoku": ["classic", "odd even", "odd even bridge", "odd even count", "odd even sum", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv", "battenburg", "skyscraper", "sandwich", "uniquerectangles", "sumskyscrapers", "sumsandwich", "positionsums", "inequalitytriples", "oneortwodifferencepairs", "teneleven", "tenspositionproducts", "fullorhalf", "samesum", "xaverage", "triplesum", "partitionedsums", "oneknightstep", "zones", "somewhere"],
+    "implemented_sudoku": ["classic", "0 to 8", "odd even", "odd even bridge", "odd even count", "odd even sum", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv", "battenburg", "skyscraper", "sandwich", "uniquerectangles", "sumskyscrapers", "sumsandwich", "positionsums", "inequalitytriples", "oneortwodifferencepairs", "teneleven", "tenspositionproducts", "fullorhalf", "samesum", "xaverage", "triplesum", "partitionedsums", "oneknightstep", "zones", "somewhere"],
     "options_groups": ["general", "sudoku", "puzzle"],
     "options": {
         "general": ["all"],
-        "sudoku": ["classic","odd even","diagonal","anti diagonal","anti king","anti knight","non consecutive","arrow","thermo","little killer","killer","difference","kropki","palindrome","sandwich","quadruple","xv","between","battenburg","skyscraper","uniquerectangles","sumskyscrapers","sumsandwich","positionsums","inequalitytriples","oneortwodifferencepairs","teneleven","tenspositionproducts","fullorhalf","samesum","xaverage","triplesum","partitionedsums","oneknightstep","windoku","odd even bridge","odd even count","odd even sum",
+        "sudoku": ["classic","0 to 8","odd even","diagonal","anti diagonal","anti king","anti knight","non consecutive","arrow","thermo","little killer","killer","difference","kropki","palindrome","sandwich","quadruple","xv","between","battenburg","skyscraper","uniquerectangles","sumskyscrapers","sumsandwich","positionsums","inequalitytriples","oneortwodifferencepairs","teneleven","tenspositionproducts","fullorhalf","samesum","xaverage","triplesum","partitionedsums","oneknightstep","windoku","odd even bridge","odd even count","odd even sum",
             "zones",
             "somewhere"],
         "puzzle": [
@@ -39,6 +39,13 @@ const penpa_constraints = {
             "styleset": [1, 2, 2, 2, 10, 1, 2, "", "", 1]
         },
         "general": ["input_sudoku", "rotation", "custom_color_lb"],
+
+        "0 to 8": {
+            "show": ["sub_number3_lb"],
+            "modeset": ["sudoku"],
+            "submodeset": ["1"],
+            "styleset": ["1"]
+        },
         "classic": {
             "show": ["mo_surface_lb",
                 "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb"
