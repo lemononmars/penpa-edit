@@ -774,6 +774,7 @@ class Puzzle_square extends Puzzle {
     ////////////////draw/////////////////////
 
     draw() {
+        this._find_common_cache = {};
         var present_mode = this.mode.qa;
         if (present_mode !== "pu_q" || UserSettings.show_solution) {
             this.draw_frameBold();
@@ -1022,59 +1023,45 @@ class Puzzle_square extends Puzzle {
     }
 
     find_common(pu, i, endpoint, symboltype) {
+        this._find_common_cache = this._find_common_cache || {};
+        let cache_key;
+        let list1, list2;
         if (symboltype === "thermo" || symboltype === "nobulbthermo") {
-            if (this[pu].thermo) {
-                for (var k = 0; k < this[pu].thermo.length; k++) {
-                    if (k != i) {
-                        if (this[pu].thermo[k]) {
-                            for (var m = 1; m < this[pu].thermo[k].length; m++) {
-                                if (this[pu].thermo[k][m] === endpoint) {
-                                    return 1;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (this[pu].nobulbthermo) {
-                for (var k = 0; k < this[pu].nobulbthermo.length; k++) {
-                    if (k != i) {
-                        if (this[pu].nobulbthermo[k]) {
-                            for (var m = 1; m < this[pu].nobulbthermo[k].length; m++) {
-                                if (this[pu].nobulbthermo[k][m] === endpoint) {
-                                    return 1;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            cache_key = pu + "_thermo";
+            list1 = this[pu].thermo;
+            list2 = this[pu].nobulbthermo;
         } else if (symboltype === "arrows" || symboltype === "direction") {
-            if (this[pu].arrows) {
-                for (var k = 0; k < this[pu].arrows.length; k++) {
-                    if (k != i) {
-                        if (this[pu].arrows[k]) {
-                            for (var m = 1; m < this[pu].arrows[k].length; m++) {
-                                if (this[pu].arrows[k][m] === endpoint) {
-                                    return 1;
+            cache_key = pu + "_arrows";
+            list1 = this[pu].arrows;
+            list2 = this[pu].direction;
+        } else {
+            return 0;
+        }
+
+        if (!this._find_common_cache[cache_key]) {
+            const cache = [];
+            for (const list of [list1, list2]) {
+                if (list) {
+                    for (let k = 0; k < list.length; k++) {
+                        if (list[k]) {
+                            for (let m = 1; m < list[k].length; m++) {
+                                const ep = list[k][m];
+                                if (!cache[ep]) {
+                                    cache[ep] = [];
                                 }
+                                cache[ep].push(k);
                             }
                         }
                     }
                 }
             }
-            if (this[pu].direction) {
-                for (var k = 0; k < this[pu].direction.length; k++) {
-                    if (k != i) {
-                        if (this[pu].direction[k]) {
-                            for (var m = 1; m < this[pu].direction[k].length; m++) {
-                                if (this[pu].direction[k][m] === endpoint) {
-                                    return 1;
-                                }
-                            }
-                        }
-                    }
-                }
+            this._find_common_cache[cache_key] = cache;
+        }
+
+        const endpoints = this._find_common_cache[cache_key][endpoint];
+        if (endpoints) {
+            for (let x = 0; x < endpoints.length; x++) {
+                if (endpoints[x] !== i) return 1;
             }
         }
         return 0;
