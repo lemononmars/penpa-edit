@@ -532,7 +532,9 @@ var SudokuSolver = (function() {
 
     function readConstraints(puzzle) {
         SIZE = puzzleSize(puzzle) || SIZE;
+        var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return variantEnabled(puzzle, v); });
         var constraints = {
+            isZeroEight: isZeroEight,
             starCells: [],
             thermos: [],
             arrows: [],
@@ -4496,12 +4498,13 @@ var SudokuTools = (function() {
             renderIrregularEditor();
             return;
         }
+        var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return activeVariants().indexOf(v) !== -1; });
         var sudokuButton = document.createElement("button");
         sudokuButton.type = "button";
         sudokuButton.className = "button sudoku-tool-button sudoku-variant-mode";
         sudokuButton.dataset.mode = "sudoku";
         sudokuButton.dataset.submode = "1";
-        sudokuButton.textContent = "Sudoku";
+        sudokuButton.textContent = isZeroEight ? "0-8" : "Sudoku";
         sudokuButton.addEventListener("click", function(event) {
             event.preventDefault();
             event.stopPropagation();
@@ -4784,6 +4787,14 @@ var SudokuTools = (function() {
         pu.activeSudokuVariants = activeVariants().filter(function(active) {
             return active !== variant;
         });
+        if (["0to8", "08arrow", "08skyscrapers"].indexOf(variant) !== -1 && !["0to8", "08arrow", "08skyscrapers"].some(function(v) { return activeVariants().indexOf(v) !== -1; })) {
+            [pu.pu_q.number, pu.pu_a.number].forEach(function(layer) {
+                if (!layer) return;
+                Object.keys(layer).forEach(function(key) {
+                    if (layer[key] && String(layer[key][0]).trim() === "0") delete layer[key];
+                });
+            });
+        }
         syncDiagonalLines();
         if (variant === "kropki") {
             pu.kropkiNegativeConstraint = false;

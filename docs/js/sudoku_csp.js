@@ -791,6 +791,7 @@ var SudokuCSP = (function() {
     }
 
     function createProblem(board, constraints) {
+        if (constraints) board.isZeroEight = constraints.isZeroEight;
         var values = cloneBoard(board);
         var normalizedConstraints = cloneConstraints(constraints || {});
         var answerKeys = [];
@@ -886,7 +887,9 @@ registerConstraint("emitters", {
                 if (!value) {
                     continue;
                 }
-                if (value < i + 1 || value > SIZE - (path.length - 1 - i)) {
+                var minVal = board.isZeroEight ? i : i + 1;
+                var maxVal = board.isZeroEight ? SIZE - 1 - (path.length - 1 - i) : SIZE - (path.length - 1 - i);
+                if (value < minVal || value > maxVal) {
                     return false;
                 }
                 var previous = i > 0 ? cellValue(board, path[i - 1]) : 0;
@@ -906,7 +909,7 @@ registerConstraint("emitters", {
             var open = 0;
             for (var i = 0; i < arrow.shaft.length; i++) {
                 var value = cellValue(board, arrow.shaft[i]);
-                value ? sum += value : open++;
+                value ? sum += (board.isZeroEight ? value - 1 : value) : open++;
             }
             if (circle) {
                 return sum + open <= circle && sum + (SIZE * open) >= circle && (open || sum === circle);
@@ -931,7 +934,7 @@ registerConstraint("emitters", {
                     return false;
                 }
                 seen |= bit;
-                total += digit;
+                total += (board.isZeroEight ? digit - 1 : digit);
             }
             if (!cage.total) {
                 return true;
@@ -1451,7 +1454,7 @@ registerConstraint("emitters", {
             for (var groupIndex = 0; groupIndex < groups.length; groupIndex++) {
                 var values = groups[groupIndex].map(function(cell) { return cellValue(board, cell); });
                 if (values.some(function(value) { return !value; })) continue;
-                var sum = values.reduce(function(total, value) { return total + value; }, 0);
+                var sum = values.reduce(function(total, value) { return total + (board.isZeroEight ? value - 1 : value); }, 0);
                 if (completedSum !== null && sum !== completedSum) return false;
                 completedSum = sum;
             }
@@ -1729,9 +1732,9 @@ registerConstraint("emitters", {
             var first = cellValue(board, clue.cells[0]);
             var second = cellValue(board, clue.cells[1]);
             if (!first || !second) return true;
-            var sum = first + second;
+            var sum = (board.isZeroEight ? first - 1 : first) + (board.isZeroEight ? second - 1 : second);
             var difference = Math.abs(first - second);
-            var product = first * second;
+            var product = (board.isZeroEight ? first - 1 : first) * (board.isZeroEight ? second - 1 : second);
             switch (clue.relation) {
                 case "fives": return sum === 5 || difference === 5;
                 case "notFives": return sum !== 5 && difference !== 5;
@@ -1756,7 +1759,7 @@ registerConstraint("emitters", {
                     var groupValues = (clue.groups || []).map(function(group) {
                         var values = group.map(function(cell) { return cellValue(board, cell); });
                         return values.some(function(value) { return !value; }) ? null :
-                            values.reduce(function(total, value) { return total + value; }, 0);
+                            values.reduce(function(total, value) { return total + (board.isZeroEight ? value - 1 : value); }, 0);
                     });
                     return groupValues.indexOf(null) !== -1 ||
                         (clue.sign === "<" ? groupValues[0] < groupValues[1] : groupValues[0] > groupValues[1]);
@@ -1769,10 +1772,10 @@ registerConstraint("emitters", {
                 case "perfectsquares": return [16, 25, 36, 49, 64, 81].indexOf(first * 10 + second) !== -1;
                 case "notPerfectSquare": return [16, 25, 36, 49, 64, 81].indexOf(first * 10 + second) === -1;
                 case "primesums":
-                    var sum = first + second;
+                    var sum = (board.isZeroEight ? first - 1 : first) + (board.isZeroEight ? second - 1 : second);
                     return [2, 3, 5, 7, 11, 13, 17].indexOf(sum) !== -1;
                 case "notPrimesums":
-                    var sum = first + second;
+                    var sum = (board.isZeroEight ? first - 1 : first) + (board.isZeroEight ? second - 1 : second);
                     return [2, 3, 5, 7, 11, 13, 17].indexOf(sum) === -1;
                 case "twodigitprimenumbers":
                     var val = first * 10 + second;
@@ -1788,8 +1791,8 @@ registerConstraint("emitters", {
                 case "notDiagonalTens": return sum !== 10;
                 case "arithmetic":
                     return sum === clue.target || difference === clue.target || product === clue.target ||
-                        (first % second === 0 && first / second === clue.target) ||
-                        (second % first === 0 && second / first === clue.target);
+                        (first % second === 0 && (board.isZeroEight ? first - 1 : first) / (board.isZeroEight ? second - 1 : second) === clue.target) ||
+                        (second % first === 0 && (board.isZeroEight ? second - 1 : second) / (board.isZeroEight ? first - 1 : first) === clue.target);
             }
             return true;
         }
@@ -2338,7 +2341,7 @@ registerConstraint("emitters", {
                 return true;
             }
             if (clue.relation === "sumframe" || clue.relation === "framediagonal") {
-                var frameSum = values.reduce(function(total, value) { return total + value; }, 0);
+                var frameSum = values.reduce(function(total, value) { return total + (board.isZeroEight ? value - 1 : value); }, 0);
                 var frameBlanks = values.filter(function(value) { return !value; }).length;
                 return frameSum <= clue.value && frameSum + frameBlanks * SIZE >= clue.value &&
                     (frameBlanks > 0 || frameSum === clue.value);
@@ -2525,7 +2528,7 @@ registerConstraint("emitters", {
             }
             if (clue.relation === "little killer" || clue.relation === "product little killer") {
                 if (clue.relation === "little killer") {
-                    var littleSum = values.reduce(function(total, value) { return total + value; }, 0);
+                    var littleSum = values.reduce(function(total, value) { return total + (board.isZeroEight ? value - 1 : value); }, 0);
                     var littleBlanks = values.filter(function(value) { return !value; }).length;
                     return littleSum <= clue.value && littleSum + littleBlanks * SIZE >= clue.value &&
                         (littleBlanks > 0 || littleSum === clue.value);
@@ -3798,8 +3801,8 @@ registerConstraint("emitters", {
         }
     });
 
-    function xvAllows(first, second, kind) {
-        var sum = first + second;
+    function xvAllows(first, second, kind, board) {
+        var sum = (board.isZeroEight ? first - 1 : first) + (board.isZeroEight ? second - 1 : second);
         if (kind === "V") {
             return sum === 5;
         }
@@ -3816,7 +3819,7 @@ registerConstraint("emitters", {
             var first = cellValue(board, clue.cells[0]);
             var second = cellValue(board, clue.cells[1]);
             if (first && second) {
-                return xvAllows(first, second, clue.kind === "none" && clue.family === "xivi" ? "none-xivi" : clue.kind);
+                return xvAllows(first, second, clue.kind === "none" && clue.family === "xivi" ? "none-xivi" : clue.kind, board);
             }
             var known = first || second;
             if (!known) {
@@ -3824,7 +3827,7 @@ registerConstraint("emitters", {
             }
             for (var candidate = 1; candidate <= SIZE; candidate++) {
                 if (candidate !== known && xvAllows(known, candidate,
-                    clue.kind === "none" && clue.family === "xivi" ? "none-xivi" : clue.kind)) {
+                    clue.kind === "none" && clue.family === "xivi" ? "none-xivi" : clue.kind, board)) {
                     return true;
                 }
             }
