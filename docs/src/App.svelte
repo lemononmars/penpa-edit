@@ -1396,6 +1396,7 @@
 
         <section
           class="variant-picker"
+          style="display: none;"
           class:hidden-section={layer !== "problem"}
         >
           <div class="control-label" id="svelte-variant-label">Add variant</div>
