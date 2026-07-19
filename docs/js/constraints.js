@@ -66,7 +66,7 @@ const penpa_constraints = {
             // "hotaru beam"
         ]
     },
-    "border": ["difference", "kropki", "quadruple", "xv", "battenburg"], // puzzle types that involves placing clues on edges and corners
+    "border": ["difference", "kropki", "xv", "battenburg"], // puzzle types that involves placing clues on edges and corners
     "setting": {
         "all": {
             "modeset": ["surface", "multicolor", "line", "lineE", "wall", "cage", "number", "symbol", "special", "combi", "sudoku"],
@@ -236,11 +236,11 @@ const penpa_constraints = {
         "quadruple": {
             "show": ["mo_surface_lb",
                 "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
-                "mo_number_lb", "sub_number4_lb"
+                "mo_number_lb", "sub_number5_lb"
             ],
             "modeset": ["sudoku", "number"],
-            "submodeset": ["1", "4"],
-            "styleset": ["", 1]
+            "submodeset": ["1", "5"],
+            "styleset": ["", 6]
         },
         "xv": {
             "show": ["mo_surface_lb",
