@@ -1808,16 +1808,25 @@ class Puzzle_square extends Puzzle {
                 {
                     let number_data = this[pu].number[i];
                     let lines = number_data[0].split('\n');
+
+                    const ctx = this.ctx;
+                    const size = this.size;
+                    const type = number_data[1];
+                    const halfSize = size * 0.5;
+                    const halfSizeStr = halfSize.toString(10);
+                    const xOffset = size * 0.2;
+                    const yOffset = size * 0.25;
+
                     for (let line of lines) {
-                        if (number_data[1] === 5) {
-                            set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                            set_circle_style(this.ctx, 7);
-                            this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.5 * this.size);
+                        if (type === 5) {
+                            set_font_style(ctx, halfSizeStr, type);
+                            set_circle_style(ctx, 7);
+                            ctx.fillRect(p_x - xOffset, p_y - yOffset, ctx.measureText(line).width, halfSize);
                         }
-                        set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                        this.ctx.textAlign = "left";
-                        this.ctx.text(line, p_x - 0.2 * this.size, p_y);
-                        p_y += this.size * 0.5;
+                        set_font_style(ctx, halfSizeStr, type);
+                        ctx.textAlign = "left";
+                        ctx.text(line, p_x - xOffset, p_y);
+                        p_y += halfSize;
                     }
                 }
                     break;
