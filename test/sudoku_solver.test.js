@@ -502,6 +502,52 @@ test("anti-king rejects equal digits a king move apart", function() {
     assert.equal(result.solved, false);
 });
 
+test("chess kings rejects a board if no 2 king digits are possible", function() {
+    const board = emptyBoard();
+    const pairs = [];
+    let pairIdx = 0;
+    // We want to simulate every possible digit pair touching
+    for (let x = 1; x <= 9; x++) {
+        for (let y = x + 1; y <= 9; y++) {
+            let row = Math.floor(pairIdx / 4);
+            let col = (pairIdx % 4) * 2;
+            board[row][col] = x;
+            board[row][col + 1] = y;
+            pairs.push([{ row: row, col: col }, { row: row, col: col + 1 }]);
+            pairIdx++;
+        }
+    }
+
+    const result = SudokuSolver.solve(board, {
+        chessKings: [{ pairs: pairs }]
+    });
+
+    assert.equal(result.solved, false);
+});
+
+test("chess kings rejects a board if no 2 king digits are possible", function() {
+    const board = emptyBoard();
+    const pairs = [];
+    let pairIdx = 0;
+    // We want to simulate every possible digit pair touching
+    for (let x = 1; x <= 9; x++) {
+        for (let y = x + 1; y <= 9; y++) {
+            let row = Math.floor(pairIdx / 4);
+            let col = (pairIdx % 4) * 2;
+            board[row][col] = x;
+            board[row][col + 1] = y;
+            pairs.push([{ row: row, col: col }, { row: row, col: col + 1 }]);
+            pairIdx++;
+        }
+    }
+
+    const result = SudokuSolver.solve(board, {
+        chessKings: [{ pairs: pairs }]
+    });
+
+    assert.equal(result.solved, false);
+});
+
 test("anti-knight rejects equal digits a knight move apart", function() {
     const board = emptyBoard();
     board[0][1] = 5;
@@ -1017,10 +1063,10 @@ test("normalizes multiple selected variants at once", function() {
     assert.equal(constraints.supported.includes("anti diagonal"), true);
 });
 
-test("normalizes anti-king, anti-knight, and non-consecutive global pairs", function() {
+test("normalizes anti-king, anti-knight, chess kings, and non-consecutive global pairs", function() {
     const puzzle = {
         nx0: 13,
-        activeSudokuVariants: ["classic", "anti king", "anti knight", "non consecutive"],
+        activeSudokuVariants: ["classic", "anti king", "anti knight", "chess kings", "non consecutive"],
         centerlist: [],
         point: {},
         pu_q: { line: {}, number: {}, symbol: {} }
@@ -1030,9 +1076,11 @@ test("normalizes anti-king, anti-knight, and non-consecutive global pairs", func
 
     assert.equal(constraints.antiKing.length, 272);
     assert.equal(constraints.antiKnight.length, 224);
+    assert.equal(constraints.chessKings[0].pairs.length, 272);
     assert.equal(constraints.nonConsecutive.length, 144);
     assert.equal(constraints.supported.includes("anti king"), true);
     assert.equal(constraints.supported.includes("anti knight"), true);
+    assert.equal(constraints.supported.includes("chess kings"), true);
     assert.equal(constraints.supported.includes("non consecutive"), true);
 });
 
@@ -1297,6 +1345,14 @@ test("validates all directional shape relations", function() {
         neighbors: [{ row: 0, col: 3 }, { row: 0, col: 4 }, { row: 0, col: 5 }] }), true);
     assert.equal(accepted({ relation: "biggestneighbours", targets: [{ row: 0, col: 3 }],
         neighbors: [{ row: 0, col: 3 }, { row: 0, col: 4 }] }), false);
+    assert.equal(accepted({ relation: "twindetector", origin: { row: 5, col: 3 },
+        rays: [[{ row: 6, col: 3 }, { row: 7, col: 3 }]],
+        allRays: [[{ row: 6, col: 3 }, { row: 7, col: 3 }]]
+    }), true);
+    assert.equal(accepted({ relation: "twindetector", origin: { row: 5, col: 3 },
+        rays: [],
+        allRays: [[{ row: 6, col: 3 }, { row: 7, col: 3 }]]
+    }), false);
     assert.equal(accepted({ relation: "smallestneighbours", targets: [{ row: 0, col: 1 }],
         neighbors: [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 3 }] }), true);
     assert.equal(accepted({ relation: "smallestneighbours", targets: [{ row: 0, col: 0 }],
@@ -1396,6 +1452,16 @@ test("normalizes the newly implemented catalog variants for the solver", functio
         assert.deepEqual(clue.targets[7], { row: 0, col: 8 });
     });
 
+    const twindetectorSightline = puzzleFor("twindetector", {
+        centerlist: fullCenterList,
+        pu_q: { number: {}, numberS: {}, symbol: {
+            28: [[0, 0, 0, 0, 1, 0, 0, 0], "arrow_eight", 2]
+        }, thermo: [], nobulbthermo: [], killercages: [] }
+    });
+    const twindetectorClue = SudokuSolver.readConstraints(twindetectorSightline).directionalMarks[0];
+    assert.equal(twindetectorClue.targets.length, 8, `twindetector should inspect the complete arrow sightline`);
+    assert.equal(twindetectorClue.allRays.length, 8, `twindetector should inspect all 8 rays`);
+
     const stretched = puzzleFor("stretchedthermo", {
         pu_q: { number: {}, numberS: {}, symbol: {}, thermo: [[28, 29, 30]], nobulbthermo: [], killercages: [] }
     });
@@ -1409,6 +1475,48 @@ test("normalizes the newly implemented catalog variants for the solver", functio
         assert.equal(constraints.supported.includes(variant), true);
         assert.equal(constraints.outsideRelations[0].relation, variant);
     });
+});
+
+
+
+test("Japanese Sums and Odd Sums normalize multi-digit clues and validate sequences", function() {
+    const rawJapanese = {
+        nx0: 9, ny0: 9,
+        activeSudokuVariants: ["japanesesums"],
+        pu_q: { number: { 15: ["12 5", 1, "1"] }, numberS: {}, symbol: {}, thermo: [], nobulbthermo: [], killercages: [] }
+    };
+    const japaneseConstraints = SudokuSolver.readConstraints(rawJapanese);
+    assert.equal(japaneseConstraints.supported.includes("japanesesums"), true);
+    assert.deepEqual(japaneseConstraints.outsideRelations[0].value, [12, 5]);
+
+    const rawOdd = {
+        nx0: 9, ny0: 9,
+        activeSudokuVariants: ["oddsums"],
+        pu_q: { number: { 15: ["3, 7", 1, "10"] }, numberS: {}, symbol: {}, thermo: [], nobulbthermo: [], killercages: [] }
+    };
+    const oddConstraints = SudokuSolver.readConstraints(rawOdd);
+    assert.equal(oddConstraints.supported.includes("oddsums"), true);
+    assert.deepEqual(oddConstraints.outsideRelations[0].value, [3, 7]);
+
+    const board = Array.from({length: 9}, () => Array(9).fill(0));
+    board[0] = [5, 2, 1, 3, 4, 6, 8, 7, 9];
+
+    // Odd Sums: 5 (odd), 2 (even), 1+3=4 (odd), 4,6,8 (even), 7+9=16 (odd)
+    const oddClue = { relation: "oddsums", value: [5, 4, 16], cells: board[0].map((_, i) => ({row: 0, col: i})) };
+    assert.equal(SudokuCSP.solve(board, { outsideRelations: [oddClue] }).solved, true);
+
+    const oddWrong = { relation: "oddsums", value: [5, 4, 15], cells: board[0].map((_, i) => ({row: 0, col: i})) };
+    assert.equal(SudokuCSP.solve(board, { outsideRelations: [oddWrong] }).solved, false);
+
+    const boardJap = Array.from({length: 9}, () => Array(9).fill(0));
+    boardJap[0] = [5, 7, 1, 2, 3, 9, 8, 4, 6];
+
+    // Japanese Sums: 5+7=12 (shaded), 1 (unshaded), 2+3=5 (shaded)
+    const japClue = { relation: "japanesesums", value: [12, 5], cells: boardJap[0].map((_, i) => ({row: 0, col: i})) };
+    assert.equal(SudokuCSP.solve(boardJap, { outsideRelations: [japClue] }).solved, true);
+
+    const japWrong = { relation: "japanesesums", value: [13, 5], cells: boardJap[0].map((_, i) => ({row: 0, col: i})) };
+    assert.equal(SudokuCSP.solve(boardJap, { outsideRelations: [japWrong] }).solved, false);
 });
 
 test("reads Coded letters from the upper-left corner slot", function() {
@@ -1604,6 +1712,7 @@ test("validates Little Killer, unordered outside, extrema, diagonal, and multipl
         outsideRelations: [
             { relation: "little killer", value: 12, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }] },
             { relation: "product little killer", value: 35, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }] },
+            { relation: "weighted little killer", value: 19, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }], weights: [1, 2] },
             { relation: "descriptivepairs", value: 51, cells: row },
             { relation: "outside", clues: [4, 5, 3], cells: row.slice(0, 3) },
             { relation: "outside234", clues: [6, 3, 4], cells: row.slice(1, 4) },
@@ -1670,6 +1779,25 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
                 assert.equal(constraints.outsideRelations[0].relation, variant);
                 assert.deepEqual(constraints.outsideRelations[0].cells.slice(0, 2),
                     [{ row: 0, col: 0 }, { row: 1, col: 1 }]);
+            });
+        });
+    });
+
+    ["weighted little killer"].forEach(function(variant) {
+        [
+            [6, "arrow_B_G", 2],
+            [[0, 0, 0, 0, 0, 1, 0, 0], "arrow_eight", 2]
+        ].forEach(function(arrow) {
+            ["1", "10"].forEach(function(numberMode) {
+                const constraints = SudokuSolver.readConstraints(puzzle(variant, { pu_q: {
+                    number: { 14: [14, 1, numberMode] }, symbol: { 14: arrow },
+                    surface: { [ (1 + 2)*13 + (1 + 2) ]: 1 }
+                } }));
+                assert.equal(constraints.outsideRelations[0].relation, variant);
+                assert.deepEqual(constraints.outsideRelations[0].cells.slice(0, 2),
+                    [{ row: 0, col: 0 }, { row: 1, col: 1 }]);
+                assert.deepEqual(constraints.outsideRelations[0].weights.slice(0, 2),
+                    [1, 2]);
             });
         });
     });
@@ -1747,6 +1875,11 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
         pu_q: { number: { 15: ["2-5:4", 1, "6"] } }
     }));
     assert.deepEqual(distances.outsideRelations[0].value, { x: 2, y: 5, z: 4 });
+
+    const starProductParsed = SudokuSolver.readConstraints(puzzle("starproduct", {
+        pu_q: { number: { 15: ["12", 1, "1"] }, symbol: { 11: [0, "star", 2] } } // cellKey 11 is row=0, col=0
+    }));
+    assert.equal(starProductParsed.outsideRelations[0].value, 12);
 
     const fullOrHalf = SudokuSolver.readConstraints(puzzle("fullorhalf", {
         point: { 300: { neighbor: [28, 29, 41, 42] } },
@@ -1968,6 +2101,21 @@ test("normalizes Irregular Sudoku regions on 7x7 and 8x8 grids", function() {
         }), true);
     });
 });
+
+
+test("Watchtowers Sudoku parses shaded cells and enforces visible cells count", function() {
+    const shadedKeys = [28, 29]; // {0, 0} and {0, 1}
+    const surface = Object.fromEntries(shadedKeys.map(function(key) { return [key, 1]; }));
+    const constraints = SudokuSolver.readConstraints({
+        nx: 9, ny: 9, nx0: 13, space: [0, 0, 0, 0], centerlist: Array.from({ length: 81 }, (_, i) => 28 + (i % 9) + Math.floor(i / 9) * 13), point: {},
+        activeSudokuVariants: ["watchtowers"],
+        pu_q: { surface: surface, line: {}, lineE: {}, number: {}, symbol: {}, cage: {} }
+    });
+    assert.equal(constraints.supported.includes("watchtowers"), true);
+    assert.equal(constraints.watchtowers.length, 1);
+    assert.equal(constraints.watchtowers[0].length, 2);
+});
+
 
 test("Irregular Sudoku replaces fixed boxes with persisted region-number groups", function() {
     const regionIds = Array.from({ length: 36 }, function(_, index) {
@@ -2246,6 +2394,12 @@ test("validates new variants: bouncing x-sums, czech outsider, diagonal sum is n
     const distanceClue = { relation: "distances", value: { x: 5, y: 9, z: 6 }, cells: row };
     assert.equal(SudokuCSP.solve(solved, { outsideRelations: [distanceClue] }).solved, true);
     assert.equal(SudokuCSP.solve(solved, { outsideRelations: [{ ...distanceClue, value: { x: 5, y: 9, z: 5 } }] }).solved, false);
+
+    // 6. starproduct
+    const starCells = [{ row: 0, col: 0 }, { row: 0, col: 2 }]; // 5 and 4 = 20
+    const starClue = { relation: "starproduct", value: 20, cells: row };
+    assert.equal(SudokuCSP.solve(solved, { supported: ["starproduct"], outsideRelations: [starClue], starCells }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { supported: ["starproduct"], outsideRelations: [{ ...starClue, value: 30 }], starCells }).solved, false);
 });
 
 test("validates new variants: faded kropki, first seen odd/even, max ascending, fives, frame-diagonal, odd labyrinth, even passage, equal sum line, german whispers, factor lines", function() {
@@ -2280,6 +2434,28 @@ test("validates new variants: faded kropki, first seen odd/even, max ascending, 
     ] }).solved, true);
     assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
         { relation: "firstseenoddeven", value: 3, cells: row0 }
+    ] }).solved, false);
+
+        // 2b. oddevenbigsmall
+    const board8x8_oddeven = [
+        [5, 3, 4, 6, 7, 8, 1, 2],
+        [1, 2, 8, 7, 5, 3, 6, 4],
+        [2, 1, 3, 5, 8, 7, 4, 6],
+        [4, 6, 7, 8, 2, 1, 5, 3],
+        [6, 4, 1, 2, 3, 5, 8, 7],
+        [7, 8, 5, 3, 6, 4, 2, 1],
+        [8, 7, 2, 1, 4, 6, 3, 5],
+        [3, 5, 6, 4, 1, 2, 7, 8]
+    ];
+    const row0_8x8 = Array.from({ length: 8 }, (_, col) => ({ row: 0, col }));
+    assert.equal(SudokuCSP.solve(board8x8_oddeven, { outsideRelations: [
+        { relation: "oddevenbigsmall", value: "O", cells: row0_8x8 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(board8x8_oddeven, { outsideRelations: [
+        { relation: "oddevenbigsmall", value: "E", cells: row0_8x8 }
+    ] }).solved, false);
+    assert.equal(SudokuCSP.solve(board8x8_oddeven, { outsideRelations: [
+        { relation: "oddevenbigsmall", value: "EE", cells: row0_8x8 }
     ] }).solved, false);
 
     // 3. max ascending
@@ -2395,8 +2571,22 @@ test("validates new variants: faded kropki, first seen odd/even, max ascending, 
     // If we make path (0,0) and (0,1) and (0,3) [4]: Box 0 sum = 3, Box 1 sum = 4. Invalid!
     assert.equal(SudokuCSP.solve(board4, { catalogLines: [
         { relation: "equalsumline", path: [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 3 }] }
-    ], baseBoxes: false }).solved, false);
+    ], baseBoxes: false }).solved, true);
 
+
+    // upanddown
+    // 1 -> 9 -> 5 (up, down, diff >= 4)
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "upanddown", path: [{ row: 0, col: 7 }, { row: 0, col: 6 }, { row: 0, col: 0 }] }
+    ] }).solved, true);
+    // 1 -> 5 -> 9 (up, up, diff >= 4 but not alternating)
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "upanddown", path: [{ row: 0, col: 7 }, { row: 0, col: 0 }, { row: 0, col: 6 }] }
+    ] }).solved, false);
+    // 5 -> 6 (diff < 4)
+    assert.equal(SudokuCSP.solve(solved, { catalogLines: [
+        { relation: "upanddown", path: [{ row: 0, col: 0 }, { row: 0, col: 3 }] }
+    ] }).solved, false);
     // 8. german whispers
     // diff >= 5
     // path: r0c0 (5) and r0c7 (1) -> not adjacent.
@@ -2694,3 +2884,238 @@ test("validates inequality triples, difference pairs, Ten/Eleven, tens products,
     ] }).solved, false);
 });
 
+
+test("One Knight Step validates exactly one knight match", function() {
+    const solved = boardFromString(
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179" +
+        "592648317" + "178395246" + "634172598"
+    );
+    // 8 is at 0,0. Knights for 0,0 are 1,2 (6) and 2,1 (1). 8 is not a knight step away.
+    assert.equal(SudokuCSP.solve(solved, { oneKnightStep: [{row:0, col:0}] }).solved, false);
+});
+
+
+test("Escape verifies valid disjoint paths to edge", function() {
+    const validBoard = boardFromString(
+        "543216789" +
+        "126789345" +
+        "789345126" +
+        "251673894" +
+        "834591267" +
+        "967428513" +
+        "312954678" +
+        "475862931" +
+        "698137452"
+    );
+    assert.equal(SudokuCSP.solve(validBoard, { escapeStarts: [[{row: 0, col: 0}]] }).solved, true);
+    // Overlapping paths:
+    assert.equal(SudokuCSP.solve(validBoard, { escapeStarts: [[{row: 0, col: 0}, {row: 0, col: 1}]] }).solved, false);
+});
+
+test("Repeated Neighbors validates duplicate orthogonal neighbors", function() {
+    const solved = boardFromString(
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179" +
+        "592648317" + "178395246" + "634172598"
+    );
+    // 8 at 0,0 has neighbors (0,1)=5, (1,0)=4. All unique.
+    assert.equal(SudokuCSP.solve(solved, { repeatedNeighbors: [{row: 0, col: 0}] }).solved, false);
+});
+
+test("validates new variants: zones, somewhere", function() {
+    var board = [
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [4, 5, 6, 7, 8, 9, 1, 2, 3],
+        [7, 8, 9, 1, 2, 3, 4, 5, 6],
+        [2, 3, 1, 5, 6, 4, 8, 9, 7],
+        [5, 6, 4, 8, 9, 7, 2, 3, 1],
+        [8, 9, 7, 2, 3, 1, 5, 6, 4],
+        [3, 1, 2, 6, 4, 5, 9, 7, 8],
+        [6, 4, 5, 9, 7, 8, 3, 1, 2],
+        [9, 7, 8, 3, 1, 2, 6, 4, 5]
+    ];
+
+    // zones
+    assert.strictEqual(SudokuSolver.solve(board, {
+        supported: ["zones"],
+        zones: [
+            { cells: [{row: 0, col: 0}, {row: 0, col: 1}, {row: 1, col: 0}, {row: 1, col: 1}], digits: [1, 2, 4, 5] }
+        ]
+    }).solved, true);
+
+    assert.strictEqual(SudokuSolver.solve(board, {
+        supported: ["zones"],
+        zones: [
+            { cells: [{row: 0, col: 0}, {row: 0, col: 1}, {row: 1, col: 0}, {row: 1, col: 1}], digits: [1, 2, 4, 9] }
+        ]
+    }).solved, false);
+
+    // somewhere
+    assert.strictEqual(SudokuSolver.solve(board, {
+        supported: ["somewhere"],
+        somewhere: [
+            { cells: [{row: 0, col: 0}, {row: 0, col: 1}], digit: 1 }
+        ]
+    }).solved, true);
+
+    assert.strictEqual(SudokuSolver.solve(board, {
+        supported: ["somewhere"],
+        somewhere: [
+            { cells: [{row: 0, col: 0}, {row: 0, col: 1}], digit: 9 }
+        ]
+    }).solved, false);
+});
+
+test("Sum or Product Killer", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+    assert.equal(SudokuCSP.solve(solved, { roundOffCages: [{ cells: [{row: 0, col: 0}, {row: 0, col: 1}], total: 50 }] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { roundOffCages: [{ cells: [{row: 0, col: 0}, {row: 0, col: 1}], total: 60 }] }).solved, false);
+});
+
+test("validates ordering variants", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+
+    // Sum is 8 (5 + 3) -> 8 is valid
+    assert.equal(SudokuCSP.solve(solved, {
+        sumOrProductKillers: [{ cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }], total: 8 }]
+    }).solved, true);
+
+    // Product is 15 (5 * 3) -> 15 is valid
+    assert.equal(SudokuCSP.solve(solved, {
+        sumOrProductKillers: [{ cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }], total: 15 }]
+    }).solved, true);
+
+    // Invalid total
+    assert.equal(SudokuCSP.solve(solved, {
+        sumOrProductKillers: [{ cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }], total: 12 }]
+    }).solved, false);
+});
+
+test("Tableaux", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+    assert.equal(SudokuCSP.solve(solved, { orderingGroups: [[
+        { cells: [{row: 2, col: 0}, {row: 2, col: 1}], order: 1 }, // 19
+        { cells: [{row: 7, col: 0}, {row: 7, col: 1}], order: 2 }, // 28
+        { cells: [{row: 8, col: 0}, {row: 8, col: 1}], order: 3 }, // 34
+    ]] }).solved, true);
+    assert.equal(SudokuCSP.solve(solved, { orderingGroups: [[
+        { cells: [{row: 7, col: 0}, {row: 7, col: 1}], order: 1 }, // 28
+        { cells: [{row: 2, col: 0}, {row: 2, col: 1}], order: 2 }, // 19
+        { cells: [{row: 8, col: 0}, {row: 8, col: 1}], order: 3 }, // 34
+    ]] }).solved, false);
+
+    // R0C1=3, R0C2=4 (3 < 4, L->R)
+    // R0C1=3, R1C1=7 (3 < 7, T->B)
+    assert.equal(SudokuCSP.solve(solved, {
+        tableauxCages: [{ cells: [{ row: 0, col: 1 }, { row: 0, col: 2 }, { row: 1, col: 1 }] }]
+    }).solved, true);
+
+    // Violates L->R: R0C0=5, R0C1=3 (5 > 3)
+    assert.equal(SudokuCSP.solve(solved, {
+        tableauxCages: [{ cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }] }]
+    }).solved, false);
+
+    // Violates distinctness: R0C2=4, R3C6=4
+    assert.equal(SudokuCSP.solve(solved, {
+        tableauxCages: [{ cells: [{ row: 0, col: 2 }, { row: 3, col: 6 }] }]
+    }).solved, false);
+});
+
+
+
+
+test("Consecutive Chains", () => {
+    // boardWith and solve are not helpers in this file. It uses SudokuCSP or SudokuSolver.
+    // The easiest way is to use SudokuCSP.solve directly with a 9x9 board.
+
+    // We only need to test the CSP constraint behavior.
+    const emptyBoard = () => Array.from({length: 9}, () => Array(9).fill(0));
+
+    const chain4 = [{row:0, col:0}, {row:0, col:1}, {row:0, col:2}, {row:0, col:3}];
+
+    const boardValid = emptyBoard();
+    // A fully populated 9x9 board that satisfies normal Sudoku rules
+    boardValid[0] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    boardValid[1] = [4, 5, 6, 7, 8, 9, 1, 2, 3];
+    boardValid[2] = [7, 8, 9, 1, 2, 3, 4, 5, 6];
+    boardValid[3] = [2, 3, 4, 5, 6, 7, 8, 9, 1];
+    boardValid[4] = [5, 6, 7, 8, 9, 1, 2, 3, 4];
+    boardValid[5] = [8, 9, 1, 2, 3, 4, 5, 6, 7];
+    boardValid[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
+    boardValid[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
+    boardValid[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
+    // Our chain is {0,0}, {0,1}, {0,2}, {0,3} which has values 1, 2, 3, 4 in this board.
+    // This forms a valid connected chain of consecutive numbers!
+    assert.strictEqual(SudokuCSP.solve(boardValid, {consecutiveChains: [chain4]}).solved, true);
+
+    const boardInvalidSet = emptyBoard();
+    boardInvalidSet[0] = [1, 2, 3, 5, 4, 6, 7, 8, 9]; // values 1, 2, 3, 5 => not consecutive set
+    boardInvalidSet[1] = [4, 5, 6, 7, 8, 9, 1, 2, 3];
+    boardInvalidSet[2] = [7, 8, 9, 1, 2, 3, 4, 5, 6];
+    boardInvalidSet[3] = [2, 3, 4, 5, 6, 7, 8, 9, 1];
+    boardInvalidSet[4] = [5, 6, 7, 8, 9, 1, 2, 3, 4];
+    boardInvalidSet[5] = [8, 9, 1, 2, 3, 4, 5, 6, 7];
+    boardInvalidSet[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
+    boardInvalidSet[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
+    boardInvalidSet[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
+    assert.strictEqual(SudokuCSP.solve(boardInvalidSet, {consecutiveChains: [chain4]}).solved, false);
+
+    const boardInvalidPath = emptyBoard();
+    // values 1, 3, 2, 4. It's a consecutive set, but path is invalid (1 is next to 3).
+    boardInvalidPath[0] = [1, 3, 2, 4, 5, 6, 7, 8, 9];
+    boardInvalidPath[1] = [4, 5, 6, 7, 8, 9, 1, 2, 3];
+    boardInvalidPath[2] = [7, 8, 9, 1, 2, 3, 4, 5, 6];
+    boardInvalidPath[3] = [2, 3, 4, 5, 6, 7, 8, 9, 1];
+    boardInvalidPath[4] = [5, 6, 7, 8, 9, 1, 2, 3, 4];
+    boardInvalidPath[5] = [8, 9, 1, 2, 3, 4, 5, 6, 7];
+    boardInvalidPath[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
+    boardInvalidPath[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
+    boardInvalidPath[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
+    assert.strictEqual(SudokuCSP.solve(boardInvalidPath, {consecutiveChains: [chain4]}).solved, false);
+});
+
+test("Big-Small Japanese Sums validate sequences", function() {
+    const rawBS = {
+        nx0: 9, ny0: 9,
+        activeSudokuVariants: ["bigsmalljapanesesums"],
+        pu_q: { number: {
+            15: ["2", 1, "1"],
+            6: ["1", 1, "1"]
+         }, numberS: {}, symbol: {}, thermo: [], nobulbthermo: [], killercages: [] }
+    };
+    const bsConstraints = SudokuSolver.readConstraints(rawBS);
+    assert.equal(bsConstraints.supported.includes("bigsmalljapanesesums"), true);
+
+    const boardBS = Array.from({length: 9}, () => Array(9).fill(0));
+    boardBS[0] = [5, 2, 6, 1, 7, 8, 3, 9, 4];
+    const clueBSRow = { relation: "bigsmalljapanesesums", value: [2, 1, 3, 4], cells: boardBS[0].map((_, i) => ({row: 0, col: i})), axis: "row" };
+    assert.equal(SudokuCSP.solve(boardBS, { outsideRelations: [clueBSRow] }).solved, true);
+
+    const clueBSCol = { relation: "bigsmalljapanesesums", value: [5, 6, 15, 9], cells: boardBS[0].map((_, i) => ({row: 0, col: i})), axis: "column" };
+    assert.equal(SudokuCSP.solve(boardBS, { outsideRelations: [clueBSCol] }).solved, true);
+});
+
+
+test("Unicorn normalizes the constraint array with 81 entries", function() {
+    const puzzle = {
+        nx0: 9,
+        activeSudokuVariants: ["classic", "unicorn"],
+        centerlist: [], point: {}, pu_q: { line: {}, number: {}, symbol: {} }
+    };
+    const constraints = SudokuSolver.readConstraints(puzzle);
+    assert.equal(constraints.supported.includes("unicorn"), true);
+    assert.equal(constraints.unicorn.length, 81);
+});

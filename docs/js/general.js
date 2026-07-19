@@ -159,9 +159,7 @@ function add_constraints() {
 
 function init_genre_tags() {
     let genre_tags = document.getElementById('genre_tags_opt');
-    for (let child of genre_tags.childNodes) {
-        genre_tags.removeChild(child);
-    }
+    genre_tags.replaceChildren();
     penpa_tags['options_groups'].forEach(function(element, index) {
         let optgroup = document.createElement("optgroup");
         optgroup.label = element;
@@ -293,112 +291,52 @@ function set_display_labels(gridtype) {
 
     switch (gridtype) {
         case "square":
-            for (var i of type) {
+            for (var i of [...type, ...type2, ...type3]) {
                 document.getElementById(i).style.display = "inline";
             }
-            for (var i of type2) {
-                document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type3) {
-                document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type4) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type6) {
+            for (var i of [...type4, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
             break;
         case "tri":
-            for (var i of type) {
+            for (var i of [...type, ...type4, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
-            for (var i of type2) {
-                document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type3) {
-                document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type4) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type6) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type7) {
+            for (var i of [...type2, ...type3, ...type7]) {
                 document.getElementById(i).style.display = "inline";
             }
             break;
         case "hex":
         case "pyramid":
-            for (var i of type) {
+            for (var i of [...type, ...type4, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
-            for (var i of type2) {
+            for (var i of [...type2, ...type3]) {
                 document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type3) {
-                document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type4) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type6) {
-                document.getElementById(i).style.display = "none";
             }
             break;
         case "iso":
-            for (var i of type) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type2) {
+            for (var i of [...type, ...type2, ...type4, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
             for (var i of type3) {
                 document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type4) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type6) {
-                document.getElementById(i).style.display = "none";
             }
             break;
         case "sudoku":
-            for (var i of type) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type2) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type3) {
+            for (var i of [...type, ...type2, ...type3, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
             for (var i of type4) {
                 document.getElementById(i).style.display = "inline";
             }
-            for (var i of type6) {
-                document.getElementById(i).style.display = "none";
-            }
             break;
         case "kakuro":
-            for (var i of type) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type2) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type3) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type4) {
+            for (var i of [...type, ...type2, ...type3, ...type4, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
             for (var i of type5) {
                 document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type6) {
-                document.getElementById(i).style.display = "none";
             }
             break;
         case "tetrakis_square":
@@ -407,39 +345,18 @@ function set_display_labels(gridtype) {
         case "cairo_pentagonal":
         case "rhombitrihexagonal":
         case "deltoidal_trihexagonal":
-            for (var i of type) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type2) {
+            for (var i of [...type, ...type2, ...type4, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
             for (var i of type3) {
                 document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type4) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type6) {
-                document.getElementById(i).style.display = "none";
             }
             break;
         case "penrose_P3":
-            for (var i of type) {
+            for (var i of [...type, ...type2, ...type3, ...type4]) {
                 document.getElementById(i).style.display = "none";
             }
-            for (var i of type2) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type3) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type4) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type5) {
-                document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type6) {
+            for (var i of [...type5, ...type6]) {
                 document.getElementById(i).style.display = "inline";
             }
             break;
@@ -1760,7 +1677,7 @@ async function request_shortlink(url) {
     // The # content cannot be sent to server, So if anyone wants to use automatic shorten, use ?
     url = url.replace("#", "?");
     try {
-        return $.get('https://tinyurl.com/api-create.php?url=' + url, function(link, status) {
+        return await $.get('https://tinyurl.com/api-create.php?url=' + url, function(link, status) {
             if (status === "success") {
                 return link;
             }
@@ -3369,7 +3286,7 @@ function set_contestmode() {
     document.getElementById("mo_move_lb").classList.add('is_hidden');
     document.getElementById("puzzlesourcelink").style.display = "none";
     let sourceUrl = document.getElementById("saveinfosource").value;
-    document.getElementById("answer_key").innerHTML = PenpaText.get('contest_answer', sourceUrl);
+    document.getElementById("answer_key").innerHTML = DOMPurify.sanitize(PenpaText.get('contest_answer', sourceUrl));
     pu.undoredo_disable = true;
     pu.comp = true;
 }
@@ -3458,5 +3375,7 @@ if (!String.prototype.startsWith) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { isEmpty };
+    module.exports = { isEmpty, encrypt_data, decrypt_data, request_shortlink, get_download_filename, 
+                     get_filename_base, filename_bad_chars, validate_filename, errorMsg, infoMsg, 
+                     update_textarea};
 }

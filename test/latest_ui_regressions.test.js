@@ -39,7 +39,7 @@ test("mobile input modes expose a keyboard-free Add variant menu", function() {
 test("region-family variants are available as no-input rules", function() {
     const metadata = JSON.parse(fs.readFileSync(path.join(root, "variant_metadata.json"), "utf8"));
     const byId = new Map(metadata.variants.map((variant) => [variant.id, variant]));
-    ["scattered", "deficit", "surplus"].forEach(function(id) {
+    ["scattered", "deficit", "surplus", "toroidal"].forEach(function(id) {
         assert.equal(byId.get(id).status, "available");
         assert.deepEqual(byId.get(id).inputType.categories, ["no-input"]);
     });
@@ -99,11 +99,13 @@ test("intersection clue modes use their required Penpa primitives", function() {
     assert.match(app, /\["equalsums", "equalproducts", "equaldifferences", "equalratios"\][\s\S]*?value: "4", label: "×"/);
 });
 
-test("mode controls expose the active style variable name", function() {
+test("mode controls expose the active style and sub variable names", function() {
     const index = fs.readFileSync(path.join(root, "docs/index.html"), "utf8");
     const puzzle = fs.readFileSync(path.join(root, "docs/js/class_p.js"), "utf8");
     assert.match(index, /id="style_txt">Style: <span id="style_variable"/);
-    assert.match(puzzle, /style_variable[\s\S]*?textContent\s*=\s*m/);
+    assert.match(index, /id="sub_txt">Sub: <span id="sub_variable"/);
+    assert.match(puzzle, /styleVariable[\s\S]*?textContent\s*=\s*styleLabel/);
+    assert.match(puzzle, /subVariable[\s\S]*?textContent\s*=\s*subLabel/);
 });
 
 test("wiki exposes stored solving examples without legacy screenshots", function() {

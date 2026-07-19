@@ -27,7 +27,7 @@
   let legacyControlsHost: HTMLElement;
   let variants: VariantOption[] = [];
   let selectedVariant = "classic";
-  let layer = "problem";
+  let layer = "solution";
   let autoEnabled = false;
   let initialized = false;
   let zoom = 1;
@@ -43,6 +43,8 @@
   let newGridSize: 6 | 7 | 8 | 9 = 9;
   let keepVariants = false;
   let hoveredVariant: string | null = null;
+  let activeVariantId: string | null = null;
+  let activeVariantHasExample = false;
   let noteMode = "1";
   let variantSearch = "";
   let variantTab: VariantTab = "no-input";
@@ -161,6 +163,7 @@
     const setting = pu?.mode?.[pu?.mode?.qa]?.[mode] || [];
     const submode = String(setting[0] || "");
     const variant = String(pu?.activeSudokuVariant || "classic");
+
     const size = Math.max(
       1,
       Math.min(
@@ -170,6 +173,8 @@
           Number(pu?.space?.[1] || 0),
       ),
     );
+    const isZeroEight = ["0to8", "08arrow", "08skyscrapers"].includes(variant);
+
     const arrows = ["←", "↖", "↑", "↗", "→", "↘", "↓", "↙"];
     toolPanelMode =
       mode === "symbol"
@@ -266,6 +271,12 @@
         { value: "odd", input: "3", label: "Odd ○", submode: "circle_L" },
         { value: "even", input: "3", label: "Even □", submode: "square_L" },
       ];
+    } else if (mode === "symbol" && variant === "mastermind") {
+      toolPanelOptions = [
+        { value: "mastermind-black", input: "1", label: "Black ●", submode: "circle_SS" },
+        { value: "mastermind-white", input: "2", label: "White ○", submode: "circle_SS" },
+        { value: "mastermind-cross", input: "3", label: "Cross ⨯", submode: "cross" },
+      ];
     } else if (mode === "symbol" && variant === "trio") {
       toolPanelOptions = [
         { value: "trio-low", input: "3", label: "1–3 ○", submode: "circle_L" },
@@ -320,12 +331,17 @@
         value: String(index + 1),
         label,
       }));
+    } else if (mode === "number" && variant === "killer") {
+      toolPanelOptions = Array.from({ length: 10 }, (_, index) => ({
+        value: String(index),
+        label: String(index),
+      }));
     } else if (["symbol", "number", "sudoku"].includes(mode)) {
       toolPanelOptions = Array.from(
         { length: mode === "symbol" ? 9 : size },
         (_, index) => ({
-          value: String(index + 1),
-          label: String(index + 1),
+          value: String(isZeroEight ? index : index + 1),
+          label: String(isZeroEight ? index : index + 1),
         }),
       );
     } else {
@@ -471,7 +487,7 @@
   }
 
   function conflictingVariant(value: string) {
-    const regionGridVariants = ["irregular", "scattered", "deficit", "surplus"];
+    const regionGridVariants = ["irregular", "scattered", "deficit", "surplus", "toroidal"];
     if (regionGridVariants.includes(value)) {
       return (
         activeVariantValues().find(
@@ -544,7 +560,7 @@
 
   function chooseVariant(value: string) {
     if (conflictingVariant(value) || unavailableVariant(value)) return;
-    if (!["irregular", "scattered", "deficit", "surplus"].includes(value)) {
+    if (!["irregular", "scattered", "deficit", "surplus", "toroidal"].includes(value)) {
       (window as any).SudokuTools?.finishIrregularEditor?.();
     }
     selectedVariant = value;
@@ -559,7 +575,7 @@
     variantSearch = "";
     if (
       select.value === selectedVariant &&
-      (["little killer", "sandwich", "skyscraper"].includes(selectedVariant) ||
+      (["little killer", "sandwich", "skyscraper", "mastermind"].includes(selectedVariant) ||
         outsideVariationValues.has(selectedVariant))
     ) {
       const leftTopOnly = [
@@ -574,17 +590,22 @@
         "outsidekiller",
         "parityskyscrapers",
         "positionsums",
+        "japanesesums",
+        "oddsums",
+        "bigsmalljapanesesums",
       ].includes(selectedVariant);
       let layers = [
         "outside",
         "outside234",
         "evensandwich",
         "oddsandwich",
+        "mastermind",
       ].includes(selectedVariant)
         ? 3
         : 1;
       if (selectedVariant === "before1after9") layers = 2;
       if (selectedVariant === "positionsums") layers = 2;
+      if (selectedVariant === "bigsmalljapanesesums") layers = 5;
       ensureOutsideSpace(
         layers,
         selectedVariant === "triplesum"
@@ -930,6 +951,27 @@
     studioModal = null;
   }
 
+  async function loadExample() {
+    const pu = (window as any).pu;
+    if (!pu) return;
+    const variantId = metadataVariantIdForActiveVariants(
+      pu.activeSudokuVariants,
+      variantMetadata.variants,
+    );
+    if (!variantId) return;
+    const metadataVariant = variantMetadata.variants.find((v) => v.id === variantId);
+    if (!metadataVariant?.example) return;
+    const example = metadataVariant.example;
+    const stored = /[&]variants=/.test(example)
+      ? example
+      : `${example}&variants=${encodeURIComponent(`classic,${variantId}`)}`;
+    const url = `?m=solve&p=${stored}`;
+    if (typeof (window as any).import_url === "function") {
+      await (window as any).import_url(url);
+      syncState();
+    }
+  }
+
   async function saveExample() {
     const res = verifyUniqueSolution();
     if (!res.success) {
@@ -1078,6 +1120,22 @@
 
   function syncState() {
     installVariationCatalog();
+    const pu = (window as any).pu;
+    if (pu) {
+      activeVariantId = metadataVariantIdForActiveVariants(
+        pu.activeSudokuVariants,
+        variantMetadata.variants,
+      );
+      if (activeVariantId) {
+        const metadataVariant = variantMetadata.variants.find((v) => v.id === activeVariantId);
+        activeVariantHasExample = Boolean(metadataVariant?.example);
+      } else {
+        activeVariantHasExample = false;
+      }
+    } else {
+      activeVariantId = null;
+      activeVariantHasExample = false;
+    }
     const select = document.getElementById(
       "constraints_settings_opt",
     ) as HTMLSelectElement | null;
@@ -1171,6 +1229,7 @@
     const log = document.getElementById("sudoku-solver-log");
     const autoSolver = document.getElementById("sudoku_auto_solver");
     const solveOnce = document.getElementById("sudoku_solve_once");
+    const solveClear = document.getElementById("sudoku_solve_clear");
     const logHeader = log?.querySelector(".sudoku-solver-log-header");
     if (
       !board ||
@@ -1193,6 +1252,12 @@
       solveOnce,
       document.getElementById("sudoku-solver-status"),
     );
+    if (solveClear) {
+      logHeader.insertBefore(
+        solveClear,
+        document.getElementById("sudoku-solver-status"),
+      );
+    }
     moveLegacyControls();
     syncState();
     initialized = true;
@@ -1314,57 +1379,29 @@
     <div class="mobile-header-row">
       <button
         type="button"
-        class:active={mobileActiveTab === "controls"}
-        on:click={() =>
-          (mobileActiveTab =
-            mobileActiveTab === "controls" ? "none" : "controls")}
+        on:click={() => legacyClick("sudoku_solve_once")}
       >
-        🔧 Rules & Controls
+        <span><i class="fa fa-magic" aria-hidden="true"></i></span> Solve
       </button>
       <button
         type="button"
-        class:active={mobileActiveTab === "actions"}
-        on:click={() =>
-          (mobileActiveTab =
-            mobileActiveTab === "actions" ? "none" : "actions")}
+        on:click={() => legacyClick("sudoku_solve_clear")}
       >
-        📊 Actions
+        <span><i class="fa fa-eraser" aria-hidden="true"></i></span> Undo Sol
       </button>
-    </div>
-    <div class="mobile-header-row solver-row">
       <button
         type="button"
-        class="solver-btn"
-        class:active={autoEnabled}
-        on:click={() => legacyClick("sudoku_auto_solver")}
+        on:click={() => legacyClick("sudoku_undo")}
       >
-        <i class="fa fa-refresh" aria-hidden="true"></i>
-        {autoEnabled ? "ON" : "OFF"}
+        <span>↶</span> Undo
       </button>
-      {#if !autoEnabled}
-        <button
-          type="button"
-          class="solver-btn"
-          on:click={() => legacyClick("sudoku_solve_once")}
-        >
-          <i class="fa fa-magic" aria-hidden="true"></i> Solve
-        </button>
-      {/if}
-      <div class="solver-status">
-        <span class="status-indicator" class:running={solverRunning}></span>
-        <span class="log-text">{lastLogLine}</span>
-        <button
-          type="button"
-          class="expand-btn"
-          aria-expanded={fullLogExpanded}
-          on:click={() => (fullLogExpanded = !fullLogExpanded)}
-          >{fullLogExpanded ? "Close" : "Log"}</button
-        >
-      </div>
+      <button
+        type="button"
+        on:click={clearMarks}
+      >
+        <span>↺</span> Clear mark
+      </button>
     </div>
-    {#if fullLogExpanded}
-      <pre class="full-log-box">{fullLogContent || "No solver log yet."}</pre>
-    {/if}
   </div>
   <main class="studio-grid">
     <aside class="column controls" aria-label="Puzzle controls">
@@ -1414,6 +1451,7 @@
 
         <section
           class="variant-picker"
+          style="display: none;"
           class:hidden-section={layer !== "problem"}
         >
           <div class="control-label" id="svelte-variant-label">Add variant</div>
@@ -1898,7 +1936,11 @@
             >
           </div>
           <div class="action-group bottom-actions">
-            <button on:click={saveExample}><span>💾</span>Save Example</button>
+            {#if activeVariantHasExample}
+              <button on:click={loadExample}><span>📖</span>Load Example</button>
+            {:else}
+              <button on:click={saveExample}><span>💾</span>Save Example</button>
+            {/if}
             <button
               class="info-action"
               title="About this editor"
@@ -2957,7 +2999,8 @@ href="https://github.com/semiexp/cspuz_core"
     border-bottom: 1px solid #d9e0e6;
   }
   :global(.svelte-home .log-host #sudoku_auto_solver),
-  :global(.svelte-home .log-host #sudoku_solve_once) {
+  :global(.svelte-home .log-host #sudoku_solve_once),
+  :global(.svelte-home .log-host #sudoku_solve_clear) {
     height: 26px;
     margin: 0;
     padding: 0 8px;
@@ -3631,6 +3674,7 @@ href="https://github.com/semiexp/cspuz_core"
   }
   .studio-shell.dark :global(.log-host #sudoku_auto_solver),
   .studio-shell.dark :global(.log-host #sudoku_solve_once),
+  .studio-shell.dark :global(.log-host #sudoku_solve_clear),
   .studio-shell.dark :global(.sudoku-kropki-negative),
   .studio-shell.dark :global(.sudoku-xv-negative),
   .studio-shell.dark :global(.sudoku-battenburg-negative) {
@@ -4201,7 +4245,8 @@ href="https://github.com/semiexp/cspuz_core"
   }
 
   :global(.svelte-home .log-host #sudoku_auto_solver),
-  :global(.svelte-home .log-host #sudoku_solve_once) {
+  :global(.svelte-home .log-host #sudoku_solve_once),
+  :global(.svelte-home .log-host #sudoku_solve_clear) {
     width: auto !important;
     padding: 0 8px !important;
     display: inline-flex !important;
