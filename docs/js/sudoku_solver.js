@@ -532,7 +532,9 @@ var SudokuSolver = (function() {
 
     function readConstraints(puzzle) {
         SIZE = puzzleSize(puzzle) || SIZE;
+        var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return variantEnabled(puzzle, v); });
         var constraints = {
+            isZeroEight: isZeroEight,
             starCells: [],
             thermos: [],
             arrows: [],
@@ -553,6 +555,7 @@ var SudokuSolver = (function() {
             noThreeInRow: [],
             queenDigits: [],
             touchyCells: [],
+            emitters: [],
             unicorn: [],
             edgeRelations: [],
             catalogLines: [],
@@ -598,6 +601,8 @@ var SudokuSolver = (function() {
             disguisedPalindromes: [],
             antiConsecutive: [],
             averageArrows: [],
+            countDifferent: [],
+            countOdd: [],
             kropki: [],
             fadedKropki: [],
             fives: [],
@@ -617,8 +622,11 @@ var SudokuSolver = (function() {
             divisiblebythree: [],
             oddtapa: [],
             tictactoe: [],
+            tictactoewinner: [],
             roundOffCages: [],
             orderingGroups: [],
+            wildcards: [],
+            braille: [],
             supported: ["classic"]
         };
         if (!puzzle || !puzzle.pu_q) {
@@ -670,6 +678,8 @@ var SudokuSolver = (function() {
                 if (cells.length > 1) {
                     if (names[0] === "nobulbthermo" && variantEnabled(puzzle, "creasing")) {
                         constraints.catalogLines.push({ path: cells, relation: "creasing" });
+                    } else if (names[0] === "nobulbthermo" && variantEnabled(puzzle, "emitters")) {
+                        // Handled by emitters block
                     } else if (variantEnabled(puzzle, "stretchedthermo")) constraints.stretchedThermos.push(cells);
                     else constraints[names[1]].push(cells);
                 }
@@ -689,6 +699,10 @@ var SudokuSolver = (function() {
             if (arrowCells.length > 1) {
                 if (variantEnabled(puzzle, "averagearrows")) {
                     constraints.averageArrows.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
+                } else if (variantEnabled(puzzle, "countdifferent")) {
+                    constraints.countDifferent.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
+                } else if (variantEnabled(puzzle, "counttheoddones")) {
+                    constraints.countOdd.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
                 } else {
                     constraints.arrows.push({ circle: arrowCells[0], shaft: arrowCells.slice(1) });
                 }
@@ -709,6 +723,12 @@ var SudokuSolver = (function() {
         }
         if (constraints.averageArrows.length) {
             constraints.supported.push("averagearrows");
+        }
+        if (constraints.countDifferent.length || variantEnabled(puzzle, "countdifferent")) {
+            constraints.supported.push("countdifferent");
+        }
+        if (constraints.countOdd.length || variantEnabled(puzzle, "counttheoddones")) {
+            constraints.supported.push("counttheoddones");
         }
 
         var activeCells = {};
@@ -1066,6 +1086,23 @@ var SudokuSolver = (function() {
         if (variantEnabled(puzzle, "tic-tac-toe")) {
             constraints.tictactoe.push(true);
             constraints.supported.push("tictactoe");
+        }
+        if (variantEnabled(puzzle, "tic-tac-toe winner")) {
+            var tictactoeLines = connectedLinePaths(puzzle, 5);
+            var boxLines = [[], [], [], [], [], [], [], [], []];
+            tictactoeLines.forEach(function(path) {
+                if (path.length > 0) {
+                    var box = Math.floor(path[0].row / 3) * 3 + Math.floor(path[0].col / 3);
+                    boxLines[box].push(path);
+                }
+            });
+            for (var i = 0; i < 9; i++) {
+                if (boxLines[i].length !== 1) {
+                    throw new Error("Tic-Tac-Toe Winner requires exactly one gray line per 3x3 box.");
+                }
+            }
+            constraints.tictactoewinner = [boxLines];
+            constraints.supported.push("tictactoewinner");
         }
         if (variantEnabled(puzzle, "mirror")) {
             var mirrorDimensions = boxDimensions(SIZE);
@@ -1624,6 +1661,62 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push(quadVariant);
         }
+
+        if (variantEnabled(puzzle, "emitters")) {
+            var emitterCells = [];
+            var symbols = puzzle.pu_q.symbol || {};
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                if (entry && entry[1] && entry[1].indexOf("circle_") === 0) {
+                    var cell = keyToCell(puzzle, Number(key));
+                    if (cell && isRealCell(cell)) {
+                        emitterCells.push(cell);
+                    }
+                }
+            });
+
+            var thermoEdges = {};
+            var source = puzzle.pu_q.nobulbthermo || [];
+            for (var i = 0; i < source.length; i++) {
+                var cells = pathToCells(puzzle, source[i]);
+                for (var j = 0; j < cells.length - 1; j++) {
+                    var c1 = cells[j], c2 = cells[j+1];
+                    var k1 = c1.row + "," + c1.col;
+                    var k2 = c2.row + "," + c2.col;
+                    thermoEdges[k1 + "-" + k2] = true;
+                    thermoEdges[k2 + "-" + k1] = true;
+                }
+            }
+
+            var dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            emitterCells.forEach(function(E) {
+                var emitterData = { cell: E, lines: [] };
+                dirs.forEach(function(d) {
+                    var line = [];
+                    var cr = E.row, cc = E.col;
+                    while (true) {
+                        var nr = cr + d[0], nc = cc + d[1];
+                        var k1 = cr + "," + cc;
+                        var k2 = nr + "," + nc;
+                        if (thermoEdges[k1 + "-" + k2]) {
+                            line.push({ row: nr, col: nc });
+                            cr = nr;
+                            cc = nc;
+                        } else {
+                            break;
+                        }
+                    }
+                    var nextCell = { row: cr + d[0], col: cc + d[1] };
+                    if (nextCell.row < 0 || nextCell.row >= SIZE || nextCell.col < 0 || nextCell.col >= SIZE) {
+                        nextCell = null;
+                    }
+                    emitterData.lines.push({ cells: line, nextCell: nextCell });
+                });
+                constraints.emitters.push(emitterData);
+            });
+            constraints.supported.push("emitters");
+        }
+
         if (variantEnabled(puzzle, "quadro")) {
             for (var quadroRow = 0; quadroRow < SIZE - 1; quadroRow++) {
                 for (var quadroCol = 0; quadroCol < SIZE - 1; quadroCol++) {
@@ -1954,6 +2047,22 @@ var SudokuSolver = (function() {
             if (constraints.fadedKropki.length || puzzle.kropkiNegativeConstraint === true) {
                 constraints.supported.push("fadedkropki");
             }
+        }
+
+        if (variantEnabled(puzzle, "braille")) {
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                var point = puzzle.point && puzzle.point[key];
+                if (!entry || entry[1] !== "dice" || !point) return;
+                var cell = keyToCell(puzzle, Number(key));
+                if (!cell) return;
+                var dots = [];
+                for (var i = 0; i < 9; i++) {
+                    if (entry[0][i] === 1) dots.push(i);
+                }
+                constraints.braille.push({ cell: cell, dots: dots });
+            });
+            constraints.supported.push("braille");
         }
 
         var numbers = puzzle.pu_q.number || {};
@@ -2366,6 +2475,25 @@ var SudokuSolver = (function() {
         if (variantEnabled(puzzle, "uniquerectangles")) {
             constraints.uniqueRectangles.push({});
             constraints.supported.push("uniquerectangles");
+        }
+        if (variantEnabled(puzzle, "wildcard")) {
+            var wildcardCells = [];
+            Object.keys(puzzle.pu_q.number || {}).forEach(function(key) {
+                if (!activeCells[key]) return;
+                var entry = puzzle.pu_q.number[key];
+                var text = entry && String(entry[0]).trim();
+                if (text === "<" || text === ">" || text === "^" || text === "v" || text === "V") {
+                    var sign = text;
+                    if (text === "^") sign = "<";
+                    if (text === "v" || text === "V") sign = ">";
+                    var cell = keyToCell(puzzle, Number(key));
+                    if (cell) wildcardCells.push({ cell: cell, sign: sign });
+                }
+            });
+            if (wildcardCells.length) {
+                constraints.wildcards.push(wildcardCells);
+                constraints.supported.push("wildcard");
+            }
         }
         if (variantEnabled(puzzle, "inequalitytriples")) {
             constraints.inequalityTriples.push({});
@@ -4373,12 +4501,13 @@ var SudokuTools = (function() {
             renderIrregularEditor();
             return;
         }
+        var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return activeVariants().indexOf(v) !== -1; });
         var sudokuButton = document.createElement("button");
         sudokuButton.type = "button";
         sudokuButton.className = "button sudoku-tool-button sudoku-variant-mode";
         sudokuButton.dataset.mode = "sudoku";
         sudokuButton.dataset.submode = "1";
-        sudokuButton.textContent = "Sudoku";
+        sudokuButton.textContent = isZeroEight ? "0-8" : "Sudoku";
         sudokuButton.addEventListener("click", function(event) {
             event.preventDefault();
             event.stopPropagation();
@@ -4661,6 +4790,14 @@ var SudokuTools = (function() {
         pu.activeSudokuVariants = activeVariants().filter(function(active) {
             return active !== variant;
         });
+        if (["0to8", "08arrow", "08skyscrapers"].indexOf(variant) !== -1 && !["0to8", "08arrow", "08skyscrapers"].some(function(v) { return activeVariants().indexOf(v) !== -1; })) {
+            [pu.pu_q.number, pu.pu_a.number].forEach(function(layer) {
+                if (!layer) return;
+                Object.keys(layer).forEach(function(key) {
+                    if (layer[key] && String(layer[key][0]).trim() === "0") delete layer[key];
+                });
+            });
+        }
         syncDiagonalLines();
         if (variant === "kropki") {
             pu.kropkiNegativeConstraint = false;

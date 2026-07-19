@@ -115,6 +115,10 @@ function genericSetting(variation: Variation) {
         add("line", "1", 2, ["mo_line_lb", "sub_line1_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
+    if (variation.value === "tictactoewinner") {
+        add("line", "2", 5, ["mo_line_lb", "sub_line2_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
     if (variation.value === "meandering diagonals") {
         add("line", "2", 2, ["mo_line_lb", "sub_line2_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
@@ -267,11 +271,11 @@ function genericSetting(variation: Variation) {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["inequality", "xydifference", "perfectsquares", "primesums", "twodigitprimenumbers", "fives"].includes(variation.value)) {
-        add(variation.value === "inequality" ? "number" : "symbol",
-            variation.value === "inequality" ? "5" : "diamond_SS",
-            variation.value === "inequality" ? 6 : 2,
-            variation.value === "inequality" ? ["mo_number_lb", "sub_number5_lb"] :
+    if (["inequality", "xydifference", "perfectsquares", "primesums", "twodigitprimenumbers", "fives", "wildcard"].includes(variation.value)) {
+        add((variation.value === "inequality" || variation.value === "wildcard") ? "number" : "symbol",
+            (variation.value === "inequality" || variation.value === "wildcard") ? "5" : "diamond_SS",
+            (variation.value === "inequality" || variation.value === "wildcard") ? 6 : 2,
+            (variation.value === "inequality" || variation.value === "wildcard") ? ["mo_number_lb", "sub_number5_lb"] :
                 ["mo_symbol_lb", "ms1", "li_diamond"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
@@ -347,6 +351,10 @@ function genericSetting(variation: Variation) {
     if (variation.value === "wheel") {
         add("number", "4", 1, ["mo_number_lb", "sub_number4_lb"]);
         add("symbol", "circle_L", 2, ["mo_symbol_lb", "ms1", "li_circle_L"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "braille") {
+        add("symbol", "dice", 2, ["mo_symbol_lb", "ms", "ms_dice"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
 

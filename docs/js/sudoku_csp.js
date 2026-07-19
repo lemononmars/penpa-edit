@@ -229,6 +229,20 @@ var SudokuCSP = (function() {
         }
     });
 
+
+    registerConstraint("braille", {
+        validatePartial: function(board, clue) {
+            var value = cellValue(board, clue.cell);
+            if (!value) return true;
+            var brailleMap = { 1: [0], 2: [0, 3], 3: [0, 1], 4: [0, 1, 4], 5: [0, 4], 6: [0, 1, 3], 7: [0, 1, 3, 4], 8: [0, 3, 4], 9: [1, 3] };
+            var targetDots = brailleMap[value] || [];
+            for (var i = 0; i < clue.dots.length; i++) {
+                if (targetDots.indexOf(clue.dots[i]) === -1) return false;
+            }
+            return true;
+        }
+    });
+
     function registerConstraint(name, handler) {
         if (!name || !handler || typeof handler.validatePartial !== "function") {
             throw new Error("A CSP constraint requires a name and validatePartial(board, constraint, helpers).");
@@ -777,6 +791,7 @@ var SudokuCSP = (function() {
     }
 
     function createProblem(board, constraints) {
+        if (constraints) board.isZeroEight = constraints.isZeroEight;
         var values = cloneBoard(board);
         var normalizedConstraints = cloneConstraints(constraints || {});
         var answerKeys = [];
@@ -827,6 +842,44 @@ var SudokuCSP = (function() {
             { solved: false, reason: unresolvedConflict(source).message, conflict: unresolvedConflict(source) };
     }
 
+registerConstraint("emitters", {
+        validatePartial: function(board, emitter) {
+            var eVal = cellValue(board, emitter.cell);
+
+            for (var i = 0; i < emitter.lines.length; i++) {
+                var line = emitter.lines[i];
+                var minSum = 0;
+                var filledSum = 0;
+                var allCellsFilled = true;
+
+                for (var j = 0; j < line.cells.length; j++) {
+                    var v = cellValue(board, line.cells[j]);
+                    if (v) {
+                        minSum += v;
+                        filledSum += v;
+                    } else {
+                        minSum += 1; // Minimum possible digit is 1
+                        allCellsFilled = false;
+                    }
+                }
+
+                if (eVal && minSum > eVal) return false;
+                if (!eVal && minSum > SIZE) return false; // assuming max digit is SIZE
+
+                if (eVal && allCellsFilled && line.nextCell) {
+                    var nextV = cellValue(board, line.nextCell);
+                    if (nextV) {
+                        if (filledSum + nextV <= eVal) return false;
+                    } else {
+                        // nextV is unknown, its max value is SIZE
+                        if (filledSum + SIZE <= eVal) return false;
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
     registerConstraint("thermos", {
         validatePartial: function(board, path) {
             for (var i = 0; i < path.length; i++) {
@@ -834,7 +887,9 @@ var SudokuCSP = (function() {
                 if (!value) {
                     continue;
                 }
-                if (value < i + 1 || value > SIZE - (path.length - 1 - i)) {
+                var minVal = board.isZeroEight ? i : i + 1;
+                var maxVal = board.isZeroEight ? SIZE - 1 - (path.length - 1 - i) : SIZE - (path.length - 1 - i);
+                if (value < minVal || value > maxVal) {
                     return false;
                 }
                 var previous = i > 0 ? cellValue(board, path[i - 1]) : 0;
@@ -854,7 +909,7 @@ var SudokuCSP = (function() {
             var open = 0;
             for (var i = 0; i < arrow.shaft.length; i++) {
                 var value = cellValue(board, arrow.shaft[i]);
-                value ? sum += value : open++;
+                value ? sum += (board.isZeroEight ? value - 1 : value) : open++;
             }
             if (circle) {
                 return sum + open <= circle && sum + (SIZE * open) >= circle && (open || sum === circle);
@@ -879,7 +934,7 @@ var SudokuCSP = (function() {
                     return false;
                 }
                 seen |= bit;
-                total += digit;
+                total += (board.isZeroEight ? digit - 1 : digit);
             }
             if (!cage.total) {
                 return true;
@@ -1061,6 +1116,24 @@ var SudokuCSP = (function() {
                 }
             }
             return true;
+        }
+    });
+
+    registerConstraint("wildcards", {
+        validatePartial: function(board, clue) {
+            var SIZE = board.length;
+            var maxLessThan = 0;
+            var minGreaterThan = SIZE + 1;
+            for (var index = 0; index < clue.length; index++) {
+                var value = cellValue(board, clue[index].cell);
+                if (!value) continue;
+                if (clue[index].sign === "<") {
+                    maxLessThan = Math.max(maxLessThan, value);
+                } else if (clue[index].sign === ">") {
+                    minGreaterThan = Math.min(minGreaterThan, value);
+                }
+            }
+            return maxLessThan <= minGreaterThan - 2;
         }
     });
 
@@ -1381,7 +1454,7 @@ var SudokuCSP = (function() {
             for (var groupIndex = 0; groupIndex < groups.length; groupIndex++) {
                 var values = groups[groupIndex].map(function(cell) { return cellValue(board, cell); });
                 if (values.some(function(value) { return !value; })) continue;
-                var sum = values.reduce(function(total, value) { return total + value; }, 0);
+                var sum = values.reduce(function(total, value) { return total + (board.isZeroEight ? value - 1 : value); }, 0);
                 if (completedSum !== null && sum !== completedSum) return false;
                 completedSum = sum;
             }
@@ -1659,9 +1732,9 @@ var SudokuCSP = (function() {
             var first = cellValue(board, clue.cells[0]);
             var second = cellValue(board, clue.cells[1]);
             if (!first || !second) return true;
-            var sum = first + second;
+            var sum = (board.isZeroEight ? first - 1 : first) + (board.isZeroEight ? second - 1 : second);
             var difference = Math.abs(first - second);
-            var product = first * second;
+            var product = (board.isZeroEight ? first - 1 : first) * (board.isZeroEight ? second - 1 : second);
             switch (clue.relation) {
                 case "fives": return sum === 5 || difference === 5;
                 case "notFives": return sum !== 5 && difference !== 5;
@@ -1686,7 +1759,7 @@ var SudokuCSP = (function() {
                     var groupValues = (clue.groups || []).map(function(group) {
                         var values = group.map(function(cell) { return cellValue(board, cell); });
                         return values.some(function(value) { return !value; }) ? null :
-                            values.reduce(function(total, value) { return total + value; }, 0);
+                            values.reduce(function(total, value) { return total + (board.isZeroEight ? value - 1 : value); }, 0);
                     });
                     return groupValues.indexOf(null) !== -1 ||
                         (clue.sign === "<" ? groupValues[0] < groupValues[1] : groupValues[0] > groupValues[1]);
@@ -1699,10 +1772,10 @@ var SudokuCSP = (function() {
                 case "perfectsquares": return [16, 25, 36, 49, 64, 81].indexOf(first * 10 + second) !== -1;
                 case "notPerfectSquare": return [16, 25, 36, 49, 64, 81].indexOf(first * 10 + second) === -1;
                 case "primesums":
-                    var sum = first + second;
+                    var sum = (board.isZeroEight ? first - 1 : first) + (board.isZeroEight ? second - 1 : second);
                     return [2, 3, 5, 7, 11, 13, 17].indexOf(sum) !== -1;
                 case "notPrimesums":
-                    var sum = first + second;
+                    var sum = (board.isZeroEight ? first - 1 : first) + (board.isZeroEight ? second - 1 : second);
                     return [2, 3, 5, 7, 11, 13, 17].indexOf(sum) === -1;
                 case "twodigitprimenumbers":
                     var val = first * 10 + second;
@@ -1718,8 +1791,8 @@ var SudokuCSP = (function() {
                 case "notDiagonalTens": return sum !== 10;
                 case "arithmetic":
                     return sum === clue.target || difference === clue.target || product === clue.target ||
-                        (first % second === 0 && first / second === clue.target) ||
-                        (second % first === 0 && second / first === clue.target);
+                        (first % second === 0 && (board.isZeroEight ? first - 1 : first) / (board.isZeroEight ? second - 1 : second) === clue.target) ||
+                        (second % first === 0 && (board.isZeroEight ? second - 1 : second) / (board.isZeroEight ? first - 1 : first) === clue.target);
             }
             return true;
         }
@@ -2268,7 +2341,7 @@ var SudokuCSP = (function() {
                 return true;
             }
             if (clue.relation === "sumframe" || clue.relation === "framediagonal") {
-                var frameSum = values.reduce(function(total, value) { return total + value; }, 0);
+                var frameSum = values.reduce(function(total, value) { return total + (board.isZeroEight ? value - 1 : value); }, 0);
                 var frameBlanks = values.filter(function(value) { return !value; }).length;
                 return frameSum <= clue.value && frameSum + frameBlanks * SIZE >= clue.value &&
                     (frameBlanks > 0 || frameSum === clue.value);
@@ -2455,7 +2528,7 @@ var SudokuCSP = (function() {
             }
             if (clue.relation === "little killer" || clue.relation === "product little killer") {
                 if (clue.relation === "little killer") {
-                    var littleSum = values.reduce(function(total, value) { return total + value; }, 0);
+                    var littleSum = values.reduce(function(total, value) { return total + (board.isZeroEight ? value - 1 : value); }, 0);
                     var littleBlanks = values.filter(function(value) { return !value; }).length;
                     return littleSum <= clue.value && littleSum + littleBlanks * SIZE >= clue.value &&
                         (littleBlanks > 0 || littleSum === clue.value);
@@ -3676,6 +3749,34 @@ var SudokuCSP = (function() {
     });
 
     // Average Arrows: circle = arithmetic mean of shaft digits
+    registerConstraint("countDifferent", {
+        validatePartial: function(board, arrow) {
+            var circle = cellValue(board, arrow.circle);
+            var shaftValues = arrow.shaft.map(function(cell) { return cellValue(board, cell); });
+            var assigned = shaftValues.filter(Boolean);
+            var blanks = shaftValues.length - assigned.length;
+            var uniqueAssigned = new Set(assigned).size;
+            if (circle) {
+                return uniqueAssigned <= circle && uniqueAssigned + blanks >= circle;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("countOdd", {
+        validatePartial: function(board, arrow) {
+            var circle = cellValue(board, arrow.circle);
+            var shaftValues = arrow.shaft.map(function(cell) { return cellValue(board, cell); });
+            var assigned = shaftValues.filter(Boolean);
+            var blanks = shaftValues.length - assigned.length;
+            var oddCount = assigned.filter(function(v) { return v % 2 !== 0; }).length;
+            if (circle) {
+                return oddCount <= circle && oddCount + blanks >= circle;
+            }
+            return true;
+        }
+    });
+
     registerConstraint("averageArrows", {
         validatePartial: function(board, arrow) {
             var circle = cellValue(board, arrow.circle);
@@ -3700,8 +3801,8 @@ var SudokuCSP = (function() {
         }
     });
 
-    function xvAllows(first, second, kind) {
-        var sum = first + second;
+    function xvAllows(first, second, kind, board) {
+        var sum = (board.isZeroEight ? first - 1 : first) + (board.isZeroEight ? second - 1 : second);
         if (kind === "V") {
             return sum === 5;
         }
@@ -3718,7 +3819,7 @@ var SudokuCSP = (function() {
             var first = cellValue(board, clue.cells[0]);
             var second = cellValue(board, clue.cells[1]);
             if (first && second) {
-                return xvAllows(first, second, clue.kind === "none" && clue.family === "xivi" ? "none-xivi" : clue.kind);
+                return xvAllows(first, second, clue.kind === "none" && clue.family === "xivi" ? "none-xivi" : clue.kind, board);
             }
             var known = first || second;
             if (!known) {
@@ -3726,7 +3827,7 @@ var SudokuCSP = (function() {
             }
             for (var candidate = 1; candidate <= SIZE; candidate++) {
                 if (candidate !== known && xvAllows(known, candidate,
-                    clue.kind === "none" && clue.family === "xivi" ? "none-xivi" : clue.kind)) {
+                    clue.kind === "none" && clue.family === "xivi" ? "none-xivi" : clue.kind, board)) {
                     return true;
                 }
             }
@@ -4045,6 +4146,82 @@ var SudokuCSP = (function() {
                     });
                 }
                 return visited.size === oddCells.length;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("tictactoewinner", {
+        validatePartial: function(board, constraint) {
+            if (board.length !== 9) return true;
+            for (var b = 0; b < 9; b++) {
+                var startRow = Math.floor(b / 3) * 3;
+                var startCol = (b % 3) * 3;
+                var lines = [
+                    [{ r: startRow, c: startCol }, { r: startRow, c: startCol + 1 }, { r: startRow, c: startCol + 2 }],
+                    [{ r: startRow + 1, c: startCol }, { r: startRow + 1, c: startCol + 1 }, { r: startRow + 1, c: startCol + 2 }],
+                    [{ r: startRow + 2, c: startCol }, { r: startRow + 2, c: startCol + 1 }, { r: startRow + 2, c: startCol + 2 }],
+                    [{ r: startRow, c: startCol }, { r: startRow + 1, c: startCol }, { r: startRow + 2, c: startCol }],
+                    [{ r: startRow, c: startCol + 1 }, { r: startRow + 1, c: startCol + 1 }, { r: startRow + 2, c: startCol + 1 }],
+                    [{ r: startRow, c: startCol + 2 }, { r: startRow + 1, c: startCol + 2 }, { r: startRow + 2, c: startCol + 2 }],
+                    [{ r: startRow, c: startCol }, { r: startRow + 1, c: startCol + 1 }, { r: startRow + 2, c: startCol + 2 }],
+                    [{ r: startRow, c: startCol + 2 }, { r: startRow + 1, c: startCol + 1 }, { r: startRow + 2, c: startCol }]
+                ];
+                var grayLinePath = constraint[b] ? constraint[b][0] : undefined;
+                var isGrayLineValidWinner = false;
+
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i];
+
+                    var isGray = false;
+                    if (grayLinePath && grayLinePath.length === 3) {
+                        var m1 = line.find(function(c) { return c.r === grayLinePath[0].row && c.c === grayLinePath[0].col; });
+                        var m2 = line.find(function(c) { return c.r === grayLinePath[1].row && c.c === grayLinePath[1].col; });
+                        var m3 = line.find(function(c) { return c.r === grayLinePath[2].row && c.c === grayLinePath[2].col; });
+                        var m1r = line.find(function(c) { return c.r === grayLinePath[2].row && c.c === grayLinePath[2].col; });
+                        var m2r = line.find(function(c) { return c.r === grayLinePath[1].row && c.c === grayLinePath[1].col; });
+                        var m3r = line.find(function(c) { return c.r === grayLinePath[0].row && c.c === grayLinePath[0].col; });
+                        // wait, line is array of length 3, e.g. {r:0,c:0},{r:0,c:1},{r:0,c:2}.
+                        // grayLinePath is {row:0, col:0},{row:0, col:1},{row:0, col:2}.
+                        if ((m1 && m2 && m3) || (m1r && m2r && m3r)) {
+                            isGray = true;
+                        }
+                    }
+
+                    var oddCount = 0;
+                    var evenCount = 0;
+                    for (var j = 0; j < 3; j++) {
+                        var val = cellValue(board, { row: line[j].r, col: line[j].c });
+                        if (val) {
+                            if (val % 2 !== 0) oddCount++;
+                            else evenCount++;
+                        }
+                    }
+
+                    if (isGray) {
+                        // We must only fail if the line is fully populated and has mixed parity,
+                        // OR if a cell is filled that breaks the possibility of 3 matching.
+                        // Wait. If oddCount > 0 and evenCount > 0, then the line CAN NEVER be all odd or all even. So it's correct to return false!
+                        if (oddCount > 0 && evenCount > 0) return false;
+                        if (oddCount === 3 || evenCount === 3) {
+                            isGrayLineValidWinner = true;
+                        }
+                    } else {
+                        if (oddCount === 3 || evenCount === 3) return false;
+                    }
+                }
+
+                if (grayLinePath && grayLinePath.length === 3) {
+                    var boxComplete = true;
+                    for (var r = startRow; r < startRow + 3; r++) {
+                        for (var c = startCol; c < startCol + 3; c++) {
+                            if (!cellValue(board, { row: r, col: c })) boxComplete = false;
+                        }
+                    }
+                    if (boxComplete && !isGrayLineValidWinner) return false;
+                } else {
+                    return false;
+                }
             }
             return true;
         }
