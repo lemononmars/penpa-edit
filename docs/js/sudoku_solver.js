@@ -360,6 +360,12 @@ var SudokuSolver = (function() {
         return 0;
     }
 
+    function outsideStringFromEntry(entry) {
+        if (!entry || ["1", "6", "10"].indexOf(String(entry[2])) === -1) return null;
+        var value = String(entry[0]).trim().toUpperCase();
+        return value || null;
+    }
+
     function outsideClueFromEntry(entry) {
         // entry[2] "1" = normal number, "10" = long (multi-digit) number
         if (!entry || ["1", "6", "10"].indexOf(entry[2]) === -1) return null;
@@ -2342,7 +2348,7 @@ var SudokuSolver = (function() {
         }
         var activeOutsideVariants = ["bust", "xsums", "numberedrooms", "sumframe", "edgedifference",
             "fullrank", "outsideparity", "parityparty", "serbianframe", "median", "descriptivepairs",
-            "maximin", "minimax", "ascendingstarters", "before9", "before1after9", "firstseenoddeven", "maxascending",
+            "maximin", "minimax", "ascendingstarters", "before9", "oddevenbigsmall", "before1after9", "firstseenoddeven", "maxascending",
             "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers",
             "position", "sumnexttonine", "wrongoutsidesum", "doublesandwich", "xaverage", "triplesum"].filter(function(name) {
             return variantEnabled(puzzle, name);
@@ -2358,7 +2364,7 @@ var SudokuSolver = (function() {
             var fullRankEntries = [];
             activeOutsideVariants.forEach(function(variant) {
                 function addOutsideRelation(key, cells, frameLength, axis, relation) {
-                    var clue = outsideClueFromEntry(numbers[key]);
+                    var clue = variant === "oddevenbigsmall" ? outsideStringFromEntry(numbers[key]) : outsideClueFromEntry(numbers[key]);
                     if (variant === "fullrank") {
                         fullRankEntries.push({ rank: clue, cells: cells });
                         return;
@@ -3559,7 +3565,7 @@ var SudokuTools = (function() {
         "numberedrooms", "sumframe", "productframe", "edgedifference", "fullrank", "outsideparity",
         "parityparty", "serbianframe", "median", "rossini", "before9",
         "before1after9", "ascendingstarters", "bouncing x-sums", "czech outsider", "distances",
-        "firstseenoddeven", "maxascending", "framediagonal",
+        "oddevenbigsmall", "firstseenoddeven", "maxascending", "framediagonal",
         "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers", "pointingdifferents",
         "sumskyscrapers", "sumsandwich", "positionsums", "xaverage", "triplesum"];
 

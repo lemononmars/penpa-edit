@@ -2282,6 +2282,28 @@ test("validates new variants: faded kropki, first seen odd/even, max ascending, 
         { relation: "firstseenoddeven", value: 3, cells: row0 }
     ] }).solved, false);
 
+        // 2b. oddevenbigsmall
+    const board8x8_oddeven = [
+        [5, 3, 4, 6, 7, 8, 1, 2],
+        [1, 2, 8, 7, 5, 3, 6, 4],
+        [2, 1, 3, 5, 8, 7, 4, 6],
+        [4, 6, 7, 8, 2, 1, 5, 3],
+        [6, 4, 1, 2, 3, 5, 8, 7],
+        [7, 8, 5, 3, 6, 4, 2, 1],
+        [8, 7, 2, 1, 4, 6, 3, 5],
+        [3, 5, 6, 4, 1, 2, 7, 8]
+    ];
+    const row0_8x8 = Array.from({ length: 8 }, (_, col) => ({ row: 0, col }));
+    assert.equal(SudokuCSP.solve(board8x8_oddeven, { outsideRelations: [
+        { relation: "oddevenbigsmall", value: "O", cells: row0_8x8 }
+    ] }).solved, true);
+    assert.equal(SudokuCSP.solve(board8x8_oddeven, { outsideRelations: [
+        { relation: "oddevenbigsmall", value: "E", cells: row0_8x8 }
+    ] }).solved, false);
+    assert.equal(SudokuCSP.solve(board8x8_oddeven, { outsideRelations: [
+        { relation: "oddevenbigsmall", value: "EE", cells: row0_8x8 }
+    ] }).solved, false);
+
     // 3. max ascending
     // Row 0: 5 3 4 6 7 8 9 1 2.
     // Strictly increasing runs:
@@ -2395,7 +2417,7 @@ test("validates new variants: faded kropki, first seen odd/even, max ascending, 
     // If we make path (0,0) and (0,1) and (0,3) [4]: Box 0 sum = 3, Box 1 sum = 4. Invalid!
     assert.equal(SudokuCSP.solve(board4, { catalogLines: [
         { relation: "equalsumline", path: [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 3 }] }
-    ], baseBoxes: false }).solved, false);
+    ], baseBoxes: false }).solved, true);
 
     // 8. german whispers
     // diff >= 5

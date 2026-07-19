@@ -1714,6 +1714,21 @@ var SudokuCSP = (function() {
                 return frameSum <= clue.value && frameSum + frameBlanks * SIZE >= clue.value &&
                     (frameBlanks > 0 || frameSum === clue.value);
             }
+            if (clue.relation === "oddevenbigsmall") {
+                if (board.length !== 8) return false;
+                var val = String(clue.value).replace(/\s+/g, "");
+                if (val.length !== 1 || !["O", "E", "B", "S"].includes(val.toUpperCase())) return false;
+                var c = val.toUpperCase();
+                for (var i = 0; i < Math.min(2, values.length); i++) {
+                    var v = values[i];
+                    if (!v) continue;
+                    if (c === "O" && v % 2 !== 1) return false;
+                    if (c === "E" && v % 2 !== 0) return false;
+                    if (c === "B" && v <= 4) return false;
+                    if (c === "S" && v > 4) return false;
+                }
+                return true;
+            }
             if (clue.relation === "firstseenoddeven") {
                 var isOddClue = (clue.value % 2) !== 0;
                 for (var i = 0; i < values.length; i++) {
