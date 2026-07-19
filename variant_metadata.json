@@ -5689,7 +5689,7 @@
       "rules": {
         "9x9": "The clues outside the grid indicate the product of the digits placed in the cells containing stars in the corresponding row or column."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [

@@ -103,7 +103,8 @@ var SudokuCSP = (function() {
         size: SIZE,
         allDigitsMask: ALL_DIGITS,
         cellValue: cellValue,
-        maskToDigits: maskToDigits
+        maskToDigits: maskToDigits,
+        isStarCell: function(cell, starCells) { return (starCells || []).some(function(sc) { return sc.row === cell.row && sc.col === cell.col; }); }
     };
 
     function registerConstraint(name, handler) {
@@ -124,6 +125,12 @@ var SudokuCSP = (function() {
         var byCell = {};
         var globalEntries = [];
         registeredConstraints().forEach(function(name) {
+            if (name === "outsideRelations" && constraints.starCells) {
+                // inject starCells into outsideRelations clues so they can check it
+                (constraints[name] || []).forEach(function(item) {
+                    item.starCells = constraints.starCells;
+                });
+            }
             var handler = constraintRegistry[name];
             (constraints[name] || []).forEach(function(item) {
                 var entry = { handler: handler, item: item };
@@ -1784,6 +1791,18 @@ var SudokuCSP = (function() {
                     if (index < clue.value - 1 && running > 21) return false;
                 }
                 return running > 21;
+            }
+            if (clue.relation === "starproduct") {
+                var starValues = [];
+                for (var st_i = 0; st_i < clue.cells.length; st_i++) {
+                    var cell = clue.cells[st_i];
+                    if (helpers.isStarCell(cell, clue.starCells)) {
+                         starValues.push(values[st_i]);
+                    }
+                }
+                var product = starValues.reduce(function(total, value) { return total * (value || 1); }, 1);
+                var productOpen = starValues.filter(function(value) { return !value; }).length;
+                return product <= clue.value && clue.value % product === 0 && (productOpen > 0 || product === clue.value);
             }
             if (clue.relation === "productframe") {
                 var productValues = values.slice(0, 3);
