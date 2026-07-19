@@ -2695,7 +2695,6 @@ test("validates inequality triples, difference pairs, Ten/Eleven, tens products,
 });
 
 
-test("validates round off variants", function() {
 test("validates new variants: zones, somewhere", function() {
     var board = [
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -2737,6 +2736,10 @@ test("validates new variants: zones, somewhere", function() {
         somewhere: [
             { cells: [{row: 0, col: 0}, {row: 0, col: 1}], digit: 9 }
         ]
+    }).solved, false);
+});
+    }).solved, false);
+});
 test("Sum or Product Killer", function() {
     const solved = boardFromString(
         "534678912" + "672195348" + "198342567" +

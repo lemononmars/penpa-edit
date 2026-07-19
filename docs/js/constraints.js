@@ -1,48 +1,11 @@
 const penpa_constraints = {
-    "implemented_sudoku": ["classic", "odd even", "odd even bridge", "odd even count", "odd even sum", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv", "battenburg", "skyscraper", "sandwich", "uniquerectangles", "sumskyscrapers", "sumsandwich", "positionsums", "inequalitytriples", "oneortwodifferencepairs", "teneleven", "tenspositionproducts", "fullorhalf", "samesum", "xaverage", "triplesum", "partitionedsums", "oneknightstep"],
+    "implemented_sudoku": ["classic", "odd even", "odd even bridge", "odd even count", "odd even sum", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv", "battenburg", "skyscraper", "sandwich", "uniquerectangles", "sumskyscrapers", "sumsandwich", "positionsums", "inequalitytriples", "oneortwodifferencepairs", "teneleven", "tenspositionproducts", "fullorhalf", "samesum", "xaverage", "triplesum", "partitionedsums", "oneknightstep", "zones", "somewhere"],
     "options_groups": ["general", "sudoku", "puzzle"],
     "options": {
         "general": ["all"],
-        "sudoku": [
-            "classic",
-            "odd even",
-            "diagonal",
-            "anti diagonal",
-            "anti king",
-            "anti knight",
-            "non consecutive",
-            "arrow",
-            "thermo",
-            "little killer",
-            "killer",
-            "difference",
-            "kropki",
-            "palindrome",
-            "sandwich",
-            "quadruple",
-            "xv",
-            "between",
-            "battenburg",
-            "skyscraper",
-            "uniquerectangles",
-            "sumskyscrapers",
-            "sumsandwich",
-            "positionsums",
-            "inequalitytriples",
-            "oneortwodifferencepairs",
-            "teneleven",
-            "tenspositionproducts",
-            "fullorhalf",
-            "samesum",
-            "xaverage",
-            "triplesum",
-            "partitionedsums",
-            "oneknightstep",
-            "windoku",
-            "odd even bridge",
-            "odd even count",
-            "odd even sum"
-        ],
+        "sudoku": ["classic","odd even","diagonal","anti diagonal","anti king","anti knight","non consecutive","arrow","thermo","little killer","killer","difference","kropki","palindrome","sandwich","quadruple","xv","between","battenburg","skyscraper","uniquerectangles","sumskyscrapers","sumsandwich","positionsums","inequalitytriples","oneortwodifferencepairs","teneleven","tenspositionproducts","fullorhalf","samesum","xaverage","triplesum","partitionedsums","oneknightstep","windoku","odd even bridge","odd even count","odd even sum",
+            "zones",
+            "somewhere"],
         "puzzle": [
             "slitherlink",
             "tapa",
@@ -188,6 +151,28 @@ const penpa_constraints = {
             "outside": true
         },
         "killer": {
+            "show": ["mo_surface_lb",
+                "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb",
+                "mo_number_lb", "sub_number11_lb", "sub_number3_lb"
+            ],
+            "modeset": ["sudoku", "cage", "number"],
+            "submodeset": ["1", "1", "11"],
+            "styleset": ["", 10, 1]
+        },
+
+        "zones": {
+            "show": ["mo_surface_lb",
+                "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb",
+                "mo_number_lb", "sub_number11_lb", "sub_number3_lb"
+            ],
+            "modeset": ["sudoku", "cage", "number"],
+            "submodeset": ["1", "1", "11"],
+            "styleset": ["", 10, 1]
+        },
+
+        "somewhere": {
             "show": ["mo_surface_lb",
                 "mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
                 "mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb",

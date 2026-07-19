@@ -5643,7 +5643,9 @@
         "categories": [
           "cage"
         ],
-        "instructions": []
+        "instructions": [
+          "Drag across cells to make a cage, then use Killer Sum on its upper-left corner."
+        ]
       },
       "tags": []
     },
@@ -6907,7 +6909,9 @@
         "categories": [
           "cage"
         ],
-        "instructions": []
+        "instructions": [
+          "Drag across cells to make a cage, then use Killer Sum on its upper-left corner."
+        ]
       },
       "tags": []
     },
