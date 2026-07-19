@@ -2828,6 +2828,9 @@ test("validates new variants: zones, somewhere", function() {
         somewhere: [
             { cells: [{row: 0, col: 0}, {row: 0, col: 1}], digit: 9 }
         ]
+    }).solved, false);
+});
+
 test("Sum or Product Killer", function() {
     const solved = boardFromString(
         "534678912" + "672195348" + "198342567" +
@@ -2839,6 +2842,11 @@ test("Sum or Product Killer", function() {
 });
 
 test("validates ordering variants", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
 
     // Sum is 8 (5 + 3) -> 8 is valid
     assert.equal(SudokuCSP.solve(solved, {

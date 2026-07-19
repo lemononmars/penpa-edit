@@ -206,9 +206,9 @@ function genericSetting(variation: Variation) {
         add("special", "thermo", "", ["mo_special_lb", "sub_specialthermo_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["productkiller", "solokiller"].includes(variation.value)) {
+    if (["productkiller", "solokiller", "roundoff"].includes(variation.value)) {
         add("cage", "1", 10, ["mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb"]);
-        if (variation.value === "productkiller") add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);
+        if (["productkiller", "roundoff"].includes(variation.value)) add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "starproduct") {
