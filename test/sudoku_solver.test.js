@@ -3067,6 +3067,8 @@ test("Consecutive Chains", () => {
     boardInvalidPath[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
     boardInvalidPath[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
     assert.strictEqual(SudokuCSP.solve(boardInvalidPath, {consecutiveChains: [chain4]}).solved, false);
+});
+
 test("Big-Small Japanese Sums validate sequences", function() {
     const rawBS = {
         nx0: 9, ny0: 9,
