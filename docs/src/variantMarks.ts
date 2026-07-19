@@ -145,6 +145,7 @@ function cspImplementationFor(variation: Variation) {
   const neighbors = item.neighbors.map(cell => cellValue(board, cell)).filter(Boolean);
   return new Set(neighbors).size === neighbors.length;
 }`;
+    }
     if (variation.value === "watchtowers") {
         return "A watchtower digit N overlooks exactly N cells. If N=3, it sees itself and 2 others.";
     }
@@ -491,6 +492,7 @@ export function solverTestCasesFor(variation: Variation) {
     neighbors: [{ row: 0, col: 2 }, { row: 2, col: 2 }]
   }), false);
 });`;
+    }
     if (variation.value === "watchtowers") {
         return "A watchtower digit N overlooks exactly N cells. If N=3, it sees itself and 2 others.";
     }
