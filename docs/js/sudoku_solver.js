@@ -4005,6 +4005,7 @@ var SudokuTools = (function() {
         pu.even_sum_pairs_mode = pu.activeSudokuVariant === "evensumpairs";
         pu.clockfaces_mode = pu.activeSudokuVariant === "clockfaces";
         pu.trio_mode = pu.activeSudokuVariant === "trio";
+        pu.mastermind_mode = pu.activeSudokuVariant === "mastermind";
         pu.pencilmarks_mode = pu.activeSudokuVariant === "pencilmarks";
         pu.diagonal_consecutive_mode = ["diagonallyconsecutive", "diagonal sum is nine", "diagonal tens"].indexOf(pu.activeSudokuVariant) !== -1;
         pu.xv_mode = pu.activeSudokuVariant === "xv" || pu.activeSudokuVariant === "xivi";

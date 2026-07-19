@@ -266,6 +266,12 @@
         { value: "odd", input: "3", label: "Odd ○", submode: "circle_L" },
         { value: "even", input: "3", label: "Even □", submode: "square_L" },
       ];
+    } else if (mode === "symbol" && variant === "mastermind") {
+      toolPanelOptions = [
+        { value: "mastermind-black", input: "1", label: "Black ●", submode: "circle_SS" },
+        { value: "mastermind-white", input: "2", label: "White ○", submode: "circle_SS" },
+        { value: "mastermind-cross", input: "3", label: "Cross ⨯", submode: "cross" },
+      ];
     } else if (mode === "symbol" && variant === "trio") {
       toolPanelOptions = [
         { value: "trio-low", input: "3", label: "1–3 ○", submode: "circle_L" },
@@ -564,7 +570,7 @@
     variantSearch = "";
     if (
       select.value === selectedVariant &&
-      (["little killer", "sandwich", "skyscraper"].includes(selectedVariant) ||
+      (["little killer", "sandwich", "skyscraper", "mastermind"].includes(selectedVariant) ||
         outsideVariationValues.has(selectedVariant))
     ) {
       const leftTopOnly = [
@@ -585,6 +591,7 @@
         "outside234",
         "evensandwich",
         "oddsandwich",
+        "mastermind",
       ].includes(selectedVariant)
         ? 3
         : 1;

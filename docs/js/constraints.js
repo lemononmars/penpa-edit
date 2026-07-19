@@ -11,6 +11,8 @@ const penpa_constraints = {
             "tapa",
             "star battle",
             "tents",
+        "mastermind",
+    "mastermind",
             // "heyawake",
             // "nurikabe",
             // "lits",
