@@ -12,6 +12,7 @@ type RawVariation = {
     isDuplicate?: boolean;
     duplicateOf?: string;
     example?: string;
+    otherNames?: string;
 };
 
 type VariantMetadata = {
@@ -47,6 +48,7 @@ const allVariations: Variation[] = variantMetadata.variants.map((item) => {
         rules: Object.fromEntries(Object.entries(item.rules).map(([size, rule]) => [size, stripRulePreamble(rule)])),
         value,
         rule,
+        otherNames: item.otherNames || "",
         inputType: {
             ...item.inputType,
             categories: item.inputType.categories
@@ -104,7 +106,7 @@ function genericSetting(variation: Variation) {
     if (variation.inputType.categories.includes("shading")) {
         add("surface", "", 1, ["mo_surface_lb"]);
     }
-    if (["extraregion", "extralargeregions", "difference2neighbours", "hiddenclone", "escape", "offset", "oneknightstep"].includes(variation.value)) {
+    if (["extraregion", "extralargeregions", "difference2neighbours", "hiddenclone", "escape", "offset", "oneknightstep", "repeatedneighbors"].includes(variation.value)) {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
@@ -127,6 +129,11 @@ function genericSetting(variation: Variation) {
     }
     if (variation.value === "blocksumrelations") {
         add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "ordering") {
+        add("cage", "1", 10, ["mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb"]);
+        add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "codedpairs") {
@@ -195,7 +202,7 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "quadruple" || variation.value === "exclusion") {
-        add("number", "4", 6, ["mo_number_lb", "sub_number4_lb"]);
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "groupsum") {
@@ -206,10 +213,16 @@ function genericSetting(variation: Variation) {
         add("special", "thermo", "", ["mo_special_lb", "sub_specialthermo_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["productkiller", "solokiller"].includes(variation.value)) {
+    if (["productkiller", "solokiller", "sumorproductkiller", "roundoff"].includes(variation.value)) {
         add("cage", "1", 10, ["mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb"]);
-        if (variation.value === "productkiller") add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);
+        if (["productkiller", "sumorproductkiller", "roundoff"].includes(variation.value)) 
+          add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "starproduct") {
+        add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
+        add("symbol", "star", 2, ["mo_symbol_lb", "ms4", "li_star", "ms_star"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
     if (["bust", "xsums", "numberedrooms", "sumframe", "edgedifference", "fullrank",
         "outsideparity", "parityparty", "serbianframe", "median", "ascendingstarters",
@@ -270,7 +283,7 @@ function genericSetting(variation: Variation) {
         add("symbol", "circle_SS", 2, ["mo_symbol_lb", "ms1", "ms1_circle", "li_circle_SS"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["little killer", "product little killer", "productframe", "bouncing x-sums", "czech outsider", "framediagonal", "pointingdifferents"].includes(variation.value)) {
+    if (["little killer", "weighted little killer", "product little killer", "productframe", "bouncing x-sums", "czech outsider", "framediagonal", "pointingdifferents"].includes(variation.value)) {
         const mediumProduct = variation.value === "product little killer" || variation.value === "productframe";
         add("number", mediumProduct ? "6" : "1", 1,
             mediumProduct ? ["mo_number_lb", "sub_number6_lb"] : ["mo_number_lb", "sub_number1_lb"]);

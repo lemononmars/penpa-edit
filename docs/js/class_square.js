@@ -229,6 +229,9 @@ class Puzzle_square extends Puzzle {
             case "move":
                 if (edit_mode === "symbol" && this.sudoku_directional_cell_mode) {
                     type = [0];
+                } else if (edit_mode === "symbol" && this.mastermind_mode) {
+                    this.pu.mastermind_mode = true;
+                    this.pu.mouse_down_cancel = true;
                 } else if (edit_mode === "symbol" && this.trio_mode) {
                     type = [0];
                 } else if (edit_mode === "symbol" && this.clockfaces_mode) {
@@ -774,6 +777,7 @@ class Puzzle_square extends Puzzle {
     ////////////////draw/////////////////////
 
     draw() {
+        this._find_common_cache = {};
         var present_mode = this.mode.qa;
         if (present_mode !== "pu_q" || UserSettings.show_solution) {
             this.draw_frameBold();
@@ -907,52 +911,61 @@ class Puzzle_square extends Puzzle {
             let xdirection, ydirection, commonend; // x is column, y is row
             let reduce_straight = 0.44 * this.size,
                 reduce_diagonal = 0.316 * this.size;
-            for (var i = 0; i < this[pu].thermo.length; i++) {
-                if (this[pu].thermo[i] && this[pu].thermo[i][0]) {
+            let thermos = this[pu].thermo;
+            let thermos_col = this[pu + "_col"].thermo;
+            for (var i = 0; i < thermos.length; i++) {
+                let curr_thermo = thermos[i];
+                if (curr_thermo && curr_thermo[0]) {
                     this.ctx.strokeStyle = Color.TRANSPARENTBLACK;
-                    if (UserSettings.custom_colors_on && this[pu + "_col"].thermo[i]) {
-                        this.ctx.fillStyle = this[pu + "_col"].thermo[i];
+                    let thermo_col = UserSettings.custom_colors_on && thermos_col && thermos_col[i] ? thermos_col[i] : null;
+                    if (thermo_col) {
+                        this.ctx.fillStyle = thermo_col;
                     } else {
                         this.ctx.fillStyle = Color.GREY_LIGHT;
                     }
-                    this.draw_circle(this.ctx, this.point[this[pu].thermo[i][0]].x, this.point[this[pu].thermo[i][0]].y, 0.4);
+                    let p0 = this.point[curr_thermo[0]];
+                    this.draw_circle(this.ctx, p0.x, p0.y, 0.4);
                     this.ctx.setLineDash([]);
                     this.ctx.lineCap = "square";
-                    if (UserSettings.custom_colors_on && this[pu + "_col"].thermo[i]) {
-                        this.ctx.strokeStyle = this[pu + "_col"].thermo[i];
+                    if (thermo_col) {
+                        this.ctx.strokeStyle = thermo_col;
                     } else {
                         this.ctx.strokeStyle = Color.GREY_LIGHT;
                     }
                     this.ctx.lineWidth = this.size * 0.4;
                     this.ctx.beginPath();
-                    this.ctx.moveTo(this.point[this[pu].thermo[i][0]].x, this.point[this[pu].thermo[i][0]].y);
-                    for (var j = 1; j < this[pu].thermo[i].length; j++) {
-                        if (j < (this[pu].thermo[i].length - 1)) {
-                            this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x, this.point[this[pu].thermo[i][j]].y);
+                    this.ctx.moveTo(p0.x, p0.y);
+                    let curr_len = curr_thermo.length;
+                    for (var j = 1; j < curr_len; j++) {
+                        let th_i_j = curr_thermo[j];
+                        let pj = this.point[th_i_j];
+                        if (j < (curr_len - 1)) {
+                            this.ctx.lineTo(pj.x, pj.y);
                         } else {
-                            commonend = this.find_common(pu, i, this[pu].thermo[i][j], "thermo");
+                            commonend = this.find_common(pu, i, th_i_j, "thermo");
                             if (commonend) {
-                                xdirection = this.point[this[pu].thermo[i][j]].x - this.point[this[pu].thermo[i][j - 1]].x;
-                                ydirection = this.point[this[pu].thermo[i][j]].y - this.point[this[pu].thermo[i][j - 1]].y;
+                                let pj_prev = this.point[curr_thermo[j - 1]];
+                                xdirection = pj.x - pj_prev.x;
+                                ydirection = pj.y - pj_prev.y;
                                 if (xdirection == 0 && ydirection < 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x, this.point[this[pu].thermo[i][j]].y + reduce_straight);
+                                    this.ctx.lineTo(pj.x, pj.y + reduce_straight);
                                 } else if (xdirection < 0 && ydirection > 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x + reduce_diagonal, this.point[this[pu].thermo[i][j]].y - reduce_diagonal);
+                                    this.ctx.lineTo(pj.x + reduce_diagonal, pj.y - reduce_diagonal);
                                 } else if (xdirection > 0 && ydirection == 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x - reduce_straight, this.point[this[pu].thermo[i][j]].y);
+                                    this.ctx.lineTo(pj.x - reduce_straight, pj.y);
                                 } else if (xdirection > 0 && ydirection > 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x - reduce_diagonal, this.point[this[pu].thermo[i][j]].y - reduce_diagonal);
+                                    this.ctx.lineTo(pj.x - reduce_diagonal, pj.y - reduce_diagonal);
                                 } else if (xdirection == 0 && ydirection > 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x, this.point[this[pu].thermo[i][j]].y - reduce_straight);
+                                    this.ctx.lineTo(pj.x, pj.y - reduce_straight);
                                 } else if (xdirection > 0 && ydirection < 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x - reduce_diagonal, this.point[this[pu].thermo[i][j]].y + reduce_diagonal);
+                                    this.ctx.lineTo(pj.x - reduce_diagonal, pj.y + reduce_diagonal);
                                 } else if (xdirection < 0 && ydirection == 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x + reduce_straight, this.point[this[pu].thermo[i][j]].y);
+                                    this.ctx.lineTo(pj.x + reduce_straight, pj.y);
                                 } else if (xdirection < 0 && ydirection < 0) {
-                                    this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x + reduce_diagonal, this.point[this[pu].thermo[i][j]].y + reduce_diagonal);
+                                    this.ctx.lineTo(pj.x + reduce_diagonal, pj.y + reduce_diagonal);
                                 }
                             } else {
-                                this.ctx.lineTo(this.point[this[pu].thermo[i][j]].x, this.point[this[pu].thermo[i][j]].y);
+                                this.ctx.lineTo(pj.x, pj.y);
                             }
                         }
                     }
@@ -1022,59 +1035,45 @@ class Puzzle_square extends Puzzle {
     }
 
     find_common(pu, i, endpoint, symboltype) {
+        this._find_common_cache = this._find_common_cache || {};
+        let cache_key;
+        let list1, list2;
         if (symboltype === "thermo" || symboltype === "nobulbthermo") {
-            if (this[pu].thermo) {
-                for (var k = 0; k < this[pu].thermo.length; k++) {
-                    if (k != i) {
-                        if (this[pu].thermo[k]) {
-                            for (var m = 1; m < this[pu].thermo[k].length; m++) {
-                                if (this[pu].thermo[k][m] === endpoint) {
-                                    return 1;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (this[pu].nobulbthermo) {
-                for (var k = 0; k < this[pu].nobulbthermo.length; k++) {
-                    if (k != i) {
-                        if (this[pu].nobulbthermo[k]) {
-                            for (var m = 1; m < this[pu].nobulbthermo[k].length; m++) {
-                                if (this[pu].nobulbthermo[k][m] === endpoint) {
-                                    return 1;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            cache_key = pu + "_thermo";
+            list1 = this[pu].thermo;
+            list2 = this[pu].nobulbthermo;
         } else if (symboltype === "arrows" || symboltype === "direction") {
-            if (this[pu].arrows) {
-                for (var k = 0; k < this[pu].arrows.length; k++) {
-                    if (k != i) {
-                        if (this[pu].arrows[k]) {
-                            for (var m = 1; m < this[pu].arrows[k].length; m++) {
-                                if (this[pu].arrows[k][m] === endpoint) {
-                                    return 1;
+            cache_key = pu + "_arrows";
+            list1 = this[pu].arrows;
+            list2 = this[pu].direction;
+        } else {
+            return 0;
+        }
+
+        if (!this._find_common_cache[cache_key]) {
+            const cache = [];
+            for (const list of [list1, list2]) {
+                if (list) {
+                    for (let k = 0; k < list.length; k++) {
+                        if (list[k]) {
+                            for (let m = 1; m < list[k].length; m++) {
+                                const ep = list[k][m];
+                                if (!cache[ep]) {
+                                    cache[ep] = [];
                                 }
+                                cache[ep].push(k);
                             }
                         }
                     }
                 }
             }
-            if (this[pu].direction) {
-                for (var k = 0; k < this[pu].direction.length; k++) {
-                    if (k != i) {
-                        if (this[pu].direction[k]) {
-                            for (var m = 1; m < this[pu].direction[k].length; m++) {
-                                if (this[pu].direction[k][m] === endpoint) {
-                                    return 1;
-                                }
-                            }
-                        }
-                    }
-                }
+            this._find_common_cache[cache_key] = cache;
+        }
+
+        const endpoints = this._find_common_cache[cache_key][endpoint];
+        if (endpoints) {
+            for (let x = 0; x < endpoints.length; x++) {
+                if (endpoints[x] !== i) return 1;
             }
         }
         return 0;
@@ -1808,16 +1807,25 @@ class Puzzle_square extends Puzzle {
                 {
                     let number_data = this[pu].number[i];
                     let lines = number_data[0].split('\n');
+
+                    const ctx = this.ctx;
+                    const size = this.size;
+                    const type = number_data[1];
+                    const halfSize = size * 0.5;
+                    const halfSizeStr = halfSize.toString(10);
+                    const xOffset = size * 0.2;
+                    const yOffset = size * 0.25;
+
                     for (let line of lines) {
-                        if (number_data[1] === 5) {
-                            set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                            set_circle_style(this.ctx, 7);
-                            this.ctx.fillRect(p_x - 0.2 * this.size, p_y - 0.25 * this.size, this.ctx.measureText(line).width, 0.5 * this.size);
+                        if (type === 5) {
+                            set_font_style(ctx, halfSizeStr, type);
+                            set_circle_style(ctx, 7);
+                            ctx.fillRect(p_x - xOffset, p_y - yOffset, ctx.measureText(line).width, halfSize);
                         }
-                        set_font_style(this.ctx, 0.5 * this.size.toString(10), number_data[1]);
-                        this.ctx.textAlign = "left";
-                        this.ctx.text(line, p_x - 0.2 * this.size, p_y);
-                        p_y += this.size * 0.5;
+                        set_font_style(ctx, halfSizeStr, type);
+                        ctx.textAlign = "left";
+                        ctx.text(line, p_x - xOffset, p_y);
+                        p_y += halfSize;
                     }
                 }
                     break;
