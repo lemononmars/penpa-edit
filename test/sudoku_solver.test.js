@@ -219,6 +219,50 @@ test("honors an arrow sum", function() {
     assert.equal(result.board[0][0], result.board[0][1] + result.board[0][2]);
 });
 
+test("honors a count different arrow", function() {
+    const constraints = {
+        countDifferent: [{
+            circle: { row: 0, col: 0 },
+            shaft: [{ row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }, { row: 4, col: 4 }]
+        }]
+    };
+
+    const board = emptyBoard();
+    board[1][1] = 1;
+    board[2][2] = 2;
+    board[3][3] = 1;
+    board[4][4] = 3;
+    board[0][0] = 3; // 1, 2, 3 -> 3 unique
+
+    assert.equal(SudokuCSP.findConflict(board, constraints), null);
+
+    board[4][4] = 2; // 1, 2 -> 2 unique
+    board[0][0] = 3; // wants 3
+    assert.equal(SudokuCSP.findConflict(board, constraints)?.constraint, "countDifferent");
+});
+
+test("honors a count the odd ones arrow", function() {
+    const constraints = {
+        countOdd: [{
+            circle: { row: 0, col: 0 },
+            shaft: [{ row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }, { row: 4, col: 4 }]
+        }]
+    };
+
+    const board = emptyBoard();
+    board[1][1] = 1;
+    board[2][2] = 2;
+    board[3][3] = 3;
+    board[4][4] = 5;
+    board[0][0] = 3; // 1, 3, 5 -> 3 odd digits
+
+    assert.equal(SudokuCSP.findConflict(board, constraints), null);
+
+    board[4][4] = 4; // 1, 3 -> 2 odd digits
+    board[0][0] = 3; // wants 3
+    assert.equal(SudokuCSP.findConflict(board, constraints)?.constraint, "countOdd");
+});
+
 test("an active Arrow variant is CSP-supported before its first clue is drawn", function() {
     const puzzle = {
         nx: 9, ny: 9, space: [0, 0, 0, 0],
@@ -227,6 +271,26 @@ test("an active Arrow variant is CSP-supported before its first clue is drawn", 
         point: {}
     };
     assert.equal(SudokuSolver.readConstraints(puzzle).supported.includes("arrow"), true);
+});
+
+test("an active Count different variant is CSP-supported when its first clue is drawn", function() {
+    const puzzle = {
+        nx: 9, ny: 9, space: [0, 0, 0, 0],
+        activeSudokuVariants: ["classic", "countdifferent"],
+        pu_q: { arrows: [[85, 86]], thermo: [], number: {}, numberS: {}, symbol: {}, line: {}, lineE: {}, cage: {}, surface: {} },
+        point: { 85: { x: 0, y: 0, type: 0 }, 86: { x: 0, y: 1, type: 0 } }
+    };
+    assert.equal(SudokuSolver.readConstraints(puzzle).supported.includes("countdifferent"), true);
+});
+
+test("an active Count the odd ones variant is CSP-supported when its first clue is drawn", function() {
+    const puzzle = {
+        nx: 9, ny: 9, space: [0, 0, 0, 0],
+        activeSudokuVariants: ["classic", "counttheoddones"],
+        pu_q: { arrows: [[85, 86]], thermo: [], number: {}, numberS: {}, symbol: {}, line: {}, lineE: {}, cage: {}, surface: {} },
+        point: { 85: { x: 0, y: 0, type: 0 }, 86: { x: 0, y: 1, type: 0 } }
+    };
+    assert.equal(SudokuSolver.readConstraints(puzzle).supported.includes("counttheoddones"), true);
 });
 
 test("Almost Palindrome accepts a sequence made palindromic by deleting one digit", function() {

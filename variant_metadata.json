@@ -1011,13 +1011,15 @@
       "rules": {
         "9x9": "Follow classic sudoku rules. Number in a circle tells how many distinct digits you can find along the corresponding arrow."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "line"
         ],
-        "instructions": []
+        "instructions": [
+          "Drag from the circle cell through the shaft cells to create an arrow."
+        ]
       },
       "tags": []
     },
@@ -1045,13 +1047,15 @@
       "rules": {
         "9x9": "Follow classic sudoku rules. Number in a circle tells you how many odd digits you can find along the corresponding arrow."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "line"
         ],
-        "instructions": []
+        "instructions": [
+          "Drag from the circle cell through the shaft cells to create an arrow."
+        ]
       },
       "tags": []
     },

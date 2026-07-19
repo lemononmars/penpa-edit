@@ -3676,6 +3676,34 @@ var SudokuCSP = (function() {
     });
 
     // Average Arrows: circle = arithmetic mean of shaft digits
+    registerConstraint("countDifferent", {
+        validatePartial: function(board, arrow) {
+            var circle = cellValue(board, arrow.circle);
+            var shaftValues = arrow.shaft.map(function(cell) { return cellValue(board, cell); });
+            var assigned = shaftValues.filter(Boolean);
+            var blanks = shaftValues.length - assigned.length;
+            var uniqueAssigned = new Set(assigned).size;
+            if (circle) {
+                return uniqueAssigned <= circle && uniqueAssigned + blanks >= circle;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("countOdd", {
+        validatePartial: function(board, arrow) {
+            var circle = cellValue(board, arrow.circle);
+            var shaftValues = arrow.shaft.map(function(cell) { return cellValue(board, cell); });
+            var assigned = shaftValues.filter(Boolean);
+            var blanks = shaftValues.length - assigned.length;
+            var oddCount = assigned.filter(function(v) { return v % 2 !== 0; }).length;
+            if (circle) {
+                return oddCount <= circle && oddCount + blanks >= circle;
+            }
+            return true;
+        }
+    });
+
     registerConstraint("averageArrows", {
         validatePartial: function(board, arrow) {
             var circle = cellValue(board, arrow.circle);
