@@ -2923,7 +2923,7 @@
       "rules": {
         "9x9": "Place a digit from 1 to 9 into each of the empty cells so that each digit appears exactly once in each row, column and 3x3 outlined region. Shade some cells in the grid such that the numbers outside the grid represent sums of digits in white cells of the corresponding row or column. If there is more than one sum, the given order is valid and there must be at least one shaded cell between the sums. Some shaded cells may be given."
       },
-      "status": "infeasible",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -3932,7 +3932,7 @@
       "rules": {
         "9x9": " The clues outside the grid indicate, in the correct order, the sums of all consecutive sequences of odd numbers in the corresponding direction. There must be at least one even number placed between two such sequences."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
