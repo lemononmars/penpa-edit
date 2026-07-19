@@ -3191,6 +3191,7 @@ test("Big-Small Japanese Sums validate sequences", function() {
 
 test("Tic-Tac-Toe Winner validations", function() {
     assert.strictEqual(true, true);
+});
 
 test("Unicorn normalizes the constraint array with 81 entries", function() {
     const puzzle = {
@@ -3270,6 +3271,8 @@ test("evaluates Coded Clone assignments", function() {
         "345286179"
     );
     assert.equal(SudokuCSP.solve(invalidSolution, constraints).solved, false);
+});
+
 test("Braille parsing and CSP validation", () => {
     const puzzle = {
         gridtype: "sudoku",
