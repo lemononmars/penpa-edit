@@ -6517,7 +6517,7 @@
       "rules": {
         "9x9": "Wherever the number in the cell equals to a total of any amount of the closest numbers in any direction, there is an arrow pointing to that direction possible arrows are given)."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [

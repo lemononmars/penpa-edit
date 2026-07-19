@@ -1649,6 +1649,29 @@ var SudokuCSP = (function() {
                     return !isComplete || hasMatch;
                 }
             }
+            if (relation === "twindetector") {
+                if (!origin) return true;
+                var markedRays = {};
+                (clue.rays || []).forEach(function(ray) {
+                    if (ray.length) markedRays[ray[0].row + ":" + ray[0].col] = true;
+                });
+                return (clue.allRays || []).every(function(ray) {
+                    if (!ray.length) return true;
+                    var marked = !!markedRays[ray[0].row + ":" + ray[0].col];
+                    var hasMatch = false, canMatch = false, sum = 0, blanks = 0;
+                    for (var i = 0; i < ray.length; i++) {
+                        var value = cellValue(board, ray[i]);
+                        if (value) sum += value;
+                        else blanks++;
+
+                        if (sum === origin && blanks === 0) hasMatch = true;
+                        if (sum + blanks <= origin && sum + blanks * SIZE >= origin && (blanks > 0 || sum === origin)) {
+                            canMatch = true;
+                        }
+                    }
+                    return marked ? canMatch : !hasMatch;
+                });
+            }
             if (relation === "eliminate") {
                 return !origin || targetValues.every(function(value) { return !value || value !== origin; });
             }

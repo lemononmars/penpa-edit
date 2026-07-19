@@ -1345,6 +1345,14 @@ test("validates all directional shape relations", function() {
         neighbors: [{ row: 0, col: 3 }, { row: 0, col: 4 }, { row: 0, col: 5 }] }), true);
     assert.equal(accepted({ relation: "biggestneighbours", targets: [{ row: 0, col: 3 }],
         neighbors: [{ row: 0, col: 3 }, { row: 0, col: 4 }] }), false);
+    assert.equal(accepted({ relation: "twindetector", origin: { row: 5, col: 3 },
+        rays: [[{ row: 6, col: 3 }, { row: 7, col: 3 }]],
+        allRays: [[{ row: 6, col: 3 }, { row: 7, col: 3 }]]
+    }), true);
+    assert.equal(accepted({ relation: "twindetector", origin: { row: 5, col: 3 },
+        rays: [],
+        allRays: [[{ row: 6, col: 3 }, { row: 7, col: 3 }]]
+    }), false);
     assert.equal(accepted({ relation: "smallestneighbours", targets: [{ row: 0, col: 1 }],
         neighbors: [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 3 }] }), true);
     assert.equal(accepted({ relation: "smallestneighbours", targets: [{ row: 0, col: 0 }],
@@ -1443,6 +1451,16 @@ test("normalizes the newly implemented catalog variants for the solver", functio
         assert.equal(clue.targets.length, 8, `${variant} should inspect the complete arrow sightline`);
         assert.deepEqual(clue.targets[7], { row: 0, col: 8 });
     });
+
+    const twindetectorSightline = puzzleFor("twindetector", {
+        centerlist: fullCenterList,
+        pu_q: { number: {}, numberS: {}, symbol: {
+            28: [[0, 0, 0, 0, 1, 0, 0, 0], "arrow_eight", 2]
+        }, thermo: [], nobulbthermo: [], killercages: [] }
+    });
+    const twindetectorClue = SudokuSolver.readConstraints(twindetectorSightline).directionalMarks[0];
+    assert.equal(twindetectorClue.targets.length, 8, `twindetector should inspect the complete arrow sightline`);
+    assert.equal(twindetectorClue.allRays.length, 8, `twindetector should inspect all 8 rays`);
 
     const stretched = puzzleFor("stretchedthermo", {
         pu_q: { number: {}, numberS: {}, symbol: {}, thermo: [[28, 29, 30]], nobulbthermo: [], killercages: [] }
