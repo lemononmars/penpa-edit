@@ -77,7 +77,7 @@ export const outsideVariationValues = new Set(variations.filter((item) =>
     item.value !== "xydifference" && (item.inputType.categories.includes("outside") ||
         item.tags?.includes("outside"))
 ).map((item) => item.value));
-const regionGridVariants = ["irregular", "scattered", "deficit", "surplus"];
+const regionGridVariants = ["irregular", "scattered", "deficit", "surplus", "toroidal"];
 
 function genericSetting(variation: Variation) {
     const text = variation.rule.toLowerCase();
