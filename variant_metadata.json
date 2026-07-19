@@ -361,7 +361,7 @@
       "rules": {
         "9x9": "Apply classic sudoku rules.\nThe three numbers placed along marked lines must result in 24 after applying two of the arithmetic operations (+, x, -, /). The order of these numbers along the line does not matter.\nE.g. 395 can be combined as 24 = (3 x 5) + 9."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
