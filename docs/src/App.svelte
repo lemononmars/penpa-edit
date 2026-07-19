@@ -1373,7 +1373,7 @@
             <button
               class:active={layer === "solution"}
               on:click={() => chooseLayer("solution")}
-              ><i class="fa fa-check" aria-hidden="true"></i>Answer</button
+              ><i class="fa fa-check" aria-hidden="true"></i>Solve</button
             >
             <button
               class:active={layer === "modes"}
@@ -1404,7 +1404,7 @@
 
         <section
           class="variant-picker"
-          style="display: none;"
+
           class:hidden-section={layer !== "problem"}
         >
           <div class="control-label" id="svelte-variant-label">Add variant</div>
@@ -1579,6 +1579,7 @@
           <button
             type="button"
             class="mobile-add-variant"
+            class:hidden-section={layer === "solution"}
             aria-expanded={inputVariantMenuOpen}
             on:click={() =>
               (inputVariantMenuOpen = !inputVariantMenuOpen)}
