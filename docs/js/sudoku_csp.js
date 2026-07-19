@@ -1001,6 +1001,122 @@ var SudokuCSP = (function() {
         }
     });
 
+        registerConstraint("oneKnightStep", {
+        validatePartial: function(board, starts) {
+            var SIZE = board.length;
+            var knightOffsets = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+            for (var index = 0; index < starts.length; index++) {
+                var cell = starts[index];
+                var cellVal = cellValue(board, cell);
+                if (!cellVal) continue;
+                var matchCount = 0;
+                var emptyCount = 0;
+                for (var i = 0; i < knightOffsets.length; i++) {
+                    var r = cell.row + knightOffsets[i][0];
+                    var c = cell.col + knightOffsets[i][1];
+                    if (r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+                        var kVal = cellValue(board, { row: r, col: c });
+                        if (!kVal) emptyCount++;
+                        else if (kVal === cellVal) matchCount++;
+                    }
+                }
+                if (matchCount > 1) return false;
+                if (matchCount === 0 && emptyCount === 0) return false;
+            }
+            return true;
+        },
+        validateComplete: function(board, starts) {
+            var SIZE = board.length;
+            var knightOffsets = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+            for (var index = 0; index < starts.length; index++) {
+                var cell = starts[index];
+                var cellVal = cellValue(board, cell);
+                var matchCount = 0;
+                for (var i = 0; i < knightOffsets.length; i++) {
+                    var r = cell.row + knightOffsets[i][0];
+                    var c = cell.col + knightOffsets[i][1];
+                    if (r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+                        if (cellValue(board, { row: r, col: c }) === cellVal) matchCount++;
+                    }
+                }
+                if (matchCount !== 1) return false;
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("repeatedNeighbors", {
+        validatePartial: function(board, shaded) {
+            var SIZE = board.length;
+            var offsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var isShaded = false;
+                    for (var i = 0; i < shaded.length; i++) {
+                        if (shaded[i].row === r && shaded[i].col === c) {
+                            isShaded = true;
+                            break;
+                        }
+                    }
+                    var counts = {};
+                    var emptyCount = 0;
+                    for (var i = 0; i < offsets.length; i++) {
+                        var nr = r + offsets[i][0];
+                        var nc = c + offsets[i][1];
+                        if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+                            var v = cellValue(board, {row: nr, col: nc});
+                            if (!v) emptyCount++;
+                            else counts[v] = (counts[v] || 0) + 1;
+                        }
+                    }
+                    var maxCount = 0;
+                    for (var k in counts) {
+                        if (counts[k] > maxCount) maxCount = counts[k];
+                    }
+                    if (isShaded) {
+                        if (maxCount + emptyCount < 2) return false;
+                    } else {
+                        if (maxCount > 1) return false;
+                    }
+                }
+            }
+            return true;
+        },
+        validateComplete: function(board, shaded) {
+            var SIZE = board.length;
+            var offsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var isShaded = false;
+                    for (var i = 0; i < shaded.length; i++) {
+                        if (shaded[i].row === r && shaded[i].col === c) {
+                            isShaded = true;
+                            break;
+                        }
+                    }
+                    var counts = {};
+                    for (var i = 0; i < offsets.length; i++) {
+                        var nr = r + offsets[i][0];
+                        var nc = c + offsets[i][1];
+                        if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+                            var v = cellValue(board, {row: nr, col: nc});
+                            if (v) counts[v] = (counts[v] || 0) + 1;
+                        }
+                    }
+                    var hasRepeated = false;
+                    for (var k in counts) {
+                        if (counts[k] > 1) {
+                            hasRepeated = true;
+                            break;
+                        }
+                    }
+                    if (isShaded !== hasRepeated) return false;
+                }
+            }
+            return true;
+        }
+    });
+
     registerConstraint("escapeStarts", {
         validatePartial: function(board, starts) {
             return true;

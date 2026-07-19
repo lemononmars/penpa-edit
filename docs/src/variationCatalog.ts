@@ -104,7 +104,7 @@ function genericSetting(variation: Variation) {
     if (variation.inputType.categories.includes("shading")) {
         add("surface", "", 1, ["mo_surface_lb"]);
     }
-    if (["extraregion", "extralargeregions", "difference2neighbours", "hiddenclone", "escape", "offset", "oneknightstep"].includes(variation.value)) {
+    if (["extraregion", "extralargeregions", "difference2neighbours", "hiddenclone", "escape", "offset", "oneknightstep", "repeatedneighbors"].includes(variation.value)) {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }

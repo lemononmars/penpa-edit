@@ -4017,7 +4017,7 @@
       "rules": {
         "9x9": "Some given digits are shaded. All such digits have exactly one digit of the same value one knight step away from its own position."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -5141,7 +5141,7 @@
       "rules": {
         "9x9": "All cells having the same digit(s) more than once as orthogonal neighbors are shaded. (If a cell is not shaded, it cannot have any digits repeated as orthogonal neighbors.)"
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
