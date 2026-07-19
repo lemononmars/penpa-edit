@@ -138,6 +138,9 @@ export function inputModesFor(variation: Variation) {
 
 /** Human-readable source shown on each generated variant reference page. */
 function cspImplementationFor(variation: Variation) {
+    if (variation.value === "watchtowers") {
+        return "A watchtower digit N overlooks exactly N cells. If N=3, it sees itself and 2 others.";
+    }
     if (variation.value === "zones") {
         return "Returns true when every digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
     }
@@ -145,6 +148,26 @@ function cspImplementationFor(variation: Variation) {
         return "Returns true when the digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
     }
     const implementations: Record<string, string> = {
+        chesskings: `function validatePartial(board, item) {
+  const invalidPairs = new Set();
+  const invalidSingles = new Set();
+  for (const pair of item.pairs) {
+    const a = cellValue(board, pair[0]);
+    const b = cellValue(board, pair[1]);
+    if (a && b) {
+      if (a === b) invalidSingles.add(a);
+      else invalidPairs.add(Math.min(a, b) + "-" + Math.max(a, b));
+    }
+  }
+  for (let x = 1; x <= 9; x++) {
+    if (invalidSingles.has(x)) continue;
+    for (let y = x + 1; y <= 9; y++) {
+      if (invalidSingles.has(y)) continue;
+      if (!invalidPairs.has(x + "-" + y)) return true;
+    }
+  }
+  return false;
+}`,
         oneknightstep: `validatePartial(board, starts) {\n  // Checks that each shaded cell eventually sees exactly one knight-step match.\n  // Fails early if more than one match exists, or if 0 matches and no empty knight-step cells remain.\n  return true;\n}\nvalidateComplete(board, starts) {\n  return starts.every(cell => knightStepMatches(board, cell) === 1);\n}`,
         repeatedneighbors: `validatePartial(board, shaded) {\n  // Checks that shaded cells can still form a duplicate orthogonal neighbor,\n  // and unshaded cells do not already have a duplicate orthogonal neighbor.\n  return true;\n}\nvalidateComplete(board, shaded) {\n  // Verifies that shaded cells have exactly one or more repeated digits among orthogonal neighbors,\n  // and unshaded cells have no repeated digits among orthogonal neighbors.\n  return true;\n}`,
         classic: `validatePartial(board) {\n  return rows(board).every(assignedDigitsAreDistinct)\n    && columns(board).every(assignedDigitsAreDistinct)\n    && boxes(board).every(assignedDigitsAreDistinct);\n}`,
@@ -158,6 +181,10 @@ function cspImplementationFor(variation: Variation) {
         japanesesums: `validatePartial(board, clue) {
   const values = clue.cells.map(cell => cellValue(board, cell));
   return checkSumsSequence(values, clue.value, clue.relation);
+}`,
+        bigsmalljapanesesums: `validatePartial(board, clue) {
+  const values = clue.cells.map(cell => cellValue(board, cell));
+  return checkSumsSequence(values, clue.value, clue.relation, clue.axis);
 }`,
         oddsums: `validatePartial(board, clue) {
   const values = clue.cells.map(cell => cellValue(board, cell));
@@ -175,6 +202,7 @@ function cspImplementationFor(variation: Variation) {
         fortress: `validatePartial(board, clue) {\n  const shaded = cellValue(board, clue.shaded), unshaded = cellValue(board, clue.unshaded);\n  return !shaded || !unshaded || shaded > unshaded;\n}`,
         inequality: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  return !a || !b || (clue.sign === "<" ? a < b : a > b);\n}`,
         trio: `validatePartial(board, clue) {\n  const value = cellValue(board, clue.cell);\n  return !value || (value >= clue.minimum && value <= clue.maximum);\n}`,
+        watchtowers: `validatePartial(board, shadedCells) {\n  // Implementation omitted\n}`,
         perfectsquares: `validatePartial(board, clue) {\n  const [a, b] = clue.cells.map(cellValue);\n  if (!a || !b) return true;\n  const perfect = [16, 25, 36, 49, 64, 81].includes(10 * a + b);\n  return clue.marked ? perfect : !perfect;\n}`,
         clockfaces: `validateComplete(board, clue) {\n  const clockwise = clockwiseCells(clue.cells).map(cellValue);\n  const increasingClockwise = circularDescentCount(clockwise) === 1;\n  const increasingCounterclockwise = circularDescentCount(clockwise.toReversed()) === 1;\n  return clue.kind === "white" ? increasingClockwise : clue.kind === "black" ? increasingCounterclockwise\n    : !increasingClockwise && !increasingCounterclockwise;\n}`,
         exclusion: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue).filter(Boolean);\n  return clue.digits.every(digit => !values.includes(digit));\n}`,
@@ -301,12 +329,14 @@ function cspImplementationFor(variation: Variation) {
         "even passage": `validatePartial(board) {\n  return hasEvenPath(board, board.length);\n}`,
         "equal sum line": `validatePartial(board, clue) {\n  const groups = {};\n  clue.cells.forEach(cell => {\n    const box = boxIndex(cell.row, cell.col, board.length);\n    (groups[box] || (groups[box] = [])).push(cell);\n  });\n  let minPossible = -Infinity, maxPossible = Infinity;\n  for (const box of Object.keys(groups)) {\n    const cells = groups[box], sum = cells.map(cellValue).reduce((t, v) => t + v, 0);\n    const blanks = cells.filter(cell => !cellValue(board, cell)).length;\n    let minS = sum + blanks, maxS = sum + blanks * board.length;\n    if (blanks === 0) { minS = sum; maxS = sum; }\n    minPossible = Math.max(minPossible, minS);\n    maxPossible = Math.min(maxPossible, maxS);\n  }\n  return minPossible <= maxPossible;\n}`,
         "german whispers": `validatePartial(board, line) {\n  const values = line.cells.map(cellValue);\n  for (let i = 0; i < values.length - 1; i++) {\n    if (values[i] && values[i+1] && Math.abs(values[i] - values[i+1]) < 5) return false;\n  }\n  return true;\n}`,
+        upanddown: `validatePartial(board, line) {\n  const values = line.cells.map(cellValue);\n  let pattern0Valid = true, pattern1Valid = true;\n  for (let i = 0; i < values.length - 1; i++) {\n    const a = values[i], b = values[i+1];\n    if (a && b) {\n      const diff = b - a;\n      if (Math.abs(diff) < 4) return false;\n      if (diff > 0) {\n        if (i % 2 !== 0) pattern0Valid = false;\n        if (i % 2 === 0) pattern1Valid = false;\n      } else {\n        if (i % 2 === 0) pattern0Valid = false;\n        if (i % 2 !== 0) pattern1Valid = false;\n      }\n    }\n  }\n  return pattern0Valid || pattern1Valid;\n}`,
         "factor lines": `validatePartial(board, line) {\n  const values = line.cells.map(cellValue);\n  for (let i = 0; i < values.length - 1; i++) {\n    if (values[i] && values[i+1] && values[i] % values[i+1] !== 0 && values[i+1] % values[i] !== 0) return false;\n  }\n  return true;\n}`,
         "24-trio": `validatePartial(board, line) {\n  const values = line.cells.map(cellValue);\n  if (values.length !== 3) return false;\n  const filled = values.filter(Boolean).sort((a, b) => a - b);\n  if (filled.length === 0) return true;\n  const tuples = [[1, 2, 8], [1, 3, 6], [1, 3, 7], [1, 3, 8], [1, 3, 9], [1, 4, 5], [1, 4, 6], [1, 4, 7], [1, 4, 8], [1, 5, 5], [1, 5, 6], [2, 2, 6], [2, 3, 4], [2, 3, 6], [2, 3, 9], [2, 4, 4], [2, 4, 8], [2, 5, 7], [2, 5, 8], [2, 6, 6], [2, 6, 8], [2, 6, 9], [2, 8, 8], [3, 3, 4], [3, 3, 5], [3, 3, 7], [3, 3, 9], [3, 4, 4], [3, 4, 9], [3, 5, 9], [3, 6, 6], [3, 6, 7], [3, 6, 8], [3, 8, 9], [4, 4, 5], [4, 4, 7], [4, 4, 8], [4, 6, 8], [4, 7, 8], [4, 8, 8], [5, 6, 6], [5, 6, 9], [5, 8, 8], [6, 8, 9], [6, 9, 9], [7, 8, 9], [8, 8, 8]];\n  return tuples.some(t => {\n    let match = true;\n    let tCopy = t.slice();\n    for (let i = 0; i < filled.length; i++) {\n      let idx = tCopy.indexOf(filled[i]);\n      if (idx !== -1) {\n        tCopy.splice(idx, 1);\n      } else {\n        match = false;\n        break;\n      }\n    }\n    return match;\n  });\n}`,
         innerframesum: `validatePartial(board, clue) {\n  const values = clue.cells.slice(1, 4).map(cellValue);\n  return sumBoundsContain(board, clue.cells.slice(1, 4), clue.value);\n}`,
         missingdigit: `validatePartial(board, clue) {\n  const digits = String(clue.value).split("").map(Number);\n  const values = clue.cells.slice(0, 3).map(cellValue);\n  return values.every(value => !digits.includes(value));\n}`,
         nextto9: `validatePartial(board, clue) {\n  const digits = String(clue.value).split("").map(Number);\n  const values = clue.cells.map(cellValue), nine = values.indexOf(9);\n  if (nine !== -1) {\n    const neighbors = [values[nine - 1], values[nine + 1]].filter(Boolean);\n    return neighbors.every(n => digits.includes(n));\n  }\n  return true;\n}`,
         outsideconsecutive: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue);\n  let min = 0, max = 0;\n  for (let i = 0; i < values.length - 1; i++) {\n    if (values[i] && values[i+1]) {\n      if (Math.abs(values[i] - values[i+1]) === 1) { min++; max++; }\n    } else {\n      max++;\n    }\n  }\n  return clue.value >= min && clue.value <= max;\n}`,
+        oddevenbigsmall: `validatePartial(board, clue) {\n  if (board.length !== 8) return false;\n  const val = String(clue.value).replace(/\\s+/g, "");\n  if (val.length !== 1 || !["O", "E", "B", "S"].includes(val.toUpperCase())) return false;\n  const c = val.toUpperCase();\n  const values = clue.cells.map(cellValue);\n  for (let i = 0; i < Math.min(2, values.length); i++) {\n    const v = values[i];\n    if (!v) continue;\n    if (c === "O" && v % 2 !== 1) return false;\n    if (c === "E" && v % 2 !== 0) return false;\n    if (c === "B" && v <= 4) return false;\n    if (c === "S" && v > 4) return false;\n  }\n  return true;\n}`,
         outsidegreaterthan: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue);\n  let min = 0, max = 0;\n  for (let i = 0; i < values.length - 1; i++) {\n    if (values[i] && values[i+1]) {\n      if (values[i] > values[i+1]) { min++; max++; }\n    } else {\n      max++;\n    }\n  }\n  return clue.value >= min && clue.value <= max;\n}`,
         outsidekiller: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue);\n  for (let i = 0; i < values.length - 1; i++) {\n    const a = values[i], b = values[i+1];\n    if (a && b && a + b === clue.value) return true;\n    if ((a || b) && clue.value - (a || b) >= 1 && clue.value - (a || b) <= board.length && clue.value - (a || b) !== (a || b)) return true;\n    if (!a && !b && clue.value >= 3 && clue.value <= board.length * 2 - 1) return true;\n  }\n  return false;\n}`,
         parityskyscrapers: `validatePartial(board, clue) {\n  const values = clue.cells.map(cellValue);\n  if (values.includes(0)) return true;\n  const visible = [];\n  let max = 0;\n  for (const val of values) {\n    if (val > max) { visible.push(val); max = val; }\n  }\n  const odd = visible.filter(v => v % 2 !== 0).length, even = visible.filter(v => v % 2 === 0).length;\n  return clue.value === odd || clue.value === even;\n}`,
@@ -443,6 +473,9 @@ export function cspConstraintFunctionFor(variation: Variation) {
 
 /** Executable-style regression examples displayed on every variant detail page. */
 export function solverTestCasesFor(variation: Variation) {
+    if (variation.value === "watchtowers") {
+        return "A watchtower digit N overlooks exactly N cells. If N=3, it sees itself and 2 others.";
+    }
     if (variation.value === "zones") {
         return "A cage with clue '12' must contain both a 1 and a 2. Partial assignments are valid if empty cells remain to accommodate missing digits.";
     }
@@ -450,7 +483,24 @@ export function solverTestCasesFor(variation: Variation) {
         return "A cage with clue '5' must contain at least one 5. Partial assignments are valid if empty cells remain to accommodate the missing digit.";
     }
     const cases: Record<string, string> = {
+        chesskings: `test("Chess Kings rejects a board if no 2 king digits are possible", () => {
+  const board = boardWith({}); // Empty board
+  const pairs = [];
+  let pairIdx = 0;
+  for (let x = 1; x <= 9; x++) {
+    for (let y = x + 1; y <= 9; y++) {
+      let row = Math.floor(pairIdx / 4);
+      let col = (pairIdx % 4) * 2;
+      board[row][col] = x;
+      board[row][col + 1] = y;
+      pairs.push([{ row: row, col: col }, { row: row, col: col + 1 }]);
+      pairIdx++;
+    }
+  }
+  assert.equal(solve(board, { chessKings: [{ pairs: pairs }] }).solved, false);
+});`,
         oneknightstep: `test("One Knight Step validates exactly one knight match", () => {\n  const board = boardWith({ r1c1: 5, r2c3: 5, r3c2: 6, r3c3: 6 });\n  assert.equal(solve(board, { oneKnightStep: [r1c1] }).solved, true);\n  assert.equal(solve(board, { oneKnightStep: [r2c3] }).solved, true);\n  assert.equal(solve(board, { oneKnightStep: [r3c2] }).solved, false);\n});`,
+        upanddown: `test("Up and down validates alternating sequence with difference >= 4", () => {\n  const board = boardWith({ r1c1: 1, r1c2: 9, r1c3: 5, r2c1: 1, r2c2: 5, r2c3: 9 });\n  assert.equal(solve(board, { catalogLines: [{ relation: "upanddown", path: [r1c1, r1c2, r1c3] }] }).solved, true);\n  assert.equal(solve(board, { catalogLines: [{ relation: "upanddown", path: [r2c1, r2c2, r2c3] }] }).solved, false);\n});`,
         repeatedneighbors: `test("Repeated Neighbors validates duplicate orthogonal neighbors", () => {\n  const board = boardWith({ r2c2: 1, r1c2: 2, r3c2: 2, r2c1: 3, r2c3: 4 });\n  assert.equal(solve(board, { repeatedNeighbors: [r2c2] }).solved, true);\n  assert.equal(solve(board, { repeatedNeighbors: [] }).solved, false);\n});`,
         japanesesums: `test("12, 5 satisfies an outside Japanese sums clue with unshaded cells", () => {
   const board = boardWith({ r1c1: 5, r1c2: 7, r1c3: 1, r1c4: 2, r1c5: 3, r1c6: 9, r1c7: 8, r1c8: 4, r1c9: 6 });
@@ -465,6 +515,12 @@ export function solverTestCasesFor(variation: Variation) {
   // 5(odd), 2(even), 1+3=4(odd), 6(even).
   assert.equal(solve(board, { outsideRelations: [clue] }).solved, true);
   assert.equal(solve(board, { outsideRelations: [{ ...clue, value: [5, 5] }] }).solved, false);
+});`,
+        bigsmalljapanesesums: `test("Big-Small Japanese Sums clues", () => {
+  const board = boardWith({ r1c1: 5, r1c2: 2, r1c3: 6, r1c4: 1, r1c5: 7, r1c6: 8, r1c7: 3, r1c8: 9, r1c9: 4 });
+  const clueRow = { relation: "bigsmalljapanesesums", axis: "row", cells: rowCells(1), value: [2, 1, 3, 4] };
+  assert.equal(solve(board, { outsideRelations: [clueRow] }).solved, true);
+  assert.equal(solve(board, { outsideRelations: [{ ...clueRow, value: [2, 1, 3, 5] }] }).solved, false);
 });`,
         roundoff: `test("rounds 14 down to 10 and 15 up to 20", () => {\n  assert.equal(solve(boardWith({ r1c1: 1, r1c2: 4 }), { roundOffCages: [{ cells: [r1c1, r1c2], total: 10 }] }).solved, true);\n  assert.equal(solve(boardWith({ r1c1: 1, r1c2: 5 }), { roundOffCages: [{ cells: [r1c1, r1c2], total: 20 }] }).solved, true);\n});`,
         ordering: `test("forces groups to form ascending 2-digit values", () => {\n  assert.equal(solve(boardWith({ r1c1: 1, r1c2: 2, r2c1: 3, r2c2: 4 }), { orderingGroups: [[{ cells: [r1c1, r1c2], order: 1 }, { cells: [r2c1, r2c2], order: 2 }]] }).solved, true);\n  assert.equal(solve(boardWith({ r1c1: 3, r1c2: 4, r2c1: 1, r2c2: 2 }), { orderingGroups: [[{ cells: [r1c1, r1c2], order: 1 }, { cells: [r2c1, r2c2], order: 2 }]] }).solved, false);\n});`,

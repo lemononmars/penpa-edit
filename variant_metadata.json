@@ -496,7 +496,7 @@
       "rules": {
         "9x9": "Clues outside the grid indicate the sums of groups in the given order. Clues on top refer to groups of big digits (5-9). These groups are separated by at least one small digit (1-4). Clues on the left refer to groups of small digits, that are separated by at least one big digit."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -668,11 +668,11 @@
       "rules": {
         "9x9": "Two numbers are white and black chess Kings. As in real chess, Kings can not touch other Kings, not even diagonally, even if they are not in opposite color. It is a part of solving to find which numbers are chess Kings."
       },
-      "status": "planned",
-      "scratchGeneratable": false,
+      "status": "available",
+      "scratchGeneratable": true,
       "inputType": {
         "categories": [
-          "cell"
+          "no-input"
         ],
         "instructions": []
       },
@@ -3984,7 +3984,7 @@
       "rules": {
         "9x9": "Place a digit from 1-8 in each empty cell in the grid such that each row, column and marked 8-cell box contains each number exactly once. The clues outside the grid indicate that the first two cells in the corresponding direction must contain digits matching the following description: O = Odd digits {1, 3, 5, 7}; E = Even digits {2, 4, 6, 8}; B = Big digits {5, 6, 7, 8}; S = Small digits {1, 2, 3, 4}."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6618,7 +6618,7 @@
       "rules": {
         "9x9": "The digits along a grey line goes alternately up and down while the difference between the two neighbouring digits is at least 4."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6635,7 +6635,7 @@
       "rules": {
         "9x9": "A digit N in a grey cell represents a watchtower, that can overlook exactly N cells, including itself, with digits smaller than N in all four directions up to the first larger digit in that direction. All possible watchtowers are given."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
