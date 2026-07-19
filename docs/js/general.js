@@ -159,9 +159,7 @@ function add_constraints() {
 
 function init_genre_tags() {
     let genre_tags = document.getElementById('genre_tags_opt');
-    for (let child of genre_tags.childNodes) {
-        genre_tags.removeChild(child);
-    }
+    genre_tags.replaceChildren();
     penpa_tags['options_groups'].forEach(function(element, index) {
         let optgroup = document.createElement("optgroup");
         optgroup.label = element;
@@ -293,112 +291,52 @@ function set_display_labels(gridtype) {
 
     switch (gridtype) {
         case "square":
-            for (var i of type) {
+            for (var i of [...type, ...type2, ...type3]) {
                 document.getElementById(i).style.display = "inline";
             }
-            for (var i of type2) {
-                document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type3) {
-                document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type4) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type6) {
+            for (var i of [...type4, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
             break;
         case "tri":
-            for (var i of type) {
+            for (var i of [...type, ...type4, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
-            for (var i of type2) {
-                document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type3) {
-                document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type4) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type6) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type7) {
+            for (var i of [...type2, ...type3, ...type7]) {
                 document.getElementById(i).style.display = "inline";
             }
             break;
         case "hex":
         case "pyramid":
-            for (var i of type) {
+            for (var i of [...type, ...type4, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
-            for (var i of type2) {
+            for (var i of [...type2, ...type3]) {
                 document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type3) {
-                document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type4) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type6) {
-                document.getElementById(i).style.display = "none";
             }
             break;
         case "iso":
-            for (var i of type) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type2) {
+            for (var i of [...type, ...type2, ...type4, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
             for (var i of type3) {
                 document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type4) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type6) {
-                document.getElementById(i).style.display = "none";
             }
             break;
         case "sudoku":
-            for (var i of type) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type2) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type3) {
+            for (var i of [...type, ...type2, ...type3, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
             for (var i of type4) {
                 document.getElementById(i).style.display = "inline";
             }
-            for (var i of type6) {
-                document.getElementById(i).style.display = "none";
-            }
             break;
         case "kakuro":
-            for (var i of type) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type2) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type3) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type4) {
+            for (var i of [...type, ...type2, ...type3, ...type4, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
             for (var i of type5) {
                 document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type6) {
-                document.getElementById(i).style.display = "none";
             }
             break;
         case "tetrakis_square":
@@ -407,39 +345,18 @@ function set_display_labels(gridtype) {
         case "cairo_pentagonal":
         case "rhombitrihexagonal":
         case "deltoidal_trihexagonal":
-            for (var i of type) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type2) {
+            for (var i of [...type, ...type2, ...type4, ...type6]) {
                 document.getElementById(i).style.display = "none";
             }
             for (var i of type3) {
                 document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type4) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type6) {
-                document.getElementById(i).style.display = "none";
             }
             break;
         case "penrose_P3":
-            for (var i of type) {
+            for (var i of [...type, ...type2, ...type3, ...type4]) {
                 document.getElementById(i).style.display = "none";
             }
-            for (var i of type2) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type3) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type4) {
-                document.getElementById(i).style.display = "none";
-            }
-            for (var i of type5) {
-                document.getElementById(i).style.display = "inline";
-            }
-            for (var i of type6) {
+            for (var i of [...type5, ...type6]) {
                 document.getElementById(i).style.display = "inline";
             }
             break;
@@ -523,8 +440,15 @@ function make_class(gridtype, loadtype = 'new') {
             break;
         case "sudoku":
             if (loadtype === 'new') {
+                var requestedSudokuSize = Number(window.sudotokuNewGridSize);
+                if ([6, 7, 8, 9].indexOf(requestedSudokuSize) === -1) {
+                    requestedSudokuSize = 0;
+                }
                 if (document.getElementById("nb_sudoku2").checked === true) { // Outside, little killer
-                    if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
+                    if (requestedSudokuSize) {
+                        var nx = requestedSudokuSize + 2;
+                        var ny = requestedSudokuSize + 2;
+                    } else if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
                         var nx = 10;
                         var ny = 10;
                     } else if (document.getElementById("nb_sudoku5").checked === true) { // 6x6 grid
@@ -542,7 +466,10 @@ function make_class(gridtype, loadtype = 'new') {
                     document.getElementById("nb_space3").value = 1;
                     document.getElementById("nb_space4").value = 1;
                 } else if (document.getElementById("nb_sudoku3").checked === true) { // sandwich
-                    if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
+                    if (requestedSudokuSize) {
+                        var nx = requestedSudokuSize + 1;
+                        var ny = requestedSudokuSize + 1;
+                    } else if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
                         var nx = 9;
                         var ny = 9;
                     } else if (document.getElementById("nb_sudoku5").checked === true) { // 6x6 grid
@@ -560,7 +487,10 @@ function make_class(gridtype, loadtype = 'new') {
                     document.getElementById("nb_space3").value = 1;
                     document.getElementById("nb_space4").value = 0;
                 } else {
-                    if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
+                    if (requestedSudokuSize) {
+                        var nx = requestedSudokuSize;
+                        var ny = requestedSudokuSize;
+                    } else if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
                         var nx = 8;
                         var ny = 8;
                     } else if (document.getElementById("nb_sudoku5").checked === true) { // 6x6 grid
@@ -589,7 +519,10 @@ function make_class(gridtype, loadtype = 'new') {
             if (loadtype === 'new') {
                 let rows, cols;
                 if (document.getElementById("nb_sudoku2").checked === true) { // Outside, little killer
-                    if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
+                    if (requestedSudokuSize === 7) {
+                        rows = [3, 4, 5, 6, 7, 8];
+                        cols = [];
+                    } else if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
                         rows = [4, 6, 8];
                         cols = [6];
                     } else if (document.getElementById("nb_sudoku5").checked === true) { // 6x6 grid
@@ -618,7 +551,10 @@ function make_class(gridtype, loadtype = 'new') {
                         pu.draw_Z(start, end, end + 1, linestyle);
                     }
                 } else if (document.getElementById("nb_sudoku3").checked === true) { // sandwich
-                    if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
+                    if (requestedSudokuSize === 7) {
+                        rows = [3, 4, 5, 6, 7, 8];
+                        cols = [];
+                    } else if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
                         rows = [4, 6, 8];
                         cols = [6];
                     } else if (document.getElementById("nb_sudoku5").checked === true) { // 6x6 grid
@@ -647,7 +583,10 @@ function make_class(gridtype, loadtype = 'new') {
                         pu.draw_Z(start, end, end + 1, linestyle);
                     }
                 } else {
-                    if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
+                    if (requestedSudokuSize === 7) {
+                        rows = [2, 3, 4, 5, 6, 7];
+                        cols = [];
+                    } else if (document.getElementById("nb_sudoku6").checked === true) { // 8x8 grid
                         rows = [3, 5, 7];
                         cols = [5];
                     } else if (document.getElementById("nb_sudoku5").checked === true) { // 6x6 grid
@@ -676,6 +615,7 @@ function make_class(gridtype, loadtype = 'new') {
                         pu.draw_Z(start, end, end, linestyle);
                     }
                 }
+                delete window.sudotokuNewGridSize;
             }
             break;
         case "kakuro":
@@ -1737,7 +1677,7 @@ async function request_shortlink(url) {
     // The # content cannot be sent to server, So if anyone wants to use automatic shorten, use ?
     url = url.replace("#", "?");
     try {
-        return $.get('https://tinyurl.com/api-create.php?url=' + url, function(link, status) {
+        return await $.get('https://tinyurl.com/api-create.php?url=' + url, function(link, status) {
             if (status === "success") {
                 return link;
             }
@@ -3329,7 +3269,8 @@ function set_solvemode(type = "url") {
 
     // No need of Solving URL in Solver Mode, instead show replay url
     document.getElementById('address_solve').style.display = 'none';
-    document.getElementById('expansion_replay').style.display = '';
+    var replayExpansion = document.getElementById('expansion_replay');
+    if (replayExpansion) replayExpansion.style.display = '';
 }
 
 function set_contestmode() {
@@ -3345,7 +3286,7 @@ function set_contestmode() {
     document.getElementById("mo_move_lb").classList.add('is_hidden');
     document.getElementById("puzzlesourcelink").style.display = "none";
     let sourceUrl = document.getElementById("saveinfosource").value;
-    document.getElementById("answer_key").innerHTML = PenpaText.get('contest_answer', sourceUrl);
+    document.getElementById("answer_key").innerHTML = DOMPurify.sanitize(PenpaText.get('contest_answer', sourceUrl));
     pu.undoredo_disable = true;
     pu.comp = true;
 }
@@ -3415,8 +3356,8 @@ function update_title() {
     let title = document.getElementById("saveinfotitle").value;
     let author = document.getElementById("saveinfoauthor").value;
 
-    document.getElementById("puzzletitle").innerHTML = title;
-    document.getElementById("puzzleauthor").innerHTML = author;
+    document.getElementById('puzzletitle').innerHTML = DOMPurify.sanitize(title);
+    document.getElementById('puzzleauthor').innerHTML = DOMPurify.sanitize(author);
 
     let auth_str = (author ? (title ? ' by ' + author : author) : '');
     let auth_tit_str = (title ? title : (auth_str ? '' : 'Puzzle')) + auth_str;
@@ -3434,5 +3375,7 @@ if (!String.prototype.startsWith) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { isEmpty };
+    module.exports = { isEmpty, encrypt_data, decrypt_data, request_shortlink, get_download_filename, 
+                     get_filename_base, filename_bad_chars, validate_filename, errorMsg, infoMsg, 
+                     update_textarea};
 }

@@ -4,17 +4,18 @@
   import {
     installVariationCatalog,
     outsideVariationValues,
-    scratchGeneratableVariants,
     variationByValue,
     variantMetadata,
   } from "./variationCatalog";
   import { markChoiceFor } from "./variantMarks";
+  import { metadataVariantIdForActiveVariants } from "./exampleSave.mjs";
 
   type VariantOption = { value: string; label: string; group: string };
   type VariantTab =
     | "no-input"
     | "line"
-    | "region"
+    | "cage"
+    | "shading"
     | "outside"
     | "cell"
     | "edge"
@@ -26,19 +27,20 @@
   let legacyControlsHost: HTMLElement;
   let variants: VariantOption[] = [];
   let selectedVariant = "classic";
-  let layer = "problem";
+  let layer = "solution";
   let autoEnabled = false;
   let initialized = false;
   let zoom = 1;
   let variantMenuOpen = false;
+  let inputVariantMenuOpen = false;
   let studioModal:
     | "confirm-grid"
     | "confirm-generate"
     | "screenshot"
     | "info"
     | null = null;
-  let actionMenu: "new-grid" | "generate" | "transform" | "clone" | null = null;
-  let newGridSize: 6 | 9 = 9;
+  let actionMenu: "new-grid" | "transform" | "clone" | null = null;
+  let newGridSize: 6 | 7 | 8 | 9 = 9;
   let keepVariants = false;
   let hoveredVariant: string | null = null;
   let noteMode = "1";
@@ -55,7 +57,6 @@
   let fullLogExpanded = false;
   let generatorVariants: string[] = ["classic"];
   let generatorNegative = { kropki: false, xv: false, battenburg: false };
-  let generatorSource: "new" | "existing" = "new";
   let toolTitle = "Sudoku input";
   let toolDescription =
     "Click a cell, then type a digit. Use Tab to cycle through available input tools.";
@@ -79,14 +80,24 @@
   const variantTabs: Array<{ value: VariantTab; label: string }> = [
     { value: "no-input", label: "No input" },
     { value: "line", label: "Line" },
-    { value: "region", label: "Region" },
+    { value: "cage", label: "Cage" },
+    { value: "shading", label: "Shading" },
     { value: "outside", label: "Outside" },
     { value: "cell", label: "Cell" },
     { value: "edge", label: "Edge" },
     { value: "intersection", label: "Intersection" },
   ];
 
-  const variantIcons: Record<string, string> = variantMetadata.icons;
+  const inputTypeIcons: Record<VariantTab, string> = {
+    "no-input": "∅",
+    line: "╱",
+    cage: "▧",
+    shading: "◩",
+    outside: "↘",
+    cell: "□",
+    edge: "⊟",
+    intersection: "✣",
+  };
 
   function legacyClick(id: string) {
     document.getElementById(id)?.click();
@@ -119,6 +130,9 @@
   }
 
   function chooseLayer(nextLayer: "problem" | "solution" | "modes") {
+    if (nextLayer !== "problem") {
+      (window as any).SudokuTools?.finishIrregularEditor?.();
+    }
     layer = nextLayer;
     variantMenuOpen = false;
     legacyPress(nextLayer === "solution" ? "pu_a_label" : "pu_q_label");
@@ -137,10 +151,17 @@
 
   function syncToolPanel() {
     const pu = (window as any).pu;
+    if (pu?.irregular_mode) {
+      toolPanelMode = "Regions";
+      toolPanelOptions = [];
+      toolPanelSelected = new Set<string>();
+      return;
+    }
     const mode = pu?.mode?.[pu?.mode?.qa]?.edit_mode || "sudoku";
     const setting = pu?.mode?.[pu?.mode?.qa]?.[mode] || [];
     const submode = String(setting[0] || "");
     const variant = String(pu?.activeSudokuVariant || "classic");
+
     const size = Math.max(
       1,
       Math.min(
@@ -150,6 +171,8 @@
           Number(pu?.space?.[1] || 0),
       ),
     );
+    const isZeroEight = ["0to8", "08arrow", "08skyscrapers"].includes(variant);
+
     const arrows = ["←", "↖", "↑", "↗", "→", "↘", "↓", "↙"];
     toolPanelMode =
       mode === "symbol"
@@ -246,12 +269,25 @@
         { value: "odd", input: "3", label: "Odd ○", submode: "circle_L" },
         { value: "even", input: "3", label: "Even □", submode: "square_L" },
       ];
+    } else if (mode === "symbol" && variant === "mastermind") {
+      toolPanelOptions = [
+        { value: "mastermind-black", input: "1", label: "Black ●", submode: "circle_SS" },
+        { value: "mastermind-white", input: "2", label: "White ○", submode: "circle_SS" },
+        { value: "mastermind-cross", input: "3", label: "Cross ⨯", submode: "cross" },
+      ];
     } else if (mode === "symbol" && variant === "trio") {
       toolPanelOptions = [
         { value: "trio-low", input: "3", label: "1–3 ○", submode: "circle_L" },
         { value: "trio-mid", input: "3", label: "4–6 □", submode: "square_L" },
         { value: "trio-high", input: "3", label: "7–9 △", submode: "triup_L" },
       ];
+    } else if (
+      mode === "symbol" &&
+      ["equalsums", "equalproducts", "equaldifferences", "equalratios"].includes(
+        variant,
+      )
+    ) {
+      toolPanelOptions = [{ value: "4", label: "×" }];
     } else if (
       mode === "symbol" &&
       [
@@ -293,12 +329,17 @@
         value: String(index + 1),
         label,
       }));
+    } else if (mode === "number" && variant === "killer") {
+      toolPanelOptions = Array.from({ length: 10 }, (_, index) => ({
+        value: String(index),
+        label: String(index),
+      }));
     } else if (["symbol", "number", "sudoku"].includes(mode)) {
       toolPanelOptions = Array.from(
         { length: mode === "symbol" ? 9 : size },
         (_, index) => ({
-          value: String(index + 1),
-          label: String(index + 1),
+          value: String(isZeroEight ? index : index + 1),
+          label: String(isZeroEight ? index : index + 1),
         }),
       );
     } else {
@@ -399,7 +440,8 @@
     if (outsideVariationValues.has(value) || setting?.outside)
       families.add("outside");
     if (catalog?.tags?.includes("region") || modes.includes("cage"))
-      families.add("region");
+      families.add("cage");
+    if (modes.includes("surface")) families.add("shading");
     if (modes.includes("line") || modes.includes("special"))
       families.add("line");
     if (!families.size) {
@@ -423,7 +465,8 @@
       (
         [
           "outside",
-          "region",
+          "cage",
+          "shading",
           "line",
           "no-input",
           "cell",
@@ -442,9 +485,17 @@
   }
 
   function conflictingVariant(value: string) {
+    const regionGridVariants = ["irregular", "scattered", "deficit", "surplus", "toroidal"];
+    if (regionGridVariants.includes(value)) {
+      return (
+        activeVariantValues().find(
+          (active) => active !== value && regionGridVariants.includes(active),
+        ) || null
+      );
+    }
     const restricted = variantInputFamilies(value).filter(
       (family) =>
-        family === "line" || family === "region" || family === "outside",
+        family === "line" || family === "cage" || family === "outside",
     );
     if (!restricted.length) return null;
     return (
@@ -452,6 +503,7 @@
         (active) =>
           active !== value &&
           active !== "classic" &&
+          !regionGridVariants.includes(active) &&
           variantInputFamilies(active).some((family) =>
             restricted.includes(family),
           ),
@@ -481,6 +533,12 @@
     );
   }
 
+  function inputMenuVariants() {
+    return variants.filter(
+      (variant) => primaryVariantTab(variant.value) === variantTab,
+    );
+  }
+
   function ensureOutsideSpace(target = 1, sides = [0, 1, 2, 3]) {
     const pu = (window as any).pu;
     if (!pu?.space || !pu.grid_is_square?.()) return;
@@ -500,8 +558,12 @@
 
   function chooseVariant(value: string) {
     if (conflictingVariant(value) || unavailableVariant(value)) return;
+    if (!["irregular", "scattered", "deficit", "surplus", "toroidal"].includes(value)) {
+      (window as any).SudokuTools?.finishIrregularEditor?.();
+    }
     selectedVariant = value;
     variantMenuOpen = false;
+    inputVariantMenuOpen = false;
     const select = document.getElementById(
       "constraints_settings_opt",
     ) as HTMLSelectElement | null;
@@ -511,7 +573,7 @@
     variantSearch = "";
     if (
       select.value === selectedVariant &&
-      (["little killer", "sandwich", "skyscraper"].includes(selectedVariant) ||
+      (["little killer", "sandwich", "skyscraper", "mastermind"].includes(selectedVariant) ||
         outsideVariationValues.has(selectedVariant))
     ) {
       const leftTopOnly = [
@@ -526,17 +588,22 @@
         "outsidekiller",
         "parityskyscrapers",
         "positionsums",
+        "japanesesums",
+        "oddsums",
+        "bigsmalljapanesesums",
       ].includes(selectedVariant);
       let layers = [
         "outside",
         "outside234",
         "evensandwich",
         "oddsandwich",
+        "mastermind",
       ].includes(selectedVariant)
         ? 3
         : 1;
       if (selectedVariant === "before1after9") layers = 2;
       if (selectedVariant === "positionsums") layers = 2;
+      if (selectedVariant === "bigsmalljapanesesums") layers = 5;
       ensureOutsideSpace(
         layers,
         selectedVariant === "triplesum"
@@ -614,14 +681,18 @@
     hoveredVariant = variant;
   }
 
-  function requestNewGrid(size: 6 | 9) {
+  function requestNewGrid(size: 6 | 7 | 8 | 9) {
     newGridSize = size;
     keepVariants = false;
     actionMenu = null;
     studioModal = "confirm-grid";
   }
 
-  function createGrid() {
+  function createGrid(preserveVariants: boolean) {
+    keepVariants = preserveVariants;
+    const variantsToKeep = preserveVariants
+      ? activeVariantValues().filter((variant) => variant !== "classic")
+      : [];
     const gridType = document.getElementById(
       "gridtype",
     ) as HTMLSelectElement | null;
@@ -634,24 +705,29 @@
     gridType.dispatchEvent(new Event("change", { bubbles: true }));
     rows.value = String(newGridSize);
     columns.value = String(newGridSize);
+    (window as any).sudotokuNewGridSize = newGridSize;
     // Native Penpa selects the Sudoku box layout through these hidden size
     // switches. The numeric fields alone are ignored for a new Sudoku grid.
     ["nb_sudoku5", "nb_sudoku6", "nb_sudoku8"].forEach((id) => {
       const option = document.getElementById(id) as HTMLInputElement | null;
-      if (option) option.checked = id === "nb_sudoku5" && newGridSize === 6;
+      if (option) {
+        option.checked =
+          (id === "nb_sudoku5" && newGridSize === 6) ||
+          (id === "nb_sudoku6" && newGridSize === 8);
+      }
     });
     if (!keepVariants) {
       (window as any).SudokuTools?.resetForNewGrid?.();
     }
     (window as any).create_newboard?.();
     (window as any).SudokuTools?.renderVariantTools?.();
+    variantsToKeep.forEach((variant) => chooseVariant(variant));
     actionMenu = null;
     studioModal = null;
     window.requestAnimationFrame(fitBoard);
   }
 
-  function requestGenerator(source: "new" | "existing") {
-    generatorSource = source;
+  function requestGenerator() {
     const pu = (window as any).pu;
     generatorVariants = Array.isArray(pu?.activeSudokuVariants)
       ? [...pu.activeSudokuVariants]
@@ -665,7 +741,9 @@
     };
     const outside = Number(pu?.space?.[0] || 0) + Number(pu?.space?.[1] || 0);
     const size = Number(pu?.ny || 9) - outside;
-    newGridSize = size === 6 ? 6 : 9;
+    newGridSize = [6, 7, 8, 9].includes(size)
+      ? (size as 6 | 7 | 8 | 9)
+      : 9;
     actionMenu = null;
     studioModal = "confirm-generate";
   }
@@ -674,44 +752,17 @@
     const size = newGridSize;
     const variantsToGenerate = [...generatorVariants];
     const negative = { ...generatorNegative };
-    const unsupported = variantsToGenerate.filter(
-      (variant) => !scratchGeneratableVariants.has(variant),
-    );
-    if (
-      generatorSource !== "existing" &&
-      (unsupported.length ||
-        negative.kropki ||
-        negative.xv ||
-        negative.battenburg ||
-        (size === 6 && variantsToGenerate.includes("anti diagonal")))
-    ) {
-      studioModal = null;
-      const reason = unsupported.length
-        ? `Generation is not implemented for: ${unsupported.join(", ")}.`
-        : negative.kropki || negative.xv || negative.battenburg
-          ? "Symmetric generation with a negative edge/corner rule is not implemented yet."
-          : "Anti-diagonal generation currently requires a 9 × 9 grid.";
-      (window as any).Swal?.fire?.({
-        icon: "warning",
-        title: "Cannot generate this combination",
-        text: reason,
-      });
-      return;
-    }
     studioModal = null;
-    const sourcePuzzle =
-      generatorSource === "existing"
-        ? {
-            board: (window as any).SudokuSolver?.readBoard?.(
-              (window as any).pu,
-              false,
-            ),
-            constraints: (window as any).SudokuSolver?.readConstraints?.(
-              (window as any).pu,
-            ),
-            preserveExisting: true,
-          }
-        : null;
+    const sourcePuzzle = {
+      board: (window as any).SudokuSolver?.readBoard?.(
+        (window as any).pu,
+        false,
+      ),
+      constraints: (window as any).SudokuSolver?.readConstraints?.(
+        (window as any).pu,
+      ),
+      preserveExisting: true,
+    };
     window.setTimeout(
       () =>
         (window as any).SudokuTools?.generatePuzzle?.(
@@ -739,7 +790,7 @@
     if (!SudokuSolver.isClassicSudoku(pu)) {
       return {
         success: false,
-        msg: "The solver only supports 6x6 or 9x9 Sudoku or square grids. Uniqueness cannot be verified.",
+        msg: "The solver only supports 6x6, 7x7, 8x8, or 9x9 Sudoku or square grids. Uniqueness cannot be verified.",
       };
     }
     try {
@@ -784,7 +835,7 @@
   }
 
   function toggleActionMenu(
-    menu: "new-grid" | "generate" | "transform" | "clone",
+    menu: "new-grid" | "transform" | "clone",
   ) {
     actionMenu = actionMenu === menu ? null : menu;
   }
@@ -913,40 +964,37 @@
       return;
     }
     const pu = (window as any).pu;
-    const settings = (window as any).UserSettings;
-    const SudokuSolver = (window as any).SudokuSolver;
-    if (!pu || !settings || !SudokuSolver) return;
+    if (!pu?.maketext_solve) return;
 
-    const variantId = activeVariantFilename();
-    const originalVisibility = settings.show_solution;
-
-    // Ensure problem is showing without solution
-    settings.show_solution = false;
-    pu.redraw();
-
-    // Set format to PNG, with border
-    const typeId = document.getElementById("nb_type1") as HTMLInputElement | null;
-    if (typeId) typeId.checked = true;
-    const border = document.getElementById("nb_margin2") as HTMLInputElement | null;
-    if (border) border.checked = true;
-
-    // Grab problem base64
-    const problemDataUrl = pu.resizecanvas();
-
-    // Apply solution and show it
-    SudokuSolver.applySolution(pu, res.solution);
-    settings.show_solution = true;
-    pu.redraw();
-
-    // Grab solution base64
-    const solutionDataUrl = pu.resizecanvas();
-
-    // Revert visually
-    settings.show_solution = originalVisibility;
-    pu.redraw();
-
-    // Grab the duplicate link
-    const link = pu.maketext_duplicate();
+    const variantId = metadataVariantIdForActiveVariants(
+      pu.activeSudokuVariants,
+      variantMetadata.variants,
+    );
+    if (!variantId) {
+      (window as any).Swal?.fire({
+        icon: "warning",
+        title: "Cannot Save Example",
+        text: "Select exactly one non-Classic variant before saving its wiki example.",
+      });
+      return;
+    }
+    const solvingUrl = pu.maketext_solve?.() as string | undefined;
+    const marker = "#m=solve&p=";
+    const markerIndex = solvingUrl?.indexOf(marker) ?? -1;
+    if (markerIndex < 0) {
+      alert("Could not generate a solving URL for this example.");
+      return;
+    }
+    let example = solvingUrl!.slice(markerIndex + marker.length);
+    if (!/[&]variants=/.test(example)) {
+      example +=
+        "&variants=" +
+        encodeURIComponent(
+          Array.isArray(pu.activeSudokuVariants)
+            ? pu.activeSudokuVariants.join(",")
+            : `classic,${variantId}`,
+        );
+    }
 
     try {
       const response = await fetch("/api/save-example", {
@@ -954,9 +1002,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           variantId,
-          problemDataUrl,
-          solutionDataUrl,
-          link
+          example
         })
       });
       if (response.ok) {
@@ -1019,7 +1065,7 @@
   }
 
   function variantIcon(variant: string) {
-    return variantIcons[variant] || "◇";
+    return inputTypeIcons[primaryVariantTab(variant)];
   }
 
   function applyZoom() {
@@ -1057,7 +1103,12 @@
     if (select?.options.length) {
       variants = Array.from(select.options).map((option) => ({
         value: option.value,
-        label: option.textContent,
+        // Never expose the internal option value as the menu label. The
+        // catalog is backed directly by variant_metadata.json's `name` field.
+        label:
+          variationByValue.get(option.value)?.name ||
+          option.textContent ||
+          "Unnamed variant",
         group:
           (option.parentElement as HTMLOptGroupElement | null)?.label ||
           "Variants",
@@ -1243,10 +1294,12 @@
     const closeVariantMenu = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target?.closest(".variant-picker")) variantMenuOpen = false;
+      if (!target?.closest(".input-modes-section"))
+        inputVariantMenuOpen = false;
       if (!target?.closest(".action-dropdown")) actionMenu = null;
       if (
         !target?.closest(
-          ".controls-top-drawer, .penpa-actions, .log-host, .mobile-header, .column.actions, .mobile-solver",
+          ".controls-top-drawer, .penpa-actions, .log-host, .mobile-header, .column.actions",
         )
       ) {
         mobileActiveTab = "none";
@@ -1280,46 +1333,22 @@
     <div class="mobile-header-row">
       <button
         type="button"
-        class:active={mobileActiveTab === "controls"}
-        on:click={() =>
-          (mobileActiveTab =
-            mobileActiveTab === "controls" ? "none" : "controls")}
+        on:click={() => legacyClick("sudoku_solve_once")}
       >
-        🔧 Rules & Controls
+        <span><i class="fa fa-magic" aria-hidden="true"></i></span> Solve
       </button>
       <button
         type="button"
-        class:active={mobileActiveTab === "actions"}
-        on:click={() =>
-          (mobileActiveTab =
-            mobileActiveTab === "actions" ? "none" : "actions")}
+        on:click={() => legacyClick("sudoku_undo")}
       >
-        📊 Actions
+        <span>↶</span> Undo
       </button>
-    </div>
-    <div class="mobile-header-row solver-row">
       <button
         type="button"
-        class="solver-btn"
-        class:active={autoEnabled}
-        on:click={() => legacyClick("sudoku_auto_solver")}
+        on:click={clearMarks}
       >
-        <i class="fa fa-refresh" aria-hidden="true"></i>
-        {autoEnabled ? "ON" : "OFF"}
+        <span>↺</span> Clear mark
       </button>
-      {#if !autoEnabled}
-        <button
-          type="button"
-          class="solver-btn"
-          on:click={() => legacyClick("sudoku_solve_once")}
-        >
-          <i class="fa fa-magic" aria-hidden="true"></i> Solve
-        </button>
-      {/if}
-      <div class="solver-status">
-        <span class="status-indicator" class:running={solverRunning}></span>
-        <span class="log-text">{lastLogLine}</span>
-      </div>
     </div>
   </div>
   <main class="studio-grid">
@@ -1370,6 +1399,7 @@
 
         <section
           class="variant-picker"
+          style="display: none;"
           class:hidden-section={layer !== "problem"}
         >
           <div class="control-label" id="svelte-variant-label">Add variant</div>
@@ -1540,7 +1570,75 @@
             >Tab ↹</kbd
           >
         </div>
-        <div bind:this={variantHost} class="legacy-variant-host"></div>
+        <div class="input-mode-tools">
+          <button
+            type="button"
+            class="mobile-add-variant"
+            aria-expanded={inputVariantMenuOpen}
+            on:click={() =>
+              (inputVariantMenuOpen = !inputVariantMenuOpen)}
+            >+</button
+          >
+          <div bind:this={variantHost} class="legacy-variant-host"></div>
+          <span class="input-mode-scroll-hint" aria-hidden="true">›</span>
+        </div>
+        {#if inputVariantMenuOpen}
+          <div
+            class="variant-menu input-mode-variant-menu"
+            role="menu"
+            tabindex="-1"
+            on:mouseleave={() => previewRule(null)}
+          >
+            <div
+              class="variant-tabs"
+              role="tablist"
+              aria-label="Variant input type"
+            >
+              {#each variantTabs as tab}
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={variantTab === tab.value}
+                  class:active={variantTab === tab.value}
+                  on:click={() => (variantTab = tab.value)}
+                >{tab.label}</button>
+              {/each}
+            </div>
+            {#each [...new Set(inputMenuVariants().map((variant) => variant.group))] as group}
+              <div class="variant-menu-group">{group}</div>
+              {#each inputMenuVariants().filter((variant) => variant.group === group) as variant}
+                {@const conflict = conflictingVariant(variant.value)}
+                {@const unavailable = unavailableVariant(variant.value)}
+                <button
+                  role="menuitem"
+                  class:current={variant.value === selectedVariant}
+                  disabled={Boolean(conflict || unavailable)}
+                  title={unavailable ||
+                    (conflict
+                      ? `${guideFor(conflict).title} already uses this input type`
+                      : "")}
+                  on:mouseenter={() => previewRule(variant.value)}
+                  on:focus={() => previewRule(variant.value)}
+                  on:click={() => chooseVariant(variant.value)}
+                >
+                  <span class="variant-icon">{variantIcon(variant.value)}</span>
+                  <span>{variant.label}</span>
+                  <span class="capability-badges">
+                    {#if variationByValue.get(variant.value)?.status === "available"}
+                      <span class="csp-badge" title="CSP solver implemented"
+                        >⬢</span
+                      >
+                    {:else}
+                      <span class="unsupported-badge" title="Planned"
+                        >Planned</span
+                      >
+                    {/if}
+                  </span>
+                </button>
+              {/each}
+            {/each}
+          </div>
+        {/if}
         {#if selectedVariant === "slotmachine"}
           <div class="slot-column-controls" aria-label="Slot Machine columns">
             {#each slotColumns as checked, index}
@@ -1689,35 +1787,20 @@
                   <button role="menuitem" on:click={() => requestNewGrid(6)}
                     >6 × 6</button
                   >
+                  <button role="menuitem" on:click={() => requestNewGrid(7)}
+                    >7 × 7</button
+                  >
+                  <button role="menuitem" on:click={() => requestNewGrid(8)}
+                    >8 × 8</button
+                  >
                   <button role="menuitem" on:click={() => requestNewGrid(9)}
                     >9 × 9</button
                   >
                 </div>
               {/if}
             </div>
-            <div class="action-dropdown">
-              <button
-                aria-haspopup="menu"
-                aria-expanded={actionMenu === "generate"}
-                on:click={() => toggleActionMenu("generate")}
-                ><span>✦</span>Generate <b>⌄</b></button
-              >
-              {#if actionMenu === "generate"}
-                <div class="action-menu" role="menu">
-                  <button
-                    role="menuitem"
-                    on:click={() => requestGenerator("new")}>New grid</button
-                  >
-                  <button
-                    role="menuitem"
-                    on:click={() => requestGenerator("existing")}
-                    >From existing</button
-                  >
-                </div>
-              {/if}
-            </div>
-            <button on:click={clearMarks}
-              ><span>↺</span>Clear mark</button
+            <button on:click={requestGenerator}
+              ><span>✦</span>Generate</button
             >
             <div class="action-dropdown">
               <button
@@ -1772,7 +1855,6 @@
               {/if}
             </div>
             <button on:click={openScreenshot}><span>▣</span>Screenshot</button>
-            <button on:click={saveExample}><span>💾</span>Save Example</button>
             <button on:click={() => legacyPress("savetext")}
               ><span>↗</span>Share</button
             >
@@ -1794,9 +1876,15 @@
             <button on:click={() => legacyClick("sudoku_undo")}
               ><span>↶</span>Undo</button
             >
+            <button on:click={clearMarks}
+              ><span>↺</span>Clear mark</button
+            >
             <button on:click={() => legacyClick("sudoku_redo")}
               ><span>↷</span>Redo</button
             >
+          </div>
+          <div class="action-group bottom-actions">
+            <button on:click={saveExample}><span>💾</span>Save Example</button>
             <button
               class="info-action"
               title="About this editor"
@@ -1837,20 +1925,15 @@
           This replaces the current puzzle, variants, solver state, and undo
           history.
         </p>
-        <label class="keep-variants-label">
-          <input type="checkbox" bind:checked={keepVariants} />
-          Keep current variants
-        </label>
         <div class="studio-modal-actions">
           <button on:click={() => (studioModal = null)}>Cancel</button>
-          <button class="primary" on:click={createGrid}>Create grid</button>
+          <button on:click={() => createGrid(true)}>Keep variants</button>
+          <button class="primary" on:click={() => createGrid(false)}
+            >Classic</button
+          >
         </div>
       {:else if studioModal === "confirm-generate"}
-        <h2 id="studio-modal-title">
-          Generate {generatorSource === "existing"
-            ? "from existing clues"
-            : "from the blank grid"}
-        </h2>
+        <h2 id="studio-modal-title">Generate from existing clues</h2>
         <p>
           {generatorVariants.length == 0
             ? "This will be a Classic Sudoku."
@@ -1932,10 +2015,8 @@
             >
             for CSP solver inspiration. This website uses a vibecoded CSP implementation,
             but I hope to learn to integrate
-          </p>
-          <p>
             <a
-              href="https://github.com/semiexp/cspuz_core"
+href="https://github.com/semiexp/cspuz_core"
               target="_blank"
               rel="noreferrer">cspuz_core</a
             > someday.
@@ -1949,11 +2030,6 @@
           </p>
           <p>Codex for making this ambitious project possible.</p>
           <h2 id="studio-modal-title">Disclaimer</h2>
-          <p>
-            The solver is deterministic, but if you find a bug, please report it
-            to the GitHub.
-          </p>
-          <p>This uses local storage for settings only.</p>
           <p>
             The solver runs on your device, and it does not collect nor send any
             of your data.
@@ -2109,11 +2185,6 @@
     position: relative;
     z-index: 20;
   }
-  .generation-legend {
-    margin: -2px 0 6px;
-    color: #6d7a87;
-    font-size: 9px;
-  }
   .variant-search-control {
     display: grid;
     grid-template-columns: 24px 1fr 18px;
@@ -2240,19 +2311,13 @@
     font-weight: 750;
     white-space: nowrap;
   }
-  .generation-badge {
-    color: #bd7b00;
-    font-size: 12px;
-    text-align: right;
-  }
   .capability-badges {
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
     gap: 5px;
   }
-  .csp-badge,
-  .csp-legend-icon {
+  .csp-badge {
     color: #16805d;
     font-size: 11px;
   }
@@ -2324,6 +2389,39 @@
     border: 1px solid #d4dbe3;
     border-radius: 10px;
     box-shadow: 0 4px 18px rgba(23, 34, 49, 0.1);
+  }
+  :global(.svelte-home #dvique.irregular-editing) {
+    position: relative;
+  }
+  :global(.svelte-home .irregular-region-editor) {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    pointer-events: auto;
+  }
+  :global(.svelte-home .irregular-region-editor input) {
+    position: absolute;
+    box-sizing: border-box;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    outline: none;
+    background: rgba(255, 255, 255, 0.78);
+    color: #173f78;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    pointer-events: auto;
+  }
+  :global(.svelte-home .irregular-region-editor input:hover) {
+    border-color: #8aa9ca;
+  }
+  :global(.svelte-home .irregular-region-editor input:focus) {
+    border-color: #176fae;
+    background: rgba(232, 243, 255, 0.96);
+    box-shadow: 0 0 0 2px rgba(23, 111, 174, 0.2);
   }
   :global(.svelte-home .board-host #puzzleinfo),
   :global(.svelte-home .board-host #contestinfo) {
@@ -2460,6 +2558,20 @@
   }
   .input-modes-heading h2 {
     margin: 0;
+  }
+  .input-mode-tools {
+    display: flex;
+    min-width: 0;
+  }
+  .input-mode-tools .legacy-variant-host {
+    flex: 1;
+    min-width: 0;
+  }
+  .mobile-add-variant {
+    display: none;
+  }
+  .input-mode-scroll-hint {
+    display: none;
   }
   .tab-key-hint {
     padding: 1px 5px;
@@ -3028,23 +3140,22 @@
     width: 17px;
     flex: 0 0 17px;
   }
-  .final-actions .info-action {
-    grid-column: 3;
-    justify-content: center;
+  .bottom-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .info-copy {
     display: grid;
     gap: 6px;
   }
   .info-copy strong {
-    color: #263443;
+    color: var(--about-foreground, #263443);
     font-size: 12px;
   }
   .info-copy p {
     margin: 0 0 8px;
   }
   .info-copy a {
-    color: var(--primary-color);
+    color: var(--about-link, #176fae);
     font-weight: 700;
     text-decoration: none;
   }
@@ -3141,6 +3252,12 @@
 
   /* Focused Svelte dialogs and matching Penpa confirmation styling. */
   .studio-modal-backdrop {
+    --modal-primary-background: #176fae;
+    --modal-primary-foreground: #ffffff;
+    --about-background: #ffffff;
+    --about-foreground: #1d2633;
+    --about-muted: #64717e;
+    --about-link: #176fae;
     position: fixed;
     inset: 0;
     z-index: 1200;
@@ -3296,20 +3413,20 @@
     padding: 24px;
     border: 1px solid #cbd5df;
     border-radius: 12px;
-    color: #1d2633;
-    background: #fff;
+    color: var(--about-foreground);
+    background: var(--about-background);
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
   }
   .studio-modal h2 {
     margin: 0 34px 6px 0;
-    color: #172231;
+    color: var(--about-foreground);
     font-size: 19px;
     letter-spacing: 0;
     text-transform: none;
   }
   .studio-modal p {
     margin: 0 0 18px;
-    color: #64717e;
+    color: var(--about-muted);
     font-size: 13px;
   }
   .studio-modal-close {
@@ -3320,7 +3437,7 @@
     height: 32px;
     border: 0;
     border-radius: 6px;
-    color: #65727f;
+    color: var(--about-muted);
     background: transparent;
     font-size: 22px;
   }
@@ -3382,9 +3499,22 @@
     background: #f7f9fb;
   }
   .studio-modal-actions button.primary {
-    color: #fff;
-    border-color: var(--primary-color);
-    background: var(--primary-color);
+    color: var(--modal-primary-foreground);
+    border-color: var(--modal-primary-background);
+    background: var(--modal-primary-background);
+  }
+  :global(html.dark) .studio-modal-backdrop {
+    --modal-primary-background: #125f91;
+    --modal-primary-foreground: #ffffff;
+    --about-background: #263340;
+    --about-foreground: #dde6ed;
+    --about-muted: #aebdca;
+    --about-link: #42a5e8;
+  }
+  :global(html.dark) .studio-modal-actions button:not(.primary) {
+    color: var(--about-foreground);
+    border-color: #536473;
+    background: #32414f;
   }
   :global(.svelte-home .swal2-container) {
     z-index: 1300;
@@ -3570,14 +3700,7 @@
   .studio-shell.dark .variant-rule-preview strong {
     color: #eef4f8;
   }
-  .studio-shell.dark .generation-legend {
-    color: #aebbc5;
-  }
-  .studio-shell.dark .generation-badge {
-    color: #f1bd56;
-  }
-  .studio-shell.dark .csp-badge,
-  .studio-shell.dark .csp-legend-icon {
+  .studio-shell.dark .csp-badge {
     color: #64d3aa;
   }
   .studio-shell.dark .unsupported-badge {
@@ -3671,7 +3794,9 @@
     .studio-grid {
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 48px);
+      flex: 1;
+      min-height: 0;
+      height: auto;
       padding: 0;
       gap: 0;
       overflow: hidden;
@@ -3691,6 +3816,13 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+    }
+    .board-host {
+      width: min(100%, 100dvh);
+      min-height: 0;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      flex: 0 1 auto;
     }
 
     .controls-top-drawer {
@@ -3777,6 +3909,29 @@
     .input-modes-section.panel-below h2 {
       display: none;
     }
+    .tab-key-hint,
+    .mobile-input-panel .tool-input-panel kbd {
+      display: none;
+    }
+    .input-mode-tools {
+      gap: 6px;
+      align-items: stretch;
+      position: relative;
+    }
+    .mobile-add-variant {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      min-height: 32px;
+      padding: 5px 9px;
+      border: 1px solid #bdc8d3;
+      border-radius: 5px;
+      color: var(--primary-color);
+      background: #fff;
+      font-size: 10px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
     .studio-shell.dark .input-modes-section.panel-above,
     .studio-shell.dark .input-modes-section.panel-below {
       background: #32414f;
@@ -3793,6 +3948,26 @@
     }
     :global(.svelte-home .legacy-variant-host button) {
       flex-shrink: 0 !important;
+    }
+    .input-mode-scroll-hint {
+      display: flex;
+      position: absolute;
+      z-index: 2;
+      top: 2px;
+      right: 0;
+      bottom: 2px;
+      width: 24px;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 3px;
+      pointer-events: none;
+      color: var(--primary-color);
+      background: linear-gradient(90deg, transparent, #fff 55%);
+      font-size: 22px;
+      font-weight: 800;
+    }
+    .studio-shell.dark .input-mode-scroll-hint {
+      background: linear-gradient(90deg, transparent, #32414f 55%);
     }
     .input-panel-section {
       padding: 6px !important;
@@ -3830,7 +4005,7 @@
     .mobile-input-panel.panel-below {
       order: 3;
       margin-top: 0 !important;
-      margin-bottom: 8px !important;
+      margin-bottom: max(8px, env(safe-area-inset-bottom)) !important;
       border-radius: 0 0 10px 10px;
       border-top: none;
       box-shadow: 0 4px 8px rgba(23, 34, 49, 0.06);
@@ -3840,17 +4015,26 @@
     }
 
     .variant-picker .variant-menu {
-      position: fixed;
-      top: 145px;
-      bottom: 0;
+      position: absolute;
+      top: calc(100% + 6px);
+      bottom: auto;
       left: 0;
       right: 0;
-      max-height: none;
+      max-height: min(52vh, 430px);
+      overflow-y: auto;
       z-index: 200;
       border-radius: 12px 12px 0 0;
       box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
       background: #ffffff;
       border: 1px solid #bdc8d3;
+    }
+    .input-mode-variant-menu {
+      position: fixed;
+      inset: auto 8px max(8px, env(safe-area-inset-bottom)) 8px;
+      z-index: 300;
+      max-height: min(62vh, 520px);
+      overflow-y: auto;
+      border-radius: 10px;
     }
     .studio-shell.dark .variant-picker .variant-menu {
       background: #263340;
@@ -3976,16 +4160,28 @@
       box-shadow: 0 0 0 2px rgba(72, 199, 142, 0.16);
     }
     .solver-status .log-text {
+      flex: 1;
+      min-width: 0;
       color: #bdc8d3;
       font-size: 10px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .log-host {
-      display: none !important;
+    .solver-status .expand-btn {
+      flex: 0 0 auto;
+      min-width: 42px;
+      min-height: 26px;
+      padding: 3px 7px;
+      font-size: 10px;
     }
-    .mobile-hidden {
+    .mobile-header > .full-log-box {
+      box-sizing: border-box;
+      width: 100%;
+      max-height: 24vh;
+      margin: 0;
+    }
+    .log-host {
       display: none !important;
     }
   }
@@ -4000,47 +4196,6 @@
     white-space: nowrap !important;
   }
 
-  .mobile-solver {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 10px;
-  }
-  .mobile-solver-toggle {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-  .mobile-solver-toggle button {
-    min-height: 38px;
-    padding: 8px;
-    border: 1px solid #bfcad4;
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: 13px;
-    background: #f7f9fb;
-    color: #263443;
-  }
-  .mobile-solver-toggle button.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-  }
-  .mobile-solver-log {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 6px;
-  }
-  .last-log-line {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    border: 1px solid #d4dbe3;
-    border-radius: 6px;
-    background: #fff;
-  }
   .status-indicator {
     width: 8px;
     height: 8px;
@@ -4084,10 +4239,6 @@
     color: #435160;
   }
 
-  .studio-shell.dark .last-log-line {
-    background: #1f2b35;
-    border-color: #465563;
-  }
   .studio-shell.dark .log-text {
     color: #d5dfe7;
   }
@@ -4095,16 +4246,6 @@
     background: #1f2b35;
     border-color: #465563;
     color: #d5dfe7;
-  }
-  .studio-shell.dark .mobile-solver-toggle button {
-    background: #263340;
-    border-color: #536473;
-    color: #dce5ec;
-  }
-  .studio-shell.dark .mobile-solver-toggle button.active {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
-    color: white;
   }
   .studio-shell.dark .expand-btn {
     background: #263340;

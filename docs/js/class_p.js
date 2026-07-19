@@ -1163,7 +1163,7 @@ class Puzzle {
     // - conflicts
     // - all pu_q and pu_a puzzle elements
     // - embedded solution (single and multiple)
-    // 
+    //
     // Currently used for resizing the board.
     // Or in the future to insert or delete a row/col, given the proper translate function.
     translate_puzzle_elements(translate_fn) {
@@ -1714,6 +1714,9 @@ class Puzzle {
     submode_check(name, skipredraw = false) {
         if (document.getElementById(name)) {
             document.getElementById(name).checked = true;
+            const subVariable = document.getElementById('sub_variable');
+            const subLabel = document.getElementById(name + '_lb');
+            if (subVariable && subLabel) subVariable.textContent = subLabel.textContent;
             this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] = document.getElementById(name).value;
             this.cursolcheck(); // override
 
@@ -1737,6 +1740,9 @@ class Puzzle {
     stylemode_check(name) {
         if (document.getElementById(name)) {
             document.getElementById(name).checked = true;
+            const styleVariable = document.getElementById('style_variable');
+            const styleLabel = document.getElementById(name + '_lb');
+            if (styleVariable && styleLabel) styleVariable.textContent = styleLabel.textContent;
             this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1] = parseInt(document.getElementById(name).value);
             panel_pu.draw_panel(); // Panel update
         }
@@ -1819,6 +1825,10 @@ class Puzzle {
     }
 
     submode_reset() {
+        const subVariable = document.getElementById('sub_variable');
+        if (subVariable) subVariable.textContent = '';
+        const styleVariable = document.getElementById('style_variable');
+        if (styleVariable) styleVariable.textContent = '';
         document.getElementById('mode_line').style.display = 'none';
         document.getElementById('mode_lineE').style.display = 'none';
         document.getElementById('mode_number').style.display = 'none';
@@ -6735,12 +6745,6 @@ class Puzzle {
                         text += "\n";
                     }
                 }
-            } else if (header === "test") {
-                console.log(this.pu_q);
-                console.log(this.pu_a);
-                console.log(this.pu_q_col);
-                console.log(this.pu_a_col);
-                console.log(this);
             } else {
                 text += PenpaText.get('gmp_unsupported', header);
             }
@@ -6782,7 +6786,17 @@ class Puzzle {
                     break;
                 }
                 if (a) {
-                    if ((a[0] === "thermo" ||
+                    if (a[0] === "sudokuTransaction") {
+                        var currentSudokuState = JSON.stringify({
+                            number: this.pu_a.number || {},
+                            numberCol: this.pu_a_col.number || {}
+                        });
+                        this.pu_q.command_redo.push([a[0], a[1], currentSudokuState, pu_mode]);
+                        this.pu_q_col.command_redo.push([a[0], a[1], null, pu_mode + "_col"]);
+                        var previousSudokuState = JSON.parse(a[2]);
+                        this.pu_a.number = previousSudokuState.number || {};
+                        this.pu_a_col.number = previousSudokuState.numberCol || {};
+                    } else if ((a[0] === "thermo" ||
                         a[0] === "nobulbthermo" ||
                         a[0] === "arrows" ||
                         a[0] === "direction" ||
@@ -7017,7 +7031,17 @@ class Puzzle {
                     break;
                 }
                 if (a) {
-                    if ((a[0] === "thermo" ||
+                    if (a[0] === "sudokuTransaction") {
+                        var currentSudokuState = JSON.stringify({
+                            number: this.pu_a.number || {},
+                            numberCol: this.pu_a_col.number || {}
+                        });
+                        this.pu_q.command_undo.push([a[0], a[1], currentSudokuState, pu_mode]);
+                        this.pu_q_col.command_undo.push([a[0], a[1], null, pu_mode + "_col"]);
+                        var nextSudokuState = JSON.parse(a[2]);
+                        this.pu_a.number = nextSudokuState.number || {};
+                        this.pu_a_col.number = nextSudokuState.numberCol || {};
+                    } else if ((a[0] === "thermo" ||
                         a[0] === "nobulbthermo" ||
                         a[0] === "arrows" ||
                         a[0] === "direction" ||
@@ -9468,6 +9492,30 @@ class Puzzle {
         return true;
     }
 
+
+    cycleLCClue(num) {
+        if (!this.isKropkiEdge(num)) {
+            this.drawing = false;
+            this.last = -1;
+            this.cursol = -1;
+            return false;
+        }
+        let current = this[this.mode.qa].number[num];
+        let value = current && current[2] === "5" ? current[0].toString().toUpperCase() : "";
+        this.undoredo_counter++;
+        this.drawing = false;
+        this.last = -1;
+        this.cursol = -1;
+        if (value !== "L" && value !== "C") {
+            this.set_value("number", num, ["L", 6, "5"], null);
+        } else if (value === "L") {
+            this.set_value("number", num, ["C", 6, "5"], null);
+        } else {
+            this.remove_value("number", num, true);
+        }
+        return true;
+    }
+
     killerCageAnchor(num) {
         let cages = this.refreshKillerCages(this.mode.qa);
         for (let cage of cages) {
@@ -9492,6 +9540,12 @@ class Puzzle {
         if (this.mouse_mode === "down_left") {
             if (this.xv_mode && String(this.mode[this.mode.qa].number[0]) === "5") {
                 this.cycleXVClue(num);
+                this.cursol = -1;
+                this.redraw();
+                return;
+            }
+            if (this.lc_mode && String(this.mode[this.mode.qa].number[0]) === "5") {
+                this.cycleLCClue(num);
                 this.cursol = -1;
                 this.redraw();
                 return;
@@ -9766,6 +9820,22 @@ class Puzzle {
             if (this.even_sum_pairs_mode && this.mode[this.mode.qa].symbol[0] === "circle_SS") {
                 this.cycleConsecutiveDot(num);
                 this.redraw();
+                return;
+            }
+            if (this.mastermind_mode) {
+                let current = this[this.mode.qa].symbol[num];
+                this.undoredo_counter++;
+                if (!current) {
+                    this.set_value("symbol", num, [2, "circle_SS", 2], null); // Black dot
+                } else if (current[1] === "circle_SS" && current[0] === 2) {
+                    this.set_value("symbol", num, [1, "circle_SS", 2], null); // White dot
+                } else if (current[1] === "circle_SS" && current[0] === 1) {
+                    this.set_value("symbol", num, [1, "cross", 2], null); // Cross mark
+                } else if (current[1] === "cross") {
+                    this.remove_value("symbol", num, true); // Empty
+                } else {
+                    this.set_value("symbol", num, [2, "circle_SS", 2], null);
+                }
                 return;
             }
             if (this.trio_mode) {
@@ -12184,14 +12254,6 @@ class Puzzle {
                     } else {
                         this.undoredo_counter = this.undoredo_counter + 1;
                     }
-                    // Disabling dots clean up for ipad/mobile until better solution is figured
-                    // let neighbors = this.get_neighbors(num);
-                    // for (let i = 0; i < neighbors.length; i++) {
-                    //     if (this[this.mode.qa].symbol[neighbors[i]]) {
-                    //         this.record("symbol", neighbors[i], this.undoredo_counter);
-                    //         delete this[this.mode.qa].symbol[neighbors[i]];
-                    //     }
-                    // }
                     this.record("symbol", num, this.undoredo_counter);
                     this[this.mode.qa].symbol[num] = [star_type, "star", 2];
                     this.record_replay("symbol", num, this.undoredo_counter);
@@ -12981,7 +13043,7 @@ class Puzzle {
 
             // Kinda weird hack: if there's too few colors, duplicate each of them. This
             // is because the basic drawing technique we use for multi-color where each color
-            // gets a triangle. If there's too few colors, the outer edges of the triangles 
+            // gets a triangle. If there's too few colors, the outer edges of the triangles
             // might be inside the cell, leaving some blank area.
             while (colors.length < 3) {
                 let new_colors = [],
@@ -13093,7 +13155,7 @@ class Puzzle {
             if (i2 != -1) {
                 this.draw_circle(this.ctx, this.point[i2].x, this.point[i2].y, 0.3);
             }
-            // Preview the line 
+            // Preview the line
             if (i1 != -1 && i2 != -1) {
                 this.ctx.beginPath();
                 this.ctx.moveTo(this.point[i1].x, this.point[i1].y);
@@ -13158,15 +13220,6 @@ class Puzzle {
         let edit_mode = this.mode[this.mode.qa].edit_mode;
         if (edit_mode === "sudoku" || this.number_multi_enabled() || edit_mode === "multicolor" ||
             (edit_mode === "cage" && document.getElementById("sub_cage1").checked)) {
-            // [ZW] removing this for now, preventing escape to clear selection, not sure what the purpose is
-            // since we dont want single cell highlighed while in killer submode
-            // if (this.selection.length === 0 && this.mode[this.mode.qa].edit_mode === "sudoku") {
-            //    // check if cursor is in centerlist, to avoid border/edge case
-            //    let cursorexist = this.centerlist.indexOf(this.cursol);
-            //    if (cursorexist !== -1) {
-            //        this.selection.push(this.cursol);
-            //    }
-            // }
             this.ctx.shadowBlur = 10;
             this.ctx.shadowColor = Color.ORANGE_TRANSPARENT;
             let irregular = false;

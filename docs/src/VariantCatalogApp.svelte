@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { variations } from "./variationCatalog";
+  import { variantMetadata, variations } from "./variationCatalog";
   import {
     automaticBlockerFor,
     cspApproachFor,
-    cspConstraintFunctionFor,
+    cspConstraintFunctionsFor,
     inputModesFor,
     solverTestCasesFor,
   } from "./variantMarks";
@@ -14,7 +14,27 @@
   let query = "";
   let status = "all";
   let tag = "all";
+  let hasExampleFilter = "all";
   let darkTheme = false;
+  let fontScale = 1;
+
+  $: if (typeof document !== "undefined") {
+    document.documentElement.style.setProperty("--font-scale", fontScale.toString());
+  }
+
+  function toggleTheme() {
+    darkTheme = !darkTheme;
+    document.cookie = `color_theme=${darkTheme ? "2" : "1"};path=/;max-age=${60 * 60 * 24 * 365}`;
+    document.documentElement.classList.toggle("dark", darkTheme);
+  }
+
+  function increaseFontSize() {
+    fontScale += 0.1;
+  }
+
+  function decreaseFontSize() {
+    fontScale = Math.max(0.5, fontScale - 0.1);
+  }
 
   onMount(() => {
     const cookies = document.cookie.split(";");
@@ -26,6 +46,7 @@
       darkTheme = val === "2";
     }
     document.documentElement.classList.toggle("dark", darkTheme);
+    if (import.meta.env.DEV) loadMetadata();
   });
 
   const detailId =
@@ -39,12 +60,37 @@
   $: normalizedQuery = query.trim().toLowerCase();
   $: availableTags = [...new Set(variations.flatMap((variation) => variation.tags))]
     .sort((first, second) => first.localeCompare(second));
+
+  function handleFeelingLucky() {
+    query = "";
+    // Wait for the reactive statement to clear the query filter from `filteredVariations`,
+    // or manually filter here. Since Svelte reactivity is async (microtask), it's easier
+    // to manually get the filtered variants without the query.
+    const luckyCandidates = variations.filter((variation) => {
+      const matchesStatus = status === "all" || variation.status === status;
+      const matchesTag = tag === "all" || variation.tags.includes(tag);
+      const matchesExample = hasExampleFilter === "all" ||
+        (hasExampleFilter === "yes" && variation.example) ||
+        (hasExampleFilter === "no" && !variation.example);
+      return matchesStatus && matchesTag && matchesExample;
+    });
+
+    if (luckyCandidates.length > 0) {
+      const randomIndex = Math.floor(Math.random() * luckyCandidates.length);
+      query = luckyCandidates[randomIndex].name;
+    }
+  }
+
   $: filteredVariations = variations.filter((variation) => {
     const matchesStatus = status === "all" || variation.status === status;
     const matchesTag = tag === "all" || variation.tags.includes(tag);
+    const matchesExample = hasExampleFilter === "all" ||
+      (hasExampleFilter === "yes" && variation.example) ||
+      (hasExampleFilter === "no" && !variation.example);
     return (
       matchesStatus &&
       matchesTag &&
+      matchesExample &&
       (!normalizedQuery ||
         [variation.name, variation.value, variation.rule, ...variation.tags].some((value) =>
           value.toLowerCase().includes(normalizedQuery),
@@ -52,54 +98,96 @@
     );
   });
 
-  let newId = "";
-  let newName = "";
-  let newRule = "";
-  let newTags = "";
-  let newStatus: "available" | "planned" | "infeasible" | "hidden" = "planned";
-  let newInputType: "no-input" | "line" | "region" | "outside" | "shape" = "shape";
+  let metadataText = JSON.stringify(variantMetadata, null, 2);
   let isSaving = false;
   let saveMessage = "";
   let saveSuccess = false;
 
-  async function handleAddVariant() {
+  function exampleUrl(example: string, variant: string) {
+    const base = new URL(".", document.baseURI);
+    const stored = /[&]variants=/.test(example)
+      ? example
+      : `${example}&variants=${encodeURIComponent(`classic,${variant}`)}`;
+    base.hash = `m=solve&tab=answer&v=0&p=${stored}`;
+    return base.href;
+  }
+
+  function errorMessage(error: unknown) {
+    if (error instanceof Error && error.message.trim()) return error.message;
+    if (typeof error === "string" && error.trim()) return error;
+    return "Unknown error. Check that the Vite development server was restarted.";
+  }
+
+  async function readApiResponse(response: Response) {
+    const text = await response.text();
+    const contentType = response.headers.get("content-type") || "";
+    if (/<!doctype|<html/i.test(text) || !contentType.includes("application/json")) {
+      throw new Error(
+        "The development metadata API returned the wiki page instead of JSON. Restart `npm run dev` and try again.",
+      );
+    }
+    let result: any;
+    try {
+      result = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error("The development metadata API returned invalid JSON.");
+    }
+    if (!response.ok) {
+      throw new Error(result.error || result.message || `Request failed (${response.status}).`);
+    }
+    return result;
+  }
+
+  function parseMetadataEditor() {
+    const parsed = JSON.parse(metadataText);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("The metadata root must be a JSON object.");
+    }
+    if (!Array.isArray(parsed.variants)) {
+      throw new Error('The metadata must contain a "variants" array.');
+    }
+    return parsed;
+  }
+
+  function formatMetadata() {
+    try {
+      metadataText = JSON.stringify(parseMetadataEditor(), null, 2);
+      saveSuccess = true;
+      saveMessage = "JSON is valid and formatted.";
+    } catch (err: any) {
+      saveSuccess = false;
+      saveMessage = `Invalid JSON: ${errorMessage(err)}`;
+    }
+  }
+
+  async function loadMetadata() {
+    try {
+      const response = await fetch("/api/variant-metadata");
+      metadataText = JSON.stringify(await readApiResponse(response), null, 2);
+      saveMessage = "";
+    } catch (err: any) {
+      saveSuccess = false;
+      saveMessage = `Could not reload metadata: ${errorMessage(err)}`;
+    }
+  }
+
+  async function saveMetadata() {
     isSaving = true;
     saveMessage = "";
     try {
-      const id = newId.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
-      const response = await fetch("/api/add-variant", {
-        method: "POST",
+      const metadata = parseMetadataEditor();
+      const response = await fetch("/api/variant-metadata", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id,
-          name: newName.trim(),
-          rule: newRule.trim(),
-          tags: newTags.split(",").map(t => t.trim()).filter(Boolean),
-          status: newStatus,
-          inputType: newInputType
-        })
+        body: JSON.stringify(metadata),
       });
-      if (response.ok) {
-        const res = await response.json();
-        saveSuccess = true;
-        saveMessage = res.message || "Saved successfully!";
-        newId = "";
-        newName = "";
-        newRule = "";
-        newTags = "";
-        newStatus = "planned";
-        newInputType = "shape";
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } else {
-        const text = await response.text();
-        saveSuccess = false;
-        saveMessage = `Error: ${text}`;
-      }
+      const result = await readApiResponse(response);
+      saveSuccess = true;
+      saveMessage = result.message || "Metadata saved.";
+      metadataText = JSON.stringify(metadata, null, 2);
     } catch (err: any) {
       saveSuccess = false;
-      saveMessage = `Error: ${err.message}`;
+      saveMessage = `Could not save metadata: ${errorMessage(err)}`;
     } finally {
       isSaving = false;
     }
@@ -112,11 +200,18 @@
 
 <header class="site-header">
   <a class="brand" href="./">Back to editor</a>
-  <nav aria-label="Reference pages">
+  <nav aria-label="Reference pages" class="site-nav">
     <a
       class:active={page === "variants" || page === "detail"}
       href="./list.html">Variant wiki</a
     >
+    <div class="nav-controls">
+      <button type="button" class="nav-btn" on:click={decreaseFontSize} aria-label="Decrease font size">A-</button>
+      <button type="button" class="nav-btn" on:click={increaseFontSize} aria-label="Increase font size">A+</button>
+      <button type="button" class="nav-btn" on:click={toggleTheme} aria-label="Toggle light/dark theme">
+        {darkTheme ? "☀️" : "🌙"}
+      </button>
+    </div>
   </nav>
 </header>
 
@@ -130,35 +225,19 @@
         <h1>{detailVariation.name}</h1>
         <div class="detail-status">
           {#if detailVariation.status === "available"}
-            <span class="status implemented">CSP implemented</span>
+            <span class="status implemented">available</span>
           {:else}
             <span
               class:backlog={detailVariation.status === "planned"}
               class:infeasible={detailVariation.status === "infeasible"}
               class="status"
             >
-              {detailVariation.status === "infeasible" ? "Infeasible" : "CSP backlog"}
+              {detailVariation.status === "infeasible" ? "infeasible" : "planned"}
             </span>
           {/if}
         </div>
-        {#if detailVariation.example}
-          <section>
-            <h2>Example</h2>
-            <div class="example-images">
-              <figure>
-                <img src={detailVariation.example.problemImage} alt="Problem grid" />
-                <figcaption>Problem</figcaption>
-              </figure>
-              <figure>
-                <img src={detailVariation.example.solutionImage} alt="Solution grid" />
-                <figcaption>Solution</figcaption>
-              </figure>
-            </div>
-            <p style="margin-top: 14px; font-weight: 500;">
-              <a href={detailVariation.example.link} target="_blank" rel="noreferrer">Open this example in the editor ↗</a>
-            </p>
-          </section>
-        {/if}
+        <div class="detail-layout">
+          <div>
         <section>
           <h2>Rules</h2>
           {#each Object.entries(detailVariation.rules) as [size, rule]}
@@ -177,7 +256,10 @@
         <section>
           <h2>CSP constraint function</h2>
           <p>{cspApproachFor(detailVariation)}</p>
-          <pre><code>{cspConstraintFunctionFor(detailVariation)}</code></pre>
+          <h3>Partial validator</h3>
+          <pre><code>{cspConstraintFunctionsFor(detailVariation).partial}</code></pre>
+          <h3>Full validator</h3>
+          <pre><code>{cspConstraintFunctionsFor(detailVariation).full}</code></pre>
           {#if detailVariation.status !== "available"}<p class="blocker">
               {automaticBlockerFor(detailVariation)}
             </p>{/if}
@@ -189,6 +271,24 @@
           </p>
           <pre><code>{solverTestCasesFor(detailVariation)}</code></pre>
         </section>
+        </div>
+        {#if detailVariation.example}
+          <aside class="variant-examples">
+            <div class="iframe-container">
+              <div class="iframe-header">
+                <h2>Playable Example</h2>
+                <a href={exampleUrl(detailVariation.example, detailVariation.value)} target="_blank" rel="noreferrer">Open in full editor ↗</a>
+              </div>
+              <iframe
+                src={exampleUrl(detailVariation.example, detailVariation.value)}
+                title="Playable {detailVariation.name} Example"
+                style="width: 100%; height: 500px; border: none;">
+              </iframe>
+            </div>
+
+          </aside>
+        {/if}
+        </div>
       </article>
     {:else}
       <section class="hero">
@@ -239,6 +339,9 @@
           placeholder="Name, rule, tag…"
         />
       </label>
+      <button type="button" class="lucky-btn" on:click={handleFeelingLucky}>
+        Feeling lucky!
+      </button>
       <label for="variant-csp-status-select">
         <span>Status</span>
         <select id="variant-csp-status-select" bind:value={status}>
@@ -257,7 +360,16 @@
           {/each}
         </select>
       </label>
+      <label for="variant-has-example-select">
+        <span>Has example</span>
+        <select id="variant-has-example-select" bind:value={hasExampleFilter}>
+          <option value="all">All</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </label>
       <span class="result-count">{filteredVariations.length} shown</span>
+      <a class="suggest-link" href="https://github.com/lemononmars/penpa-edit/pulls" target="_blank" rel="noreferrer">Suggest a variant</a>
     </section>
 
     <div class="table-wrap">
@@ -267,6 +379,7 @@
             <th>Variant</th>
             <th>Rule</th>
             <th>Status</th>
+            <th>Has example</th>
             <th>Tags</th>
           </tr>
         </thead>
@@ -278,8 +391,15 @@
                   class="variant-link"
                   href={`./list.html?id=${encodeURIComponent(variation.value)}`}
                   ><strong>{variation.name}</strong></a
-                ><code>{variation.value}</code></th
-              >
+                >
+                <div class="other-names">
+                  {#if variation.otherNames}
+                    {#each variation.otherNames.split(",") as otherName}
+                      <div class="other-name">{otherName.trim()}</div>
+                    {/each}
+                  {/if}
+                </div>
+              </th>
               <td class="rule">{variation.rule}</td>
               <td>
                 {#if variation.status === "available"}
@@ -294,6 +414,7 @@
                   </span>
                 {/if}
               </td>
+              <td style="text-align: center;">{variation.example ? "✅" : "❌"}</td>
               <td class="tags">
                 {#each variation.tags as variantTag}
                   <button type="button" class="tag" on:click={() => (tag = variantTag)}>{variantTag}</button>
@@ -308,81 +429,36 @@
 
   {#if import.meta.env.DEV}
     <section class="dev-form-card">
-      <h2>Developer Options: Add New Variant</h2>
-      <p class="dev-form-desc">This form is only visible in development mode. Submitting it adds the variant to <code>variant_metadata.json</code>.</p>
-      <form on:submit|preventDefault={handleAddVariant}>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="new-variant-id">Variant ID (alphanumeric, lowercase)</label>
-            <input
-              id="new-variant-id"
-              type="text"
-              bind:value={newId}
-              placeholder="e.g. bouncingxsums"
-              required
-            />
-            {#if newId}
-              <span class="preview-filename">Entry: <code>variant_metadata.json → {newId.trim().toLowerCase().replace(/[^a-z0-9]/g, "")}</code></span>
-            {/if}
-          </div>
-          <div class="form-group">
-            <label for="new-variant-name">Display Name</label>
-            <input
-              id="new-variant-name"
-              type="text"
-              bind:value={newName}
-              placeholder="e.g. Bouncing X-Sums"
-              required
-            />
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="new-variant-rule">Rule Description (9x9)</label>
-          <textarea
-            id="new-variant-rule"
-            bind:value={newRule}
-            placeholder="Standard sudoku rules apply. Outside clues indicate..."
-            rows="3"
-            required
-          ></textarea>
-        </div>
-        <div class="form-group">
-          <label for="new-variant-tags">Tags (comma-separated)</label>
-          <input
-            id="new-variant-tags"
-            type="text"
-            bind:value={newTags}
-            placeholder="outside, math, diagonal"
-          />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="new-variant-status">Status</label>
-            <select id="new-variant-status" bind:value={newStatus}>
-              <option value="available">Available</option>
-              <option value="planned">Planned</option>
-              <option value="infeasible">Infeasible</option>
-              <option value="hidden">Hidden</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="new-variant-input-type">Input type</label>
-            <select id="new-variant-input-type" bind:value={newInputType}>
-              <option value="no-input">No input</option>
-              <option value="line">Line</option>
-              <option value="region">Region</option>
-              <option value="outside">Outside</option>
-              <option value="shape">Shape</option>
-            </select>
-          </div>
-        </div>
+      <h2>Developer Options: Metadata Editor</h2>
+      <p class="dev-form-desc">
+        This development-only editor reads and writes the complete
+        <code>variant_metadata.json</code> file. Any root setting or variant
+        field can be edited here.
+      </p>
+      <form on:submit|preventDefault={saveMetadata}>
+        <label class="metadata-editor-label" for="variant-metadata-editor"
+          >Complete metadata JSON</label
+        >
+        <textarea
+          id="variant-metadata-editor"
+          class="metadata-editor"
+          bind:value={metadataText}
+          spellcheck="false"
+          aria-describedby="metadata-editor-status"
+        ></textarea>
         <div class="form-actions">
+          <button type="button" on:click={loadMetadata} disabled={isSaving}
+            >Reload from disk</button
+          >
+          <button type="button" on:click={formatMetadata} disabled={isSaving}
+            >Validate &amp; Format</button
+          >
           <button type="submit" disabled={isSaving}>
-            {#if isSaving}Saving...{:else}Save & Create JSON{/if}
+            {#if isSaving}Saving...{:else}Save metadata{/if}
           </button>
         </div>
         {#if saveMessage}
-          <div class="save-status {saveSuccess ? 'success' : 'error'}">
+          <div id="metadata-editor-status" aria-live="polite" class="save-status {saveSuccess ? 'success' : 'error'}">
             {saveMessage}
           </div>
         {/if}
@@ -433,7 +509,7 @@
   }
   .brand {
     color: inherit;
-    font-size: 15px;
+    font-size: calc(15px * var(--font-scale, 1));
     font-weight: 760;
     letter-spacing: 0.02em;
     text-decoration: none;
@@ -444,6 +520,7 @@
   nav {
     display: flex;
     align-self: stretch;
+    flex-grow: 1;
   }
   nav a {
     display: grid;
@@ -451,13 +528,31 @@
     padding: 0 16px;
     color: #bcd0d8;
     border-bottom: 3px solid transparent;
-    font-size: 13px;
+    font-size: calc(13px * var(--font-scale, 1));
     text-decoration: none;
   }
   nav a:hover,
   nav a.active {
     color: #fff;
     border-bottom-color: #e5b858;
+  }
+  .nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .nav-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #eaf3f5;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: calc(13px * var(--font-scale, 1));
+  }
+  .nav-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
   }
   main {
     width: min(1480px, calc(100% - 40px));
@@ -471,7 +566,7 @@
   .eyebrow {
     margin: 0 0 8px;
     color: #b16c24;
-    font-size: 12px;
+    font-size: calc(12px * var(--font-scale, 1));
     font-weight: 800;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -488,7 +583,7 @@
     max-width: 760px;
     margin: 14px 0 0;
     color: #526773;
-    font-size: 18px;
+    font-size: calc(18px * var(--font-scale, 1));
     line-height: 1.55;
   }
   .summary {
@@ -503,12 +598,12 @@
     border: 1px solid #ccdadc;
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.6);
-    font-size: 12px;
+    font-size: calc(12px * var(--font-scale, 1));
   }
   .summary strong {
     margin-right: 4px;
     color: #183a4d;
-    font-size: 15px;
+    font-size: calc(15px * var(--font-scale, 1));
   }
   .notes {
     display: grid;
@@ -525,12 +620,12 @@
   .notes h2 {
     margin: 0 0 6px;
     color: #183a4d;
-    font-size: 15px;
+    font-size: calc(15px * var(--font-scale, 1));
   }
   .notes p {
     margin: 0;
     color: #5a6e77;
-    font-size: 13px;
+    font-size: calc(13px * var(--font-scale, 1));
     line-height: 1.55;
   }
   .toolbar {
@@ -550,7 +645,7 @@
     display: grid;
     gap: 5px;
     color: #536872;
-    font-size: 11px;
+    font-size: calc(11px * var(--font-scale, 1));
     font-weight: 750;
   }
   input,
@@ -573,7 +668,7 @@
   .result-count {
     margin: 0 auto 9px 0;
     color: #657982;
-    font-size: 12px;
+    font-size: calc(12px * var(--font-scale, 1));
   }
   .table-wrap {
     width: 100%;
@@ -586,7 +681,7 @@
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: calc(12px * var(--font-scale, 1));
     line-height: 1.45;
   }
   th,
@@ -603,7 +698,7 @@
     z-index: 2;
     color: #e9f3f5;
     background: #1d4658;
-    font-size: 10px;
+    font-size: calc(10px * var(--font-scale, 1));
     letter-spacing: 0.07em;
     text-transform: uppercase;
   }
@@ -631,7 +726,7 @@
     border-radius: 999px;
     color: #315968;
     background: #edf5f6;
-    font-size: 10px;
+    font-size: calc(10px * var(--font-scale, 1));
     cursor: pointer;
   }
   .tag:hover {
@@ -647,7 +742,7 @@
     margin-top: 4px;
     color: #75878e;
     font-family: "SFMono-Regular", Consolas, monospace;
-    font-size: 10px;
+    font-size: calc(10px * var(--font-scale, 1));
     font-weight: 500;
   }
   .status {
@@ -657,7 +752,7 @@
     padding: 3px 7px;
     border-radius: 999px;
     white-space: nowrap;
-    font-size: 10px;
+    font-size: calc(10px * var(--font-scale, 1));
     font-weight: 750;
   }
   .status.implemented {
@@ -678,18 +773,94 @@
     text-underline-offset: 3px;
   }
   .variant-detail {
-    width: min(920px, 100%);
+    width: 100%;
   }
   .variant-detail .back-link {
     display: inline-block;
     margin-bottom: 24px;
     color: #267f95;
-    font-size: 13px;
+    font-size: calc(13px * var(--font-scale, 1));
   }
   .variant-detail h2 {
     margin: 0 0 12px;
     color: #183a4d;
-    font-size: 18px;
+    font-size: calc(18px * var(--font-scale, 1));
+  }
+  .detail-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .detail-layout > div:first-child {
+    flex: 1;
+    min-width: 0; /* allows shrinking */
+  }
+  .variant-examples {
+    width: 50%;
+    flex-shrink: 0;
+    position: sticky;
+    top: 24px;
+  }
+  .iframe-container {
+    border: 1px solid #cfdbdd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 8px 25px rgba(27, 52, 63, 0.05);
+  }
+  .iframe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8fafa;
+    border-bottom: 1px solid #cfdbdd;
+  }
+  .iframe-header h2 {
+    margin: 0 !important;
+    font-size: 14px !important;
+  }
+  .iframe-header a {
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .detail-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .detail-layout > div:first-child {
+    flex: 1;
+    min-width: 0; /* allows shrinking */
+  }
+  .variant-examples {
+    width: 400px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 24px;
+  }
+  .iframe-container {
+    border: 1px solid #cfdbdd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 8px 25px rgba(27, 52, 63, 0.05);
+  }
+  .iframe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8fafa;
+    border-bottom: 1px solid #cfdbdd;
+  }
+  .iframe-header h2 {
+    margin: 0 !important;
+    font-size: 14px !important;
+  }
+  .iframe-header a {
+    font-size: 12px;
+    font-weight: 600;
   }
   .variant-detail > section {
     margin-top: 22px;
@@ -738,7 +909,7 @@
     display: inline;
     margin: 0;
     color: inherit;
-    font-size: 12px;
+    font-size: calc(12px * var(--font-scale, 1));
     line-height: 1.6;
   }
   .variant-detail .blocker {
@@ -747,35 +918,23 @@
     color: #8c4e1e;
     background: #fff4e9;
   }
-  .example-images {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 24px;
-    margin-top: 16px;
-  }
-  .example-images figure {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .example-images img {
-    max-width: 100%;
-    border: 1px solid #dbe4e5;
-    background: #fff;
-  }
-  .example-images figcaption {
-    margin-top: 8px;
-    color: #526773;
-    font-size: 13px;
-    font-weight: 600;
-  }
   footer {
     padding: 24px;
     color: #708088;
     background: #dde7e8;
     text-align: center;
-    font-size: 11px;
+    font-size: calc(11px * var(--font-scale, 1));
+  }
+  /* Mobile-friendly stacked layout */
+  @media (max-width: 1100px) {
+    .detail-layout {
+      flex-direction: column;
+    }
+    .variant-examples {
+      width: 100%;
+      position: static;
+      max-width: 100%;
+    }
   }
   @media (max-width: 900px) {
     .site-header {
@@ -808,7 +967,7 @@
       display: grid;
     }
     .hero > p:last-of-type {
-      font-size: 16px;
+      font-size: calc(16px * var(--font-scale, 1));
     }
     input {
       width: 100%;
@@ -908,6 +1067,45 @@
   :global(html.dark) .variant-link {
     color: #2b8bc7 !important;
   }
+  :global(html.dark) .other-name {
+    color: #8c9ba5 !important;
+  }
+  .other-name {
+    font-weight: normal;
+    font-size: 0.9em;
+    color: #526773;
+  }
+  .lucky-btn {
+    padding: 6px 12px;
+    background: #267f95;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .lucky-btn:hover {
+    background: #1d6375;
+  }
+  :global(html.dark) .lucky-btn {
+    background: #176fae;
+  }
+  :global(html.dark) .lucky-btn:hover {
+    background: #12588b;
+  }
+  .suggest-link {
+    margin-left: auto;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2b8bc7;
+    text-decoration: none;
+  }
+  .suggest-link:hover {
+    text-decoration: underline;
+  }
+  :global(html.dark) .suggest-link {
+    color: #4da6bd !important;
+  }
   :global(html.dark) .variant-detail h2 {
     color: #dde6ed !important;
   }
@@ -937,6 +1135,20 @@
     color: #8c9ba5 !important;
     background: #1b2630 !important;
   }
+  :global(html.dark) .iframe-container {
+    border-color: #40505f;
+    background: #263340;
+  }
+  :global(html.dark) .iframe-header {
+    background: #1b2630;
+    border-bottom-color: #40505f;
+  }
+  :global(html.dark) .iframe-header h2 {
+    color: #dde6ed;
+  }
+  :global(html.dark) .iframe-header a {
+    color: #4da6bd;
+  }
   :global(html.dark) .back-link {
     color: #2b8bc7 !important;
   }
@@ -957,7 +1169,7 @@
   .dev-form-card h2 {
     margin: 0 0 8px;
     color: #102938;
-    font-size: 20px;
+    font-size: calc(20px * var(--font-scale, 1));
     font-family: Georgia, serif;
   }
   :global(html.dark) .dev-form-card h2 {
@@ -966,55 +1178,42 @@
   .dev-form-desc {
     margin: 0 0 20px;
     color: #526773;
-    font-size: 13px;
+    font-size: calc(13px * var(--font-scale, 1));
   }
   :global(html.dark) .dev-form-desc {
     color: #aebdca;
   }
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+  .metadata-editor-label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: calc(13px * var(--font-scale, 1));
+    font-weight: 700;
   }
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 16px;
+  .metadata-editor {
+    width: 100%;
+    min-height: 65vh;
+    resize: vertical;
+    padding: 14px;
+    border: 1px solid #b9c9ce;
+    border-radius: 6px;
+    color: #20313b;
+    background: #f8fbfc;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+    tab-size: 2;
   }
-  .form-group label {
-    color: #3b4d58;
-    font-size: 12px;
-    font-weight: 600;
+  .metadata-editor:focus {
+    border-color: #267f95;
+    outline: 3px solid rgba(38, 127, 149, 0.16);
   }
-  :global(html.dark) .form-group label {
-    color: #d5dfe7;
-  }
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
-    padding: 10px 12px;
-    border: 1px solid #cbd8da;
-    border-radius: 4px;
-    font-size: 14px;
-  }
-  :global(html.dark) .form-group input,
-  :global(html.dark) .form-group select,
-  :global(html.dark) .form-group textarea {
-    border-color: #465563;
-    background: #1f2b35;
-    color: #d5dfe7;
-  }
-  .preview-filename {
-    font-size: 11px;
-    color: #267f95;
-    margin-top: 4px;
-  }
-  :global(html.dark) .preview-filename {
-    color: #e5b858;
+  :global(html.dark) .metadata-editor {
+    color: #dce6ed;
+    border-color: #526372;
+    background: #17222c;
   }
   .form-actions {
     display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     justify-content: flex-end;
     margin-top: 8px;
   }
@@ -1050,7 +1249,7 @@
     margin-top: 16px;
     padding: 12px;
     border-radius: 4px;
-    font-size: 13px;
+    font-size: calc(13px * var(--font-scale, 1));
     font-weight: 600;
   }
   .save-status.success {
