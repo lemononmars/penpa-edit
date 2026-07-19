@@ -32,6 +32,7 @@ class Puzzle_square extends Puzzle {
             "degital_E": 7,
             "degital_f": 7,
             "arrow_eight": 8,
+            "braille": 4,
             "arrow_fouredge_B": 8,
             "arrow_fouredge_G": 8,
             "arrow_fouredge_E": 8,
@@ -2330,6 +2331,9 @@ class Puzzle_square extends Puzzle {
                 set_circle_style(ctx, 2, ccolor);
                 this.draw_arrowcross(ctx, num, x, y);
                 break;
+                        case "braille":
+                this.draw_braille(ctx, num, x, y, ccolor);
+                break;
             case "arrow_eight":
                 set_circle_style(ctx, 2, ccolor);
                 this.draw_arroweight(ctx, num, x, y);
@@ -3095,6 +3099,24 @@ class Puzzle_square extends Puzzle {
         }
     }
 
+
+    draw_braille(ctx, num, x, y, ccolor) {
+        let r = 0.15;
+        let p = [
+            [-0.2, -0.2],
+            [0.2, -0.2],
+            [-0.2, 0.2],
+            [0.2, 0.2]
+        ];
+        ctx.fillStyle = ccolor || Color.GREY;
+        for (let i = 0; i < 4; i++) {
+            if (num[i] === 1) {
+                ctx.beginPath();
+                ctx.arc(x + p[i][0] * this.size, y + p[i][1] * this.size, r * this.size, 0, Math.PI * 2, false);
+                ctx.fill();
+            }
+        }
+    }
     draw_pills(ctx, num, x, y, ccolor) {
         var r = 0.15;
         ctx.fillStyle = ccolor || Color.GREY;
@@ -4295,6 +4317,7 @@ class Puzzle_sudoku extends Puzzle_square {
             "degital_E": 7,
             "degital_f": 7,
             "arrow_eight": 8,
+            "braille": 4,
             "arrow_fouredge_B": 8,
             "arrow_fouredge_G": 8,
             "arrow_fouredge_E": 8,
@@ -4383,6 +4406,7 @@ class Puzzle_kakuro extends Puzzle_square {
             "degital_E": 7,
             "degital_f": 7,
             "arrow_eight": 8,
+            "braille": 4,
             "arrow_fouredge_B": 8,
             "arrow_fouredge_G": 8,
             "arrow_fouredge_E": 8,
