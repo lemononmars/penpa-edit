@@ -9814,6 +9814,22 @@ class Puzzle {
                 this.redraw();
                 return;
             }
+            if (this.mastermind_mode) {
+                let current = this[this.mode.qa].symbol[num];
+                this.undoredo_counter++;
+                if (!current) {
+                    this.set_value("symbol", num, [2, "circle_SS", 2], null); // Black dot
+                } else if (current[1] === "circle_SS" && current[0] === 2) {
+                    this.set_value("symbol", num, [1, "circle_SS", 2], null); // White dot
+                } else if (current[1] === "circle_SS" && current[0] === 1) {
+                    this.set_value("symbol", num, [1, "cross", 2], null); // Cross mark
+                } else if (current[1] === "cross") {
+                    this.remove_value("symbol", num, true); // Empty
+                } else {
+                    this.set_value("symbol", num, [2, "circle_SS", 2], null);
+                }
+                return;
+            }
             if (this.trio_mode) {
                 let current = this[this.mode.qa].symbol[num];
                 this.undoredo_counter++;

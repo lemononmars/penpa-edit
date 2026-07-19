@@ -229,6 +229,9 @@ class Puzzle_square extends Puzzle {
             case "move":
                 if (edit_mode === "symbol" && this.sudoku_directional_cell_mode) {
                     type = [0];
+                } else if (edit_mode === "symbol" && this.mastermind_mode) {
+                    this.pu.mastermind_mode = true;
+                    this.pu.mouse_down_cancel = true;
                 } else if (edit_mode === "symbol" && this.trio_mode) {
                     type = [0];
                 } else if (edit_mode === "symbol" && this.clockfaces_mode) {
