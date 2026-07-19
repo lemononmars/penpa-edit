@@ -12,6 +12,7 @@ type RawVariation = {
     isDuplicate?: boolean;
     duplicateOf?: string;
     example?: string;
+    otherNames?: string;
 };
 
 type VariantMetadata = {
@@ -47,6 +48,7 @@ const allVariations: Variation[] = variantMetadata.variants.map((item) => {
         rules: Object.fromEntries(Object.entries(item.rules).map(([size, rule]) => [size, stripRulePreamble(rule)])),
         value,
         rule,
+        otherNames: item.otherNames || "",
         inputType: {
             ...item.inputType,
             categories: item.inputType.categories
