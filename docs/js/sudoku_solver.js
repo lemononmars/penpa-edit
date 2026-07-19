@@ -4178,7 +4178,7 @@ var SudokuTools = (function() {
         var oldToroidal = Array.isArray(pu.pu_q.toroidalEdges) ? pu.pu_q.toroidalEdges : [];
         oldToroidal.forEach(function(edge) {
             if (pu.pu_q.deletelineE[edge] === 1) delete pu.pu_q.deletelineE[edge];
-            if (pu.pu_q.lineE[edge] === 1) delete pu.pu_q.lineE[edge];
+            if (pu.pu_q.lineE[edge] === 80) delete pu.pu_q.lineE[edge];
         });
 
         var regionIds = ensureIrregularRegions();
@@ -4189,7 +4189,7 @@ var SudokuTools = (function() {
         var newToroidal = toroidalEdges(regionIds);
         newToroidal.forEach(function(edge) {
             pu.pu_q.deletelineE[edge] = 1;
-            pu.pu_q.lineE[edge] = 1;
+            pu.pu_q.lineE[edge] = 80;
         });
         pu.pu_q.toroidalEdges = newToroidal;
 
@@ -4703,7 +4703,7 @@ var SudokuTools = (function() {
             var oldToroidal = Array.isArray(pu.pu_q.toroidalEdges) ? pu.pu_q.toroidalEdges : [];
             oldToroidal.forEach(function(edge) {
                 if (pu.pu_q.deletelineE[edge] === 1) delete pu.pu_q.deletelineE[edge];
-                if (pu.pu_q.lineE[edge] === 1) delete pu.pu_q.lineE[edge];
+                if (pu.pu_q.lineE[edge] === 80) delete pu.pu_q.lineE[edge];
             });
             var size = SudokuSolver.puzzleSize(pu);
             irregularBoundaryEdges(SudokuSolver.defaultIrregularRegions(size)).forEach(function(edge) {
