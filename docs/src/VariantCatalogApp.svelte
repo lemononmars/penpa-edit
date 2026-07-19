@@ -184,14 +184,16 @@
             </span>
           {/if}
         </div>
-        {#if detailVariation.example}
-          <section>
-            <h2>Example</h2>
-            <p style="margin-top: 14px; font-weight: 500;">
-              <a href={exampleUrl(detailVariation.example, detailVariation.value)} target="_blank" rel="noreferrer">Open this example puzzle ↗</a>
-            </p>
-          </section>
-        {/if}
+        <div class="detail-layout">
+          <div>
+            {#if detailVariation.example}
+              <section>
+                <h2>Example</h2>
+                <p style="margin-top: 14px; font-weight: 500;">
+                  <a href={exampleUrl(detailVariation.example, detailVariation.value)} target="_blank" rel="noreferrer">Open this example puzzle ↗</a>
+                </p>
+              </section>
+            {/if}
         <section>
           <h2>Rules</h2>
           {#each Object.entries(detailVariation.rules) as [size, rule]}
@@ -225,6 +227,50 @@
           </p>
           <pre><code>{solverTestCasesFor(detailVariation)}</code></pre>
         </section>
+        </div>
+        {#if detailVariation.example}
+          <aside class="variant-examples">
+            <div class="iframe-container">
+              <div class="iframe-header">
+                <h2>Playable Example</h2>
+                <a href={exampleUrl(detailVariation.example, detailVariation.value)} target="_blank" rel="noreferrer">Open in full editor ↗</a>
+              </div>
+              <iframe
+                src={exampleUrl(detailVariation.example, detailVariation.value)}
+                title="Playable {detailVariation.name} Example"
+                style="width: 100%; height: 500px; border: none;">
+              </iframe>
+            </div>
+
+            <div class="iframe-container" style="margin-top: 24px;">
+              <div class="iframe-header">
+                <h2>Solved State</h2>
+              </div>
+              <iframe
+                src={exampleUrl(detailVariation.example, detailVariation.value)}
+                title="Solved {detailVariation.name} Example"
+                style="width: 100%; height: 500px; border: none;"
+                on:load={function(e) {
+                  const iframe = e.target;
+                  if (iframe && iframe.contentWindow) {
+                    const checkInterval = setInterval(() => {
+                      if (iframe.contentWindow.SudokuTools) {
+                        clearInterval(checkInterval);
+                        iframe.contentWindow.SudokuTools.solveOnceAutoEnabled = true;
+
+                        const solveBtn = iframe.contentWindow.document.getElementById('sudoku_solve_once');
+                        if (solveBtn) {
+                          solveBtn.click();
+                        }
+                      }
+                    }, 500);
+                  }
+                }}>
+              </iframe>
+            </div>
+          </aside>
+        {/if}
+        </div>
       </article>
     {:else}
       <section class="hero">
@@ -684,6 +730,82 @@
     color: #183a4d;
     font-size: 18px;
   }
+  .detail-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .detail-layout > div:first-child {
+    flex: 1;
+    min-width: 0; /* allows shrinking */
+  }
+  .variant-examples {
+    width: 400px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 24px;
+  }
+  .iframe-container {
+    border: 1px solid #cfdbdd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 8px 25px rgba(27, 52, 63, 0.05);
+  }
+  .iframe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8fafa;
+    border-bottom: 1px solid #cfdbdd;
+  }
+  .iframe-header h2 {
+    margin: 0 !important;
+    font-size: 14px !important;
+  }
+  .iframe-header a {
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .detail-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .detail-layout > div:first-child {
+    flex: 1;
+    min-width: 0; /* allows shrinking */
+  }
+  .variant-examples {
+    width: 400px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 24px;
+  }
+  .iframe-container {
+    border: 1px solid #cfdbdd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 8px 25px rgba(27, 52, 63, 0.05);
+  }
+  .iframe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8fafa;
+    border-bottom: 1px solid #cfdbdd;
+  }
+  .iframe-header h2 {
+    margin: 0 !important;
+    font-size: 14px !important;
+  }
+  .iframe-header a {
+    font-size: 12px;
+    font-weight: 600;
+  }
   .variant-detail > section {
     margin-top: 22px;
     padding: 22px;
@@ -746,6 +868,16 @@
     background: #dde7e8;
     text-align: center;
     font-size: 11px;
+  }
+  @media (max-width: 1100px) {
+    .detail-layout {
+      flex-direction: column;
+    }
+    .variant-examples {
+      width: 100%;
+      position: static;
+      max-width: 920px;
+    }
   }
   @media (max-width: 900px) {
     .site-header {
@@ -906,6 +1038,20 @@
   :global(html.dark) footer {
     color: #8c9ba5 !important;
     background: #1b2630 !important;
+  }
+  :global(html.dark) .iframe-container {
+    border-color: #40505f;
+    background: #263340;
+  }
+  :global(html.dark) .iframe-header {
+    background: #1b2630;
+    border-bottom-color: #40505f;
+  }
+  :global(html.dark) .iframe-header h2 {
+    color: #dde6ed;
+  }
+  :global(html.dark) .iframe-header a {
+    color: #4da6bd;
   }
   :global(html.dark) .back-link {
     color: #2b8bc7 !important;
