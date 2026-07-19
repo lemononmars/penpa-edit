@@ -594,7 +594,7 @@
       "rules": {
         "9x9": "The dots given inside some cells form part (or all) of the Braille representation of the digit."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [

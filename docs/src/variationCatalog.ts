@@ -348,6 +348,10 @@ function genericSetting(variation: Variation) {
         add("symbol", "circle_L", 2, ["mo_symbol_lb", "ms1", "li_circle_L"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
+    if (variation.value === "braille") {
+        add("symbol", "dice", 2, ["mo_symbol_lb", "ms", "ms_dice"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
 
 
     if (variation.value === "alloddalleven") {

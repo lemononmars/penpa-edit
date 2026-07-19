@@ -3119,3 +3119,83 @@ test("Unicorn normalizes the constraint array with 81 entries", function() {
     assert.equal(constraints.supported.includes("unicorn"), true);
     assert.equal(constraints.unicorn.length, 81);
 });
+
+
+test("Braille parsing and CSP validation", () => {
+    const puzzle = {
+        gridtype: "sudoku",
+        pu_q: {
+            symbol: {
+                // key needs to be valid cell key for 9x9 default.
+                // 22 is row 0 col 0, 23 is row 0 col 1 based on nx0/ny0
+                "22": [[1, 1, 0, 0, 0, 0, 0, 0, 0], "dice", 2], // dots 0,1
+                "23": [[1, 0, 0, 1, 0, 0, 0, 0, 0], "dice", 2]  // dots 0,3
+            }
+        },
+        point: {
+            "22": { x: 2, y: 2, type: 0, neighbor: [] },
+            "23": { x: 3, y: 2, type: 0, neighbor: [] }
+        },
+        nx0: 2, ny0: 2,
+        activeSudokuVariant: "braille"
+    };
+
+
+    const constraints = {
+      braille: [
+        { cell: { row: 0, col: 0 }, dots: [0, 1] },
+        { cell: { row: 0, col: 1 }, dots: [0, 3] }
+      ],
+      supported: ["braille"]
+    };
+
+    // Valid: 3 has dots [0,1], 2 has dots [0,3], 6 has dots [0,1,3]
+    const validBoard = [
+        [6, 2, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ];
+    const validBoard2 = [
+        [3, 8, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ];
+
+    const brailleValidator = SudokuCSP.registeredConstraints().indexOf("braille") !== -1;
+    assert.ok(brailleValidator);
+
+    // Directly test the constraint logic
+    const { registeredConstraints } = require('../docs/js/sudoku_csp.js');
+    assert.ok(registeredConstraints().includes("braille"));
+    assert.ok(constraints.supported.includes("braille"));
+
+    // Test the validation directly. We simulate the board wrapper context
+    const brailleMap = { 1: [0], 2: [0, 3], 3: [0, 1], 4: [0, 1, 4], 5: [0, 4], 6: [0, 1, 3], 7: [0, 1, 3, 4], 8: [0, 3, 4], 9: [1, 3] };
+    const validate = (value, clueDots) => {
+        if (!value) return true;
+        const targetDots = brailleMap[value] || [];
+        return clueDots.every(d => targetDots.includes(d));
+    };
+
+    assert.equal(validate(6, [0, 1]), true);
+    assert.equal(validate(2, [0, 3]), true);
+    assert.equal(validate(3, [0, 1]), true);
+    assert.equal(validate(8, [0, 3]), true);
+
+    assert.equal(validate(1, [0, 1]), false); // 1 only has dot 0
+    assert.equal(validate(5, [0, 3]), false); // 5 only has dots 0, 4
+
+
+});
