@@ -6550,11 +6550,11 @@
       "rules": {
         "9x9": "Chess Knights, placed in cells with number 9, must attack only different numbers."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "no-input"
         ],
         "instructions": []
       },

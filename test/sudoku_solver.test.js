@@ -2989,3 +2989,15 @@ test("Big-Small Japanese Sums validate sequences", function() {
     const clueBSCol = { relation: "bigsmalljapanesesums", value: [5, 6, 15, 9], cells: boardBS[0].map((_, i) => ({row: 0, col: i})), axis: "column" };
     assert.equal(SudokuCSP.solve(boardBS, { outsideRelations: [clueBSCol] }).solved, true);
 });
+
+
+test("Unicorn normalizes the constraint array with 81 entries", function() {
+    const puzzle = {
+        nx0: 9,
+        activeSudokuVariants: ["classic", "unicorn"],
+        centerlist: [], point: {}, pu_q: { line: {}, number: {}, symbol: {} }
+    };
+    const constraints = SudokuSolver.readConstraints(puzzle);
+    assert.equal(constraints.supported.includes("unicorn"), true);
+    assert.equal(constraints.unicorn.length, 81);
+});

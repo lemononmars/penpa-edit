@@ -1563,6 +1563,25 @@ var SudokuCSP = (function() {
         }
     });
 
+    registerConstraint("unicorn", {
+        validatePartial: function(board, item) {
+            var value = cellValue(board, item.cell);
+            if (value !== 9) return true;
+            var seen = 0;
+            for (var i = 0; i < item.neighbors.length; i++) {
+                var nVal = cellValue(board, item.neighbors[i]);
+                if (nVal) {
+                    var bit = 1 << nVal;
+                    if ((seen & bit) !== 0) return false;
+                    seen |= bit;
+                }
+            }
+            return true;
+        }
+    });
+
+
+
     registerConstraint("edgeRelations", {
         validatePartial: function(board, clue) {
             var first = cellValue(board, clue.cells[0]);
