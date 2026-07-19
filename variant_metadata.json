@@ -721,23 +721,6 @@
       }
     },
     {
-      "otherNames": "",
-      "id": "clock08",
-      "name": "Clock 0-8",
-      "rules": {
-        "9x9": "Place a digit from 0-8 in each empty cell in the grid such that each row, column and marked 3x3 box contains each digit exactly once. Some digital clocks are shown. When the puzzle is completed, all clocks should display a valid time in 24-hour format (HH:MM); i.e. a clock cannot display 43:65."
-      },
-      "status": "planned",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "cell"
-        ],
-        "instructions": []
-      },
-      "tags": []
-    },
-    {
       "id": "clockfaces",
       "name": "Clock Faces",
       "rules": {
@@ -7079,6 +7062,26 @@
         ],
         "instructions": []
       }
+    },
+    {
+      "id": "0to8",
+      "name": "0 to 8",
+      "rules": {
+        "9x9": "Place a digit from 0-8 in each empty cell in the grid such that each row, column and marked 3x3 box contains each digit exactly once."
+      },
+      "tags": [],
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "aliases": [
+        "0 to 8",
+        "0-8"
+      ]
     }
   ]
 }
