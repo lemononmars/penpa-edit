@@ -12230,14 +12230,6 @@ class Puzzle {
                     } else {
                         this.undoredo_counter = this.undoredo_counter + 1;
                     }
-                    // Disabling dots clean up for ipad/mobile until better solution is figured
-                    // let neighbors = this.get_neighbors(num);
-                    // for (let i = 0; i < neighbors.length; i++) {
-                    //     if (this[this.mode.qa].symbol[neighbors[i]]) {
-                    //         this.record("symbol", neighbors[i], this.undoredo_counter);
-                    //         delete this[this.mode.qa].symbol[neighbors[i]];
-                    //     }
-                    // }
                     this.record("symbol", num, this.undoredo_counter);
                     this[this.mode.qa].symbol[num] = [star_type, "star", 2];
                     this.record_replay("symbol", num, this.undoredo_counter);
