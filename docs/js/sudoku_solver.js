@@ -558,6 +558,7 @@ var SudokuSolver = (function() {
             difference2Neighbours: [],
             offsetStarts: [],
             oneKnightStep: [],
+            repeatedNeighbors: [],
             escapeStarts: [],
             renbanRegions: [],
             cloneGroups: [],
@@ -1250,6 +1251,10 @@ var SudokuSolver = (function() {
         if (variantEnabled(puzzle, "oneknightstep")) {
             constraints.oneKnightStep = shadedCells.slice();
             constraints.supported.push("oneknightstep");
+        }
+        if (variantEnabled(puzzle, "repeatedneighbors")) {
+            constraints.repeatedNeighbors = shadedCells.slice();
+            constraints.supported.push("repeatedneighbors");
         }
         if (variantEnabled(puzzle, "alloddalleven")) {
             var parityBoxes = {};

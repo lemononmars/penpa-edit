@@ -10,6 +10,12 @@ global.TextDecoder = require("util").TextDecoder;
 global.btoa = (str) => Buffer.from(str, "binary").toString("base64");
 global.atob = (str) => Buffer.from(str, "base64").toString("binary");
 
+global.Swal = { fire: (obj) => { global.lastErrorMsg = obj.html; } };
+global.Identity = { errorTitle: "error", okButtonText: "ok" };
+global.PenpaText = { get: (key) => key };
+global.lastErrorMsg = null;
+
+
 // Create a context and run Zlib script to attach Zlib to global correctly inside require()
 const vm = require("vm");
 const context = vm.createContext(global);
@@ -136,4 +142,62 @@ test("errorMsg and infoMsg functionality", () => {
         global.Swal = originalSwal;
         global.Identity = originalIdentity;
     }
+});
+
+test("get_download_filename functionality", () => {
+    // Save original global.document
+    const originalDocument = global.document;
+
+    try {
+        // We will modify these in our tests
+        let elements = {
+            "testInputID": { value: "" },
+            "saveinfotitle": { value: "" },
+            "saveinfoauthor": { value: "" }
+        };
+
+        global.document = {
+            getElementById: (id) => elements[id]
+        };
+
+        // Test 1: Valid filename provided in input
+        elements["testInputID"].value = "my_custom_filename";
+        assert.equal(general.get_download_filename("testInputID"), "my_custom_filename");
+
+        // Test 2: Empty input, generates default name without bad characters
+        elements["testInputID"].value = "";
+        elements["saveinfotitle"].value = "My Puzzle Title";
+        elements["saveinfoauthor"].value = "Puzzle Author";
+        assert.equal(general.get_download_filename("testInputID"), "penpa-Puzzle-Author-My-Puzzle-Title");
+
+        // Test 3: Empty input, sanitizes bad characters
+        elements["testInputID"].value = "";
+        elements["saveinfotitle"].value = "Title with <bad> chars | and * symbols?";
+        elements["saveinfoauthor"].value = "Author / Name \\";
+        assert.equal(general.get_download_filename("testInputID"), "penpa-Author-Name-Title-with-bad-chars-and-symbols-");
+
+    } finally {
+        // Restore original global.document
+        global.document = originalDocument;
+    }
+});
+
+test("validate_filename functionality", () => {
+    // Reset global state
+    global.lastErrorMsg = null;
+
+    // Valid filename without extension
+    const result1 = general.validate_filename("valid_name", "txt");
+    assert.equal(result1, "valid_name.txt");
+    assert.equal(global.lastErrorMsg, null);
+
+    // Valid filename with extension already
+    const result2 = general.validate_filename("valid_name.txt", "txt");
+    assert.equal(result2, "valid_name.txt");
+    assert.equal(global.lastErrorMsg, null);
+
+    // Invalid filename with bad chars
+    const result3 = general.validate_filename("bad/name", "txt");
+    assert.equal(result3, null);
+    assert.equal(global.lastErrorMsg, "unsupported_filename");
 });
