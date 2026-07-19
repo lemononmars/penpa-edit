@@ -2164,7 +2164,7 @@
       "rules": {
         "9x9": "Follow classic sudoku rules. Several cells are marked with a star. In all four directions, maximal possible length is given until the sum of the digits is higher than the value of an emitter."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -4206,7 +4206,6 @@
         "instructions": []
       }
     },
-
     {
       "id": "nonconsecutive",
       "name": "Nonconsecutive",

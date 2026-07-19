@@ -458,6 +458,7 @@ var SudokuSolver = (function() {
             noThreeInRow: [],
             queenDigits: [],
             touchyCells: [],
+            emitters: [],
             edgeRelations: [],
             catalogLines: [],
             quadRelations: [],
@@ -519,6 +520,8 @@ var SudokuSolver = (function() {
                 if (cells.length > 1) {
                     if (names[0] === "nobulbthermo" && variantEnabled(puzzle, "creasing")) {
                         constraints.catalogLines.push({ path: cells, relation: "creasing" });
+                    } else if (names[0] === "nobulbthermo" && variantEnabled(puzzle, "emitters")) {
+                        // Handled by emitters block
                     } else if (variantEnabled(puzzle, "stretchedthermo")) constraints.stretchedThermos.push(cells);
                     else constraints[names[1]].push(cells);
                 }
@@ -1321,6 +1324,62 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push(quadVariant);
         }
+
+        if (variantEnabled(puzzle, "emitters")) {
+            var emitterCells = [];
+            var symbols = puzzle.pu_q.symbol || {};
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                if (entry && entry[1] && entry[1].indexOf("circle_") === 0) {
+                    var cell = keyToCell(puzzle, Number(key));
+                    if (cell && isRealCell(cell)) {
+                        emitterCells.push(cell);
+                    }
+                }
+            });
+
+            var thermoEdges = {};
+            var source = puzzle.pu_q.nobulbthermo || [];
+            for (var i = 0; i < source.length; i++) {
+                var cells = pathToCells(puzzle, source[i]);
+                for (var j = 0; j < cells.length - 1; j++) {
+                    var c1 = cells[j], c2 = cells[j+1];
+                    var k1 = c1.row + "," + c1.col;
+                    var k2 = c2.row + "," + c2.col;
+                    thermoEdges[k1 + "-" + k2] = true;
+                    thermoEdges[k2 + "-" + k1] = true;
+                }
+            }
+
+            var dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            emitterCells.forEach(function(E) {
+                var emitterData = { cell: E, lines: [] };
+                dirs.forEach(function(d) {
+                    var line = [];
+                    var cr = E.row, cc = E.col;
+                    while (true) {
+                        var nr = cr + d[0], nc = cc + d[1];
+                        var k1 = cr + "," + cc;
+                        var k2 = nr + "," + nc;
+                        if (thermoEdges[k1 + "-" + k2]) {
+                            line.push({ row: nr, col: nc });
+                            cr = nr;
+                            cc = nc;
+                        } else {
+                            break;
+                        }
+                    }
+                    var nextCell = { row: cr + d[0], col: cc + d[1] };
+                    if (nextCell.row < 0 || nextCell.row >= SIZE || nextCell.col < 0 || nextCell.col >= SIZE) {
+                        nextCell = null;
+                    }
+                    emitterData.lines.push({ cells: line, nextCell: nextCell });
+                });
+                constraints.emitters.push(emitterData);
+            });
+            constraints.supported.push("emitters");
+        }
+
         if (variantEnabled(puzzle, "quadro")) {
             for (var quadroRow = 0; quadroRow < SIZE - 1; quadroRow++) {
                 for (var quadroCol = 0; quadroCol < SIZE - 1; quadroCol++) {
