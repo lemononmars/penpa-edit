@@ -2736,5 +2736,49 @@ test("validates new variants: zones, somewhere", function() {
         somewhere: [
             { cells: [{row: 0, col: 0}, {row: 0, col: 1}], digit: 9 }
         ]
+test("Sum or Product Killer", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+
+    // Sum is 8 (5 + 3) -> 8 is valid
+    assert.equal(SudokuCSP.solve(solved, {
+        sumOrProductKillers: [{ cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }], total: 8 }]
+    }).solved, true);
+
+    // Product is 15 (5 * 3) -> 15 is valid
+    assert.equal(SudokuCSP.solve(solved, {
+        sumOrProductKillers: [{ cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }], total: 15 }]
+    }).solved, true);
+
+    // Invalid total
+    assert.equal(SudokuCSP.solve(solved, {
+        sumOrProductKillers: [{ cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }], total: 12 }]
+    }).solved, false);
+});
+
+test("Tableaux", function() {
+    const solved = boardFromString(
+        "534678912" + "672195348" + "198342567" +
+        "859761423" + "426853791" + "713924856" +
+        "961537284" + "287419635" + "345286179"
+    );
+
+    // R0C1=3, R0C2=4 (3 < 4, L->R)
+    // R0C1=3, R1C1=7 (3 < 7, T->B)
+    assert.equal(SudokuCSP.solve(solved, {
+        tableauxCages: [{ cells: [{ row: 0, col: 1 }, { row: 0, col: 2 }, { row: 1, col: 1 }] }]
+    }).solved, true);
+
+    // Violates L->R: R0C0=5, R0C1=3 (5 > 3)
+    assert.equal(SudokuCSP.solve(solved, {
+        tableauxCages: [{ cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }] }]
+    }).solved, false);
+
+    // Violates distinctness: R0C2=4, R3C6=4
+    assert.equal(SudokuCSP.solve(solved, {
+        tableauxCages: [{ cells: [{ row: 0, col: 2 }, { row: 3, col: 6 }] }]
     }).solved, false);
 });
