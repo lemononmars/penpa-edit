@@ -3934,6 +3934,38 @@ registerConstraint("threeDigitNumbersKillers", {
         }
     });
 
+    function doubleKropkiAllows(first, second, kind) {
+        var diff2 = Math.abs(first - second) === 2;
+        var ratio4 = first === 4 * second || second === 4 * first;
+        if (kind === "white") {
+            return diff2;
+        }
+        if (kind === "black") {
+            return ratio4;
+        }
+        return !diff2 && !ratio4;
+    }
+
+    registerConstraint("doublekropki", {
+        validatePartial: function(board, dot) {
+            var first = cellValue(board, dot.cells[0]);
+            var second = cellValue(board, dot.cells[1]);
+            if (first && second) {
+                return doubleKropkiAllows(first, second, dot.kind);
+            }
+            var known = first || second;
+            if (!known) {
+                return true;
+            }
+            for (var candidate = 1; candidate <= SIZE; candidate++) {
+                if (candidate !== known && doubleKropkiAllows(known, candidate, dot.kind)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    });
+
     function fadedKropkiAllows(first, second, kind) {
         var consecutive = Math.abs(first - second) === 1;
         var double = first === 2 * second || second === 2 * first;

@@ -495,6 +495,7 @@ function cspImplementationFor(variation: Variation) {
         return `function ${functionName}(board, arrow) {\n  // ${rule}\n  ${directionalBodies[variation.value]}\n}`;
     }
     const markBodies: Record<string, string> = {
+        doublekropki: `const [a, b] = mark.cells.map(cell => cellValue(board, cell));\n  if (!a || !b) return true;\n  return mark.kind === "white" ? Math.abs(a - b) === 2 : Math.max(a, b) === 4 * Math.min(a, b);`,
         "odd even": `const value = cellValue(board, mark.cell);\n  return !value || (board.isZeroEight?value-1:value) % 2 === (mark.parity === "odd" ? 1 : 0);`,
         kropki: `const [a, b] = mark.cells.map(cell => cellValue(board, cell));\n  if (!a || !b) return true;\n  return mark.kind === "white" ? Math.abs(a - b) === 1 : Math.max(board.isZeroEight?a-1:a, board.isZeroEight?b-1:b) === 2 * Math.min(board.isZeroEight?a-1:a, board.isZeroEight?b-1:b);`,
         xv: `const [a, b] = mark.cells.map(cell => cellValue(board, cell));\n  return !a || !b || (board.isZeroEight?a-1:a) + (board.isZeroEight?b-1:b) === (mark.kind === "V" ? 5 : 10);`,
