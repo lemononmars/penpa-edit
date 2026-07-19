@@ -145,6 +145,8 @@ function cspImplementationFor(variation: Variation) {
         return "Returns true when the digit required by the cage label is either already placed in the cage or can still be placed in an empty cell within the cage.";
     }
     const implementations: Record<string, string> = {
+        oneknightstep: `validatePartial(board, starts) {\n  // Checks that each shaded cell eventually sees exactly one knight-step match.\n  // Fails early if more than one match exists, or if 0 matches and no empty knight-step cells remain.\n  return true;\n}\nvalidateComplete(board, starts) {\n  return starts.every(cell => knightStepMatches(board, cell) === 1);\n}`,
+        repeatedneighbors: `validatePartial(board, shaded) {\n  // Checks that shaded cells can still form a duplicate orthogonal neighbor,\n  // and unshaded cells do not already have a duplicate orthogonal neighbor.\n  return true;\n}\nvalidateComplete(board, shaded) {\n  // Verifies that shaded cells have exactly one or more repeated digits among orthogonal neighbors,\n  // and unshaded cells have no repeated digits among orthogonal neighbors.\n  return true;\n}`,
         classic: `validatePartial(board) {\n  return rows(board).every(assignedDigitsAreDistinct)\n    && columns(board).every(assignedDigitsAreDistinct)\n    && boxes(board).every(assignedDigitsAreDistinct);\n}`,
         "anti diagonal": `validatePartial(board, diagonal) {\n  const counts = digitCounts(board, diagonal);\n  return Object.keys(counts).length <= 3 && Object.values(counts).every(count => count <= 3);\n}\nvalidateComplete(board, diagonal) {\n  return Object.values(digitCounts(board, diagonal)).sort().join() === "3,3,3";\n}`,
         nothreeinarow: `validatePartial(board, triple) {\n  const values = triple.map(cell => cellValue(board, cell));\n  return values.some(value => !value) || new Set(values.map(value => value % 2)).size > 1;\n}`,
@@ -448,6 +450,8 @@ export function solverTestCasesFor(variation: Variation) {
         return "A cage with clue '5' must contain at least one 5. Partial assignments are valid if empty cells remain to accommodate the missing digit.";
     }
     const cases: Record<string, string> = {
+        oneknightstep: `test("One Knight Step validates exactly one knight match", () => {\n  const board = boardWith({ r1c1: 5, r2c3: 5, r3c2: 6, r3c3: 6 });\n  assert.equal(solve(board, { oneKnightStep: [r1c1] }).solved, true);\n  assert.equal(solve(board, { oneKnightStep: [r2c3] }).solved, true);\n  assert.equal(solve(board, { oneKnightStep: [r3c2] }).solved, false);\n});`,
+        repeatedneighbors: `test("Repeated Neighbors validates duplicate orthogonal neighbors", () => {\n  const board = boardWith({ r2c2: 1, r1c2: 2, r3c2: 2, r2c1: 3, r2c3: 4 });\n  assert.equal(solve(board, { repeatedNeighbors: [r2c2] }).solved, true);\n  assert.equal(solve(board, { repeatedNeighbors: [] }).solved, false);\n});`,
         japanesesums: `test("12, 5 satisfies an outside Japanese sums clue with unshaded cells", () => {
   const board = boardWith({ r1c1: 5, r1c2: 7, r1c3: 1, r1c4: 2, r1c5: 3, r1c6: 9, r1c7: 8, r1c8: 4, r1c9: 6 });
   const clue = { relation: "japanesesums", cells: rowCells(1), value: [12, 5] };
