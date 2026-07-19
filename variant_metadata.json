@@ -496,7 +496,7 @@
       "rules": {
         "9x9": "Clues outside the grid indicate the sums of groups in the given order. Clues on top refer to groups of big digits (5-9). These groups are separated by at least one small digit (1-4). Clues on the left refer to groups of small digits, that are separated by at least one big digit."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
