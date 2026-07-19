@@ -386,6 +386,7 @@ var SudokuSolver = (function() {
         SIZE = puzzleSize(puzzle) || SIZE;
         includeSolution = includeSolution !== false;
         var board = [];
+        var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return variantEnabled(puzzle, v); });
         for (var row = 0; row < SIZE; row++) {
             board[row] = [];
             for (var col = 0; col < SIZE; col++) {
@@ -395,8 +396,15 @@ var SudokuSolver = (function() {
                     problemEntry && problemEntry[1] === 0;
                 var problemDigit = (variantEnabled(puzzle, "pencilmarks") && problemEntry && problemEntry[2] === "7") || pinnochioClue ?
                     0 : digitFromEntry(problemEntry);
-                board[row][col] = problemDigit ||
-                    (includeSolution ? digitFromEntry(puzzle.pu_a.number[key]) : 0) || 0;
+                if (problemDigit === 0 && isZeroEight && problemEntry && String(problemEntry[0]).trim() === "0" && (problemEntry[2] === "1" || problemEntry[2] === "2")) {
+                    problemDigit = -1; // special case to preserve explicit zero before +1
+                }
+                var digit = problemDigit || (includeSolution ? digitFromEntry(puzzle.pu_a.number[key]) : 0) || 0;
+                if (digit === 0 && isZeroEight && includeSolution && puzzle.pu_a.number[key] && String(puzzle.pu_a.number[key][0]).trim() === "0" && (puzzle.pu_a.number[key][2] === "1" || puzzle.pu_a.number[key][2] === "2")) {
+                    digit = -1;
+                }
+                if (isZeroEight && digit !== 0) digit = digit === -1 ? 1 : digit + 1;
+                board[row][col] = digit;
             }
         }
         return board;
@@ -2934,6 +2942,7 @@ var SudokuSolver = (function() {
 
     function applySolution(puzzle, solvedBoard) {
         SIZE = solvedBoard && solvedBoard.length || puzzleSize(puzzle) || SIZE;
+        var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return variantEnabled(puzzle, v); });
         var changes = [];
         var oldQa = puzzle.mode.qa;
         puzzle.mode.qa = "pu_a";
@@ -2941,8 +2950,13 @@ var SudokuSolver = (function() {
             for (var col = 0; col < SIZE; col++) {
                 var key = cellKey(puzzle, row, col);
                 var digit = solvedBoard[row][col];
-                if (digit && currentDigit(puzzle, key) !== digit) {
-                    changes.push({ key: key, value: [digit.toString(), 9, "1"] });
+                var displayDigit = isZeroEight && digit ? digit - 1 : digit;
+                if (digit) {
+                    var entry = puzzle.pu_a.number[key];
+                    var currentStr = entry && String(entry[0]).trim();
+                    if (currentStr !== displayDigit.toString()) {
+                        changes.push({ key: key, value: [displayDigit.toString(), 9, "1"] });
+                    }
                 }
             }
         }
