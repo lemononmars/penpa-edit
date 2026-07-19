@@ -10,6 +10,12 @@ global.TextDecoder = require("util").TextDecoder;
 global.btoa = (str) => Buffer.from(str, "binary").toString("base64");
 global.atob = (str) => Buffer.from(str, "base64").toString("binary");
 
+global.Swal = { fire: (obj) => { global.lastErrorMsg = obj.html; } };
+global.Identity = { errorTitle: "error", okButtonText: "ok" };
+global.PenpaText = { get: (key) => key };
+global.lastErrorMsg = null;
+
+
 // Create a context and run Zlib script to attach Zlib to global correctly inside require()
 const vm = require("vm");
 const context = vm.createContext(global);
@@ -53,6 +59,9 @@ test("encrypt_data and decrypt_data functionality", () => {
         assert.equal(typeof encrypted, "string", "Encrypted data should be a string");
         assert.notEqual(encrypted, testCase, "Encrypted data should not be the original string (except empty maybe)");
         assert.equal(decrypted, testCase, `Decrypted data should match original for: ${testCase.substring(0, 20)}`);
+    }
+});
+
 test("request_shortlink functionality", async () => {
     // Save original global.$
     const originalDollar = global.$;
@@ -87,4 +96,24 @@ test("request_shortlink functionality", async () => {
         // Restore original global.$
         global.$ = originalDollar;
     }
+});
+
+test("validate_filename functionality", () => {
+    // Reset global state
+    global.lastErrorMsg = null;
+
+    // Valid filename without extension
+    const result1 = general.validate_filename("valid_name", "txt");
+    assert.equal(result1, "valid_name.txt");
+    assert.equal(global.lastErrorMsg, null);
+
+    // Valid filename with extension already
+    const result2 = general.validate_filename("valid_name.txt", "txt");
+    assert.equal(result2, "valid_name.txt");
+    assert.equal(global.lastErrorMsg, null);
+
+    // Invalid filename with bad chars
+    const result3 = general.validate_filename("bad/name", "txt");
+    assert.equal(result3, null);
+    assert.equal(global.lastErrorMsg, "unsupported_filename");
 });
