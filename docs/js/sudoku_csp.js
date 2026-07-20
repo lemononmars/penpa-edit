@@ -1606,6 +1606,64 @@ registerConstraint("threeDigitNumbersKillers", {
         return !first || !second || first !== second;
     }
 
+
+    registerConstraint("citywalk", {
+        validatePartial: function(board, clue) {
+            var SIZE = board.length;
+            var known = [];
+            var available = {};
+
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var val = cellValue(board, {row: r, col: c});
+                    if (val >= 3 && val <= 7) {
+                        known.push({row: r, col: c});
+                        available[r + "," + c] = true;
+                    } else if (!val) {
+                        available[r + "," + c] = true;
+                    }
+                }
+            }
+
+            if (known.length === 0) return true;
+
+            var visited = {};
+            var queue = [known[0]];
+            visited[known[0].row + "," + known[0].col] = true;
+            var reachedKnown = 1;
+
+            var head = 0;
+            while (head < queue.length) {
+                var curr = queue[head++];
+                var neighbors = [
+                    {row: curr.row - 1, col: curr.col},
+                    {row: curr.row + 1, col: curr.col},
+                    {row: curr.row, col: curr.col - 1},
+                    {row: curr.row, col: curr.col + 1}
+                ];
+
+                for (var i = 0; i < neighbors.length; i++) {
+                    var nr = neighbors[i].row;
+                    var nc = neighbors[i].col;
+                    var key = nr + "," + nc;
+
+                    if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+                        if (available[key] && !visited[key]) {
+                            visited[key] = true;
+                            queue.push(neighbors[i]);
+                            var nVal = cellValue(board, neighbors[i]);
+                            if (nVal >= 3 && nVal <= 7) {
+                                reachedKnown++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return reachedKnown === known.length;
+        }
+    });
+
     registerConstraint("antiKing", {
         validatePartial: function(board, pair) {
             return pairValuesDiffer(board, pair);

@@ -536,6 +536,7 @@ var SudokuSolver = (function() {
         var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return variantEnabled(puzzle, v); });
         var constraints = {
             isZeroEight: isZeroEight,
+            citywalk: [],
             starCells: [],
             thermos: [],
             arrows: [],
@@ -1110,6 +1111,10 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
         if (variantEnabled(puzzle, "anti king")) {
             addGridPairs(constraints.antiKing, [[0, 1], [1, -1], [1, 0], [1, 1]]);
             constraints.supported.push("anti king");
+        }
+        if (variantEnabled(puzzle, "citywalk")) {
+            constraints.citywalk = [true];
+            constraints.supported.push("citywalk");
         }
         if (variantEnabled(puzzle, "anti knight")) {
             addGridPairs(constraints.antiKnight, [[1, -2], [1, 2], [2, -1], [2, 1]]);

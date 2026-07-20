@@ -6740,11 +6740,29 @@
       ]
     },
     {
+      "id": "citywalk",
+      "name": "Citywalk",
+      "rules": {
+        "9x9": "All cells that contain 3 to 7 are orthogonally connected in the grid. There is no restriction on connectivity in each 3x3 box"
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "tags": [
+        "global"
+      ]
+    },
+    {
       "id": "upperrightheavykiller",
       "name": "Upper Right Heavy Killer",
       "rules": {
         "9x9": "For any number in the cell that is smaller than the one in the diagonally adjacent upper right cell, there must be a clue in the cell indicating the sum of two numbers. For cells without a clue, the number cannot be smaller than the one in the diagonally adjacent upper right cell."
       },
+      "status": "available",
       "tags": [
         "math",
         "corner clue"
