@@ -380,7 +380,10 @@ var SudokuCSP = (function() {
             return item.relation.replace(/([a-z])([0-9])/g, "$1 $2").replace(/([a-z])([A-Z])/g, "$1 $2");
         }
         var labels = {
+            termination: "0",
+            notTermination: "none",
             antiKing: "Anti King", antiKnight: "Anti Knight", chessKings: "Chess Kings", nonConsecutive: "Non-Consecutive",
+            polePosition: "Pole Position",
             edgeRelations: "edge clue", quadRelations: "quad clue", mathdoku: "mathdoku", catalogLines: "line clue",
             diagonalAllDifferent: "diagonal/region", regionAllDifferent: "region", extraLargeRegions: "extra large regions", difference2Neighbours: "difference 2 neighbours",
             regionCoverage: "region coverage", scatteredAllDifferent: "Scattered shaded cells",
@@ -1607,6 +1610,43 @@ registerConstraint("threeDigitNumbersKillers", {
     }
 
 
+    registerConstraint("polePosition", {
+        validatePartial: function(board, clue, helpers) {
+            var targetDigit = board.isZeroEight ? 2 : 1;
+            for (var r = 0; r < board.length; r++) {
+                var firstInRow = board[r][0];
+                if (firstInRow) {
+                    var targetCol = board.isZeroEight ? firstInRow : firstInRow - 1;
+                    if (targetCol >= 0 && targetCol < board[r].length) {
+                        if (board[r][targetCol] && board[r][targetCol] !== targetDigit) return false;
+                    }
+                }
+                for (var c = 0; c < board[r].length; c++) {
+                    if (board[r][c] === targetDigit) {
+                        var expectedFirst = board.isZeroEight ? c : c + 1;
+                        if (firstInRow && firstInRow !== expectedFirst) return false;
+                    }
+                }
+            }
+            for (var c = 0; c < board[0].length; c++) {
+                var firstInCol = board[0][c];
+                if (firstInCol) {
+                    var targetRow = board.isZeroEight ? firstInCol : firstInCol - 1;
+                    if (targetRow >= 0 && targetRow < board.length) {
+                        if (board[targetRow][c] && board[targetRow][c] !== targetDigit) return false;
+                    }
+                }
+                for (var r = 0; r < board.length; r++) {
+                    if (board[r][c] === targetDigit) {
+                        var expectedFirst = board.isZeroEight ? r : r + 1;
+                        if (firstInCol && firstInCol !== expectedFirst) return false;
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
     registerConstraint("citywalk", {
         validatePartial: function(board, clue) {
             var SIZE = board.length;
@@ -1844,6 +1884,8 @@ registerConstraint("threeDigitNumbersKillers", {
                 case "sum": return sum === clue.target;
                 case "product": return product === clue.target;
                 case "tenspositionproducts": return Math.floor(product / 10) === clue.target;
+                case "termination": return (sum % 10 === 0) || (product % 10 === 0);
+                case "notTermination": return (sum % 10 !== 0) && (product % 10 !== 0);
                 case "teneleven": return sum === 10 || sum === 11;
                 case "notTenEleven": return sum !== 10 && sum !== 11;
                 case "greater": return Math.max(first, second) === clue.target;

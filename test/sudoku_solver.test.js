@@ -3548,3 +3548,33 @@ test("validates new variants: one-five-nine, one touch, parity circles", () => {
     ]}).solved, false);
 });
 });
+
+
+test("Pole Position variant", function() {
+    // Valid setups
+    var board = emptyBoard();
+    board[0][0] = 3;
+    board[0][2] = 1;
+    assert.deepEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[2][0] = 1;
+    assert.deepEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    // Invalid setups
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[0][2] = 2; // Position 3 must be 1, not 2
+    assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[0][1] = 1; // 1 is at position 2, so first cell should be 2, not 3
+    assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[1][0] = 1; // 1 is at position 2 (col 0, row 1), first cell should be 2, not 3
+    assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+});

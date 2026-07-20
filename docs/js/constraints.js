@@ -329,6 +329,13 @@ const penpa_constraints = {
             "submodeset": ["1", "1"],
             "styleset": ["", 0]
         },
+        "termination": {
+            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",
+                "mo_number_lb", "sub_number5_lb", "st_number0_lb"],
+            "modeset": ["sudoku", "number"],
+            "submodeset": ["1", "5"],
+            "styleset": ["", 0]
+        },
         "inequalitytriples": {
             "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb"],
             "modeset": ["sudoku"],
