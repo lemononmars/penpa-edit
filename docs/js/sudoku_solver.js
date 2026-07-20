@@ -1113,6 +1113,9 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             addGridPairs(constraints.antiKing, [[0, 1], [1, -1], [1, 0], [1, 1]]);
             constraints.supported.push("anti king");
         }
+        if (variantEnabled(puzzle, "sequence top-bottom")) {
+            constraints.sequenceTopBottom = true;
+            constraints.supported.push("sequence top-bottom");
         if (variantEnabled(puzzle, "poleposition")) {
             constraints.polePosition = [true];
             constraints.supported.push("poleposition");
