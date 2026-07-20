@@ -6738,6 +6738,25 @@
         "0 to 8",
         "0-8"
       ]
+    },
+    {
+      "id": "upperrightheavykiller",
+      "name": "Upper Right Heavy Killer",
+      "rules": {
+        "9x9": "For any number in the cell that is smaller than the one in the diagonally adjacent upper right cell, there must be a clue in the cell indicating the sum of two numbers. For cells without a clue, the number cannot be smaller than the one in the diagonally adjacent upper right cell."
+      },
+      "tags": [
+        "math",
+        "corner clue"
+      ],
+      "inputType": {
+        "categories": [
+          "number"
+        ],
+        "instructions": [
+          "Select \"Number\" (Small)."
+        ]
+      }
     }
   ]
 }

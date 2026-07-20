@@ -3786,6 +3786,34 @@ registerConstraint("threeDigitNumbersKillers", {
         }
     });
 
+    registerConstraint("upperrightheavykiller", {
+        validatePartial: function(board, constraint) {
+            var urCages = constraint;
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var cellVal = cellValue(board, { row: r, col: c });
+                    if (!cellVal) continue;
+                    var mathCellVal = mathCellValue(board, { row: r, col: c });
+
+                    if (r > 0 && c < SIZE - 1) {
+                        var urVal = cellValue(board, { row: r - 1, col: c + 1 });
+                        if (!urVal) continue;
+                        var mathUrVal = mathCellValue(board, { row: r - 1, col: c + 1 });
+                        var cageTotal = urCages[r + "," + c];
+
+                        if (mathCellVal < mathUrVal) {
+                            if (cageTotal === undefined) return false;
+                            if (mathCellVal + mathUrVal !== cageTotal) return false;
+                        } else {
+                            if (cageTotal !== undefined) return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
     registerConstraint("topheavy", {
         validatePartial: function(board) {
             for (var c = 0; c < SIZE; c++) {
