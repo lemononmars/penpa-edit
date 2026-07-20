@@ -6757,6 +6757,8 @@
           "Select \"Number\" (Small)."
         ]
       }
+    },
+    {
       "id": "consecutiveonline",
       "name": "Consecutive On-Line",
       "rules": {
@@ -6773,6 +6775,8 @@
         "math",
         "consecutive"
       ]
+    },
+    {
       "id": "pirate",
       "name": "Pirate",
       "rules": {
