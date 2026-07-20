@@ -549,6 +549,7 @@ var SudokuSolver = (function() {
             antiKing: [],
             antiKnight: [],
             chessKings: [],
+            polePosition: [],
             chessKings: [],
             chessKings: [],
             nonConsecutive: [],
@@ -1111,6 +1112,10 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
         if (variantEnabled(puzzle, "anti king")) {
             addGridPairs(constraints.antiKing, [[0, 1], [1, -1], [1, 0], [1, 1]]);
             constraints.supported.push("anti king");
+        }
+        if (variantEnabled(puzzle, "poleposition")) {
+            constraints.polePosition = [true];
+            constraints.supported.push("poleposition");
         }
         if (variantEnabled(puzzle, "citywalk")) {
             constraints.citywalk = [true];
