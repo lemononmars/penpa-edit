@@ -918,6 +918,49 @@ registerConstraint("emitters", {
         }
     });
 
+registerConstraint("threeDigitNumbersKillers", {
+        validatePartial: function(board, cage, helpers) {
+            var seen = 0;
+            for (var i = 0; i < cage.cells.length; i++) {
+                var digit = cellValue(board, cage.cells[i]);
+                if (digit) {
+                    var bit = 1 << digit;
+                    if (seen & bit) return false;
+                    seen |= bit;
+                }
+            }
+
+            if (cage.total === null || isNaN(cage.total) || !cage.lines || !cage.lines.length) return true;
+
+            for (var i = 0; i < cage.lines.length; i++) {
+                if (cage.lines[i].length !== 3) return false;
+            }
+
+            var allLineCellsFilled = true;
+            for (var i = 0; i < cage.lines.length; i++) {
+                for (var j = 0; j < cage.lines[i].length; j++) {
+                    if (!cellValue(board, cage.lines[i][j])) {
+                        allLineCellsFilled = false;
+                        break;
+                    }
+                }
+            }
+            if (!allLineCellsFilled) return true;
+
+            function checkSum(index, currentSum) {
+                if (index === cage.lines.length) return currentSum === cage.total;
+                var line = cage.lines[index];
+                var num1 = cellValue(board, line[0]) * 100 + cellValue(board, line[1]) * 10 + cellValue(board, line[2]);
+                var num2 = cellValue(board, line[2]) * 100 + cellValue(board, line[1]) * 10 + cellValue(board, line[0]);
+                if (checkSum(index + 1, currentSum + num1)) return true;
+                if (num1 !== num2 && checkSum(index + 1, currentSum + num2)) return true;
+                return false;
+            }
+
+            return checkSum(0, 0);
+        }
+    });
+
     registerConstraint("killers", {
         validatePartial: function(board, cage) {
             var seen = 0;
@@ -1755,6 +1798,13 @@ registerConstraint("emitters", {
                 case "divisor":
                 case "multiples": return clue.target > 0 && (first * 10 + second) % clue.target === 0;
                 case "eitheror": return first === clue.target || second === clue.target;
+                case "ratio":
+                    var parts = clue.sign.split(":");
+                    var x = parseInt(parts[0], 10);
+                    var y = parseInt(parts[1], 10);
+                    var v1 = board.isZeroEight ? first - 1 : first;
+                    var v2 = board.isZeroEight ? second - 1 : second;
+                    return (v1 * y === v2 * x) || (v1 * x === v2 * y);
                 case "blocksumrelations":
                     var groupValues = (clue.groups || []).map(function(group) {
                         var values = group.map(function(cell) { return cellValue(board, cell); });
@@ -3884,6 +3934,38 @@ registerConstraint("emitters", {
         }
     });
 
+    function doubleKropkiAllows(first, second, kind) {
+        var diff2 = Math.abs(first - second) === 2;
+        var ratio4 = first === 4 * second || second === 4 * first;
+        if (kind === "white") {
+            return diff2;
+        }
+        if (kind === "black") {
+            return ratio4;
+        }
+        return !diff2 && !ratio4;
+    }
+
+    registerConstraint("doublekropki", {
+        validatePartial: function(board, dot) {
+            var first = cellValue(board, dot.cells[0]);
+            var second = cellValue(board, dot.cells[1]);
+            if (first && second) {
+                return doubleKropkiAllows(first, second, dot.kind);
+            }
+            var known = first || second;
+            if (!known) {
+                return true;
+            }
+            for (var candidate = 1; candidate <= SIZE; candidate++) {
+                if (candidate !== known && doubleKropkiAllows(known, candidate, dot.kind)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    });
+
     function fadedKropkiAllows(first, second, kind) {
         var consecutive = Math.abs(first - second) === 1;
         var double = first === 2 * second || second === 2 * first;
@@ -3892,6 +3974,202 @@ registerConstraint("emitters", {
         }
         return !consecutive && !double;
     }
+
+    registerConstraint("onefivenine", {
+        validatePartial: function(board, clue, helpers) {
+            for (var row = 0; row < SIZE; row++) {
+                var colsToCheck = [0, 4, 8];
+                var valuesToCheck = [1, 5, 9];
+                for (var i = 0; i < 3; i++) {
+                    var pointerCol = colsToCheck[i];
+                    var expectedValue = valuesToCheck[i];
+
+                    var pointerVal = board[row][pointerCol];
+                    if (pointerVal) {
+                        var targetCol = pointerVal - 1;
+                        if (targetCol >= 0 && targetCol < SIZE) {
+                            var targetVal = board[row][targetCol];
+                            if (targetVal && targetVal !== expectedValue) {
+                                return false;
+                            }
+                            var cellHasExpected = false;
+                            for (var c = 0; c < SIZE; c++) {
+                                if (board[row][c] === expectedValue) {
+                                    if (c !== targetCol) return false;
+                                }
+                            }
+                        }
+                    }
+                    for (var c = 0; c < SIZE; c++) {
+                        var cellVal = board[row][c];
+                        if (cellVal === expectedValue) {
+                            if (pointerVal && pointerVal - 1 !== c) return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("parityCircles", {
+        validatePartial: function(board, clues, helpers) {
+            var clueMap = {};
+            for (var i = 0; i < clues.length; i++) {
+                var clue = clues[i];
+                if (clue && clue.cell) {
+                    var r = clue.cell.row !== undefined ? clue.cell.row : clue.cell[0];
+                    var c = clue.cell.col !== undefined ? clue.cell.col : clue.cell[1];
+                    clueMap[r + "," + c] = true;
+                }
+            }
+
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var val = board[r][c];
+                    if (!val) continue;
+
+                    var isValOdd = val % 2 !== 0;
+
+                    var neighbors = [
+                        [r-1, c-1], [r-1, c], [r-1, c+1],
+                        [r, c-1],           [r, c+1],
+                        [r+1, c-1], [r+1, c], [r+1, c+1]
+                    ];
+
+                    var validNeighbors = neighbors.filter(function(n) {
+                        return n[0] >= 0 && n[0] < SIZE && n[1] >= 0 && n[1] < SIZE;
+                    });
+
+                    var knownParityCount = 0;
+                    var unknownCount = 0;
+
+                    for (var i = 0; i < validNeighbors.length; i++) {
+                        var nCell = validNeighbors[i];
+                        var nVal = board[nCell[0]][nCell[1]];
+                        if (!nVal) {
+                            unknownCount++;
+                        } else {
+                            var isNOdd = nVal % 2 !== 0;
+                            if (isValOdd === isNOdd) {
+                                knownParityCount++;
+                            }
+                        }
+                    }
+
+                    var hasCircle = clueMap[r + "," + c];
+                    if (hasCircle) {
+                        if (knownParityCount > val) return false;
+                        if (knownParityCount + unknownCount < val) return false;
+                    } else {
+                        // Negative constraint: All possible circles are given
+                        if (unknownCount === 0 && knownParityCount === val) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("oneTouch", {
+        validatePartial: function(board, clueArrayWrapper, helpers) {
+            var clueArray = (clueArrayWrapper && clueArrayWrapper.length && Array.isArray(clueArrayWrapper[0])) ? clueArrayWrapper[0] : (clueArrayWrapper || []);
+            var touched = {};
+            for (var r = 0; r < SIZE - 1; r++) {
+                for (var c = 0; c < SIZE - 1; c++) {
+                    var valTL = board[r][c];
+                    var valTR = board[r][c+1];
+                    var valBL = board[r+1][c];
+                    var valBR = board[r+1][c+1];
+
+                    if (valTL && valBR && valTL === valBR) {
+                        if (!touched[valTL]) touched[valTL] = [];
+                        touched[valTL].push([r, c]);
+                    }
+                    if (valTR && valBL && valTR === valBL) {
+                        if (!touched[valTR]) touched[valTR] = [];
+                        touched[valTR].push([r, c]);
+                    }
+                }
+            }
+
+            var validIntersectionsMap = {};
+            for (var i = 0; i < clueArray.length; i++) {
+                var cells = clueArray[i].cells || clueArray[i];
+                if (!cells) continue;
+                var minR = SIZE, minC = SIZE;
+                for (var j = 0; j < cells.length; j++) {
+                    var cr = cells[j].row !== undefined ? cells[j].row : cells[j][0];
+                    var cc = cells[j].col !== undefined ? cells[j].col : cells[j][1];
+                    minR = Math.min(minR, cr);
+                    minC = Math.min(minC, cc);
+                }
+                validIntersectionsMap[minR + "," + minC] = true;
+            }
+
+            for (var val in touched) {
+                var points = touched[val];
+                if (points.length > 1) return false;
+                if (points.length === 1) {
+                    var p = points[0];
+                    if (!validIntersectionsMap[p[0] + "," + p[1]]) {
+                        return false; // Touching unmarked
+                    }
+                }
+            }
+            return true;
+        },
+        validateComplete: function(board, clueArrayWrapper, helpers) {
+            var clueArray = (clueArrayWrapper && clueArrayWrapper.length && Array.isArray(clueArrayWrapper[0])) ? clueArrayWrapper[0] : (clueArrayWrapper || []);
+            var validIntersectionsMap = {};
+            for (var i = 0; i < clueArray.length; i++) {
+                var cells = clueArray[i].cells || clueArray[i];
+                if (!cells) continue;
+                var minR = SIZE, minC = SIZE;
+                for (var j = 0; j < cells.length; j++) {
+                    var cr = cells[j].row !== undefined ? cells[j].row : cells[j][0];
+                    var cc = cells[j].col !== undefined ? cells[j].col : cells[j][1];
+                    minR = Math.min(minR, cr);
+                    minC = Math.min(minC, cc);
+                }
+                validIntersectionsMap[minR + "," + minC] = true;
+            }
+
+            var touchedCounts = {};
+            var intersectionHasPairMap = {};
+            for (var i = 1; i <= SIZE; i++) touchedCounts[i] = 0;
+
+            for (var r = 0; r < SIZE - 1; r++) {
+                for (var c = 0; c < SIZE - 1; c++) {
+                    var valTL = board[r][c];
+                    var valTR = board[r][c+1];
+                    var valBL = board[r+1][c];
+                    var valBR = board[r+1][c+1];
+
+                    if (valTL && valBR && valTL === valBR) {
+                        touchedCounts[valTL]++;
+                        intersectionHasPairMap[r + "," + c] = true;
+                    }
+                    if (valTR && valBL && valTR === valBL) {
+                        touchedCounts[valTR]++;
+                        intersectionHasPairMap[r + "," + c] = true;
+                    }
+                }
+            }
+
+            for (var val = 1; val <= SIZE; val++) {
+                if (touchedCounts[val] !== 1) return false;
+            }
+
+            for (var k in validIntersectionsMap) {
+                if (!intersectionHasPairMap[k]) return false;
+            }
+
+            return true;
+        }
+    });
 
     registerConstraint("fadedKropki", {
         validatePartial: function(board, dot) {

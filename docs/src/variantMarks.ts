@@ -138,6 +138,47 @@ export function inputModesFor(variation: Variation) {
 
 /** Human-readable source shown on each generated variant reference page. */
 function cspImplementationFor(variation: Variation) {
+    if (variation.value === "threedigitnumberskiller") {
+        return `validatePartial: function(board, cage, helpers) {
+            var seen = 0;
+            for (var i = 0; i < cage.cells.length; i++) {
+                var digit = cellValue(board, cage.cells[i]);
+                if (digit) {
+                    var bit = 1 << digit;
+                    if (seen & bit) return false;
+                    seen |= bit;
+                }
+            }
+
+            if (cage.total === null || isNaN(cage.total) || !cage.lines || !cage.lines.length) return true;
+
+            for (var i = 0; i < cage.lines.length; i++) {
+                if (cage.lines[i].length !== 3) return false;
+            }
+
+            var allLineCellsFilled = true;
+            for (var i = 0; i < cage.lines.length; i++) {
+                for (var j = 0; j < cage.lines[i].length; j++) {
+                    if (!cellValue(board, cage.lines[i][j])) {
+                        allLineCellsFilled = false;
+                        break;
+                    }
+                }
+            }
+            if (!allLineCellsFilled) return true;
+
+            function checkSum(index, currentSum) {
+                if (index === cage.lines.length) return currentSum === cage.total;
+                var line = cage.lines[index];
+                var num1 = cellValue(board, line[0]) * 100 + cellValue(board, line[1]) * 10 + cellValue(board, line[2]);
+                var num2 = cellValue(board, line[2]) * 100 + cellValue(board, line[1]) * 10 + cellValue(board, line[0]);
+                if (checkSum(index + 1, currentSum + num1)) return true;
+                if (num1 !== num2 && checkSum(index + 1, currentSum + num2)) return true;
+                return false;
+            }
+
+            return checkSum(0, 0);
+        }`;
     if (variation.value === "braille") {
         return `function validatePartial(board, clue) {
   const value = cellValue(board, clue.cell);
@@ -382,7 +423,8 @@ function cspImplementationFor(variation: Variation) {
         lesser: "Math.min(a, b) === clue.value",
         consecutive: "Math.abs(a - b) === 1",
         evensumpairs: "((board.isZeroEight?a-1:a) + (board.isZeroEight?b-1:b)) % 2 === 0",
-        oddsumpairs: "((board.isZeroEight?a-1:a) + (board.isZeroEight?b-1:b)) % 2 === 1"
+        oddsumpairs: "((board.isZeroEight?a-1:a) + (board.isZeroEight?b-1:b)) % 2 === 1",
+        ratio: "(() => { const [x, y] = clue.sign.split(':').map(Number); const v1 = board.isZeroEight?a-1:a; const v2 = board.isZeroEight?b-1:b; return v1 * y === v2 * x || v1 * x === v2 * y; })()"
     };
     if (edgeRelations[variation.value]) {
         return `function ${functionName}(board, clue) {\n  const [a, b] = clue.cells.map(cell => cellValue(board, cell));\n  return !a || !b || ${edgeRelations[variation.value]};\n}`;
@@ -453,6 +495,7 @@ function cspImplementationFor(variation: Variation) {
         return `function ${functionName}(board, arrow) {\n  // ${rule}\n  ${directionalBodies[variation.value]}\n}`;
     }
     const markBodies: Record<string, string> = {
+        doublekropki: `const [a, b] = mark.cells.map(cell => cellValue(board, cell));\n  if (!a || !b) return true;\n  return mark.kind === "white" ? Math.abs(a - b) === 2 : Math.max(a, b) === 4 * Math.min(a, b);`,
         "odd even": `const value = cellValue(board, mark.cell);\n  return !value || (board.isZeroEight?value-1:value) % 2 === (mark.parity === "odd" ? 1 : 0);`,
         kropki: `const [a, b] = mark.cells.map(cell => cellValue(board, cell));\n  if (!a || !b) return true;\n  return mark.kind === "white" ? Math.abs(a - b) === 1 : Math.max(board.isZeroEight?a-1:a, board.isZeroEight?b-1:b) === 2 * Math.min(board.isZeroEight?a-1:a, board.isZeroEight?b-1:b);`,
         xv: `const [a, b] = mark.cells.map(cell => cellValue(board, cell));\n  return !a || !b || (board.isZeroEight?a-1:a) + (board.isZeroEight?b-1:b) === (mark.kind === "V" ? 5 : 10);`,
@@ -505,6 +548,8 @@ export function cspConstraintFunctionFor(variation: Variation) {
 
 /** Executable-style regression examples displayed on every variant detail page. */
 export function solverTestCasesFor(variation: Variation) {
+    if (variation.value === "threedigitnumberskiller") {
+        return "A cage without a total must have unique digits. A cage with a total must have unique digits, and if all its 3-cell gray lines are fully populated, their values (read in either direction) must sum to the cage's total.";
     if (variation.value === "braille") {
         return `test("Braille allows subset of dots", () => {
   const board = boardWith({ 0: { 0: 6 } });

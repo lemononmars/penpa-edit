@@ -438,11 +438,12 @@ var SudokuSolver = (function() {
     function connectedLinePaths(puzzle, style) {
         var active = {};
         (puzzle.centerlist || []).forEach(function(key) { active[key] = true; });
+
         var adjacency = {};
         Object.keys(puzzle.pu_q.line || {}).forEach(function(edge) {
             if (puzzle.pu_q.line[edge] !== style) return;
             var endpoints = edge.split(",").map(Number);
-            if (endpoints.length !== 2 || !active[endpoints[0]] || !active[endpoints[1]]) return;
+            if (endpoints.length !== 2 || !active[endpoints[0]] || !active[endpoints[1]]) { return; }
             (adjacency[endpoints[0]] || (adjacency[endpoints[0]] = [])).push(endpoints[1]);
             (adjacency[endpoints[1]] || (adjacency[endpoints[1]] = [])).push(endpoints[0]);
         });
@@ -588,7 +589,8 @@ var SudokuSolver = (function() {
             symmetricUnequal: [],
             stretchedThermos: [],
             productKillers: [],
-            sumOrProductKillers: [],
+sumOrProductKillers: [],
+            threeDigitNumbersKillers: [],
             tableauxCages: [],
             soloKillerGroups: [],
             outsideRelations: [],
@@ -602,8 +604,11 @@ var SudokuSolver = (function() {
             antiConsecutive: [],
             averageArrows: [],
             countDifferent: [],
+            parityCircles: [],
+            oneTouch: [],
             countOdd: [],
             kropki: [],
+            doublekropki: [],
             fadedKropki: [],
             fives: [],
             oddLabyrinth: [],
@@ -739,7 +744,7 @@ var SudokuSolver = (function() {
         var cages = typeof puzzle.refreshKillerCages === "function" ?
             puzzle.refreshKillerCages("pu_q") : (puzzle.pu_q.killercages || []);
         var regionVariantNames = ["clone", "consecutiveclone", "renban", "windoku",
-            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "codedclone", "number 5 is alive", "sumset", "zones", "somewhere", "sumorproductkiller", "tableaux", "roundoff", "ordering"];
+            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "codedclone", "number 5 is alive", "sumset", "zones", "somewhere", "sumorproductkiller", "tableaux", "roundoff", "ordering","threedigitnumberskiller"];
         var usesCagedRegions = regionVariantNames.some(function(name) { return variantEnabled(puzzle, name); });
         var regionCages = [];
         for (var k = 0; k < cages.length; k++) {
@@ -796,7 +801,7 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push("productkiller");
         }
-        if (variantEnabled(puzzle, "sumorproductkiller")) {
+if (variantEnabled(puzzle, "sumorproductkiller")) {
             for (var spIndex = 0; spIndex < cages.length; spIndex++) {
                 var spCells = pathToCells(puzzle, cages[spIndex]);
                 var spTotal = readKillerTotal(puzzle, cages[spIndex]);
@@ -804,6 +809,53 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push("sumorproductkiller");
         }
+
+
+
+
+
+
+        if (variantEnabled(puzzle, "threedigitnumberskiller")) {
+            var lines = connectedLinePaths(puzzle, 5);
+            for (var tIndex = 0; tIndex < cages.length; tIndex++) {
+                var tCells = pathToCells(puzzle, cages[tIndex]);
+                var tTotal = readKillerTotal(puzzle, cages[tIndex]);
+                if (tCells.length) {
+                    var intersectingLines = [];
+                    for (var lg = 0; lg < lines.length; lg++) {
+                        var lineGroup = lines[lg];
+                        if (lineGroup.length === 3) {
+                            var allInCage = true;
+                            for (var lgc = 0; lgc < lineGroup.length; lgc++) {
+                                var found = false;
+                                for (var tc = 0; tc < tCells.length; tc++) {
+                                    if (lineGroup[lgc].row === tCells[tc].row && lineGroup[lgc].col === tCells[tc].col) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                                if (!found) {
+                                    allInCage = false;
+                                    break;
+                                }
+                            }
+                            if (allInCage) {
+                                intersectingLines.push(lineGroup);
+                            }
+                        }
+                    }
+                    constraints.threeDigitNumbersKillers.push({ cells: tCells, total: tTotal, lines: intersectingLines });
+                }
+            }
+            constraints.supported.push("threedigitnumberskiller");
+        }
+
+
+
+
+
+
+
         if (variantEnabled(puzzle, "tableaux")) {
             for (var tIndex = 0; tIndex < cages.length; tIndex++) {
                 var tCells = pathToCells(puzzle, cages[tIndex]);
@@ -2032,6 +2084,91 @@ var SudokuSolver = (function() {
                 }
             }
         }
+        if (variantEnabled(puzzle, "doublekropki")) {
+            var doubleDottedEdges = {};
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                var point = puzzle.point && puzzle.point[key];
+                if (!entry || entry[1] !== "diamond_SS" || (entry[0] !== 1 && entry[0] !== 2) || !point) return;
+                var cells = (point.neighbor || []).filter(function(neighbor) {
+                    return activeCells[neighbor];
+                }).map(function(neighbor) {
+                    return keyToCell(puzzle, neighbor);
+                }).filter(Boolean);
+                if (cells.length === 2) {
+                    constraints.doublekropki.push({
+                        cells: cells,
+                        kind: entry[0] === 2 ? "black" : "white"
+                    });
+                }
+            });
+            if (constraints.doublekropki.length) constraints.supported.push("doublekropki");
+
+            if (puzzle.doublekropkiNegativeConstraint === true) {
+                constraints.doublekropki.forEach(function(dot) {
+                    var first = dot.cells[0].row * SIZE + dot.cells[0].col;
+                    var second = dot.cells[1].row * SIZE + dot.cells[1].col;
+                    doubleDottedEdges[Math.min(first, second) + ":" + Math.max(first, second)] = true;
+                });
+                for (var row = 0; row < SIZE; row++) {
+                    for (var col = 0; col < SIZE; col++) {
+                        [[row + 1, col], [row, col + 1]].forEach(function(neighbor) {
+                            if (neighbor[0] >= SIZE || neighbor[1] >= SIZE) return;
+                            var firstIdx = row * SIZE + col;
+                            var secondIdx = neighbor[0] * SIZE + neighbor[1];
+                            var edge = Math.min(firstIdx, secondIdx) + ":" + Math.max(firstIdx, secondIdx);
+                            if (!doubleDottedEdges[edge]) {
+                                constraints.doublekropki.push({
+                                    cells: [{ row: row, col: col }, { row: neighbor[0], col: neighbor[1] }],
+                                    kind: "none"
+                                });
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        if (variantEnabled(puzzle, "onetouch")) {
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                var point = puzzle.point && puzzle.point[key];
+                if (!entry || !point) return;
+
+                if (entry[1] === "circle_SS" && point.type === 0) {
+                    var activeCells = {};
+                    (point.neighbor || []).forEach(function(neighbor) {
+                        activeCells[neighbor] = true;
+                    });
+                    var cells = Object.keys(activeCells).map(function(neighbor) {
+                        return keyToCell(puzzle, Number(neighbor));
+                    }).filter(Boolean);
+
+                    if (cells.length === 4) {
+                        constraints.oneTouch.push({ cells: cells });
+                    }
+                }
+            });
+            constraints.oneTouch = [constraints.oneTouch]; // Wrapping once for CSP
+            constraints.supported.push("onetouch");
+        }
+        if (variantEnabled(puzzle, "paritycircles")) {
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                if (!entry || !activeCells[key]) return;
+                if (entry[1] === "circle_L") {
+                    var cell = keyToCell(puzzle, Number(key));
+                    if (cell) {
+                        constraints.parityCircles.push({ cell: cell });
+                    }
+                }
+            });
+            constraints.parityCircles = [constraints.parityCircles]; // Wrap once for CSP
+            constraints.supported.push("paritycircles");
+        }
+        if (variantEnabled(puzzle, "onefivenine")) {
+            constraints.onefivenine = [{}];
+            constraints.supported.push("onefivenine");
+        }
         if (variantEnabled(puzzle, "fadedkropki")) {
             var fadedDottedEdges = {};
             Object.keys(symbols).forEach(function(key) {
@@ -2250,7 +2387,7 @@ var SudokuSolver = (function() {
             }
             constraints.supported.push("lc");
         }
-        var catalogEdgeVariant = ["difference", "sum", "product", "arithmetic", "greater", "lesser", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts",
+        var catalogEdgeVariant = ["difference", "sum", "product", "arithmetic", "greater", "lesser", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts", "ratio",
             "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares",
             "primesums", "twodigitprimenumbers", "fives", "oneortwodifferencepairs", "teneleven"].find(function(name) {
                 return variantEnabled(puzzle, name);
@@ -2263,14 +2400,15 @@ var SudokuSolver = (function() {
                 return point.neighbor.filter(function(neighbor) { return activeCells[neighbor]; })
                     .map(function(neighbor) { return keyToCell(puzzle, neighbor); }).filter(Boolean);
             }
-            if (["difference", "sum", "product", "arithmetic", "greater", "lesser", "inequality", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts"].indexOf(catalogEdgeVariant) !== -1) {
+            if (["difference", "sum", "product", "arithmetic", "greater", "lesser", "inequality", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts", "ratio"].indexOf(catalogEdgeVariant) !== -1) {
                 Object.keys(numbers).forEach(function(key) {
                     var cells = catalogEdgeCells(key);
                     var target = numbers[key] && parseInt(numbers[key][0], 10);
                     var text = numbers[key] && String(numbers[key][0]).trim();
                     if (cells.length === 2 && (Number.isFinite(target) ||
                         ((catalogEdgeVariant === "inequality" || catalogEdgeVariant === "blocksumrelations") &&
-                            (text === "<" || text === ">" || text === "^" || text === "v" || text === "V")))) {
+                            (text === "<" || text === ">" || text === "^" || text === "v" || text === "V")) ||
+                        (catalogEdgeVariant === "ratio" && text.indexOf(":") !== -1))) {
                         cells.sort(function(first, second) { return first.row - second.row || first.col - second.col; });
                         var sign = text;
                         if (text === "^") sign = "<";
@@ -3377,6 +3515,7 @@ var SudokuSolver = (function() {
         AUTO_RUN_LIMIT_MS: AUTO_RUN_LIMIT_MS,
         TEST_BOARD_URL: TEST_BOARD_URL,
         isClassicSudoku: isClassicSudoku,
+
         cellKey: cellKey,
         digitFromEntry: digitFromEntry,
         readBoard: readBoard,
@@ -3857,6 +3996,7 @@ var SudokuTools = (function() {
             irregular: "Regions",
             sudoku: "Sudoku",
             symbol: variant === "deadoralivearrows" ? (submode === "arrow_B_W" ? "White Arrow" : "Grey Arrow") :
+                submode === "diamond_SS" && variant === "doublekropki" ? "Double Kropki Dot" :
                 submode === "circle_SS" ? (variant === "consecutive" ? "White Dot" : "Kropki Dot") :
                 variant === "odd even" || variant === "odd even count" || variant === "odd even bridge" ? "Odd / Even Mark" :
                     variant === "battenburg" ? "Battenburg Mark" :
@@ -4059,6 +4199,9 @@ var SudokuTools = (function() {
                 } else if (entry && entry[1] === "sudokuetc" && entry[0] === 1 &&
                     canDiscover("battenburg", "symbol", "sudokuetc")) {
                     addVariant("battenburg");
+                } else if (entry && entry[1] === "diamond_SS" && (entry[0] === 1 || entry[0] === 2) &&
+                    canDiscover("doublekropki", "symbol", "diamond_SS")) {
+                    addVariant("doublekropki");
                 }
             });
             Object.keys(layer.line || {}).some(function(key) {
@@ -4130,6 +4273,27 @@ var SudokuTools = (function() {
         pu.kropkiNegativeConstraint = pu.kropkiNegativeConstraint !== true;
         SudokuSolver.invalidateCandidateAnalysis();
         updateKropkiNegativeControl();
+        pu.redraw();
+    }
+
+    function updateDoubleKropkiNegativeControl() {
+        var button = byId("sudoku_doublekropki_negative");
+        if (!button) {
+            return;
+        }
+        var enabled = !!(pu && pu.doublekropkiNegativeConstraint === true);
+        button.classList.toggle("active", enabled);
+        button.setAttribute("aria-pressed", enabled ? "true" : "false");
+        button.textContent = "Negative Double Kropki " + (enabled ? "ON" : "OFF");
+    }
+
+    function toggleDoubleKropkiNegative() {
+        if (!pu || !hasVariant("doublekropki")) {
+            return;
+        }
+        pu.doublekropkiNegativeConstraint = pu.doublekropkiNegativeConstraint !== true;
+        SudokuSolver.invalidateCandidateAnalysis();
+        updateDoubleKropkiNegativeControl();
         pu.redraw();
     }
 
@@ -4232,6 +4396,9 @@ var SudokuTools = (function() {
         }
         pu.activeSudokuVariant = variant || "classic";
         pu.kropki_mode = pu.activeSudokuVariant === "kropki";
+        pu.onefivenine_mode = pu.activeSudokuVariant === "onefivenine";
+        pu.onetouch_mode = pu.activeSudokuVariant === "onetouch";
+        pu.paritycircles_mode = pu.activeSudokuVariant === "paritycircles";
         pu.consecutive_mode = pu.activeSudokuVariant === "consecutive";
         pu.even_sum_pairs_mode = pu.activeSudokuVariant === "evensumpairs";
         pu.clockfaces_mode = pu.activeSudokuVariant === "clockfaces";
@@ -4245,7 +4412,7 @@ var SudokuTools = (function() {
         pu.battenburg_mode = pu.activeSudokuVariant === "battenburg";
         pu.sudoku_edge_clue_mode = ["difference", "sum", "product", "arithmetic", "greater", "lesser",
             "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares", "multiplication", "xivi", "lc",
-            "primesums", "twodigitprimenumbers", "blocksumrelations", "divisor", "eitheror", "anticonsecutive", "fives", "fadedkropki",
+            "primesums", "twodigitprimenumbers", "blocksumrelations", "divisor", "eitheror", "anticonsecutive", "fives", "fadedkropki", "doublekropki",
             "oneortwodifferencepairs", "teneleven", "tenspositionproducts"].indexOf(pu.activeSudokuVariant) !== -1 &&
             (mode === "number" || mode === "symbol");
         pu.sudoku_corner_clue_mode = ["quadruple", "equalsums", "equaldifferences", "equalproducts",
@@ -4266,6 +4433,7 @@ var SudokuTools = (function() {
         pu.type = pu.type_set();
         updateVariantActive();
         updateKropkiNegativeControl();
+        updateDoubleKropkiNegativeControl();
         updateConsecutiveNegativeControl();
         updateXVNegativeControl();
         updateLCNegativeControl();
@@ -4573,33 +4741,38 @@ var SudokuTools = (function() {
                         setting.submodeset[i], setting.styleset[i]);
                 }
             }
-            if (variant === "kropki" || variant === "consecutive" || variant === "xv" || variant === "lc" || variant === "battenburg") {
+            if (variant === "kropki" || variant === "doublekropki" || variant === "consecutive" || variant === "xv" || variant === "lc" || variant === "battenburg") {
                 var negative = document.createElement("button");
                 var isKropki = variant === "kropki";
+                var isDoubleKropki = variant === "doublekropki";
                 var isConsecutive = variant === "consecutive";
                 var isXV = variant === "xv";
                 var isLC = variant === "lc";
                 negative.id = isKropki ? "sudoku_kropki_negative" :
+                    isDoubleKropki ? "sudoku_doublekropki_negative" :
                     isConsecutive ? "sudoku_consecutive_negative" :
                         isXV ? "sudoku_xv_negative" : isLC ? "sudoku_lc_negative" : "sudoku_battenburg_negative";
                 negative.type = "button";
                 negative.className = "button sudoku-tool-button " +
-                    (isKropki ? "sudoku-kropki-negative" : isConsecutive ? "sudoku-consecutive-negative" : isXV ? "sudoku-xv-negative" :
+                    (isKropki ? "sudoku-kropki-negative" : isDoubleKropki ? "sudoku-doublekropki-negative" : isConsecutive ? "sudoku-consecutive-negative" : isXV ? "sudoku-xv-negative" :
                         isLC ? "sudoku-lc-negative" : "sudoku-battenburg-negative");
                 negative.title = isKropki ?
                     "Apply the negative Kropki rule to every undotted orthogonal edge" :
+                    isDoubleKropki ? "Apply the negative Double Kropki rule to every undotted orthogonal edge" :
                     isConsecutive ? "Require every unmarked orthogonal edge to be non-consecutive" :
                     isXV ? "Apply the negative XV rule to every unmarked orthogonal edge" :
                     isLC ? "Apply the negative LC rule to every unmarked orthogonal edge" :
                         "Forbid checkerboard parity around every unmarked four-cell corner";
                 negative.setAttribute("aria-label", isKropki ?
-                    "Negative Kropki constraint" : isConsecutive ? "Negative Consecutive constraint" : isXV ? "Negative XV constraint" :
+                    "Negative Kropki constraint" : isDoubleKropki ? "Negative Double Kropki constraint" : isConsecutive ? "Negative Consecutive constraint" : isXV ? "Negative XV constraint" :
                     isLC ? "Negative LC constraint" : "Negative Battenburg constraint");
                 negative.addEventListener("click", function(event) {
                     event.preventDefault();
                     event.stopPropagation();
                     if (variant === "kropki") {
                         toggleKropkiNegative();
+                    } else if (variant === "doublekropki") {
+                        toggleDoubleKropkiNegative();
                     } else if (variant === "consecutive") {
                         toggleConsecutiveNegative();
                     } else if (variant === "xv") {
@@ -4630,6 +4803,9 @@ var SudokuTools = (function() {
             if (typeof pu.kropkiNegativeConstraint !== "boolean") {
                 pu.kropkiNegativeConstraint = false;
             }
+            if (typeof pu.doublekropkiNegativeConstraint !== "boolean") {
+                pu.doublekropkiNegativeConstraint = false;
+            }
             if (typeof pu.consecutiveNegativeConstraint !== "boolean") {
                 pu.consecutiveNegativeConstraint = false;
             }
@@ -4642,6 +4818,7 @@ var SudokuTools = (function() {
         }
         updateVariantActive();
         updateKropkiNegativeControl();
+        updateDoubleKropkiNegativeControl();
         updateConsecutiveNegativeControl();
         updateXVNegativeControl();
         updateLCNegativeControl();
@@ -4682,6 +4859,13 @@ var SudokuTools = (function() {
             });
             deleteEntries(colorLayer && colorLayer.symbol, function(entry) {
                 return entry && entry[1] === "circle_SS" && (entry[0] === 1 || entry[0] === 2);
+            });
+        } else if (variant === "doublekropki") {
+            deleteEntries(layer.symbol, function(entry) {
+                return entry && entry[1] === "diamond_SS" && (entry[0] === 1 || entry[0] === 2);
+            });
+            deleteEntries(colorLayer && colorLayer.symbol, function(entry) {
+                return entry && entry[1] === "diamond_SS" && (entry[0] === 1 || entry[0] === 2);
             });
         } else if (variant === "consecutive") {
             deleteEntries(layer.symbol, function(entry) {
@@ -4832,6 +5016,8 @@ var SudokuTools = (function() {
         syncDiagonalLines();
         if (variant === "kropki") {
             pu.kropkiNegativeConstraint = false;
+        } else if (variant === "doublekropki") {
+            pu.doublekropkiNegativeConstraint = false;
         } else if (variant === "consecutive") {
             pu.consecutiveNegativeConstraint = false;
         } else if (variant === "xv") {
@@ -4920,6 +5106,7 @@ var SudokuTools = (function() {
             pu.odd_even_mode = false;
             pu.battenburg_mode = false;
             pu.kropkiNegativeConstraint = false;
+            pu.doublekropkiNegativeConstraint = false;
             pu.consecutiveNegativeConstraint = false;
             pu.xvNegativeConstraint = false;
             pu.battenburgNegativeConstraint = false;
@@ -5038,6 +5225,7 @@ var SudokuTools = (function() {
             },
             sudoku_load_test_board: loadTestBoard,
             sudoku_kropki_negative: toggleKropkiNegative,
+            sudoku_doublekropki_negative: toggleDoubleKropkiNegative,
             sudoku_consecutive_negative: toggleConsecutiveNegative,
             sudoku_xv_negative: toggleXVNegative,
             sudoku_lc_negative: toggleLCNegative,
