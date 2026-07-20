@@ -7631,8 +7631,7 @@ class Puzzle {
         if (clipboard_data === "" || !clipboard_data) {
             let plain_text = ev.clipboardData.getData("text/plain");
             if (plain_text) {
-                // Do not use trim() directly on plain_text to preserve leading empty cells (e.g. leading tabs)
-                let lines = plain_text.replace(/\s+$/, '').split(/\r?\n/);
+                let lines = plain_text.trim().split(/\r?\n/);
                 if (lines.length > 0) {
                     let items = [];
                     let y = 0;
