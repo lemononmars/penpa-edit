@@ -623,7 +623,7 @@
         : 1;
       if (selectedVariant === "before1after9") layers = 2;
       if (selectedVariant === "positionsums") layers = 2;
-      if (selectedVariant === "bigsmalljapanesesums") layers = 5;
+      if (["bigsmalljapanesesums", "japanesesums", "partitionedsums"].includes(selectedVariant)) layers = 5;
       ensureOutsideSpace(
         layers,
         selectedVariant === "triplesum"
