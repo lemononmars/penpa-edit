@@ -5203,11 +5203,11 @@
       "rules": {
         "9x9": "The digits placed in adjacent cells must satisfy the given ratios."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "edge"
         ],
         "instructions": []
       },
@@ -6526,11 +6526,13 @@
       "rules": {
         "9x9": "Digits in the gray strings represent three-digit numbers. All three-digit numbers in the cage must sum to the total given in its top-left corner. Digits must not repeat in cages."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cage"
+          "cage",
+          "line",
+          "number"
         ],
         "instructions": []
       },

@@ -918,6 +918,49 @@ registerConstraint("emitters", {
         }
     });
 
+registerConstraint("threeDigitNumbersKillers", {
+        validatePartial: function(board, cage, helpers) {
+            var seen = 0;
+            for (var i = 0; i < cage.cells.length; i++) {
+                var digit = cellValue(board, cage.cells[i]);
+                if (digit) {
+                    var bit = 1 << digit;
+                    if (seen & bit) return false;
+                    seen |= bit;
+                }
+            }
+
+            if (cage.total === null || isNaN(cage.total) || !cage.lines || !cage.lines.length) return true;
+
+            for (var i = 0; i < cage.lines.length; i++) {
+                if (cage.lines[i].length !== 3) return false;
+            }
+
+            var allLineCellsFilled = true;
+            for (var i = 0; i < cage.lines.length; i++) {
+                for (var j = 0; j < cage.lines[i].length; j++) {
+                    if (!cellValue(board, cage.lines[i][j])) {
+                        allLineCellsFilled = false;
+                        break;
+                    }
+                }
+            }
+            if (!allLineCellsFilled) return true;
+
+            function checkSum(index, currentSum) {
+                if (index === cage.lines.length) return currentSum === cage.total;
+                var line = cage.lines[index];
+                var num1 = cellValue(board, line[0]) * 100 + cellValue(board, line[1]) * 10 + cellValue(board, line[2]);
+                var num2 = cellValue(board, line[2]) * 100 + cellValue(board, line[1]) * 10 + cellValue(board, line[0]);
+                if (checkSum(index + 1, currentSum + num1)) return true;
+                if (num1 !== num2 && checkSum(index + 1, currentSum + num2)) return true;
+                return false;
+            }
+
+            return checkSum(0, 0);
+        }
+    });
+
     registerConstraint("killers", {
         validatePartial: function(board, cage) {
             var seen = 0;
@@ -1755,6 +1798,13 @@ registerConstraint("emitters", {
                 case "divisor":
                 case "multiples": return clue.target > 0 && (first * 10 + second) % clue.target === 0;
                 case "eitheror": return first === clue.target || second === clue.target;
+                case "ratio":
+                    var parts = clue.sign.split(":");
+                    var x = parseInt(parts[0], 10);
+                    var y = parseInt(parts[1], 10);
+                    var v1 = board.isZeroEight ? first - 1 : first;
+                    var v2 = board.isZeroEight ? second - 1 : second;
+                    return (v1 * y === v2 * x) || (v1 * x === v2 * y);
                 case "blocksumrelations":
                     var groupValues = (clue.groups || []).map(function(group) {
                         var values = group.map(function(cell) { return cellValue(board, cell); });
@@ -3953,6 +4003,38 @@ registerConstraint("emitters", {
             }
             for (var candidate = 1; candidate <= SIZE; candidate++) {
                 if (candidate !== known && kropkiAllows(known, candidate, dot.kind)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    });
+
+    function doubleKropkiAllows(first, second, kind) {
+        var diff2 = Math.abs(first - second) === 2;
+        var ratio4 = first === 4 * second || second === 4 * first;
+        if (kind === "white") {
+            return diff2;
+        }
+        if (kind === "black") {
+            return ratio4;
+        }
+        return !diff2 && !ratio4;
+    }
+
+    registerConstraint("doublekropki", {
+        validatePartial: function(board, dot) {
+            var first = cellValue(board, dot.cells[0]);
+            var second = cellValue(board, dot.cells[1]);
+            if (first && second) {
+                return doubleKropkiAllows(first, second, dot.kind);
+            }
+            var known = first || second;
+            if (!known) {
+                return true;
+            }
+            for (var candidate = 1; candidate <= SIZE; candidate++) {
+                if (candidate !== known && doubleKropkiAllows(known, candidate, dot.kind)) {
                     return true;
                 }
             }

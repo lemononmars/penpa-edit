@@ -58,7 +58,8 @@
   let fullLogContent = "";
   let fullLogExpanded = false;
   let generatorVariants: string[] = ["classic"];
-  let generatorNegative = { kropki: false, xv: false, battenburg: false };
+  let generatorNegative = { kropki: false, doublekropki: false, xv: false, battenburg: false };
+  let generatorSource: "new" | "existing" = "new";
   let toolTitle = "Sudoku input";
   let toolDescription =
     "Click a cell, then type a digit. Use Tab to cycle through available input tools.";
@@ -265,6 +266,15 @@
       submode === "diamond_SS"
     ) {
       toolPanelOptions = [{ value: "1", label: "Diamond" }];
+    } else if (
+      mode === "symbol" &&
+      variant === "doublekropki" &&
+      submode === "diamond_SS"
+    ) {
+      toolPanelOptions = [
+        { value: "1", label: "White" },
+        { value: "2", label: "Black" },
+      ];
     } else if (
       mode === "symbol" &&
       variant === "battenburg" &&
@@ -743,6 +753,7 @@
       generatorVariants.unshift("classic");
     generatorNegative = {
       kropki: pu?.kropkiNegativeConstraint === true,
+      doublekropki: pu?.doublekropkiNegativeConstraint === true,
       xv: pu?.xvNegativeConstraint === true,
       battenburg: pu?.battenburgNegativeConstraint === true,
     };
@@ -759,6 +770,31 @@
     const size = newGridSize;
     const variantsToGenerate = [...generatorVariants];
     const negative = { ...generatorNegative };
+    const unsupported = variantsToGenerate.filter(
+      (variant) => !scratchGeneratableVariants.has(variant),
+    );
+    if (
+      generatorSource !== "existing" &&
+      (unsupported.length ||
+        negative.kropki ||
+        negative.doublekropki ||
+        negative.xv ||
+        negative.battenburg ||
+        (size === 6 && variantsToGenerate.includes("anti diagonal")))
+    ) {
+      studioModal = null;
+      const reason = unsupported.length
+        ? `Generation is not implemented for: ${unsupported.join(", ")}.`
+        : negative.kropki || negative.doublekropki || negative.xv || negative.battenburg
+          ? "Symmetric generation with a negative edge/corner rule is not implemented yet."
+          : "Anti-diagonal generation currently requires a 9 × 9 grid.";
+      (window as any).Swal?.fire?.({
+        icon: "warning",
+        title: "Cannot generate this combination",
+        text: reason,
+      });
+      return;
+    }
     studioModal = null;
     const sourcePuzzle = {
       board: (window as any).SudokuSolver?.readBoard?.(
@@ -2872,6 +2908,9 @@ href="https://github.com/semiexp/cspuz_core"
   :global(.svelte-home .sudoku-variant-group[data-variant="kropki"]) {
     --variant-icon: "●";
   }
+  :global(.svelte-home .sudoku-variant-group[data-variant="doublekropki"]) {
+    --variant-icon: "♦";
+  }
   :global(.svelte-home .sudoku-variant-group[data-variant="palindrome"]) {
     --variant-icon: "↔";
   }
@@ -2922,6 +2961,7 @@ href="https://github.com/semiexp/cspuz_core"
     border-radius: 0 6px 6px 0 !important;
   }
   :global(.svelte-home .sudoku-kropki-negative),
+  :global(.svelte-home .sudoku-doublekropki-negative),
   :global(.svelte-home .sudoku-xv-negative),
   :global(.svelte-home .sudoku-battenburg-negative) {
     padding: 0 8px !important;
@@ -3682,6 +3722,7 @@ href="https://github.com/semiexp/cspuz_core"
   .studio-shell.dark :global(.log-host #sudoku_solve_once),
   .studio-shell.dark :global(.log-host #sudoku_solve_clear),
   .studio-shell.dark :global(.sudoku-kropki-negative),
+  .studio-shell.dark :global(.sudoku-doublekropki-negative),
   .studio-shell.dark :global(.sudoku-xv-negative),
   .studio-shell.dark :global(.sudoku-battenburg-negative) {
     color: #dce5ec !important;
@@ -3690,6 +3731,7 @@ href="https://github.com/semiexp/cspuz_core"
   }
   .studio-shell.dark :global(.log-host #sudoku_auto_solver.active),
   .studio-shell.dark :global(.sudoku-kropki-negative.active),
+  .studio-shell.dark :global(.sudoku-doublekropki-negative.active),
   .studio-shell.dark :global(.sudoku-xv-negative.active),
   .studio-shell.dark :global(.sudoku-battenburg-negative.active) {
     color: #fff !important;
