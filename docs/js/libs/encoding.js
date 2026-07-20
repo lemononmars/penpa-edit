@@ -1299,15 +1299,17 @@
         }
         // TODO: Align with spec algorithm.
         if (!this._do_not_flush) {
-            while (true) {
+            do {
                 result = this._encoder.handler(input, input.read());
                 if (result === finished)
                     break;
+                if (result === null)
+                    continue;
                 if (Array.isArray(result))
                     output.push.apply(output, /**@type {!Array.<number>}*/ (result));
                 else
                     output.push(result);
-            }
+            } while (!input.endOfStream());
             this._encoder = null;
         }
         // 3. If result is finished, convert output into a byte sequence,
