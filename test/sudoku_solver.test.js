@@ -3259,7 +3259,7 @@ test("Consecutive Chains", () => {
     boardInvalidSet[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
     boardInvalidSet[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
     boardInvalidSet[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
-    assert.strictEqual(SudokuCSP.solve(boardInvalidSet, {consecutiveChains: [chain4]}).solved, true);
+    assert.strictEqual(SudokuCSP.solve(boardInvalidSet, {consecutiveChains: [chain4]}).solved, false);
 
     const boardInvalidPath = emptyBoard();
     // values 1, 3, 2, 4. It's a consecutive set, but path is invalid (1 is next to 3).
@@ -3272,7 +3272,7 @@ test("Consecutive Chains", () => {
     boardInvalidPath[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
     boardInvalidPath[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
     boardInvalidPath[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
-    assert.strictEqual(SudokuCSP.solve(boardInvalidPath, {consecutiveChains: [chain4]}).solved, true);
+    assert.strictEqual(SudokuCSP.solve(boardInvalidPath, {consecutiveChains: [chain4]}).solved, false);
 });
 
 test("Big-Small Japanese Sums validate sequences", function() {
