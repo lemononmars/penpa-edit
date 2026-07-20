@@ -136,6 +136,12 @@ function genericSetting(variation: Variation) {
         add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
+if (variation.value === "threedigitnumberskiller") {
+        add("cage", "1", 10, ["mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb"]);
+        add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);
+        add("line", "2", 5, ["mo_line_lb", "sub_line2_lb", "st_line5_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
     if (variation.value === "ordering") {
         add("cage", "1", 10, ["mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb"]);
         add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);
@@ -255,6 +261,10 @@ function genericSetting(variation: Variation) {
         add("symbol", "circle_SS", 2, ["mo_symbol_lb", "ms1", "ms1_circle", "li_circle_SS", "ms1_bars", "li_circle", "li_bars", "ul_bars"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
+    if (variation.value === "doublekropki") {
+        add("symbol", "diamond_SS", 2, ["mo_symbol_lb", "ms1", "li_diamond"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
     if (variation.value === "averagearrows") {
         add("special", "arrow", "", ["mo_special_lb", "sub_specialarrow_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
@@ -310,6 +320,10 @@ function genericSetting(variation: Variation) {
     if (variation.value === "missingdigit") {
         add("number", "8", 1, ["mo_number_lb", "sub_number8_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
+    }
+    if (variation.value === "mathdoku" || variation.value === "mathrax") {
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (["outside", "outside234", "maximin", "minimax", "innerframesum", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers", "sumbyx"].includes(variation.value)) {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);

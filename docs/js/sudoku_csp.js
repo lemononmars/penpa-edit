@@ -381,7 +381,7 @@ var SudokuCSP = (function() {
         }
         var labels = {
             antiKing: "Anti King", antiKnight: "Anti Knight", chessKings: "Chess Kings", nonConsecutive: "Non-Consecutive",
-            edgeRelations: "edge clue", quadRelations: "quad clue", catalogLines: "line clue",
+            edgeRelations: "edge clue", quadRelations: "quad clue", mathdoku: "mathdoku", catalogLines: "line clue",
             diagonalAllDifferent: "diagonal/region", regionAllDifferent: "region", extraLargeRegions: "extra large regions", difference2Neighbours: "difference 2 neighbours",
             regionCoverage: "region coverage", scatteredAllDifferent: "Scattered shaded cells",
             invalidRegions: "region layout", kropki: "Kropki", xv: "XV", battenburg: "Battenburg"
@@ -915,6 +915,49 @@ registerConstraint("emitters", {
                 return sum + open <= circle && sum + (SIZE * open) >= circle && (open || sum === circle);
             }
             return open ? sum + open <= SIZE : sum >= 1 && sum <= SIZE;
+        }
+    });
+
+registerConstraint("threeDigitNumbersKillers", {
+        validatePartial: function(board, cage, helpers) {
+            var seen = 0;
+            for (var i = 0; i < cage.cells.length; i++) {
+                var digit = cellValue(board, cage.cells[i]);
+                if (digit) {
+                    var bit = 1 << digit;
+                    if (seen & bit) return false;
+                    seen |= bit;
+                }
+            }
+
+            if (cage.total === null || isNaN(cage.total) || !cage.lines || !cage.lines.length) return true;
+
+            for (var i = 0; i < cage.lines.length; i++) {
+                if (cage.lines[i].length !== 3) return false;
+            }
+
+            var allLineCellsFilled = true;
+            for (var i = 0; i < cage.lines.length; i++) {
+                for (var j = 0; j < cage.lines[i].length; j++) {
+                    if (!cellValue(board, cage.lines[i][j])) {
+                        allLineCellsFilled = false;
+                        break;
+                    }
+                }
+            }
+            if (!allLineCellsFilled) return true;
+
+            function checkSum(index, currentSum) {
+                if (index === cage.lines.length) return currentSum === cage.total;
+                var line = cage.lines[index];
+                var num1 = cellValue(board, line[0]) * 100 + cellValue(board, line[1]) * 10 + cellValue(board, line[2]);
+                var num2 = cellValue(board, line[2]) * 100 + cellValue(board, line[1]) * 10 + cellValue(board, line[0]);
+                if (checkSum(index + 1, currentSum + num1)) return true;
+                if (num1 !== num2 && checkSum(index + 1, currentSum + num2)) return true;
+                return false;
+            }
+
+            return checkSum(0, 0);
         }
     });
 
@@ -1757,6 +1800,13 @@ registerConstraint("emitters", {
                 case "divisor":
                 case "multiples": return clue.target > 0 && (first * 10 + second) % clue.target === 0;
                 case "eitheror": return first === clue.target || second === clue.target;
+                case "ratio":
+                    var parts = clue.sign.split(":");
+                    var x = parseInt(parts[0], 10);
+                    var y = parseInt(parts[1], 10);
+                    var v1 = board.isZeroEight ? first - 1 : first;
+                    var v2 = board.isZeroEight ? second - 1 : second;
+                    return (v1 * y === v2 * x) || (v1 * x === v2 * y);
                 case "blocksumrelations":
                     var groupValues = (clue.groups || []).map(function(group) {
                         var values = group.map(function(cell) { return cellValue(board, cell); });
@@ -3340,6 +3390,37 @@ registerConstraint("emitters", {
                 }
                 return oddCount <= 2 && oddCount + openCount >= 2;
             }
+            if (clue.relation === "mathrax") {
+                if (clue.text === "E") return assigned.every(function(value) { return value % 2 === 0; });
+                if (clue.text === "O") return assigned.every(function(value) { return value % 2 === 1; });
+
+                var operator = clue.text.slice(-1);
+                var targetStr = clue.text.slice(0, -1);
+
+                if (assigned.length < 4) return true;
+                var first = board.isZeroEight ? values[0] - 1 : values[0];
+                var second = board.isZeroEight ? values[1] - 1 : values[1];
+                var third = board.isZeroEight ? values[2] - 1 : values[2];
+                var fourth = board.isZeroEight ? values[3] - 1 : values[3];
+
+                function matchOp(a, b) {
+                    if (targetStr === "?") {
+                        if (operator === "+") return true;
+                        if (operator === "-") return Math.abs(a - b) > 0;
+                        if (operator === "*") return true;
+                        if (operator === "/") return a % b === 0 || b % a === 0;
+                    }
+                    var target = parseInt(targetStr, 10);
+                    if (operator === "+") return a + b === target;
+                    if (operator === "-") return Math.abs(a - b) === target;
+                    if (operator === "*") return a * b === target;
+                    if (operator === "/") return a / b === target || b / a === target;
+                    return false;
+                }
+
+                return matchOp(first, fourth) && matchOp(second, third);
+            }
+
             if (assigned.length < 4) return true;
             var first = values[0], second = values[1], third = values[2], fourth = values[3];
             if (clue.relation === "equalsums") return first + fourth === second + third;
@@ -3359,6 +3440,51 @@ registerConstraint("emitters", {
                 return clue.kind === "black" ? pairs >= 2 : pairs === 1;
             }
             return true;
+        }
+    });
+
+    registerConstraint("mathdoku", {
+        validatePartial: function(board, box) {
+            var clues = box.clues;
+            var assignedEdges = [];
+            for (var i = 0; i < clues.length; i++) {
+                var first = cellValue(board, clues[i].cells[0]);
+                var second = cellValue(board, clues[i].cells[1]);
+                if (first && second) {
+                    first = board.isZeroEight ? first - 1 : first;
+                    second = board.isZeroEight ? second - 1 : second;
+                    assignedEdges.push({ first: first, second: second, target: clues[i].target });
+                } else {
+                    return true;
+                }
+            }
+            if (assignedEdges.length < 4) return true;
+
+            function canSatisfy(edges, availableOps) {
+                if (edges.length === 0) return true;
+                var edge = edges[0];
+                var f = edge.first;
+                var s = edge.second;
+                var t = edge.target;
+
+                for (var opIdx = 0; opIdx < availableOps.length; opIdx++) {
+                    var op = availableOps[opIdx];
+                    var possible = false;
+                    if (op === "+") possible = (f + s === t);
+                    else if (op === "-") possible = (Math.abs(f - s) === t);
+                    else if (op === "*") possible = (f * s === t);
+                    else if (op === "/") possible = (f / s === t || s / f === t);
+
+                    if (possible) {
+                        var newOps = availableOps.slice();
+                        newOps.splice(opIdx, 1);
+                        if (canSatisfy(edges.slice(1), newOps)) return true;
+                    }
+                }
+                return false;
+            }
+
+            return canSatisfy(assignedEdges, ["+", "-", "*", "/"]);
         }
     });
 
@@ -3887,6 +4013,38 @@ registerConstraint("emitters", {
             }
             for (var candidate = 1; candidate <= SIZE; candidate++) {
                 if (candidate !== known && kropkiAllows(known, candidate, dot.kind)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    });
+
+    function doubleKropkiAllows(first, second, kind) {
+        var diff2 = Math.abs(first - second) === 2;
+        var ratio4 = first === 4 * second || second === 4 * first;
+        if (kind === "white") {
+            return diff2;
+        }
+        if (kind === "black") {
+            return ratio4;
+        }
+        return !diff2 && !ratio4;
+    }
+
+    registerConstraint("doublekropki", {
+        validatePartial: function(board, dot) {
+            var first = cellValue(board, dot.cells[0]);
+            var second = cellValue(board, dot.cells[1]);
+            if (first && second) {
+                return doubleKropkiAllows(first, second, dot.kind);
+            }
+            var known = first || second;
+            if (!known) {
+                return true;
+            }
+            for (var candidate = 1; candidate <= SIZE; candidate++) {
+                if (candidate !== known && doubleKropkiAllows(known, candidate, dot.kind)) {
                     return true;
                 }
             }

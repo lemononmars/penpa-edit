@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sudoku_csp Functions Anatomy</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; }
+        h1 { color: #333; }
+        .function-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .function-name { font-size: 1.2em; font-weight: bold; color: #0056b3; }
+        .property { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Anatomy of functions in sudoku_csp</h1>
+    <div class="function-card">
+        <div class="function-name">cloneBoard</div>
+        <div><span class="property">Arguments:</span> board</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">boxDimensions</div>
+        <div><span class="property">Arguments:</span> size</div>
+        <div><span class="property">Outputs:</span> { height: 2, width: 3</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">boxIndex</div>
+        <div><span class="property">Arguments:</span> row, col, size</div>
+        <div><span class="property">Outputs:</span> ((row / boxHeight) | 0) * (size / boxWidth) + ((col / boxWidth) | 0)</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">cloneConstraints</div>
+        <div><span class="property">Arguments:</span> constraints</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">cellValue</div>
+        <div><span class="property">Arguments:</span> board, cell</div>
+        <div><span class="property">Outputs:</span> board[cell.row][cell.col]</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">maskToDigits</div>
+        <div><span class="property">Arguments:</span> mask</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">countBits</div>
+        <div><span class="property">Arguments:</span> mask</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">createState</div>
+        <div><span class="property">Arguments:</span> source, constraints</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">coreMask</div>
+        <div><span class="property">Arguments:</span> state, row, col</div>
+        <div><span class="property">Outputs:</span> ALL_DIGITS & ~(state.rows[row] | state.cols[col] | (state.useBoxes ? state.boxes[box] : 0))</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">registerConstraint</div>
+        <div><span class="property">Arguments:</span> name, handler</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">registeredConstraints</div>
+        <div><span class="property">Arguments:</span> None</div>
+        <div><span class="property">Outputs:</span> Object.keys(constraintRegistry)</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">compileConstraints</div>
+        <div><span class="property">Arguments:</span> constraints</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">validate</div>
+        <div><span class="property">Arguments:</span> board, selected, complete</div>
+        <div><span class="property">Outputs:</span> false</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">constraintsValid</div>
+        <div><span class="property">Arguments:</span> board, constraints, complete</div>
+        <div><span class="property">Outputs:</span> compileConstraints(constraints || {</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">cellName</div>
+        <div><span class="property">Arguments:</span> cell</div>
+        <div><span class="property">Outputs:</span> "r" + (cell.row + 1) + "c" + (cell.col + 1)</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">cellsInConstraint</div>
+        <div><span class="property">Arguments:</span> value, cells, seen</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">duplicateConflict</div>
+        <div><span class="property">Arguments:</span> board, constraints</div>
+        <div><span class="property">Outputs:</span> null</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">constraintLabel</div>
+        <div><span class="property">Arguments:</span> name, item</div>
+        <div><span class="property">Outputs:</span> item.relation.replace(/([a-z])([0-9])/g, "$1 $2").replace(/([a-z])([A-Z])/g, "$1 $2")</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">findConflict</div>
+        <div><span class="property">Arguments:</span> board, constraints</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">unresolvedConflict</div>
+        <div><span class="property">Arguments:</span> board</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">place</div>
+        <div><span class="property">Arguments:</span> state, row, col, digit</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">remove</div>
+        <div><span class="property">Arguments:</span> state, row, col, digit</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">allowedMask</div>
+        <div><span class="property">Arguments:</span> state, constraints, row, col, evaluator</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">search</div>
+        <div><span class="property">Arguments:</span> state, constraints, onSolution, limit, evaluator</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">visit</div>
+        <div><span class="property">Arguments:</span> None</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">findSolutions</div>
+        <div><span class="property">Arguments:</span> board, constraints, limit</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">solutionWithAssumption</div>
+        <div><span class="property">Arguments:</span> board, constraints, row, col, digit</div>
+        <div><span class="property">Outputs:</span> null</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">solutionMatches</div>
+        <div><span class="property">Arguments:</span> solution, source, constraints</div>
+        <div><span class="property">Outputs:</span> false</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">analyzeCandidates</div>
+        <div><span class="property">Arguments:</span> board, constraints</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">absorb</div>
+        <div><span class="property">Arguments:</span> solution</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">nextPaint</div>
+        <div><span class="property">Arguments:</span> None</div>
+        <div><span class="property">Outputs:</span> new Promise(function(resolve) {
+            setTimeout(resolve, 0)</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">analyzeCandidatesAsync</div>
+        <div><span class="property">Arguments:</span> board, constraints, options</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">absorb</div>
+        <div><span class="property">Arguments:</span> solution</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">createProblem</div>
+        <div><span class="property">Arguments:</span> board, constraints</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">getCandidates</div>
+        <div><span class="property">Arguments:</span> board, constraints</div>
+        <div><span class="property">Outputs:</span> analyzeCandidates(board, constraints || {</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">solve</div>
+        <div><span class="property">Arguments:</span> board, constraints</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">checkSum</div>
+        <div><span class="property">Arguments:</span> index, currentSum</div>
+        <div><span class="property">Outputs:</span> currentSum === cage.total OR true OR false</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">sameDirection</div>
+        <div><span class="property">Arguments:</span> pairs</div>
+        <div><span class="property">Outputs:</span> false</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">dfs</div>
+        <div><span class="property">Arguments:</span> r, c, currentPath</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">backtrack</div>
+        <div><span class="property">Arguments:</span> index, usedCells</div>
+        <div><span class="property">Outputs:</span> true</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">sumSandwichSequence</div>
+        <div><span class="property">Arguments:</span> board, sightline</div>
+        <div><span class="property">Outputs:</span> cellValue(board, cell)</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">pairValuesDiffer</div>
+        <div><span class="property">Arguments:</span> board, pair</div>
+        <div><span class="property">Outputs:</span> !first || !second || first !== second</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">checkSumsSequence</div>
+        <div><span class="property">Arguments:</span> values, clueSequence, variant, axis</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">search</div>
+        <div><span class="property">Arguments:</span> index, clueIndex, currentSum</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">canPartitionSums</div>
+        <div><span class="property">Arguments:</span> values, expectedSums</div>
+        <div><span class="property">Outputs:</span> valIndex === values.length</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">parityPrefixPossible</div>
+        <div><span class="property">Arguments:</span> parity</div>
+        <div><span class="property">Outputs:</span> sum &lt; clue.value OR sum === clue.value OR false</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">isPossibleSumNextToNine</div>
+        <div><span class="property">Arguments:</span> p</div>
+        <div><span class="property">Outputs:</span> val === clue.value OR clue.value &gt;= 1 && clue.value &lt;= 8</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">isValid</div>
+        <div><span class="property">Arguments:</span> t</div>
+        <div><span class="property">Outputs:</span> t &gt;= 1 && t &lt;= 9 && prefix.indexOf(t) === -1</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">canSumTo</div>
+        <div><span class="property">Arguments:</span> t</div>
+        <div><span class="property">Outputs:</span> true</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">canSumThree</div>
+        <div><span class="property">Arguments:</span> t</div>
+        <div><span class="property">Outputs:</span> true</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">checkPositions</div>
+        <div><span class="property">Arguments:</span> pos1, pos5, pos9</div>
+        <div><span class="property">Outputs:</span> a - b</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">b1a9_sumSlice</div>
+        <div><span class="property">Arguments:</span> start, end</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">b1a9_canEqual</div>
+        <div><span class="property">Arguments:</span> s, bl</div>
+        <div><span class="property">Outputs:</span> s === clue.value OR s + bl &lt;= clue.value && s + bl * 8 &gt;= clue.value</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">oneDescent</div>
+        <div><span class="property">Arguments:</span> sequence</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">consecutiveSetValid</div>
+        <div><span class="property">Arguments:</span> board, cells, allowEqual</div>
+        <div><span class="property">Outputs:</span> false</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">canDeleteOneForPalindrome</div>
+        <div><span class="property">Arguments:</span> values</div>
+        <div><span class="property">Outputs:</span> index !== skipped</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">xvAllows</div>
+        <div><span class="property">Arguments:</span> first, second, kind, board</div>
+        <div><span class="property">Outputs:</span> sum === 5</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">kropkiAllows</div>
+        <div><span class="property">Arguments:</span> first, second, kind</div>
+        <div><span class="property">Outputs:</span> consecutive</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">doubleKropkiAllows</div>
+        <div><span class="property">Arguments:</span> first, second, kind</div>
+        <div><span class="property">Outputs:</span> diff2</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">fadedKropkiAllows</div>
+        <div><span class="property">Arguments:</span> first, second, kind</div>
+        <div><span class="property">Outputs:</span> consecutive || double</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">hasOddPath</div>
+        <div><span class="property">Arguments:</span> board, size</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+    <div class="function-card">
+        <div class="function-name">hasEvenPath</div>
+        <div><span class="property">Arguments:</span> board, size</div>
+        <div><span class="property">Outputs:</span> None</div>
+    </div>
+</body>
+</html>

@@ -62,7 +62,7 @@ const penpa_modes = {
         'subcombi': ['subc1', 'subc2', 'subc3', 'subc4', 'subc5'],
         'shapemodes': ['ms1', 'ms2', 'ms3', 'ms4', 'ms5'],
         // shapes
-        'ms': ['cross', 'line', 'frameline', 'tri', 'inequality', 'degital_f', 'dice', 'pills',
+        'ms': ['cross', 'line', 'frameline', 'tri', 'inequality', 'degital_f', 'dice', 'pills', 'braille',
             'arrow_Short', 'arrow_S', 'arrow_cross', 'arrow_eight', 'arrow_fourtip',
             'battleship_B', 'battleship_G', 'battleship_W', 'battleship_B+', 'battleship_G+', 'battleship_W+',
             'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino', 'polyhex',
@@ -120,7 +120,7 @@ const penpa_modes = {
         'subcombi': ['subc1', 'subc2', 'subc3', 'subc4', 'subc5'],
         'shapemodes': ['ms1', 'ms2', 'ms3', 'ms4', 'ms5'],
         // shapes
-        'ms': ['cross', 'line', 'frameline', 'tri', 'inequality', 'degital_f', 'dice', 'pills',
+        'ms': ['cross', 'line', 'frameline', 'tri', 'inequality', 'degital_f', 'dice', 'pills', 'braille',
             'arrow_Short', 'arrow_S', 'arrow_cross', 'arrow_eight', 'arrow_fourtip',
             'battleship_B', 'battleship_G', 'battleship_W', 'battleship_B+', 'battleship_G+', 'battleship_W+',
             'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
@@ -178,7 +178,7 @@ const penpa_modes = {
         'subcombi': ['subc1', 'subc2', 'subc3', 'subc4', 'subc5'],
         'shapemodes': ['ms1', 'ms2', 'ms3', 'ms4', 'ms5'],
         // shapes
-        'ms': ['cross', 'line', 'frameline', 'tri', 'inequality', 'degital_f', 'dice', 'pills',
+        'ms': ['cross', 'line', 'frameline', 'tri', 'inequality', 'degital_f', 'dice', 'pills', 'braille',
             'arrow_Short', 'arrow_S', 'arrow_cross', 'arrow_eight', 'arrow_fourtip',
             'battleship_B', 'battleship_G', 'battleship_W', 'battleship_B+', 'battleship_G+', 'battleship_W+',
             'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
@@ -236,7 +236,7 @@ const penpa_modes = {
         'subcombi': ['subc1', 'subc2', 'subc3', 'subc4', 'subc5'],
         'shapemodes': ['ms1', 'ms2', 'ms3', 'ms4', 'ms5'],
         // shapes
-        'ms': ['cross', 'line', 'frameline', 'inequality', 'degital_f', 'dice', 'pills',
+        'ms': ['cross', 'line', 'frameline', 'inequality', 'degital_f', 'dice', 'pills', 'braille',
             'arrow_Short', 'arrow_S', 'arrow_cross', 'arrow_eight',
             'battleship_B', 'battleship_G', 'battleship_W',
             'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'polyomino', 'polyhex',
@@ -345,7 +345,7 @@ const penpa_modes = {
         'subcombi': ['subc1', 'subc2', 'subc3', 'subc4', 'subc5'],
         'shapemodes': ['ms1', 'ms2', 'ms3', 'ms4', 'ms5'],
         // shapes
-        'ms': ['cross', 'line', 'frameline', 'inequality', 'degital_f', 'dice', 'pills',
+        'ms': ['cross', 'line', 'frameline', 'inequality', 'degital_f', 'dice', 'pills', 'braille',
             'arrow_Short', 'arrow_S', 'arrow_cross', 'arrow_eight',
             'battleship_B', 'battleship_G', 'battleship_W',
             'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'polyomino',
@@ -400,7 +400,7 @@ const penpa_modes = {
         'subcombi': ['subc1', 'subc2', 'subc3', 'subc4', 'subc5'],
         'shapemodes': ['ms1', 'ms2', 'ms3', 'ms5'],
         // shapes
-        'ms': ['cross', 'line', 'frameline', 'inequality', 'degital_f', 'dice', 'pills',
+        'ms': ['cross', 'line', 'frameline', 'inequality', 'degital_f', 'dice', 'pills', 'braille',
             'arrow_Short', 'arrow_S', 'arrow_cross', 'arrow_eight',
             'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'angleloop', 'firefly', 'sun_moon'
@@ -454,7 +454,7 @@ const penpa_modes = {
         'subcombi': ['subc1', 'subc2', 'subc3', 'subc4'],
         'shapemodes': ['ms1', 'ms2', 'ms3', 'ms5'],
         // shapes
-        'ms': ['cross', 'line', 'frameline', 'inequality', 'degital_f', 'dice', 'pills',
+        'ms': ['cross', 'line', 'frameline', 'inequality', 'degital_f', 'dice', 'pills', 'braille',
             'arrow_Short', 'arrow_S', 'arrow_cross', 'arrow_eight',
             'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'angleloop', 'firefly', 'sun_moon'
@@ -778,7 +778,7 @@ const penpa_modes = {
         'subcombi': ['subc1', 'subc2', 'subc3', 'subc4'],
         'shapemodes': ['ms1', 'ms2', 'ms3', 'ms5'],
         // shapes
-        'ms': ['cross', 'line', 'frameline', 'inequality', 'degital_f', 'dice', 'pills',
+        'ms': ['cross', 'line', 'frameline', 'inequality', 'degital_f', 'dice', 'pills', 'braille',
             'arrow_Short', 'arrow_S', 'arrow_cross', 'arrow_eight',
             'kakuro', 'tents', 'star', 'compass', 'sudokuetc', 'sudokumore', 'polyomino',
             'angleloop', 'firefly', 'sun_moon'
