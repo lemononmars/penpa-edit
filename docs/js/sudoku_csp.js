@@ -381,7 +381,7 @@ var SudokuCSP = (function() {
         }
         var labels = {
             antiKing: "Anti King", antiKnight: "Anti Knight", chessKings: "Chess Kings", nonConsecutive: "Non-Consecutive",
-            edgeRelations: "edge clue", quadRelations: "quad clue", catalogLines: "line clue",
+            edgeRelations: "edge clue", quadRelations: "quad clue", mathdoku: "mathdoku", catalogLines: "line clue",
             diagonalAllDifferent: "diagonal/region", regionAllDifferent: "region", extraLargeRegions: "extra large regions", difference2Neighbours: "difference 2 neighbours",
             regionCoverage: "region coverage", scatteredAllDifferent: "Scattered shaded cells",
             invalidRegions: "region layout", kropki: "Kropki", xv: "XV", battenburg: "Battenburg"
@@ -3380,6 +3380,37 @@ registerConstraint("threeDigitNumbersKillers", {
                 }
                 return oddCount <= 2 && oddCount + openCount >= 2;
             }
+            if (clue.relation === "mathrax") {
+                if (clue.text === "E") return assigned.every(function(value) { return value % 2 === 0; });
+                if (clue.text === "O") return assigned.every(function(value) { return value % 2 === 1; });
+
+                var operator = clue.text.slice(-1);
+                var targetStr = clue.text.slice(0, -1);
+
+                if (assigned.length < 4) return true;
+                var first = board.isZeroEight ? values[0] - 1 : values[0];
+                var second = board.isZeroEight ? values[1] - 1 : values[1];
+                var third = board.isZeroEight ? values[2] - 1 : values[2];
+                var fourth = board.isZeroEight ? values[3] - 1 : values[3];
+
+                function matchOp(a, b) {
+                    if (targetStr === "?") {
+                        if (operator === "+") return true;
+                        if (operator === "-") return Math.abs(a - b) > 0;
+                        if (operator === "*") return true;
+                        if (operator === "/") return a % b === 0 || b % a === 0;
+                    }
+                    var target = parseInt(targetStr, 10);
+                    if (operator === "+") return a + b === target;
+                    if (operator === "-") return Math.abs(a - b) === target;
+                    if (operator === "*") return a * b === target;
+                    if (operator === "/") return a / b === target || b / a === target;
+                    return false;
+                }
+
+                return matchOp(first, fourth) && matchOp(second, third);
+            }
+
             if (assigned.length < 4) return true;
             var first = values[0], second = values[1], third = values[2], fourth = values[3];
             if (clue.relation === "equalsums") return first + fourth === second + third;
@@ -3399,6 +3430,51 @@ registerConstraint("threeDigitNumbersKillers", {
                 return clue.kind === "black" ? pairs >= 2 : pairs === 1;
             }
             return true;
+        }
+    });
+
+    registerConstraint("mathdoku", {
+        validatePartial: function(board, box) {
+            var clues = box.clues;
+            var assignedEdges = [];
+            for (var i = 0; i < clues.length; i++) {
+                var first = cellValue(board, clues[i].cells[0]);
+                var second = cellValue(board, clues[i].cells[1]);
+                if (first && second) {
+                    first = board.isZeroEight ? first - 1 : first;
+                    second = board.isZeroEight ? second - 1 : second;
+                    assignedEdges.push({ first: first, second: second, target: clues[i].target });
+                } else {
+                    return true;
+                }
+            }
+            if (assignedEdges.length < 4) return true;
+
+            function canSatisfy(edges, availableOps) {
+                if (edges.length === 0) return true;
+                var edge = edges[0];
+                var f = edge.first;
+                var s = edge.second;
+                var t = edge.target;
+
+                for (var opIdx = 0; opIdx < availableOps.length; opIdx++) {
+                    var op = availableOps[opIdx];
+                    var possible = false;
+                    if (op === "+") possible = (f + s === t);
+                    else if (op === "-") possible = (Math.abs(f - s) === t);
+                    else if (op === "*") possible = (f * s === t);
+                    else if (op === "/") possible = (f / s === t || s / f === t);
+
+                    if (possible) {
+                        var newOps = availableOps.slice();
+                        newOps.splice(opIdx, 1);
+                        if (canSatisfy(edges.slice(1), newOps)) return true;
+                    }
+                }
+                return false;
+            }
+
+            return canSatisfy(assignedEdges, ["+", "-", "*", "/"]);
         }
     });
 
