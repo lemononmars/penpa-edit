@@ -1137,6 +1137,21 @@
 
             // 4. Otherwise, do nothing.
         }
+        // TODO: Align with spec algorithm.
+        if (!this._do_not_flush) {
+            while (true) {
+                result = this._decoder.handler(input_stream, input_stream.read());
+                if (result === finished)
+                    break;
+                if (result === null)
+                    continue;
+                if (Array.isArray(result))
+                    output.push.apply(output, /**@type {!Array.<number>}*/ (result));
+                else
+                    output.push(result);
+            }
+            this._decoder = null;
+        }
 
         // A TextDecoder object also has an associated serialize stream
         // algorithm...
