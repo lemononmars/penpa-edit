@@ -27,7 +27,7 @@ async function boot() {
     set_input_patterns();
 
     var urlParam = location.search.substring(1);
-    if (!urlParam && location.hash) {
+    if ((!urlParam || !urlParam.includes("p=")) && location.hash) {
         urlParam = location.hash.substring(1);
     }
     if (urlParam) {
@@ -42,21 +42,25 @@ async function boot() {
         }
 
 
-        // Decrypt puzzle data
-        const hash = PenpaProgress.getHash(paramArray.p);
-        let local_data = await PenpaProgress.tryLoad(hash);
+        if (paramArray.p) {
+            // Decrypt puzzle data
+            const hash = PenpaProgress.getHash(paramArray.p);
+            let local_data = await PenpaProgress.tryLoad(hash);
 
-        if (local_data && local_data.includes('&p=')) {
-            // This is to account for old links and new links together
-            var url;
-            if (local_data.includes("#")) {
-                url = local_data.split('#')[1];
+            if (local_data && local_data.includes('&p=')) {
+                // This is to account for old links and new links together
+                var url;
+                if (local_data.includes("#")) {
+                    url = local_data.split('#')[1];
+                } else {
+                    url = local_data.split('?')[1];
+                }
+                load(url, type = 'localstorage', origurl = paramArray.p);
             } else {
-                url = local_data.split('?')[1];
+                load(urlParam);
             }
-            load(url, type = 'localstorage', origurl = paramArray.p);
         } else {
-            load(urlParam);
+            create();
         }
     } else {
         create();
@@ -2006,20 +2010,23 @@ async function import_url(urlstring) {
 
             if (local_data && local_data.includes('&p=')) {
                 // This is to account for old links and new links together
-                var url;
-                if (local_data.includes("#")) {
-                    url = local_data.split('#')[1];
-                } else {
-                    url = local_data.split('?')[1];
+                var url = local_data;
+                if (url.includes("#")) {
+                    url = url.split('#')[1];
+                } else if (url.includes("?")) {
+                    url = url.split('?')[1];
                 }
                 load(url, type = 'localstorage', origurl = paramArray.p);
             } else {
-                if (urlstring.includes("#")) {
-                    urlstring = urlstring.split("/penpa-edit/#")[1];
-                } else {
-                    urlstring = urlstring.split("/penpa-edit/?")[1];
+                let paramString = urlstring;
+                if (paramString.includes("/penpa-edit/#")) {
+                    paramString = paramString.split("/penpa-edit/#")[1];
+                } else if (paramString.includes("/penpa-edit/?")) {
+                    paramString = paramString.split("/penpa-edit/?")[1];
+                } else if (typeof paramString === "string" && (paramString.startsWith("?") || paramString.startsWith("#"))) {
+                    paramString = paramString.slice(1);
                 }
-                load(urlstring, 'local');
+                load(paramString, 'local');
             }
 
             document.getElementById("modal-load").style.display = 'none';
@@ -2052,6 +2059,10 @@ function show_shortcuts() {
 }
 
 async function load(urlParam, type = 'url', origurl = null) {
+    if (!urlParam || typeof urlParam !== "string") return;
+    if (urlParam.startsWith("?") || urlParam.startsWith("#")) {
+        urlParam = urlParam.slice(1);
+    }
     var param = urlParam.split('&');
     var paramArray = [];
 

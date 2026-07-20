@@ -3,7 +3,6 @@ type RawVariation = {
     name: string;
     rules: Record<string, string>;
     status: "available" | "planned" | "infeasible" | "hidden";
-    scratchGeneratable: boolean;
     inputType: {
         categories: Array<"no-input" | "line" | "cage" | "shading" | "outside" | "cell" | "edge" | "intersection">;
         instructions: string[];
@@ -12,13 +11,14 @@ type RawVariation = {
     isDuplicate?: boolean;
     duplicateOf?: string;
     example?: string;
+    reviewed?: boolean;
     otherNames?: string;
     wikiOnly?: boolean;
 };
 
 type VariantMetadata = {
-    scrapedAliases: Record<string, string>;
-    markOverrides: Record<string, { position: string; mark: string }>;
+    scrapedAliases?: Record<string, string>;
+    markOverrides?: Record<string, { position: string; mark: string }>;
     variants: RawVariation[];
 };
 
@@ -29,7 +29,7 @@ export type Variation = RawVariation & {
 
 import metadataJson from "../../variant_metadata.json";
 export const variantMetadata = metadataJson as VariantMetadata;
-const scrapedAliases = variantMetadata.scrapedAliases;
+const scrapedAliases = variantMetadata.scrapedAliases || {};
 
 function stripRulePreamble(rule: string) {
     const detail = rule.replace(/^Place a digit\b[^.]*\.\s*/i, "").trim();
@@ -62,9 +62,6 @@ export const variations: Variation[] = allVariations
         all.findIndex((candidate) => candidate.value === item.value) === index)
     .sort((first, second) => first.name.localeCompare(second.name));
 
-export const scratchGeneratableVariants = new Set(variations
-    .filter((item) => item.scratchGeneratable)
-    .map((item) => item.value));
 const hiddenVariationValues = new Set(allVariations
     .filter((item) => item.status === "hidden")
     .map((item) => item.value));
@@ -281,7 +278,7 @@ if (variation.value === "threedigitnumberskiller") {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["inequality", "xydifference", "perfectsquares", "primesums", "twodigitprimenumbers", "fives", "wildcard"].includes(variation.value)) {
+    if (["inequality", "xydifference", "perfectsquares", "primesums", "twodigitprimenumbers", "fives", "wildcard", "sumnine"].includes(variation.value)) {
         add((variation.value === "inequality" || variation.value === "wildcard") ? "number" : "symbol",
             (variation.value === "inequality" || variation.value === "wildcard") ? "5" : "diamond_SS",
             (variation.value === "inequality" || variation.value === "wildcard") ? 6 : 2,
@@ -321,7 +318,11 @@ if (variation.value === "threedigitnumberskiller") {
         add("number", "8", 1, ["mo_number_lb", "sub_number8_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
-    if (["outside", "outside234", "maximin", "minimax", "innerframesum", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers"].includes(variation.value)) {
+    if (variation.value === "mathdoku" || variation.value === "mathrax") {
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (["outside", "outside234", "maximin", "minimax", "innerframesum", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers", "sumbyx"].includes(variation.value)) {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }

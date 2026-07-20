@@ -357,6 +357,14 @@ var SudokuGenerator = (function() {
 
         for (var attempt = 0; attempt < units.length; attempt++) {
             var unit = units[attempt];
+            if (options.preserveExisting && Array.isArray(options.sourceBoard)) {
+                var containsGiven = unit.some(function(index) {
+                    var r = Math.floor(index / size);
+                    var c = index % size;
+                    return options.sourceBoard[r] && options.sourceBoard[r][c] !== 0;
+                });
+                if (containsGiven) continue;
+            }
             var previous = unit.map(function(index) {
                 var row = Math.floor(index / size);
                 var col = index % size;

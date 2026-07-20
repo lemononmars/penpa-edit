@@ -230,7 +230,8 @@
          * stream.
          */
         prepend: function(token) {
-            if (Array.isArray(token)) {
+            if (Array.isArray(token) || (token !== null && typeof token === "object" && token.length !== undefined)) {
+                token = Array.isArray(token) ? token : [].slice.call(token);
                 var tokens = /**@type {!Array.<number>}*/ (token);
                 while (tokens.length)
                     this.tokens.push(tokens.pop());
@@ -248,7 +249,8 @@
          * stream.
          */
         push: function(token) {
-            if (Array.isArray(token)) {
+            if (Array.isArray(token) || (token !== null && typeof token === "object" && token.length !== undefined)) {
+                token = Array.isArray(token) ? token : [].slice.call(token);
                 var tokens = /**@type {!Array.<number>}*/ (token);
                 while (tokens.length)
                     this.tokens.unshift(tokens.shift());
@@ -996,6 +998,8 @@
         this._error_mode = 'replacement';
         /** @private @type {boolean} */
         this._do_not_flush = false;
+        /** @private @type {Stream} */
+        this._stream = new Stream([]);
 
 
         // 1. Let encoding be the result of getting an encoding from
@@ -1087,6 +1091,7 @@
                 fatal: this._error_mode === 'fatal'
             });
             this._BOMseen = false;
+            this._stream = new Stream([]);
         }
 
         // 2. If options's stream is true, set the do not flush flag, and
@@ -1094,8 +1099,8 @@
         this._do_not_flush = Boolean(options['stream']);
 
         // 3. If input is given, push a copy of input to stream.
-        // TODO: Align with spec algorithm - maintain stream on instance.
-        var input_stream = new Stream(bytes);
+        // 3. If input is given, push a copy of input to stream.
+        this._stream.push(bytes);
 
         // 4. Let output be a new stream.
         var output = [];
@@ -1106,23 +1111,24 @@
         // 5. While true:
         while (true) {
             // 1. Let token be the result of reading from stream.
-            var token = input_stream.read();
+            var token = this._stream.read();
 
             // 2. If token is end-of-stream and the do not flush flag is
             // set, return output, serialized.
-            // TODO: Align with spec algorithm.
-            if (token === end_of_stream)
+            if (token === end_of_stream && this._do_not_flush)
                 break;
 
             // 3. Otherwise, run these subsubsteps:
 
             // 1. Let result be the result of processing token for decoder,
             // stream, output, and error mode.
-            result = this._decoder.handler(input_stream, token);
+            result = this._decoder.handler(this._stream, token);
 
             // 2. If result is finished, return output, serialized.
-            if (result === finished)
+            if (result === finished) {
+                this._decoder = null;
                 break;
+            }
 
             if (result !== null) {
                 if (Array.isArray(result))
@@ -1139,7 +1145,7 @@
         // TODO: Align with spec algorithm.
         if (!this._do_not_flush) {
             do {
-                result = this._decoder.handler(input_stream, input_stream.read());
+                result = this._decoder.handler(this._stream, this._stream.read());
                 if (result === finished)
                     break;
                 if (result === null)
@@ -1148,7 +1154,7 @@
                     output.push.apply(output, /**@type {!Array.<number>}*/ (result));
                 else
                     output.push(result);
-            } while (!input_stream.endOfStream());
+            } while (!this._stream.endOfStream());
             this._decoder = null;
         }
 
@@ -1299,15 +1305,17 @@
         }
         // TODO: Align with spec algorithm.
         if (!this._do_not_flush) {
-            while (true) {
+            do {
                 result = this._encoder.handler(input, input.read());
                 if (result === finished)
                     break;
+                if (result === null)
+                    continue;
                 if (Array.isArray(result))
                     output.push.apply(output, /**@type {!Array.<number>}*/ (result));
                 else
                     output.push(result);
-            }
+            } while (!input.endOfStream());
             this._encoder = null;
         }
         // 3. If result is finished, convert output into a byte sequence,

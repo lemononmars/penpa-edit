@@ -2456,7 +2456,7 @@ onload = function() {
     document.addEventListener("visibilitychange", () => {
         // Only change pause state if we're not already paused
         let pause_canvas = document.getElementById("pause_canvas");
-        if (pause_canvas.style.display !== "none")
+        if (!pause_canvas || pause_canvas.style.display !== "none")
             return;
 
         if (document.visibilityState === "visible") {

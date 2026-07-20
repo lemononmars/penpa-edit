@@ -69,7 +69,6 @@ function devApiPlugin() {
                 name: data.name,
                 rules: { "9x9": data.rule },
                 status: data.status,
-                scratchGeneratable: false,
                 inputType: {
                   categories: [data.inputType],
                   instructions: []
@@ -127,6 +126,46 @@ function devApiPlugin() {
           });
           return;
         }
+
+        if (req.url === "/api/toggle-reviewed" && req.method === "POST") {
+          let body = "";
+          req.on("data", chunk => { body += chunk.toString(); });
+          req.on("end", () => {
+            try {
+              const data = JSON.parse(body);
+              const { variantId, reviewed } = data;
+              if (!variantId || typeof reviewed !== "boolean") {
+                res.statusCode = 400;
+                res.end("Variant ID and reviewed boolean are required");
+                return;
+              }
+
+              const metadata = readMetadata();
+              let updated = false;
+
+              for (const variant of metadata.variants) {
+                if (variant.id === variantId) {
+                  variant.reviewed = reviewed;
+                  updated = true;
+                  break;
+                }
+              }
+
+              if (updated) {
+                writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+                res.setHeader("Content-Type", "application/json");
+                res.end(JSON.stringify({ message: "Reviewed status saved successfully!" }));
+              } else {
+                res.statusCode = 404;
+                res.end("Variant not found in metadata");
+              }
+            } catch (err) {
+              res.statusCode = 500;
+              res.end("Error saving reviewed status: " + err.message);
+            }
+          });
+          return;
+        }
         next();
       });
     }
@@ -138,7 +177,7 @@ function variantDetailPages() {
   const ids = Array.from(new Set(metadata.variants
     .filter((variant) => variant.status !== "hidden")
     .map((variant) => variant.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase())
-    .filter(Boolean)));
+  ));
   return {
     name: "variant-detail-pages",
     writeBundle(options) {

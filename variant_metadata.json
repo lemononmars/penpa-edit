@@ -1,13 +1,5 @@
 {
   "version": 3,
-  "scrapedAliases": {
-    "elimination": "eliminate",
-    "disjointgroups": "disjoint",
-    "extraregions": "extraregion",
-    "min-max": "minimax",
-    "minmax": "minimax",
-    "renban": "renbanregion"
-  },
   "markOverrides": {},
   "variants": [
     {
@@ -18,7 +10,6 @@
         "9x9": " Numbers placed along the marked line and circles must no repeat. The same set of 8 numbers is used along the circles."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -35,7 +26,6 @@
         "9x9": "The range of digits is now 0-9. Some cells have been split with a diagonal, and two digits go into those cells."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -54,7 +44,6 @@
         "9x9": "Place a digit from 0-8 in each empty cell in the grid such that each row, column and 3x3 box contains each digit exactly once. Each digit placed in a cell with a circle must be the sum of the digits placed in the cells that the adjoining arrow passes through. Digits may repeat on arrows."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -73,7 +62,6 @@
         "9x9": " Each number from 1-8 represents the height of the building. The clues outside the grid indicate the number of buildings visible from the corresponding direction. A taller building will hide any shorter buildings behind it. 0 does not represent a building, and does not count towards the number of buildings in a corresponding direction."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -92,7 +80,6 @@
         "9x9": "The three numbers placed along marked lines must result in 24 after applying two of the arithmetic operations (+, x, -, /). The order of these numbers along the line does not matter. E.g. 395 can be combined as 24 = (3 x 5) + 9."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -111,7 +98,6 @@
         "9x9": "Place a digit from 1-8 in each empty cell in the grid such that each row, column and outlined regions contains each digit exactly once. This puzzle has 12 lines (instead of rows and columns) and 6 regions. The lines are not straight. The way to identify a line is by taking a cell at the edge of the grid and to follow a path by finding the next cell that touches the opposite side of the cell. You repeat this process until you reach the other edge."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -132,7 +118,6 @@
         "parity"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -150,7 +135,6 @@
         "9x9": "Numbers formed by the digits on the gray lines are \"almost palindromes\", i.e. they can be read equally in both directions except for exactly one couple of cells that do not match on each line."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -169,7 +153,6 @@
         "line"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -191,7 +174,6 @@
         "diagonal"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "no-input"
@@ -212,7 +194,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "no-input"
@@ -230,7 +211,6 @@
         "9x9": "Adjacent cells marked with X cannot contain digits which are consecutive to each other. Not all such adjacent cells are marked. In other words, adjacent cells with no marking may or may not contain consecutive digits."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -251,7 +231,6 @@
         "diagonal"
       ],
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -270,7 +249,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -289,7 +267,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -307,7 +284,6 @@
         "9x9": "There are circles and arrows in the grid. For a digit N in a circle, the digit N+1 is at the end of the attached arrow. The digits along the arrow (not including the circle) must form a sequence of consecutive digits. (The digit in the circle can appear along the arrow itself.)"
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -326,7 +302,6 @@
         "9x9": "Clues outside the grid indicate the sum of the first set of all ascending digits, starting from the first cell from the corresponding side. Sets may consist of only one digit."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -349,7 +324,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -365,7 +339,6 @@
         "9x9": "The number placed in a cell with a circle must be the arithmetic mean of the digits along the path of each arrow. Numbers may repeat on an arrow."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -386,7 +359,6 @@
         "parity"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "intersection"
@@ -397,33 +369,13 @@
       }
     },
     {
-      "id": "battleship",
-      "name": "Battleship",
-      "rules": {
-        "9x9": "Each ship outside the grid must appear in the grid such that ships do not touch each other, even diagonally. Rotation and reflection are allowed but the orientation of digits in the ships remain the same. Ship segments without a digit can contain any digit. Each number outside the grid is the number of ship segments in the corresponding row or column. Cells with given digits or a water symbol are not part of any ship."
-      },
-      "tags": [
-        "placement",
-        "hybrid"
-      ],
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "outside"
-        ],
-        "instructions": []
-      }
-    },
-    {
       "otherNames": "Battleship Sudoku",
       "id": "battleships",
       "name": "Battleships",
       "rules": {
         "9x9": "Place the given set of battleships into the grid; ships cannot touch even diagonally. The clues outside the grid indicate the sum of the digits occupied by ships in the corresponding row or column."
       },
-      "status": "infeasible",
-      "scratchGeneratable": false,
+      "status": "planned",
       "inputType": {
         "categories": [
           "outside"
@@ -431,7 +383,8 @@
         "instructions": []
       },
       "tags": [
-        "math"
+        "math",
+        "bank"
       ]
     },
     {
@@ -442,7 +395,6 @@
         "9x9": "Numbers outside the grid indicate the sum of all digits before the digit 1 in that row/column or after the digit 9 in that row/column, going from left to right and from top to bottom."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -461,7 +413,6 @@
         "9x9": "The clues outside the grid show the sum of the digits that appear before 9 in the corresponding row or column."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -482,7 +433,6 @@
         "line"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line",
@@ -503,7 +453,6 @@
         "9x9": "Each of the grey twisty bands must contain one of the given 7-digit numbers. The numbers can be entered in either of two directions."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -522,7 +471,6 @@
         "9x9": "Clues outside the grid indicate the sums of groups in the given order. Clues on top refer to groups of big digits (5-9). These groups are separated by at least one small digit (1-4). Clues on the left refer to groups of small digits, that are separated by at least one big digit."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -543,7 +491,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -561,7 +508,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -584,7 +530,6 @@
         "diagonal"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -605,7 +550,6 @@
         "9x9": "If two neighbouring cells are connected with a grey line, they contain consecutive digits. All possible sequences with length of at least 3 are marked inside each 3x3 box."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -624,7 +568,6 @@
         "9x9": "The dots given inside some cells form part (or all) of the Braille representation of the digit."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -644,7 +587,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -664,7 +606,6 @@
         "9x9": "Place a number from 1-8 in each empty cell in the grid such that each row, column and marked region each number exactly once. Note that cells containing capsules span three columns."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -680,10 +621,9 @@
       "id": "cave",
       "name": "Cave",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Symbols around the grid describe in correct order all increasing and decreasing sequences of length 3 or more that exist in the corresponding row/column. Sharp end of each symbol points where the small numbers are, open end is where the big numbers are. Number inside a symbol gives the length of a sequence."
+        "9x9": "Symbols around the grid describe in correct order all increasing and decreasing sequences of length 3 or more that exist in the corresponding row/column. Sharp end of each symbol points where the small numbers are, open end is where the big numbers are. Number inside a symbol gives the length of a sequence."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -702,7 +642,6 @@
         "9x9": "Two numbers are white and black chess Kings. As in real chess, Kings can not touch other Kings, not even diagonally, even if they are not in opposite color. It is a part of solving to find which numbers are chess Kings."
       },
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "no-input"
@@ -721,7 +660,6 @@
         "classic"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "no-input"
@@ -742,7 +680,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage",
@@ -767,7 +704,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -785,7 +721,6 @@
         "region"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -797,32 +732,12 @@
     },
     {
       "otherNames": "",
-      "id": "cloneorrenban",
-      "name": "Clone or Renban",
-      "rules": {
-        "9x9": "Each shape in the grid appears four times. Two shapes are clones, and digits in the same place in each shape must be identical. Other two shapes are renban groups, and they must contain a set of distinct, consecutive digits in any order. Cloned shapes may or may not be renban groups at the same time, and digits in it may repeat. Identifying which shapes are clones and which are renban groups is part of the solving."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "cell"
-        ],
-        "instructions": []
-      },
-      "tags": [
-        "math"
-      ]
-    },
-    {
-      "otherNames": "",
       "id": "clonedshapes",
       "name": "Cloned Shapes",
       "rules": {
         "9x9": "Each shape is cloned, including the digits it contains, without rotating or mirroring. The position of the digits inside each shape is fixed - the same digits have to be placed at the same position inside the identical shapes. The digit may appear more than once in a shape."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -843,7 +758,6 @@
         "line"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -864,7 +778,6 @@
         "alphabet"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -883,7 +796,6 @@
         "9x9": "Two cages with a dashed border are marked by the same letter if they contain the same set of digits. For each cage marked with the same letter digits in the same place must be identical. Digits may repeat in a cage."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -903,7 +815,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -923,7 +834,6 @@
         "9x9": "The clues with an arrow outside the grid indicate the number of even digits in the indicated direction. However, some of these clues are replaced by letters. Different letters mean different numbers. Lettered clues can be equal to any of the given numbered clues."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -945,7 +855,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -961,7 +870,6 @@
         "9x9": "Digits in the grey areas must form a chain of consecutive digits from 1 to 9 by moving horizontally or vertically from one cell to the next."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -984,32 +892,12 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
         ],
         "instructions": []
       }
-    },
-    {
-      "otherNames": "",
-      "id": "consecutivepairs",
-      "name": "Consecutive Pairs",
-      "rules": {
-        "9x9": "If a circle is given between two adjacent cells, then the digits in those cells must be consecutive. Not all circles are given; adjacent cells without a circle may contain either consecutive numbers or non-consecutive numbers."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "edge"
-        ],
-        "instructions": []
-      },
-      "tags": [
-        "math"
-      ]
     },
     {
       "id": "consecutivequads",
@@ -1024,7 +912,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -1043,7 +930,6 @@
         "placement"
       ],
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -1056,10 +942,9 @@
       "id": "countdifferent",
       "name": "Count different",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Number in a circle tells how many distinct digits you can find along the corresponding arrow."
+        "9x9": "Number in a circle tells how many distinct digits you can find along the corresponding arrow."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -1078,7 +963,6 @@
         "9x9": "Number in a circle tells the count of odd digits in up to 10 cells touching the pair of cells with the circle."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -1092,10 +976,9 @@
       "id": "counttheoddones",
       "name": "Count the odd ones",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Number in a circle tells you how many odd digits you can find along the corresponding arrow."
+        "9x9": "Number in a circle tells you how many odd digits you can find along the corresponding arrow."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -1111,10 +994,9 @@
       "id": "countingneighbours",
       "name": "Counting neighbours",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Number in a cell with a circle tells you how many distinct digits you can find in up to 8 neighbouring cells (sharing edge or corner). Number in a cell with a cross tells you how many distinct digits you can find in up to 4 diagonally neighbouring cells (sharing a corner). All possible circles and crosses are drawn."
+        "9x9": "Number in a cell with a circle tells you how many distinct digits you can find in up to 8 neighbouring cells (sharing edge or corner). Number in a cell with a cross tells you how many distinct digits you can find in up to 4 diagonally neighbouring cells (sharing a corner). All possible circles and crosses are drawn."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -1135,7 +1017,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -1156,7 +1037,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -1175,7 +1055,6 @@
         "9x9": "Place all the listed number sequences into shaded strips. Number sequences can be entered in any of four directions."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -1195,7 +1074,6 @@
         "diagonal"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -1216,7 +1094,6 @@
         "9x9": "There are some white and grey arrows in the grid. The digit placed in the cell with white arrow must not repeat in the direction of the arrow. The digit placed in the cell with grey arrow is repeated at least once in the direction of the arrow."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -1239,7 +1116,6 @@
         "region"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -1257,7 +1133,6 @@
         "9x9": "Kropki dots are placed in the grid. Kropki rules are applied only for a pair of cells where the centers of cells are connected (orthogonally or diagonally) with a grey line."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -1278,7 +1153,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -1300,7 +1174,6 @@
         "direction"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -1321,7 +1194,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -1343,7 +1215,6 @@
         "diagonal"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "no-input"
@@ -1352,7 +1223,7 @@
           "No mark is required. Select this button to inspect or activate the rule."
         ]
       },
-      "example": "zVbvb+I4EP3OX3Hy17W0sZM4caT9QH+tVG175a69XotQlUIotIHsBmirVN2/fd84TvMDuqdb6aRTwMyM4b03Y4/NajPJHjZc43FD7nCBxw0d8w49eglEKX4+X6dJ9Bvvb9azLIfB+e9HR3wap6uEH1/d7x089J8O+39/9K9d9+J0+uH+YHBxP7n8Swyc+cfcOU3D5cnZwV764XNxfTLrPyaHiTpbZeNZmsSTuLi+PH5Ol0fh3Wwq9o9n++E0Xjqrb+G5ftwbfPrUG5IMPKPekAnGmcRbsNF3VqbAvpuwHvVeij+il+ImGo5eeXFRm2Ft/hm9YDyNXpgMWTSkpAmLM1fC9WvXhatq14MbvLle2/U7LiHL2tVw3TdXBXD1mxs4rS8HxBu+udpvzWpCromEI1o5CKdNJQSBN+YFCa2TFLLjmzRp4Suf6GutwlVtfo/wK7WoqzDVvTLjOQrOC9eMB2Z0zOib8Yv5ziHWQYQos4ZwCRStuRRYCdj45FJCANnS59JF8mRjt0ofiZPtCy4VRJOtPC4DFJfsIOBSQxzZGnvaQVkJPwS+Y/Ed4AuLL4BPG8JwAd+z+B7waXUNF/Bp8QwX8EOLj36RusTHJ7hQJIND+m1curAtjgROMy9ZfV/BtvgS+E09sqwPPlEHy+uC17U6FdXB5qXAqyyvAm+zPsryKvAqy6vA28xLWV4FXmV5FXhpp5oaYoNpfB/rgyJit2gQk4MoKgpFZkYA1gF16UAf5WwcSkiAvHRoZcFiHA8pUdrGccHpIw/j+EiKdlvpUFaVAkrLtwrKdakUBJRYpSCEAuqm0oGCoFKgfayZVeA6UBAaBdiel2aT7pvRM6Mymzegs6TXGyIRaq7mQ830P4rgyMSxyFZZerPa5NN4nNwkz/F4zaLy9G7OtGLLzeI2yVuhNMu+pvPlLoRqqhWc3y2zPNk5RcFkcvceFE3tgLrN8klH01Ocpu1cvm3ivP3j8Twfp+3QOp+3/DjPs6dWZBGvZ63AbbzGLbiazb+2kZJlp5jruC0xfog7bIu6HK899szMG8c2dnVIl5iOigEvPket244XA9xiJ1F16dFVNmQMS8zZYpOu5+MszcBsYzhgzc8lzMPavDTzZO2XQeHAPrU2zCuYZcFuvpSRs2hYnHNGCvbMr8lki+wROZQKyR9ni1tkOWSNOnEXE1ZuxYAe6v9KHoCq8iCzzIOsHXlQev9tHnr0Wq6c86/+c/zaDfmPB9Gz7fAs/0mT15Pd8I5WR/Qn3d6Y3RV/p7Ebs934VheT2O1GRnRHLyPabWeEtjsawa2mRuydvibUbmuTqm53E9VWgxNVs8dxBhvrBw=="
+      "example": "zVbvT9tIEP2ev6Lar13pvGt7/UO6D4FCrz2goQfiiIWQCQFCHdxzbOCM6N/eN+s19jqhp6t00snJZmY2ee/N7M5uVtVl/qXiER435A4XeNzQ0e/Qo5dAlOJHizKbx2/4uCpv8gIG5592d/lVmq3m/OPpzd52Pn54N/7zPiynU/HeqT44J7e7t28/L3//sHALsXsQTvYn+wt5Pf5te+tQ7bxVk2p1XM7vD5di6/Z4enQ1ObmO5N87B1Ovnn5y/I/Tq1/ux8e/jhJSgOdslDDBOJN4C3b2jTXq2beEuYxHZ6On+nP8VJ/Hydkzr487M+zMP+InjAfxE5MhixPKl7A4cyVcv3NduKpzPbjBi+vZrj9wCVl2bgTXfXFVADd6cQPH+nJAvOGLG/nWbETIHZFwhJWDcGwqIQi8Ny9IaJekkANfp0lr3vpE32kVrrL5PcJv1aKuQlf3VI9HKDivXT2+06OjR1+Pe/o7O1gHEaLMEYRLoEQRlwIrARufXEoIIFv6XLpInmxsVOkjcbJ9waWCaLKVx2WA4pIdBFxGEEd2hO3soKyEHwLfMfgO8IXBF8CnDaG5gO8ZfA/4tLqaC/i0eJoL+KHBR6vIqMHHJ7hQJI1D+k1curANjgROPy/Zfl/BNvgS+H09sqkPPlEHw+uC1zU6FdXB5KXAqwyvAm+/PsrwKvAqw6vA289LGV4FXmV4FXhpp+oaYoNF+D7WB0XEbolATA6iqCgU6RkBWAfUjQN9lLN2KCEB8sahlQWLdjykRGlrxwWnjzy04yMp2m2NQ1m1Cigt3yho1qVVEFBirYIQCqibGgcKglZB5GPNjALXgYJQK8D2PNGbdFuPnh6V3rwBnSWjUYJEqLn6DzXT/yiCIxPHIlvl2fmqKq7S2fx8/pjOShY3B3d/xordVcuLeWGFsjz/mi3uNiG0U1ZwcX2XF/ONUxScX16/BkVTG6Au8uJyoOkhzTI7l7+qtLB/PFsUs8wOlcXC8tOiyB+syDItb6zARVriAlzdLL7aSPO7QTHL1JaYfkkHbMuuHM8j9sj0G8c2dnVIl1gU14e8fh9btx2vD3GL7cftpUdXWcIYlpizZZWVi1me5WA2MRyw+ucS5k5nnuh5sraboHBgHxgb5inMpmDne01kEif1EWekYEv/mky2zO+RQ6OQ/Fm+vECWCevVibuYMHJbBvTQ+GfyAFSbB5lNHmRtyIPS+w/z0P81npuVc/7Vf46fuyH/8SB6NB2eFz9o8m5yGN7Q6oj+oNt7s5virzR2b3YYX+tiErveyIhu6GVEh+2M0HpHI7jW1Ii90teEOmxtUjXsbqJaa3Ci6vc4zmBtfQc=&variants=classic%2Cdiagonal"
     },
     {
       "otherNames": "",
@@ -1362,7 +1233,6 @@
         "9x9": "One marked diagonal must contains digits from 1-9 exactly once and the other contains exactly 3 different digits."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -1378,10 +1248,9 @@
       "id": "diagonalpairs",
       "name": "Diagonal pairs",
       "rules": {
-        "9x9": "Follow classic sudoku rules. There are exactly 13 pairs of cells in the grid (15 in example) satisfying the following conditions: one cell is grey, one cell is white, both contain the same digit, which is equal to the diagonal distance between the cells. There is no such pair with both cells white or both cells grey. Each digit from 1 to 8 appears at least once in a grey cell. Each cell / digit belongs to at most one pair."
+        "9x9": "There are exactly 13 pairs of cells in the grid (15 in example) satisfying the following conditions: one cell is grey, one cell is white, both contain the same digit, which is equal to the diagonal distance between the cells. There is no such pair with both cells white or both cells grey. Each digit from 1 to 8 appears at least once in a grey cell. Each cell / digit belongs to at most one pair."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge",
@@ -1404,7 +1273,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -1426,7 +1294,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -1450,7 +1317,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -1474,7 +1340,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -1493,7 +1358,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -1509,7 +1373,6 @@
         "9x9": "Each digit in a grey cell must have at least one orthogonally adjacent digit (in eather a grey or a white cell) that is exactly 2 greater or smaller. There may also be digits in white cells which have orthohonally adjacent digits that are exactly 2 greater or smaller."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -1532,7 +1395,6 @@
         "9x9": "The small number in a two-cell cage indicates how many different digits surround the cage. Up to 10 cells touching the cage by a side or by a corner should be inspected."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -1551,7 +1413,6 @@
         "9x9": "For each grey line, there must be at least one way of removing a digit so that the remaining digits on the line form a palindrome. It is permissible that the digits on the grey line also form a palindrom before the removal step."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -1571,7 +1432,6 @@
         "classiclookalike"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "no-input"
@@ -1589,7 +1449,6 @@
         "parity"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -1607,7 +1466,6 @@
         "9x9": "Nine grey cells are uniquely paired to nine occurances of digit 5, the distance (vertical, horizontal or diagonal) from grey cell to digit 5 is given in the grey cell. Digit 5 cannot be placed in a grey cell."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -1627,7 +1485,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -1648,7 +1505,6 @@
         "9x9": "Inside each 3x3 box all sums created by three horizontally or vertically adjacent digits must be divisible by 3."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no input"
@@ -1669,7 +1525,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -1688,7 +1543,6 @@
         "9x9": "Place a digit from 1-4 in each empty cell so that each digit appears exactly twice in each row, column, and outlined region. Identical digits cannot share an edge."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -1707,7 +1561,6 @@
         "9x9": "Adjacent cells contianing numbers whose difference is 2 are marked with a white rhombus. Adjacent cells containing numbers whose ratio is 4 are marked with a black rhombus. Adjacent cells with no marking must not contain numbers either whose difference is 2 or whose ratio is 4."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -1726,7 +1579,6 @@
         "9x9": "Clues outside the grid indicate the sum of the digit(s) placed between the digits 1, 5 and 9 in the respective row or column in the correct order. The order of the digits 1,5 and 9 is not given."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -1745,7 +1597,6 @@
         "9x9": " Each 9 in the grid sees exactly 8 other cells in the 4 vertical and horizontal directions before a wall is seen. Numbers placed in each of these sets of 8 cells must not repeat."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -1762,7 +1613,6 @@
         "9x9": "Place a digit from the given set into each of the empty cells so that each digit appears exactly once in each row, column and 3x3 outlined region. The remaining cells are blank. Each digit outside the grid is the first digit seen from the corresponding direction."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -1782,7 +1632,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -1800,7 +1649,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -1822,7 +1670,6 @@
         "direction"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -1835,10 +1682,9 @@
       "id": "emitters",
       "name": "Emitters",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Several cells are marked with a circle. In all four directions, the maximal possible length of a path starting from the circle is given until the sum of the digits in the cells along the path is higher than the value of the emitter."
+        "9x9": "Several cells are marked with a circle. In all four directions, the maximal possible length of a path starting from the circle is given until the sum of the digits in the cells along the path is higher than the value of the emitter."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -1861,7 +1707,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -1883,7 +1728,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -1905,7 +1749,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -1926,7 +1769,6 @@
         "line"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -1950,7 +1792,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -1968,7 +1809,6 @@
         "9x9": "Each of the shaded cells has an escape path to the edge of the grid. An escape path consists of a series of adjacent cells containing a descending consecutive sequence of digits. All escape paths begin with the digit in the shaded cell and end at a cell containing a 1 at the edge of the grid. Escape paths starting in different shaded cells never share any cell. It is possible that a shaded cell can have more than one escape path."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -1990,7 +1830,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -2000,7 +1839,8 @@
           "The constraint is generated from grid geometry.",
           "This is a global rule and requires no additional marks."
         ]
-      }
+      },
+      "example": "zVXvb+I4EP3OX3Hy17W0sQPOD2k/0F8rVdteuWuv1yJUpRAKbSC7IbRVqvZv3zeOWceB7ulWOukUMG/G5r0ZT8ZerSf5w5pHePyQe1zg8UNPf8MufTzznM/LLI1/4/11OcsLAM5/Pzri0yRbpfz46n7v4KH/dNj/+2Pv2vcvTqcf7g8GF/eTy7/EwJt/LLzTLFyenB3sZR8+V9cns/5jepiqs1U+nmVpMkmq68vj52x5FN7NpmL/eLYfTpOlt/oWnkePe4NPnzpDE8ioM2SCcSbxFWz0xuoU2Jt2R6POS/VH/FLdxMPRK68uLAwt/DN+wXgavzDfZ/FQIWni4szvwQx/mF0Js2dNWhxYswvTt2YAU1ozdJh7tLhh0mLa7NpUJGSpAlpsqQKKqvvDDCmMyJrubESzlioiKhuz8JSTkhDCyViI1nrpOWJC0nobuJBuqEJSNDZPIUnPRif0hjdtWr/RQ1GELs2VHs9RLV75ejzQo6fHnh6/6DWHKKIIIRhFLJZgiSIuBbYTGL9cUkCEZY9LHzUhjFdd9pAI4Z7gUiEJwqrLZYDKEA4CLiMkTzhCQ3gInPhD8HuG3wO/MPwC/NLwS/B3DX8X/FR8rQV+ZfgV+EPDj2aTVDet5UMLm6Z5KH7jlz6w4ZHgaeZFm6yxAjb8EvzNeGS9P/jFPhhdH7q+iVPRPpi8FHSV0VXQbe6PMroKusroKug281JGV0FXGV0F3YB0UbRLXbp9PXb1qHRJA2rPTmeIeOkVaz70yv6PPDiFcNKwVZ7drNbFNBmnN+lzMi5ZXB+IzRnHt1wvbtPCcWV5/jWbL3cxbKYc5/xumRfpzilyppO796hoagfVbV5MWjE9JVnm5vJtnRTun8fzYpy5rrKYO3ZSFPmT41kk5cxx3CYlLpbVbP7VZUqXrc0sEzfE5CFpqS3sdrx22DPTX5yFeINDuheiuBrw6nPsXCC8GuBiOIk39wjdDkPGUGLOFuusnI/zLIey8eHY0X+XgIcWXup5Qvu1U3jApwYDXgHWG3bzpfacxcPqnDOKYE//myBb5I/IoY6Q7HG+uEWWQ9bYJ+5jwoS7UUAP9X8lD1Bt8iBY50FoRx6U3n+bRzR6rSvn/atr/NfujX88iJ5Nh+fFT5rcTrbdO1od3p90e2N2l/+dxm7Mtv1bXUzBbjcyvDt6Gd52O8O13dFwbjU1fO/0NbG2W5uianc3SW01OEk1exxnsEbfAQ==&variants=classic%2Ceven%20passage"
     },
     {
       "id": "evensandwich",
@@ -2014,7 +1854,6 @@
         "parity"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -2037,7 +1876,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -2058,7 +1896,6 @@
         "placement"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -2074,7 +1911,6 @@
         "9x9": "The rows and columns continue over an empty space."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2091,7 +1927,6 @@
         "9x9": "The clues outside the grid indicate the sum of the first X digits placed in the corresponding direction, where X is equal to the first digit placed in that direction. There are different letters and mathematical expressions (consisting of only +, -, x and /) inside and outside the grid. Each letter represents a positive integer. Different letters may take on the same value."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -2110,7 +1945,6 @@
         "9x9": "Each marked 10-cell string must contain all digits from 1 to 9. Digits at both ends of each string must be the same."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2129,7 +1963,6 @@
         "9x9": "Each marked region must contain each digit from 1-9 exactly twice."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -2154,7 +1987,6 @@
         "region"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -2173,7 +2005,6 @@
         "9x9": "The grey cells will not contain numbers."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -2193,7 +2024,6 @@
         "line"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -2216,7 +2046,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -2236,7 +2065,6 @@
         "9x9": "Place the given set of figures into the grid following grid lines. Figures can be rotated, but not reflected. Figures cannot touch each other even in a point. Clues show the sum of neighboring digits which are inside the figures."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2255,7 +2083,6 @@
         "9x9": "Dotted areas with the same shape must contain the same set of digits (but not necessarily in the same order). The digit may be repeated in area."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2272,7 +2099,6 @@
         "9x9": "The digit in each shaded cell is greater than the digits in the first cell of the corresponding row (leftmost cell) and the first cell of the corresponding column (topmost cell). Not all possible cells are shaded."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -2295,7 +2121,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -2319,7 +2144,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -2338,7 +2162,6 @@
         "9x9": "Fill in the grid with digits 1 to 9 so that every row, column and outlined region contains nine different digits. There are two grids to be solved on two sides of the paper. There are 12 extra squares along the grid edge. You have to bend each of those extra squares (independently) to the one or the other side to form two classic sudokus of the standard size. You should solve them after that."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2352,10 +2175,9 @@
       "id": "football",
       "name": "Football",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Grey circles represent 14 football players divided into two teams. Players of each team are marked with numbers from 1 to 7. One team plays with a ball number 8, the other with a ball number 9. Player number 1 has a ball number next to him in a direction of a horizontal, vertical or diagonal pass to the player number 2. And so on up to the pass between players 6 and 7 of each team. No other player stands in the way of every pass."
+        "9x9": "Grey circles represent 14 football players divided into two teams. Players of each team are marked with numbers from 1 to 7. One team plays with a ball number 8, the other with a ball number 9. Player number 1 has a ball number next to him in a direction of a horizontal, vertical or diagonal pass to the player number 2. And so on up to the pass between players 6 and 7 of each team. No other player stands in the way of every pass."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -2374,23 +2196,22 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
         ],
         "instructions": []
-      }
+      },
+      "example": "zVVrT+M4FP3eX7Hy17E0sZM4D2k+lNdIaGDpLiwLUYVCm9JC2sykLaAg5rfPubY7ebTMrpBWWqW1j4/jcx/OtZfrcfGw5hEeN+QOF3jc0NH/0KOfY5/z2SrP4t94f72aFiUA578fHfFJmi8zfnx1v3fw0H867P/90b923YvTyYf7g8HF/fjyLzFwZh9L5zQPFydnB3v5h8/V9cm0/5gdZupsWYymeZaO0+r68vg5XxyFd9OJ2D+e7oeTdOEsv4Xn0ePe4NOnXmIdGfYSJhhnEn/Bht+ZCYF913Q07L1Uf8Qv1U2cDF95dVHDsIZ/xi/MkywWnHmu6Tzd+b7uVGi6SHeBYzqzIDALArMgFKZTuosMGZl1QpgVQpIqzJ7CrIR0opBlch52MZUwxWoiACHrIaQS/+fQh4GE+fXrPr1Om2aH9DqlZkMo+JcwryZCBNPQDxFN4tZDcieoh+Ss93MoHLLGglpNOF2DQpDF2iMhtMth8w1aE9VjSStql4Qkn5o+C4+c3mgikSJ+QXul23NsKa9c3R7o1tGtr9sv+p1DJF6EyDrtjIRKFHFJuwOMnkvaIcLS59JF0IRRD9KHa4R9waVCIISVx2WARBAOAi4jOEc4QtU4cJ30Q+g7Vt+BvrD6Avr0BWhb0Pesvgd92lttC/rK6ivo044RRkXKyOijhy18c1qH/Le8dIGtjoROMy65eV8BW30J/aY/0uQHPfJg7bqw61o/FeXBxqVgV1m7Cnab+VHWroJdZe0q2G3GRUWmMexSpWkMu1RuEpt2qbduX7eebpXe0oBquNdL4C99Es2HCuV/xOCownHElkV+s1yXk3SU3WTP6WjFYnNqNmda3GI9v83KFpUXxdd8ttilsJlqkbO7RVFmO6eIzMZ3b0nR1A6p26Icd3x6SvO8Hcu3dVq2F49m5ShvU6ty1hqnZVk8tZh5upq2iNt0hdtnOZ19bStli04yV2nbxfQh7Vib1+l47bFnpv84AvEFh3R5RHE14NVnnECNW4ZXA9weJ/HmsqErJGE4oXA6zdf5ajYq8gKWLYdjRy+XgIc1vNTzhPYNKRzgU4sBrwBNwm6+GOYsTqpzzsiDPb2aIJsXj4jBeEjjUTG/RZQJa+SJu5iw7m4soIb674kDUps4CJo4CO2Ig8L7b+OIhq9m55x/edebq/d998Y/HkTPtsKL8hdFXk926R2lDvYX1d6Y3cW/UdiN2S6/VcXk7HYhg91Ry2C75Qxqu6JBbhU1uDfqmlS7pU1edaubTG0VOJlq1jjOYI1+AA==&variants=classic%2Cfortress"
     },
     {
       "otherNames": "",
       "id": "fourpairs",
       "name": "Four pairs",
       "rules": {
-        "9x9": "Follow classic sudoku rules. There are two independent groups of eight cells in the grid, marked with a grey gg. Exactly four different digits can be found in each of the groups, each of them exactly twice."
+        "9x9": "There are two independent groups of eight cells in the grid, marked with a grey gg. Exactly four different digits can be found in each of the groups, each of them exactly twice."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -2406,8 +2227,7 @@
       "rules": {
         "9x9": "Numbers outside the grid are equal to the sum of the first 3 digits appearing in the corresponding row or column."
       },
-      "status": "hidden",
-      "scratchGeneratable": false,
+      "status": "available",
       "inputType": {
         "categories": [
           "outside"
@@ -2430,7 +2250,6 @@
         "diagonal"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -2452,7 +2271,6 @@
         "9x9": " A circle marked at the intersection of a 2×2 block of cells indicates that numbers placed in these cells are either all odd or all even. A square marked at the intersection of a 2×2 block of cells indicates that exactly two numbers placed in these cells are odd, and exactly two numbers are even."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -2472,7 +2290,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -2488,7 +2305,6 @@
         "9x9": "Place a number from 1 to X (integers only) into each cell so that each number appears exactly once in each row and column. (X is the number of cells in each row.) Some inequality relations are given between adjacent cells; they must apply to the numbers in those cells. Numbers may not repeat in any of the outlined regions."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -2505,7 +2321,6 @@
         "9x9": "Exactly one circle should be added on each grey line. One or two arrows should be drawn at all loose ends of each grey line then. Finally solve standard arrows sudoku. A number placed in a cell with a circle must be the sum of the numbers placed in cells the adjoining arrow passes through. Numbers may repeat on arrows."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2526,7 +2341,6 @@
         "line"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -2548,7 +2362,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -2558,70 +2371,12 @@
     },
     {
       "otherNames": "",
-      "id": "greaterordifference",
-      "name": "Greater or Difference",
-      "rules": {
-        "9x9": "Each number between two neighbouring cells is either the greater of the digits or the difference between the digits in those two cells."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "edge"
-        ],
-        "instructions": []
-      },
-      "tags": [
-        "math"
-      ]
-    },
-    {
-      "otherNames": "",
-      "id": "greaterorsum",
-      "name": "Greater or Sum",
-      "rules": {
-        "9x9": "Each number between two neighbouring cells is either the greater of the digits or the sum of the digits in those two cells."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "edge"
-        ],
-        "instructions": []
-      },
-      "tags": [
-        "math"
-      ]
-    },
-    {
-      "otherNames": "",
-      "id": "greaterthanandkiller",
-      "name": "Greater than and Killer",
-      "rules": {
-        "9x9": "Follow classic sudoku rules. There are several cages in the grid with a dashed-line outline. Sum of all digits in every cage is given. Same digit cannot be repeated in one cage. All digits should follow given inequality signs."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "cage"
-        ],
-        "instructions": []
-      },
-      "tags": [
-        "math"
-      ]
-    },
-    {
-      "otherNames": "",
       "id": "greaterthankiller",
       "name": "Greater Than Killer",
       "rules": {
         "9x9": "All equality and inequality signs relate to the sums of killer cages. Some of the cages have no sum value attached. Digits must not repeat in cages."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -2642,7 +2397,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -2658,7 +2412,6 @@
         "9x9": " Adjacent cells containing consecutive numbers are marked with inequalities. Numbers placed in these cells must satisfy the given inequality. Adjacent cells with no marking must not contain consecutive numbers."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2677,7 +2430,6 @@
         "9x9": "At some intersections of two crossing grid lines, a set of four digits is given. For each set, exactly 2 digits are correct (they appear at least once)."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -2695,8 +2447,7 @@
       "tags": [
         "irregular"
       ],
-      "status": "hidden",
-      "scratchGeneratable": false,
+      "status": "planned",
       "inputType": {
         "categories": [
           "no-input"
@@ -2712,7 +2463,6 @@
         "9x9": "Two of the gray lines are perfect palindromes and the other two gray lines are consecutive pair palindromes (i.e. paired palindrome positions must have digits which are consecutive to each other). Part of solving is to figure out which lines are perfect palindromes and which are consecutive pair palindromes."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2731,7 +2481,6 @@
         "9x9": "Fill in the grid with digits 1 to 9 so that every row, column and outlined region contains nine different digits. If there are two digits in one cell, the smaller one should be to the left from the higher one."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2748,7 +2497,6 @@
         "9x9": "Some cells are halved by one of the diagonals. For any such cell, exactly one of its two halves shall contain a digit. That digit is considered to belong to the row and column containing its cell, as well as to the region connected to the half cell the digit is in."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2765,7 +2513,6 @@
         "9x9": "Each of the four marked diagonals must also contain each digit from 1-9 exactly once."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2786,8 +2533,7 @@
         "diagonal",
         "irregular"
       ],
-      "status": "hidden",
-      "scratchGeneratable": false,
+      "status": "infeasible",
       "inputType": {
         "categories": [
           "no-input"
@@ -2803,7 +2549,6 @@
         "9x9": "The shaded region must be at least once cloned somewhere else in the grid, without rotation or reflection and the digits in the corresponding cells must be equal. The clone may overlap partially with the original shaded region, but not completely. Digits may repeat in a shaded region."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -2820,7 +2565,6 @@
         "9x9": "There must be a path from 1 in the arrow to 9 in the target via the digits 2 to 8 so that 2 must be placed in a cell in the direction of the arrow. Consider the cell with 2 a new arrow cell but with the arrow turned 90 degrees to the right. Now 3 must be in a cell in that direction. Consider the cell with 3 a new arrow but with the arrow turned another 90 degrees to the right. Now 4 must be in a cell in that direction ... and so on until you hit the target."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2828,24 +2572,6 @@
         "instructions": []
       },
       "tags": []
-    },
-    {
-      "id": "inclusion",
-      "name": "Inclusion",
-      "rules": {
-        "9x9": "Each digit at the intersection of cells must be present in at least one of those cells."
-      },
-      "tags": [
-        "placement"
-      ],
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "intersection"
-        ],
-        "instructions": []
-      }
     },
     {
       "id": "inequality",
@@ -2857,7 +2583,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -2873,7 +2598,6 @@
         "9x9": "For each pair of adjacent boxes, the inequality relationship between three pairs of numbers across the box boundary is the same."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -2890,7 +2614,6 @@
         "9x9": "Numbers outside the grid represents sum of 2nd, 3rd and 4th digit in the corresponding direction."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -2908,10 +2631,9 @@
       "id": "interconnectedclassics",
       "name": "Interconnected Classics",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Grey cells contain the same digits as the corresponding grey cells in the other puzzle."
+        "9x9": "Grey cells contain the same digits as the corresponding grey cells in the other puzzle."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -2930,7 +2652,6 @@
         "irregular"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2948,7 +2669,6 @@
         "9x9": "Some region boundaries are missing, but all given borders must separate cells in different reqions."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -2965,7 +2685,6 @@
         "9x9": "Follow irrregular sudoku rules. Rows and columns are marked with numbers 1 to 9. There is a white dot between two cells if the difference of the digits they contain is equal to the number of a row they are part of. There is a black dot between two cells if the sum of the digits they contain is equal to the number of a row they are part of. The same applies to the columns. All possible dots are drawn."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -2984,7 +2703,6 @@
         "9x9": "Some regions are connected by lines."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3001,7 +2719,6 @@
         "9x9": "Place numbers from 1-8 in the grid so that each number appears exactly once in each row, column and outlined region. The numbers on the right and left show the sum of the first 2 numbers in the row from the given side. The numbers on top and bottom show the product of the first 2 numbers in the column from the given side."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3020,7 +2737,6 @@
         "9x9": "Place a digit from 1 to 9 into each of the empty cells so that each digit appears exactly once in each row, column and 3x3 outlined region. Shade some cells in the grid such that the numbers outside the grid represent sums of digits in white cells of the corresponding row or column. If there is more than one sum, the given order is valid and there must be at least one shaded cell between the sums. Some shaded cells may be given."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -3042,7 +2758,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -3060,7 +2775,6 @@
         "9x9": "Fill in the grid with digits 0 to 7 so that every row, column and boldly outlined region contains two zeros and all remaining digits exactly once. Two cells with a zero cannot share an edge. No digit can be repeated in a region with a dashed border. The sum of all digits in every region with a dashed border is given."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3079,26 +2793,6 @@
         "9x9": "Digits places in each marked cage must sum to the total given in its top-left corner. Digits must not repeat in cages. All cages contain a standard arrow clue, which is hidden. The circle part of the arrow will be at one end of the cage with the arrow extending along the cage to the other end. The arrow must fill the entire cage. The circle may enclose any number of digits, and multi-digit totals are read in the direction of the arrow."
       },
       "status": "planned",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "cage"
-        ],
-        "instructions": []
-      },
-      "tags": [
-        "math"
-      ]
-    },
-    {
-      "otherNames": "",
-      "id": "killerlittlekiller",
-      "name": "Killer Little Killer",
-      "rules": {
-        "9x9": "The digits placed in each marked cage must sum to the total given in its top-left. Digits must not repeat in cages. Numbers along the arrows indicate the sum of the digits in the corresponding direction."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -3117,7 +2811,6 @@
         "9x9": "Two cells which are a knight's move apart must not contain digits which add to either 5 or 15."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -3140,7 +2833,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "edge"
@@ -3158,7 +2850,6 @@
         "9x9": "Whenever two adjacent numbers in a row or column add up to 50 or 100, this is marked by a letter L or C respectively, placed on the line separating the two numbers. Two-digit numbers are formed by combining adjacent digits (reading from left to right or top to bottom only). All possible letters L and C are marked. Row and column strings which would result in the leters L and C coinciding (e.g. 5248) will not occur."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -3179,30 +2870,12 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
         ],
         "instructions": []
       }
-    },
-    {
-      "otherNames": "",
-      "id": "letter",
-      "name": "Letter",
-      "rules": {
-        "9x9": "Place a letter in each empty cell in the grid such that each row, column and marked 3x3 box contains the same set of letters. There are no repeated letters in the set."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "cell"
-        ],
-        "instructions": []
-      },
-      "tags": []
     },
     {
       "otherNames": "One bug per line Sudoku",
@@ -3212,7 +2885,6 @@
         "9x9": " Exactly one given clue in each row, column and marked 3 × 3 box is incorrect."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3229,7 +2901,6 @@
         "9x9": "One diagonal must contain each digit from 1-9 exactly once, whilst the other diagonal must have one or more digits repeated. It is part of solving to determine which diagonal has the corresponding property."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -3248,7 +2919,6 @@
         "9x9": "The digits placed in all but one marked cage must sum to the total given in its top-left. Exactly one marked cage displays a wrong sum. Digits must not repeat in cages."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -3267,7 +2937,6 @@
         "9x9": "Digits in circles must be odd and digits in squares must be even except for exactly one cell which has the wrong symbol."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3284,7 +2953,6 @@
         "9x9": "Each clue in the top-left corner of a marked cage displays two digits correctly and one incorrectly. Digits may repeat in cages."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -3307,7 +2975,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -3328,7 +2995,6 @@
         "9x9": "There are 80 numbers in the grid that fulfill a following condition: each of these happy numbers has a consecutive friend in a cell sharing an edge with it. There is exactly one lonely number in the grid that doesn't have a consecutive friend next to it."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3347,7 +3013,6 @@
         "9x9": "Three of the given 3x3 blocks are magic squares, which means that the sum of the digits on both diagonals, the three horizontal lines of three cells and the three vertical lines of three cells is the same."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -3366,7 +3031,6 @@
         "9x9": "The grey central box serves as an exemplar. The four corner boxes are compared to the central one and the result of comparison is given in the style of a Mastermind puzzle for every triplet of cells. A black dot is given for every identical digit in the same position. A white dot is given for an identical digit but not in the same position. A cross means that there is nothing in common in this triplet."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell",
@@ -3387,7 +3051,6 @@
         "neighbour"
       ],
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -3407,7 +3070,6 @@
         "parity"
       ],
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -3423,7 +3085,6 @@
         "9x9": "Also some areas are overlapped, with sizes from 6×6 to 9×9."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3442,7 +3103,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -3466,7 +3126,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -3486,7 +3145,6 @@
         "9x9": "In each set of cells connected by meandering diagonal lines each digit appears at most once."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -3505,7 +3163,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -3521,7 +3178,6 @@
         "9x9": "Place mines into the empty cells in the grid, at most one mine per cell, so that each number in a cell represents the number of mines adjacent to that cell (including diagonally adjacent cells). Each row, column, and outlined region in the grid must contain exactly 3 mines."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3541,7 +3197,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -3563,7 +3218,6 @@
         "classiclookalike"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "no-input"
@@ -3579,7 +3233,6 @@
         "9x9": "Place a digit from 0-9 in each empty cell. Digits in a row, column and 3x3 box must be different. The clues outside the grid indicate the digit that is not included in the corresponding row/column."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -3600,7 +3253,6 @@
         "9x9": "The combination of odd and even digits along an arrow corresponds to the \"Morse-like coding\" for the digit in the circled cell which follows."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3620,8 +3272,7 @@
       "tags": [
         "diagonal"
       ],
-      "status": "hidden",
-      "scratchGeneratable": false,
+      "status": "planned",
       "inputType": {
         "categories": [
           "cell"
@@ -3639,7 +3290,6 @@
         "math"
       ],
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3655,7 +3305,6 @@
         "9x9": "Some numbers are given on the edges between two adjacent cells. Treating those cells as a two-digit number (reading left to right or top to bottom), the two-digit number must be a multiple of the clue. (For example, near a 7 clue, the two digits can be 14, 21, 28, 35,...)"
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -3676,7 +3325,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -3696,7 +3344,6 @@
         "9x9": "The clues outside the grid indicate the digits that sit next to 9 in that row or column. These clues are given in increasing order."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -3716,8 +3363,7 @@
       "tags": [
         "line"
       ],
-      "status": "hidden",
-      "scratchGeneratable": false,
+      "status": "planned",
       "inputType": {
         "categories": [
           "cell"
@@ -3733,7 +3379,6 @@
         "9x9": "For each number 1-9, there must be at least one set of three identical digits in a straight line of adjacent cells somewhere in the grid."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3752,7 +3397,6 @@
         "9x9": "No group of three contiguous cells within any row or column can contain a set of consecutive digits in any order. (For example, the grid cannot have 345, 354, 435, 453, 534, or 543 in three contiguous cells)."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3775,7 +3419,6 @@
         "parity"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -3796,7 +3439,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -3817,7 +3459,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "no-input"
@@ -3832,10 +3473,9 @@
       "id": "nonconsecutivespiral",
       "name": "Nonconsecutive spiral",
       "rules": {
-        "9x9": "Follow classic sudoku rules. (The classic sudoku regions are marked with the shading not by the bold lines.) Pair of adjacent cells following the spiral way marked by a bold line cannot contain consecutive digits."
+        "9x9": "Pair of adjacent cells following the spiral way marked by a bold line cannot contain consecutive digits."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3854,7 +3494,6 @@
         "9x9": "Digits must not repeat in cages and their sums end with 5 (the sums can be 5, 15, 25, 35 or 45)."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -3869,14 +3508,13 @@
       "id": "numberedrooms",
       "name": "Numbered Rooms",
       "rules": {
-        "9x9": "Each digit outside the grid is the digit in the Xth cell in the corresponding direction where X is the digit in the first cell in that direction."
+        "9x9": "Each digit outside the grid is the digit in the X-th cell in the corresponding direction where X is the digit in the first cell in that direction."
       },
       "tags": [
         "outside",
         "placement"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -3889,24 +3527,6 @@
       }
     },
     {
-      "id": "odd",
-      "name": "Odd",
-      "rules": {
-        "9x9": "Cells with shaded circles contain odd digits."
-      },
-      "tags": [
-        "parity"
-      ],
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "cell"
-        ],
-        "instructions": []
-      }
-    },
-    {
       "id": "odd even",
       "name": "Odd Even",
       "rules": {
@@ -3916,7 +3536,6 @@
         "parity"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "cell"
@@ -3928,32 +3547,12 @@
     },
     {
       "otherNames": "",
-      "id": "oddevenandkiller",
-      "name": "Odd even and killer",
-      "rules": {
-        "9x9": "Follow classic sudoku rules. Sum of the two digits in marked cages is given. Every pair of blank cells (= cells outside marked cages) sharing an edge have different parity."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "cage"
-        ],
-        "instructions": []
-      },
-      "tags": [
-        "math"
-      ]
-    },
-    {
-      "otherNames": "",
       "id": "oddevenbridge",
       "name": "Odd Even Bridge",
       "rules": {
         "9x9": "Some circled cells are connected by a bridge. An odd digit in a circle denotes the number of odd digits on the bridge. An even digit in a circle equals the number of even digits on the bridge. The digits on the circles are not counted. If a circled cell is connected by more than one bridge, an odd/even digit in the cell denote the number of odd/even digits on each connected bridge (not the sum of all connected bridges)."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -3972,7 +3571,6 @@
         "9x9": "An even digit placed in a cell with a circle indicates the number of even digits placed in the surrounding 8 cells. An odd digit placed in a cell with a circle indicates the number of odd digits placed in the surrounding cells. Numbers placed in cells without a circle may have either of these properties."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -3986,10 +3584,9 @@
       "id": "oddevensum",
       "name": "Odd Even Sum",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Moreover, the sum of two digits in every cage marked with “O” is odd and the sum of two digits in every cage marked with “E” is even."
+        "9x9": "Moreover, the sum of two digits in every cage marked with O is odd and the sum of two digits in every cage marked with E is even."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -4011,7 +3608,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -4021,7 +3617,8 @@
           "The constraint is generated from grid geometry.",
           "This is a global rule and requires no additional marks."
         ]
-      }
+      },
+      "example": "zVVtT+M4EP7eX3Hy17W0sdO4TqT9UN5WQgtH7+A4qCoU2pQW0mY3TQEFsb99n3FcnKRlT7fSSac0zjMzzTMv9kxW60n2sOYhLl9zjwtcvvbMrbv08+x1Pi/SJPqN99fFLMsBOP/96IhP43SV8OOr+72Dh/7TYf/vj8G171+cTj/cHwwu7ieXf4mBN/+Ye6epXp6cHeylHz6X1yez/mNymKizVTaepUk8icvry+PndHmk72ZTsX8829fTeOmtvunz8HFv8OlTZ2gDGXWGTDDOJG7BRt9ZlQL7btThqPNS/hG9lDfRcPTKywsHtYN/Ri9YT6MXJjWLhpQ0cXHmBxDVm9gVEH0nkrXrxBCifBMDsmonktVRKRIdVc9rWHtdiL03UZPVOdJkde9qitk5CskaOpGsjipsBik8kp1ZCB9yUJNb/5dkd4EK2Wu+77fsXQp9U1AUWZhSX5n1HNXnpW/WA7N6Zg3M+sX85xCbIjQIKXAJljDkUkiD8eRSosyEZcClj1wJ4+jKAHtFOBBcKpSEsOpy2UPAhHs9LkMERzjEAfcQOPFr8HuW3wO/sPwC/HQ6jC/w01kg3AV/YPkD8CvLr8BP+0YYzSPDih9P+FKWh+K3eukDWx4JnnpecvN/BWz5Jfjr8ciqPniiDtavD7++jVNRHWxeCn6V9avgt14fZf0q+FXWr4Lfel7K+lXwSwfZYPilUyyxaZdm6/bN2jWrMlvao3brdIaIl45E/aIj9z/SYKpgcrBVlt6s1vk0Hic3yXM8LlhUDbi6paFbrhe3Sd5QpVn2NZ0vdzFsTA3l/G6Z5clOEymTyd17VGTaQXWb5ZNWTE9xmjZz+baO8+bL43k+TpuqIp835DjPs6eGZhEXs4biNi7woVjN5l+bTMmyVcwiboYYP8QtbwtXjtcOe2bmxiDECdY058OoHPDyc9T4IPBygEF/Em2+CzTth4xhizlbrNNiPs7SDJ6tDmPHvC4BDx28NHZC+5VSeMCnFgNeAVYFu/lSac6iYXnOGUWwZ94myBbZI3KoIiR5nC1ukeWQ1erEfRhsuBsP6KH+r+QBqk0eBKs8CO3Ig9L7b/MIR6/Vznn/6rP8a9+NfxxEz7bDs/wnTe6MbfWOVof2J91es+7Sv9PYNWtbv9XFFOx2I0O7o5ehbbczVNsdDeVWU0P3Tl8Ta7u1Kap2d5OrrQYnV/Uexww26Ac=&variants=classic%2Codd%20labyrinth"
     },
     {
       "id": "oddsandwich",
@@ -4035,7 +3632,6 @@
         "parity"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -4058,7 +3654,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -4074,7 +3669,6 @@
         "9x9": " The clues outside the grid indicate, in the correct order, the sums of all consecutive sequences of odd numbers in the corresponding direction. There must be at least one even number placed between two such sequences."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4093,7 +3687,6 @@
         "9x9": "All odd digits must be orthogonally interconnected with no 2x2 area covered completely by odd digits (like shaded cells in Tapa puzzle)."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -4110,7 +3703,6 @@
         "9x9": "Exactly one odd and one even digit must be placed in each marked pair of adjacent cells."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4127,7 +3719,6 @@
         "9x9": "Place a digit from 1-8 in each empty cell in the grid such that each row, column and marked 8-cell box contains each number exactly once. The clues outside the grid indicate that the first two cells in the corresponding direction must contain digits matching the following description: O = Odd digits {1, 3, 5, 7}; E = Even digits {2, 4, 6, 8}; B = Big digits {5, 6, 7, 8}; S = Small digits {1, 2, 3, 4}."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4146,7 +3737,6 @@
         "9x9": "A digit in a grey cell must be placed in the Nth position in the next row, where N is the digit immediately to the right of the grey cell."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -4163,7 +3753,6 @@
         "9x9": "Some given digits are shaded. All such digits have exactly one digit of the same value one knight step away from its own position."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -4180,7 +3769,6 @@
         "9x9": "If a circle is given between two adjacent cells, then the difference in those cells must be 1 or 2. Not all circles are given; adjacent cells without a circle may contain either consecutive digits, digits whose difference is 2 or other non-consecutive digits."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -4199,7 +3787,6 @@
         "9x9": "Every digit 1-9 has exactly one touching pair in the grid. All these touches are marked by a circle. If there are less than 9 circles in the grid, that means there is at least one marked 2x2 block which contains two pairs of touching digits."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -4215,10 +3802,9 @@
       "id": "onefivenine",
       "name": "One-five-nine",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Digits in the first column say in which column you can find number 1 in the respective row. Digits in the fifth column say in which column you can find number 5. Digits in the nineth column say in which column you can find number 9."
+        "9x9": "Digits in the first column say in which column you can find number 1 in the respective row. Digits in the fifth column say in which column you can find number 5. Digits in the nineth column say in which column you can find number 9."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -4235,7 +3821,6 @@
         "9x9": "The set of given digits on each grey line must appear on the same line in the solution. They may or may not appear in the same order."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4249,10 +3834,9 @@
       "id": "ordering",
       "name": "Ordering",
       "rules": {
-        "9x9": "Follow classic sudoku rules. There is a set of 16 different two-digit numbers in the marked cages. Their order from the lowest to the highest is given by small numbers from 1 to 16."
+        "9x9": "There is a set of 16 different two-digit numbers in the marked cages. Their order from the lowest to the highest is given by small numbers from 1 to 16."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -4268,10 +3852,9 @@
       "id": "orthogonalspacing",
       "name": "Orthogonal spacing",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Let’s denote D a number in the marked cell. Let’s denote Aand B the two neighbouring numbers in the cells marked by arrows. The distance between numbers A and B in an ortogonal row / column (marked by the short grey line) should be equal to D. (It is possible to have two signs in one cell.)"
+        "9x9": "Let’s denote D a number in the marked cell. Let’s denote Aand B the two neighbouring numbers in the cells marked by arrows. The distance between numbers A and B in an ortogonal row / column (marked by the short grey line) should be equal to D. (It is possible to have two signs in one cell.)"
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -4293,7 +3876,6 @@
         "placement"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -4310,10 +3892,9 @@
       "id": "outsideconsecutive",
       "name": "Outside consecutive",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Numbers outside the grid tells the count of consecutive adjacent pairs in the particular row / column."
+        "9x9": "Numbers outside the grid tells the count of consecutive adjacent pairs in the particular row / column."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4334,7 +3915,6 @@
         "9x9": "The signs outside the grid indicate how many inequality signs should be placed between neighbouring cells in the corresponding direction."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4353,7 +3933,6 @@
         "9x9": "The clues outside the grid indicate the sum of at least one pair of neighboring cells in that row or column."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4378,7 +3957,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4397,7 +3975,6 @@
         "placement"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -4417,7 +3994,6 @@
         "9x9": "Two grids are overlapping."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4434,7 +4010,6 @@
         "9x9": "Place the digits from 1 to 9 in every row and column of both overlapping grids and in every bold outlined area for the puzzle as a whole."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4451,7 +4026,6 @@
         "9x9": "Shade some cells such that the numbers outside the grid indicate the number of shaded cells in each shaded stretch in the corresponding row or column. If there is more than one number, the given order is valid and there must be at least one white cell between the stretches of shaded cells. Then transfer the digits from the white cells into the blank grid and solve it as classic Sudoku. Place a digit from 1 to 9 into each of the empty cells so that each digit appears exactly once in each row, column and 3x3 outlined region."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -4471,7 +4045,6 @@
         "line"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -4489,7 +4062,6 @@
         "9x9": " The numbers placed in each shaded region must form the given equations when they are read as the corresponding n-digit numbers."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -4507,8 +4079,7 @@
       "rules": {
         "9x9": "Digits along any grey line have the same parity (all odd or all even)."
       },
-      "status": "hidden",
-      "scratchGeneratable": false,
+      "status": "planned",
       "inputType": {
         "categories": [
           "cell"
@@ -4522,10 +4093,9 @@
       "id": "paritycircles",
       "name": "Parity circles",
       "rules": {
-        "9x9": "Follow classic sudoku rules. If there is an odd number O in a circle, there are exactly O odd numbers around it. If there is an even number E in a circle, there are exactly E even numbers around it. All possible circles are given."
+        "9x9": "If there is an odd number O in a circle, there are exactly O odd numbers around it. If there is an even number E in a circle, there are exactly E even numbers around it. All possible circles are given."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4545,7 +4115,6 @@
         "line"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cellinel"
@@ -4565,7 +4134,6 @@
         "parity"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4581,7 +4149,6 @@
         "9x9": "Each digit represents the height of a building. The clues outside the grid indicate whether an odd (O) or even (E) number of buildings is visible from the corresponding direction. A taller building will hide any shorter buildings behind it."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4602,8 +4169,7 @@
         "irregular",
         "math"
       ],
-      "status": "hidden",
-      "scratchGeneratable": false,
+      "status": "infeasible",
       "inputType": {
         "categories": [
           "cell"
@@ -4619,7 +4185,6 @@
         "9x9": "Clues outside the grid indicate the sum of the digit(s) in the respective row or column, when the row or column is partitioned at certain points (not given), in the correct order. Clues are either given for the entire row or column, or not given at all."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4640,7 +4205,6 @@
         "placement"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4663,7 +4227,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -4679,7 +4242,6 @@
       },
       "tags": [],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4698,7 +4260,6 @@
         "9x9": "Place the given fragments inside the grid without rotating or mirroring. Fragments can touch each other, but can not overlap each other or given digits."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4715,7 +4276,6 @@
         "9x9": "Follow irregular sudoku rules (digits 1 to 7). No digit can be repeated in a region with a dashed border. The sum of all digits in every region with a dashed border is given while digits in grey cells are counted as negative ones."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage",
@@ -4732,10 +4292,9 @@
       "id": "plusminuslines",
       "name": "Plus minus lines",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Cell with a horizontal line contains a sum of the two neighbouring cells in the particular row. Cell with a vertical line contains a difference of the two neighbouring cells in the particular column. All possible lines are given."
+        "9x9": "Cell with a horizontal line contains a sum of the two neighbouring cells in the particular row. Cell with a vertical line contains a difference of the two neighbouring cells in the particular column. All possible lines are given."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4754,7 +4313,6 @@
         "9x9": "A grey horizontal or vertical bar symbol in a cell indicates that the digit in the cell is equal to the sum or difference of its horizontal or vertical neighbours. Not all possible bars are marked; cells without a bar may or may not indicate either sum or difference of its horizontal or vertical neighbours."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4776,7 +4334,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4795,7 +4352,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4811,7 +4367,6 @@
         "9x9": "Numbers outside the grid indicate the number of different numbers placed in the cells in the corresponding diagonal direction."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4830,7 +4385,6 @@
         "9x9": "A digit N in a cell with an arrow sees another digit N, which is N cells away in the arrow's direction (diagonally). Arrows may be reciprocal (pointing towards each other). Not all possible arrows are given."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4847,7 +4401,6 @@
         "9x9": "Numbers outside the grid signify the position of the highest of the nearest three digits in the corresponding row/column."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4866,7 +4419,6 @@
         "9x9": "Apply classic sudoku rule. External clues give information relating to the first two digits (called A and B) in the corresponding row or column. Clues next to the grid give the sum of A and B. Clues in the grey band further outside the grid give the sum of the digits in positions A and B."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4885,7 +4437,6 @@
         "9x9": "Place digits from 1 to 9, they don't repeat in marked triangles and rows of cells in three principal directions (of any length, e.g.4+5)."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4903,7 +4454,6 @@
         "9x9": "Horizontally and vertically adjacent cells containing digits whose sum is a prime number are marked with a diamond. All possible diamonds are marked."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -4925,7 +4475,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -4941,7 +4490,6 @@
         "9x9": "Some arrows are in the grid. The encircled 1, 2, or more digits must be equal to the product of the digits that appear along the path of the arrow. Digits can repeat within an arrow shape."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -4963,7 +4511,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -4985,7 +4532,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -5002,10 +4548,9 @@
       "id": "productlastdigit",
       "name": "Product last digit",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Number in a circle is equal to the last digit of a product of all digits along the corresponding arrow."
+        "9x9": "Number in a circle is equal to the last digit of a product of all digits along the corresponding arrow."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5028,7 +4573,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -5049,7 +4593,6 @@
         "9x9": "There are some pyramids in the grid made out of grey cells. For each row above the base of the pyramid, each grey cell must equal either the sum or the difference of the two grey cells diagonally beneath it."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -5070,7 +4613,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -5090,7 +4632,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -5108,7 +4649,6 @@
         "9x9": "A circle at a corner implies that one digit is the sum of the remaining three digits at that 2x2 square. Not all possible dots are given, i.e. there may or may not be additional 2x2 squares where one digit is the sum of the remaining three digits."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5130,7 +4670,6 @@
         "parity"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -5139,6 +4678,7 @@
       }
     },
     {
+      "otherNames": "inclusion",
       "id": "quadruple",
       "name": "Quadruple",
       "rules": {
@@ -5148,7 +4688,6 @@
         "placement"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "intersection"
@@ -5169,7 +4708,6 @@
         "diagonal"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "no-input"
@@ -5185,7 +4723,6 @@
         "9x9": "A digit 'X' in a circle means that the digit in the cell is the X-th smallest number in the corresponding cage. Digits cannot repeat within a cage."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -5204,7 +4741,6 @@
         "9x9": "The digits placed in adjacent cells must satisfy the given ratios."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -5223,7 +4759,6 @@
         "9x9": "Within each 3x3 region, exactly one of two constraints (A or B) applies: (A) Digits places in adjacent cells within the 3x3 region must not be consecutive, (B) Each cell must be adjacent to at least one other cell within the 3x3 region where the digits places in both are consecutive. Neither constraint applies to adjacent cells in different 3x3 regions."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5242,7 +4777,6 @@
         "9x9": "For each line, digits on the line have an equal sum N within each box it passes through. If a line passes through the same box more than once, each individual segment of such a line within that box sums to N separately."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5261,7 +4795,6 @@
         "9x9": "Lines in a cell mark that in those two directions both digits are the same at a distance of N where N is the value of that cell. Not all possible lines are given."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5282,7 +4815,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -5304,7 +4836,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -5316,33 +4847,12 @@
     },
     {
       "otherNames": "",
-      "id": "renbankiller",
-      "name": "Renban Killer",
-      "rules": {
-        "9x9": "Each outlined cage must contain a set of distinct digits with the specified digit sum. All remaining squares form contiguous blocks of shaded cells and each block must contain a set of consecutive digits."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "cage",
-          "shading"
-        ],
-        "instructions": []
-      },
-      "tags": [
-        "math"
-      ]
-    },
-    {
-      "otherNames": "",
       "id": "repeatedneighbors",
       "name": "Repeated Neighbors",
       "rules": {
         "9x9": "All cells having the same digit(s) more than once as orthogonal neighbors are shaded. (If a cell is not shaded, it cannot have any digits repeated as orthogonal neighbors.)"
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -5359,7 +4869,6 @@
         "9x9": " Instead of clues for the digits 1 to 9, this sudoku gives clues for Roman numerals I, II, III, IV, V, VI, VII, VIII, IX. Not all clues are complete numbers; some of them may be just part of the Roman numeral."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5380,7 +4889,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -5400,7 +4908,6 @@
         "9x9": "Each cage clue indicates the value of rounding off the two-digit number within that cage to the nearest multiple of 10. Numbers ending in digits 1-4 are rounded down, while numbers ending in digits 5-9 are rounded up."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -5419,7 +4926,6 @@
         "9x9": "The sum of four cells adjacent to a grey one is the same in the whole grid."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -5441,7 +4947,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -5461,7 +4966,6 @@
         "irregular"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -5479,7 +4983,6 @@
         "9x9": "Place the digits from 1 to 9 in every row, column, bold outlined area and the nine grey cells. Clues outside the grid indicate the sum of the first X digits in the corresponding direction. X is the first digit in the corresponding direction."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -5501,7 +5004,6 @@
         "direction"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5517,24 +5019,6 @@
         "9x9": "Some arrows are marked in the grid. Each arrow points to the digit 9 in the respective row, column or diagonal. The digit in the cell with the arrow is the distance from this cell to the corresponding digit 9. For each diagonally oriented arrow, the digit in the cell with the arrow shows the distance to the closest digit 9 in that direction."
       },
       "status": "planned",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "cell"
-        ],
-        "instructions": []
-      },
-      "tags": []
-    },
-    {
-      "otherNames": "",
-      "id": "searchnine",
-      "name": "Search Nine",
-      "rules": {
-        "9x9": "Some arrows are marked in the grid. Each arrow points to the digit 9 in the respective row or column. The digit in the cell with the arrow is the distance from this cell to the corresponding digit 9."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5555,30 +5039,12 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
         ],
         "instructions": []
       }
-    },
-    {
-      "otherNames": "",
-      "id": "sequences",
-      "name": "Sequences",
-      "rules": {
-        "9x9": "The digits along each marked line have to be different and must form an arithmetic sequence in the correct order. Two straight lines may cross each other."
-      },
-      "status": "hidden",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "cell"
-        ],
-        "instructions": []
-      },
-      "tags": []
     },
     {
       "id": "serbianframe",
@@ -5591,7 +5057,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -5607,7 +5072,6 @@
         "9x9": "Place a digit from 1 to 9 in each empty cell so that each digit appears exactly once in every row and column. In bold regions of size N ≤ 9, the digits 1 to N must appear exactly once. In bold regions of size N > 9, the (N-9) largest digits will appear twice while the remaining digits will appear once. For example, a region with 11 cells will contain the digits 1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, with the two largest digits, 8 and 9, repeated."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5626,7 +5090,6 @@
         "9x9": "Blacken exactly two cells in every row, column and outlined region. Fill in the remaining blank cells with digits from a given set so that no digit is repeated in a row, column or outlined region. The sum of all digits between the two black cells is given for some rows and columns."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -5645,7 +5108,6 @@
         "9x9": "Each shape is cloned, including the digits it contains. Position of digits within the shape may change. A cloned shape may undergo rotation and/or reflection. Digits may repeat in a shape."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5664,7 +5126,6 @@
         "9x9": "Each shaded shape below the grid must replace one of the shaded regions in the grid. Shapes can be rotated, but cannot be reflected."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -5684,7 +5145,6 @@
         "hybrid"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -5699,10 +5159,9 @@
       "id": "skyscrapersonarrows",
       "name": "Skyscrapers on arrows",
       "rules": {
-        "9x9": "Follow classic sudoku rules. Digits along the arrows represent buildings of the height given by its value. Number in a circle tells you the count of visible buildings along the corresponding arrow, in the direction from the circle to the opposite end of the arrow. Higher building covers all smaller or equal building behind it."
+        "9x9": "Digits along the arrows represent buildings of the height given by its value. Number in a circle tells you the count of visible buildings along the corresponding arrow, in the direction from the circle to the opposite end of the arrow. Higher building covers all smaller or equal building behind it."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5719,7 +5178,6 @@
         "9x9": "In each row the cells between two poles must contain a set of consecutive digits."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -5740,7 +5198,6 @@
         "direction"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -5759,7 +5216,6 @@
         "9x9": "One or more loops of orthogonally connected cells will be shaded grey. Along such a loop, each pair of adjacent digits must have a difference of either 1 or 2."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -5780,7 +5236,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5799,7 +5254,6 @@
         "9x9": "Place a digit from 1-6 in each empty cell so that each digit appears exactly once in each “row“ and outlined hexagon."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5820,7 +5274,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -5839,7 +5292,6 @@
         "9x9": "In each cage, at least one cell has the indicated digit."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -5858,7 +5310,6 @@
         "9x9": "Exactly three of the nine 3x3 boxes have the property that their eight perimeter cells are in a strictly increasing order with starting cell and direction unspecified. The 3 sprial boxes, and the starting cell/direction in these boxes need to be identified as part of solving."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5878,8 +5329,7 @@
       "tags": [
         "placement"
       ],
-      "status": "hidden",
-      "scratchGeneratable": false,
+      "status": "planned",
       "inputType": {
         "categories": [
           "intersection"
@@ -5895,7 +5345,6 @@
         "9x9": "The clues outside the grid indicate the product of the digits placed in the cells containing stars in the corresponding row or column."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -5911,10 +5360,9 @@
       "id": "stepbystep",
       "name": "Step by step",
       "rules": {
-        "9x9": "Follow classic sudoku rules. There is exactly one way how to go in a cycle through all grey arrows, every time making that number of steps to the next arrow which is given by the digit in the previous cell with an arrow"
+        "9x9": "There is exactly one way how to go in a cycle through all grey arrows, every time making that number of steps to the next arrow which is given by the digit in the previous cell with an arrow"
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -5935,7 +5383,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -5954,7 +5401,6 @@
         "9x9": "For every pair of connected cages, the set of digits in the smaller cage must be a subset of the set of digits in the larger cage. Digits on the corresponding connecting line must belong to the set of digits in the larger cage but must not belong to the subset of digits in the smaller cage. Digits are not allowed to repeat in any cage."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -5972,8 +5418,7 @@
       "tags": [
         "alphabet"
       ],
-      "status": "hidden",
-      "scratchGeneratable": false,
+      "status": "planned",
       "inputType": {
         "categories": [
           "cell"
@@ -5991,8 +5436,7 @@
         "direction",
         "irregular"
       ],
-      "status": "hidden",
-      "scratchGeneratable": false,
+      "status": "infeasible",
       "inputType": {
         "categories": [
           "cell"
@@ -6008,7 +5452,6 @@
         "9x9": "If any operation (+, -, x, /) performed between two orthogonally adjacent cells leads to a result of N, then the two cells are separated by a grey circle. If there is no grey circle, the result can not be N. The number N can be any integer in the range from 1-9. N is not given. It is part of solving to determine N."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -6027,7 +5470,6 @@
         "9x9": "Place either a digit from 1 to 7 or a star in each empty cell, so that each digit appears exactly once in each row, column and outlined region. There must be exactly two stars in in each row, column and outlined region. Stars cannot be placed in adjacent cells that touch even at a corner."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -6044,7 +5486,6 @@
         "9x9": "Place a digit from 1 to 9 into each of the empty cells so that each digit appears exactly once in each row, column and irregular shaped outlined region. The sum of digits in each horizontal and vertical group of cells is given on its left and top respectively."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -6066,7 +5507,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -6082,7 +5522,6 @@
         "9x9": "The sum of the numbers placed in corresponding cells in two regions of the same shape must equal 10."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -6101,7 +5540,6 @@
         "9x9": "The sum of numbers in the shaded cells in each row is exactly 100. Two adjacent shaded cells in the same row form a two-digit number."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -6120,7 +5558,6 @@
         "9x9": "There are 22 outlined cages in the grid that have sums between 5 and 15. Every sum is used exactly twice and the combinations of digits never repeat. Some of the sums are already given. Digits may repeat in a cage."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -6138,8 +5575,7 @@
       "rules": {
         "9x9": "Each number outside the grid is the sum of the first few digits from the edge. The nearest shaded cell in the corresponding direction indicates the number of digits included in the sum."
       },
-      "status": "planned",
-      "scratchGeneratable": false,
+      "status": "available",
       "inputType": {
         "categories": [
           "outside",
@@ -6162,7 +5598,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -6184,7 +5619,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -6204,7 +5638,6 @@
         "9x9": "Follow diagonal sudoku rules. Each row and both diagonals can be interpreted as a sequence of three numbers, a 4-digit, 3-digit (in grey cells) and 2-digit one. The total of those numbers is given."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -6223,7 +5656,6 @@
         "9x9": "Clues outside the grid indicate the sum of the immediate neighbours of the digit 9 in the corresponding row or column."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -6241,13 +5673,14 @@
       "rules": {
         "9x9": "Adjacent cells containing numbers with the sum 9 are marked with a rhombus. Adjacent cells with no marking must not contain numbers with the sum 9."
       },
-      "status": "planned",
-      "scratchGeneratable": false,
+      "status": "available",
       "inputType": {
         "categories": [
-          "cell"
+          "edge"
         ],
-        "instructions": []
+        "instructions": [
+          "Click an edge to cycle through a diamond and no clue."
+        ]
       },
       "tags": [
         "math"
@@ -6261,7 +5694,6 @@
         "9x9": "The number in each cage shows either the sum or the product (or both) of all digits inside the cage. Digits may be repeated within a cage."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -6280,7 +5712,6 @@
         "9x9": "The clues outside the grid indicate all numbers placed in the corresponding direction that are the sum of the numbers placed in the two neighbouring cells in that direction, e.g. 132. If a number is not clued outside the grid, then it must not be the sum of its two neighbours in that direction."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -6299,7 +5730,6 @@
         "9x9": "The sum of the digits in each marked cage must be different."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -6318,7 +5748,6 @@
         "9x9": "Each number represents the height of a building. The clues outside the grid indicate the sum of buildings visible from the corresponding direction. A taller building will hide any shorter buildings behind it."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -6334,10 +5763,9 @@
       "id": "superconsecutive",
       "name": "Superconsecutive",
       "rules": {
-        "9x9": "Follow classic sudoku rules. There is one circled number N in every box. If any number of that particular box has a neighbour sharing an edge which is differing exactly by N there is a dot between them. (All possible dots are marked.)"
+        "9x9": "There is one circled number N in every box. If any number of that particular box has a neighbour sharing an edge which is differing exactly by N there is a dot between them. (All possible dots are marked.)"
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -6357,7 +5785,6 @@
         "region"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -6375,7 +5802,6 @@
         "9x9": "The contents of any two cells in symmetrical positions relative to the centre of the grid must sum to 10. Digits placed in cells connected by a chess Knight's move must be different."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -6394,7 +5820,6 @@
         "9x9": "Each rectangular region is of size 2xn and the number in the circle is the sum of the products of all 180-degree symmetric pairs of digits within the region. Digits may be repeated within a rectangular region."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -6415,7 +5840,6 @@
         "classiclookalike"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "no-input"
@@ -6431,7 +5855,6 @@
         "9x9": "Apply class sudoku rules. Within cages, digits must increase from top to bottom along columns and increase along rows from left to right, even if there is a gap between two cells in a cage. Digits within a cage must be distinct."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -6448,7 +5871,6 @@
         "9x9": "If a gray bar is given between two adjacent cells, then the two digits in those cells sum to ten or eleven. If a gray bar is not given, the two digits cannot sum to ten or eleven."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -6467,7 +5889,6 @@
         "9x9": "Number between a pair of adjacent cell indicates the number of the tens position of the product of the numbers placed in these cells (e.g. if 3 and 4 are placed in the cells, their product is 12 and the clue would be 1)."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -6489,7 +5910,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -6507,7 +5927,6 @@
         "9x9": "In each group of three lines: - One will follow Arrow Sudoku rules. The digit placed in a cell with a circle must be the sum of the digits placed in the cells that the adjoining arrow passes through. Digits may repeat on arrows. It is up to the solver to determine which end has the circle. - One will follow Thermo Sudoku rules. Starting at the “bulb”, digits placed along the thermometer must form a strictly increasing sequence. It is up to the solver to determine which end has the bulb. - One will follow Palindrome Sudoku rules. Digits along the line read the same in both directions. It is allowed that a line has properties of both Arrow and Thermo Sudoku (for instance: 1-2-3-6)."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -6526,7 +5945,6 @@
         "9x9": "Digits in the gray strings represent three-digit numbers. All three-digit numbers in the cage must sum to the total given in its top-left corner. Digits must not repeat in cages."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage",
@@ -6547,7 +5965,6 @@
         "9x9": "The central 3x3 region serves as a map to the 9 regions of the grid (for the example, its top-left cell corresponds to the top-left 3x3 region, and its central cell corresponds to the central 3x3 region). Wherever the central region contains an odd digit, the corresponding region must have three odd digits in at least one line (horizontal, vertical or diagonal). Wherever it contains an even digit, the corresponding region must have three even digits in a line. No region can contain both a line of odd digits and a line of even digits."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -6566,7 +5983,6 @@
         "9x9": "Each 3x3 box is also a grid for a Tic-Tac-Toe game. A game is won by placing three odd digits or three even digits in a horizontal, vertical or diagonal line. Each 3x3 box contains exactly one winning combination and this combination is marked by a grey line."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -6586,8 +6002,7 @@
       "tags": [
         "irregular"
       ],
-      "status": "hidden",
-      "scratchGeneratable": false,
+      "status": "planned",
       "inputType": {
         "categories": [
           "cell"
@@ -6603,7 +6018,6 @@
         "9x9": "Each marked line contains exactly one identical digit."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -6623,7 +6037,6 @@
         "9x9": "For every pair of vertically adjacent digits where both digits lie in the range 1-7, the upper digit must be greater than the lower digit."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -6644,7 +6057,6 @@
         "irregular"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "no-input"
@@ -6660,7 +6072,6 @@
         "9x9": "Complete the grid so that each row, column and 3x3 box contains 8 distinct digits in the range 1-9. The digits in the cells orthogonally adjacent to each black square must give an identical total sum."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -6684,7 +6095,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -6700,7 +6110,6 @@
         "9x9": "The digits in the gray cells have been erased from a filled Classic Sudoku grid. Then four digits in every row are transferred to the right one after another. Also, four digits in every column are transferred down one after another. Each digit that was not erased was moved outside the grid to either a row or column clue, but not both. Restore all digits to the grid to reform the starting Sudoku."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -6721,7 +6130,6 @@
         "placement"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -6737,7 +6145,6 @@
         "9x9": "Place a digit from 1 to 6 into each empty cell or blacken the cell so that each digit appears exactly once in every row, column, and outlined 3x3 region along with three black cells. Each black cell should be part of an orthogonally connected group of three blackened cells (a triomino). No two triominoes can share an edge."
       },
       "status": "infeasible",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -6754,7 +6161,6 @@
         "9x9": "Each row is divided into 3 parts. The 1st part is a 4-digit number, the 2nd part (shaded) is a 3-digit number and the 3rd part is a 2-digit number. The sum of these three numbers is given outside the grid in the corresponding row. Not all outside clues may be given."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -6774,7 +6180,6 @@
         "9x9": "Wherever the number in the cell equals to a total of any amount of the closest numbers in any direction, there is an arrow pointing to that direction. All possible arrows are given."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -6792,7 +6197,6 @@
         "9x9": "Adjacent cells in the indicated direction (left-to-right or top-to-bottom) containing a two-digit prime number are marked with a diamond. All possible diamonds are marked."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -6811,14 +6215,14 @@
         "9x9": "Chess Knights, placed in cells with number 9, must attack only different numbers."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
         ],
         "instructions": []
       },
-      "tags": []
+      "tags": [],
+      "example": "zVXvT9tIEP2ev+K0X7tSvbv2xrbUD+FXJVQ4cgfHgRUhkzgk4MSt4wAyon9736w3+EdCT1fppJPjzZtZ572Z8c5ktZ5kD2se4FI+d7jApXzH3L5LH8de5/MiTcLf+GBdzLIcgPPfj474NE5XCT++ut87eBg8HQ7+/uhdK3VxOv1wfzC8uJ9c/iWGzvxj7pym/vLk7GAv/fC5vD6ZDR6Tw0SfrbLxLE3iSVxeXx4/p8sj/242FfvHs31/Gi+d1Tf/PHjcG3761ItsIKNexATjTOIWbPSdVSmw78YdjHov5R/hS3kTRqNXXl7U0K/hn+EL1tPwhSnFwkgjaeLiTGmY6s10PZhebfZh9t9Mj0z3zdQCpl+bQYuqT1TBm+nTw7I2iYpqX5kBRdUwiap+WDjtOIQgslpKSLLrpIQkujpQoWSbTzXTRGGEKc+VWc9RMV4qsx6Y1TGrZ9Yv5plDFFL4EKRAJViCgEsBEWB8cykhQFh6XCq/wjhu0kOghD3BpXYrrF0u+0iQcL/PZeBUOMChdJAI8fvgdyy/A35h+QX4peWX4Hctvwt+z/J74NeWX4Pft/w48JLqbrQUtHAUDA/Fb/1SAVseCZ5mXnLzvAa2/BL8zXhkVR98ow5WV0FX2Tg11cHmpaGrra6GbrM+2upq6Gqrq6HbzEtbXQ1dOosGQ7dPunhpl+bV7ZvVNas2r7RPLdLrRYiXTmDzoiPyP/JgEqDb2SpLb1brfBqPk5vkOR4XLKyGUnOn5VuuF7dJ3nKlWfY1nS93MWy2Ws753TLLk51b5Ewmd+9R0dYOqtssn3RieorTtJ3Lt3Wct388nufjtO0q8nnLjvM8e2p5FnExazlu4wLDfTWbf20zJctOMYu4HWL8EHfUFnU5XnvsmZkbwwkn2KfZHITlkJefw9YQ5+UQw/kk3MxymtARY3jFnC3WaTEfZ2kGZevD2DE/l4CHNbw0+4T2K6dwgE8tBrwCrAp286XynIVRec4ZRbBnfk2QLbJH5FBFSPY4W9wiy4g16sQVNmy4GwX00OBX8gDVJg+CVR6EduRB6f23eQSj1+rNOf/qr/TX/jf+cRA92w7P8p80eb3Zde9odXh/0u2N3V3+dxq7sdv1b3UxBbvdyPDu6GV4u+0M13ZHw7nV1PC909fE2m1tiqrb3SS11eAk1exxzGCDfgA=&variants=classic%2Cunicorn"
     },
     {
       "otherNames": "Ordered sums Sudoku, Unique Order Sums Sudoku",
@@ -6828,7 +6232,6 @@
         "9x9": "There are numbered cages in the grid. All cages are ordered according to the sum of digits in the cage. A cage marked with number 1 has the lowest sum, a cage with number 2 has a higher sum than a cage marked with number 1 … and so on. It is possible for two or more cages marked with the same number to appear in the grid. That means they have the same sum (not necessary the same digits)."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -6844,10 +6247,9 @@
       "id": "uniquerectangles",
       "name": "Unique Rectangles",
       "rules": {
-        "9x9": "Follow classic sudoku rules. If any four cells in the grid lays in exactly two rows and two columns, there should be more than two different digits in them."
+        "9x9": "If any four cells in the grid lays in exactly two rows and two columns, there should be more than two different digits in them."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -6864,7 +6266,6 @@
         "9x9": "Shaded regions must contain a set of distinct, consecutive digits in any order. Every renban group consists of an unique set of digits."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -6883,7 +6284,6 @@
         "9x9": "The digits along a grey line goes alternately up and down while the difference between the two neighbouring digits is at least 4."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "line"
@@ -6902,7 +6302,6 @@
         "9x9": "A digit N in a grey cell represents a watchtower, that can overlook exactly N cells, including itself, with digits smaller than N in all four directions up to the first larger digit in that direction. All possible watchtowers are given."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "shading"
@@ -6919,7 +6318,6 @@
         "9x9": "The clues outside the grid indicate the sum of the digits contained in the cells in the direction of the corresponding arrow. Digits in gray cells have to be counted twice. Digits may repeat within a sum."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -6932,36 +6330,13 @@
       ]
     },
     {
-      "id": "wheel",
-      "name": "Wheel",
-      "rules": {
-        "9x9": "The digits inside each wheel must be located in those four cells in the given order. Wheels can be rotated, but not reflected."
-      },
-      "tags": [
-        "placement"
-      ],
-      "status": "planned",
-      "scratchGeneratable": false,
-      "inputType": {
-        "categories": [
-          "intersection"
-        ],
-        "instructions": [
-          "Number · Tapa",
-          "Shape · large circle",
-          "Place four clue digits and a large circle at the same four-cell intersection."
-        ]
-      }
-    },
-    {
       "otherNames": "",
       "id": "wheels",
       "name": "Wheels",
       "rules": {
         "9x9": "The digits on the circles have to be placed in the same circular order in the four cells that are touched by the circle. The circles may have to be rotated to the correct position by 90, 180 or 270 degrees."
       },
-      "status": "hidden",
-      "scratchGeneratable": false,
+      "status": "planned",
       "inputType": {
         "categories": [
           "intersection"
@@ -6978,7 +6353,6 @@
         "9x9": "One wildcard. Cells with '>' contain digits greater than wildcard. Cells with '<' contain digits smaller than wildcard."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -6999,7 +6373,6 @@
         "region"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -7018,7 +6391,6 @@
         "9x9": "Place a symbol from the given set into each of the empty cells so that each symbol appears exactly once in each row, column and 3x3 outlined region. Each given word must appear horizontally, vertically, or diagonally - forward or backward, in the grid."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -7037,7 +6409,6 @@
         "9x9": " The clues outside the grid differ by exactly 1 from the sum of the first 3 numbers placed in the corresponding direction."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -7056,7 +6427,6 @@
         "9x9": "Clues outside the grid indicate the exact average of the first X digits seen from that side, where X is the first digit from that side."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -7073,7 +6443,6 @@
         "9x9": " The number placed in a circled cell must appear exactly once on each of the two marked diagonals passing through that cell."
       },
       "status": "planned",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cell"
@@ -7093,7 +6462,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside",
@@ -7117,7 +6485,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "edge"
@@ -7140,7 +6507,6 @@
         "neighbour"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "edge"
@@ -7163,7 +6529,6 @@
         "parity"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -7179,7 +6544,6 @@
         "9x9": "Digits in the top-left corner of a marked cage must all appear in the cage. Digits may repeat in cages."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "cage"
@@ -7202,7 +6566,6 @@
         "classiclookalike"
       ],
       "status": "available",
-      "scratchGeneratable": true,
       "inputType": {
         "categories": [
           "no-input"
@@ -7210,7 +6573,8 @@
         "instructions": [
           "This is a global rule and requires no additional marks."
         ]
-      }
+      },
+      "example": "zVVtT+M4EP7eX3Hy17W0sdM6TqT9UN5WQgtH7+A4iCoU2pQW0mY3TQEFsb99n3Ec8tKyp1vppFNad17c55kZeybrzTR92HAfj6u5wwUeVzvmq/v0cexzvsiTOPiNDzf5PM0gcP770RGfRck65sdX93sHD8Onw+HfHwfXrntxOvtwfzC6uJ9e/iVGzuJj5pwmenVydrCXfPhcXJ/Mh4/xYazO1ulknsTRNCquL4+fk9WRvpvPxP7xfF/PopWz/qbP/ce90adPvdAGMu6FTDDOJL6Cjb+zMgX23Zj9ce+l+CN4KW6CcPzKi4ta1LX4Z/CC9TR4Ya7DgtBF0oTFmduH6tWqguq/qX3R8vZps6zVQXuzhtp/Uwe0uVaVhDp4Uz0XqnpTNRExj9UG8tfYmqhqZu3RdmRfGXzy13DCoTwauqBg6qyFbFdBSKKrgxWS9tPVqHQirPmFS9k0ddqvG3qzFqi8MPW/Mus5joQXrlkPzOqYdWDWL2bPIU5KaCTg+yyQQPF9LgVIIeOXS4mESZYDLomMZNxnOUAhSR4ILhWCIln1ufSQAMmex6WP5En2cesdJE74GviOxXeALyy+AL60+BL4dCNI7gOfTthwAV9ZfAV8bfHRUdIv8fELLhyKwaH4rV26kC2OBE4zL1ntV5AtvgR+Mx5Z1ge/qIPldcHr2jgV1cHmpcCrLK8Cb7M+yvIq8CrLq8DbzEtZXgVeZXkVeD3ixaFdmqPbN2vfrMocqUc92OuFiJeuVPOhhvgfWTBqME7YOk1u1ptsFk3im/g5muQsKKde09OyrTbL2zhrmZI0/ZosVrsQKlfLuLhbpVm800XGeHr3HhS5dkDdptm0E9NTlCTtXL5toqz958kimyRtU54tWnqUZelTy7KM8nnLcBvleHus54uvbaR41SlmHrVDjB6iDtuyLsdrjz0z88Xwwg3WNPz9oBjx4nM5EKu3BC9GmP4nQfWyoFdAyDAwMZ2WmyRfTNIkBbO1YeyYv0uIh7V4afwk7dt560A+tTLEK4hlwW6+lJazICzOOaMI9sy/SWTL9BE5lBGSPkmXt8gyZI06cRcOG27FgB4a/koegKryILHMg6QdeVB6/20e/vi1PDnnX72rf+298Y+D6Nl2eJr9pMlrZ9e8o9Vh/Um3N7y77O80dsPbtW91MQW73ciw7uhlWLvtDNN2R8O41dSwvdPXhNptbYqq291EtdXgRNXsccxgI/0A&variants=classic%2Canti%20king"
     },
     {
       "id": "innerframesum",
@@ -7223,7 +6587,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -7241,7 +6604,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -7260,7 +6622,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -7279,7 +6640,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -7298,7 +6658,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -7317,7 +6676,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -7336,7 +6694,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -7354,7 +6711,6 @@
         "outside"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "outside"
@@ -7372,7 +6728,6 @@
         "math"
       ],
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
