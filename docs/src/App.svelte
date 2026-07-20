@@ -45,6 +45,7 @@
   let hoveredVariant: string | null = null;
   let activeVariantId: string | null = null;
   let activeVariantHasExample = false;
+  let activeVariantReviewed = false;
   let noteMode = "1";
   let variantSearch = "";
   let variantTab: VariantTab = "no-input";
@@ -134,10 +135,11 @@
   }
 
   function chooseLayer(nextLayer: "problem" | "solution" | "modes") {
+    layer = nextLayer;
+    if (typeof (window as any).pu === "undefined") return;
     if (nextLayer !== "problem") {
       (window as any).SudokuTools?.finishIrregularEditor?.();
     }
-    layer = nextLayer;
     variantMenuOpen = false;
     legacyPress(nextLayer === "solution" ? "pu_a_label" : "pu_q_label");
     if (nextLayer === "modes") queueMicrotask(moveLegacyControls);
@@ -771,22 +773,17 @@
     const size = newGridSize;
     const variantsToGenerate = [...generatorVariants];
     const negative = { ...generatorNegative };
-    const unsupported = variantsToGenerate.filter(
-      (variant) => !scratchGeneratableVariants.has(variant),
-    );
     if (
       generatorSource !== "existing" &&
-      (unsupported.length ||
-        negative.kropki ||
+      (negative.kropki ||
         negative.doublekropki ||
         negative.xv ||
         negative.battenburg ||
         (size === 6 && variantsToGenerate.includes("anti diagonal")))
     ) {
       studioModal = null;
-      const reason = unsupported.length
-        ? `Generation is not implemented for: ${unsupported.join(", ")}.`
-        : negative.kropki || negative.doublekropki || negative.xv || negative.battenburg
+      const reason =
+        negative.kropki || negative.doublekropki || negative.xv || negative.battenburg
           ? "Symmetric generation with a negative edge/corner rule is not implemented yet."
           : "Anti-diagonal generation currently requires a 9 × 9 grid.";
       (window as any).Swal?.fire?.({
@@ -1101,6 +1098,51 @@
     }
   }
 
+  async function confirmOverwriteExample() {
+    if ((window as any).Swal) {
+      const result = await (window as any).Swal.fire({
+        icon: "warning",
+        title: "Overwrite Example?",
+        text: "This will replace the existing example puzzle for this variant.",
+        showCancelButton: true,
+        confirmButtonText: "Overwrite",
+        cancelButtonText: "Cancel",
+      });
+      if (result.isConfirmed) {
+        await saveExample();
+      }
+    } else if (confirm("Overwrite the existing example puzzle for this variant?")) {
+      await saveExample();
+    }
+  }
+
+  async function handleToggleReviewed(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const reviewed = target.checked;
+    const variantId = metadataVariantIdForActiveVariants(
+      (window as any).pu?.activeSudokuVariants,
+      variantMetadata.variants,
+    );
+    if (!variantId) return;
+
+    try {
+      const response = await fetch("/api/toggle-reviewed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ variantId, reviewed }),
+      });
+      if (response.ok) {
+        const metadataVariant = variantMetadata.variants.find((v) => v.id === variantId);
+        if (metadataVariant) {
+          metadataVariant.reviewed = reviewed;
+          activeVariantReviewed = reviewed;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   function toggleTheme() {
     darkTheme = !darkTheme;
     document.documentElement.classList.toggle("dark", darkTheme);
@@ -1171,12 +1213,15 @@
       if (activeVariantId) {
         const metadataVariant = variantMetadata.variants.find((v) => v.id === activeVariantId);
         activeVariantHasExample = Boolean(metadataVariant?.example);
+        activeVariantReviewed = Boolean(metadataVariant?.reviewed);
       } else {
         activeVariantHasExample = false;
+        activeVariantReviewed = false;
       }
     } else {
       activeVariantId = null;
       activeVariantHasExample = false;
+      activeVariantReviewed = false;
     }
     const select = document.getElementById(
       "constraints_settings_opt",
@@ -1196,15 +1241,22 @@
       }));
       selectedVariant = select.value || "classic";
     }
-    if (layer !== "modes")
+    if (isEmbedded) {
+      layer = "solution";
+      if (typeof (window as any).pu !== "undefined" && (window as any).pu?.mode?.qa !== "pu_a") {
+        chooseLayer("solution");
+      }
+    } else if (layer !== "modes") {
       layer = document.getElementById("pu_a")?.checked ? "solution" : "problem";
+    }
     noteMode = String((window as any).pu?.mode?.pu_a?.sudoku?.[0] || "1");
     if (layer === "solution") variantMenuOpen = false;
     variantHost
       ?.querySelectorAll<HTMLButtonElement>("button")
       .forEach((button) => {
-        if (button.disabled !== (layer === "solution"))
-          button.disabled = layer === "solution";
+        const shouldDisable = !isEmbedded && layer === "solution";
+        if (button.disabled !== shouldDisable)
+          button.disabled = shouldDisable;
       });
     autoEnabled =
       document
@@ -1310,12 +1362,18 @@
   }
 
   onMount(() => {
-    isEmbedded = new URLSearchParams(window.location.search).has("embed");
+    isEmbedded =
+      new URLSearchParams(window.location.search).has("embed") ||
+      new URLSearchParams(window.location.hash.replace(/^#/, "?")).has("embed") ||
+      window.location.search.includes("embed") ||
+      window.location.hash.includes("embed");
     const savedPanelPosition = window.localStorage.getItem(
       "penpa-mobile-input-panel-position",
     );
     if (savedPanelPosition === "above" || savedPanelPosition === "below") {
       mobilePanelPosition = savedPanelPosition;
+    } else if (isEmbedded) {
+      mobilePanelPosition = "below";
     }
     let observer: MutationObserver | undefined;
     let resizeObserver: ResizeObserver | undefined;
@@ -1334,6 +1392,7 @@
     const start = () => {
       installVariationCatalog();
       if (!moveLegacyNodes()) return false;
+      if (isEmbedded) chooseLayer("solution");
       const settings = (window as any).UserSettings;
       if (settings) {
         if (settings.color_theme === 2) {
@@ -1419,34 +1478,84 @@
 
 <div class="studio-shell" class:ready={initialized} class:dark={darkTheme} class:embedded={isEmbedded}>
   <div class="mobile-header">
-    <div class="mobile-header-row">
-      <button
-        type="button"
-        on:click={() => legacyClick("sudoku_solve_once")}
-      >
-        <span><i class="fa fa-magic" aria-hidden="true"></i></span> Solve
-      </button>
-      <button
-        type="button"
-        on:click={() => legacyClick("sudoku_solve_clear")}
-      >
-        <span><i class="fa fa-eraser" aria-hidden="true"></i></span> Undo Sol
-      </button>
-      <button
-        type="button"
-        on:click={() => legacyClick("sudoku_undo")}
-      >
-        <span>↶</span> Undo
-      </button>
-      <button
-        type="button"
-        on:click={clearMarks}
-      >
-        <span>↺</span> Clear mark
-      </button>
-    </div>
+    {#if isEmbedded}
+      <div class="mobile-header-row">
+        <button
+          type="button"
+          on:click={() => legacyClick("sudoku_solve_once")}
+        >
+          <span><i class="fa fa-magic" aria-hidden="true"></i></span> Solve
+        </button>
+        <button
+          type="button"
+          on:click={() => legacyClick("sudoku_solve_clear")}
+        >
+          <span><i class="fa fa-eraser" aria-hidden="true"></i></span> Undo Sol
+        </button>
+        <button
+          type="button"
+          on:click={() => legacyClick("sudoku_undo")}
+        >
+          <span>↶</span> Undo
+        </button>
+        <button
+          type="button"
+          on:click={clearMarks}
+        >
+          <span>↺</span> Clear mark
+        </button>
+      </div>
+    {:else}
+      <div class="mobile-header-row">
+        <button
+          type="button"
+          class:active={mobileActiveTab === "controls"}
+          on:click={() => (mobileActiveTab = mobileActiveTab === "controls" ? "none" : "controls")}
+        >
+          <span>⚙</span> Controls
+        </button>
+        <button
+          type="button"
+          class:active={mobileActiveTab === "actions"}
+          on:click={() => (mobileActiveTab = mobileActiveTab === "actions" ? "none" : "actions")}
+        >
+          <span>☰</span> Actions
+        </button>
+      </div>
+      <div class="mobile-header-row solver-row">
+        <button
+          type="button"
+          class="solver-btn"
+          class:active={autoEnabled}
+          on:click={() => legacyClick("sudoku_auto_solver")}
+        >
+          Auto Solve
+        </button>
+        <button
+          type="button"
+          class="solver-btn"
+          on:click={() => legacyClick("sudoku_solve_once")}
+        >
+          <span><i class="fa fa-magic" aria-hidden="true"></i></span> Solve
+        </button>
+        <button
+          type="button"
+          class="solver-btn"
+          on:click={() => legacyClick("sudoku_undo")}
+        >
+          <span>↶</span> Undo
+        </button>
+        <div class="solver-status">
+          <span class="status-indicator" class:running={solverRunning}></span>
+          <span class="log-text">{lastLogLine}</span>
+        </div>
+      </div>
+    {/if}
   </div>
-  <main class="studio-grid">
+  <main
+    class="studio-grid"
+    class:embedded-right={isEmbedded && mobilePanelPosition === "below"}
+  >
     <aside class="column controls" aria-label="Puzzle controls">
       <div
         class="controls-top-drawer"
@@ -1557,6 +1666,13 @@
                     >
                     <span>{variant.label}</span>
                     <span class="capability-badges">
+                      {#if variationByValue.get(variant.value)?.example}
+                        <span
+                          class="example-badge"
+                          title="Example puzzle available"
+                          aria-label="Example puzzle available">📖</span
+                        >
+                      {/if}
                       {#if variationByValue.get(variant.value)?.status === "available"}
                         <span
                           class="csp-badge"
@@ -1654,7 +1770,7 @@
 
       <section
         class="input-modes-section"
-        class:disabled-section={layer === "solution"}
+        class:disabled-section={!isEmbedded && layer === "solution"}
         class:hidden-section={layer === "modes"}
         class:panel-above={mobilePanelPosition === "above"}
         class:panel-below={mobilePanelPosition === "below"}
@@ -1776,62 +1892,61 @@
           </div>
         </div>
       {/if}
-    </aside>
-
-    {#if toolPanelOptions.length}
-      <section
-        class="input-panel-section mobile-input-panel"
-        class:panel-above={mobilePanelPosition === "above"}
-        class:panel-below={mobilePanelPosition === "below"}
-        aria-label={`${toolPanelMode} mobile input panel section`}
-      >
-        <div class="mobile-input-panel-header">
-          <span>Input · Penpa {toolPanelMode}</span>
-          <button type="button" on:click={toggleMobilePanelPosition}>
-            Move {mobilePanelPosition === "above" ? "below" : "above"}
-          </button>
-        </div>
-        {#if layer === "solution" && toolPanelMode === "Sudoku"}
-          <div
-            class="note-modes mobile-note-modes"
-            aria-label="Note input style"
-          >
-            <button
-              type="button"
-              class:active={noteMode === "1"}
-              on:click={() => chooseNoteMode("1")}>Normal</button
-            >
-            <button
-              type="button"
-              class:active={noteMode === "3"}
-              on:click={() => chooseNoteMode("3")}>Center</button
-            >
-            <button
-              type="button"
-              class:active={noteMode === "2"}
-              on:click={() => chooseNoteMode("2")}>Corner</button
-            >
-          </div>
-        {/if}
-        <div
-          class="tool-input-panel"
-          aria-label={`${toolPanelMode} mobile input panel`}
+      {#if toolPanelOptions.length}
+        <section
+          class="input-panel-section mobile-input-panel"
+          class:panel-above={mobilePanelPosition === "above"}
+          class:panel-below={mobilePanelPosition === "below"}
+          aria-label={`${toolPanelMode} mobile input panel section`}
         >
-          {#each toolPanelOptions as option, index}
-            <button
-              type="button"
-              class:selected={toolPanelSelected.has(option.value)}
-              class:panel-action={Boolean(option.action)}
-              on:pointerdown={(event) => useToolPanelOption(event, option)}
-            >
-              {option.label}{#if !option.action && index < 9}<kbd
-                  >{index + 1}</kbd
-                >{/if}
+          <div class="mobile-input-panel-header">
+            <span>Input · Penpa {toolPanelMode}</span>
+            <button type="button" on:click={toggleMobilePanelPosition}>
+              Move {mobilePanelPosition === "above" ? (isEmbedded ? "right" : "below") : "above"}
             </button>
-          {/each}
-        </div>
-      </section>
-    {/if}
+          </div>
+          {#if layer === "solution" && toolPanelMode === "Sudoku"}
+            <div
+              class="note-modes mobile-note-modes"
+              aria-label="Note input style"
+            >
+              <button
+                type="button"
+                class:active={noteMode === "1"}
+                on:click={() => chooseNoteMode("1")}>Normal</button
+              >
+              <button
+                type="button"
+                class:active={noteMode === "3"}
+                on:click={() => chooseNoteMode("3")}>Center</button
+              >
+              <button
+                type="button"
+                class:active={noteMode === "2"}
+                on:click={() => chooseNoteMode("2")}>Corner</button
+              >
+            </div>
+          {/if}
+          <div
+            class="tool-input-panel"
+            aria-label={`${toolPanelMode} mobile input panel`}
+          >
+            {#each toolPanelOptions as option, index}
+              <button
+                type="button"
+                class:selected={toolPanelSelected.has(option.value)}
+                class:panel-action={Boolean(option.action)}
+                on:pointerdown={(event) => useToolPanelOption(event, option)}
+              >
+                {option.label}{#if !option.action && index < 9}<kbd
+                    >{index + 1}</kbd
+                  >{/if}
+              </button>
+            {/each}
+          </div>
+        </section>
+      {/if}
+    </aside>
 
     <section class="column board-column" aria-label="Puzzle board">
       <div class="zoom-controls" aria-label="Board zoom">
@@ -1982,7 +2097,10 @@
           <div class="action-group bottom-actions">
             {#if activeVariantHasExample}
               <button on:click={loadExample}><span>📖</span>Load Example</button>
-            {:else}
+              {#if import.meta.env.DEV}
+                <button on:click={confirmOverwriteExample}><span>💾</span>Overwrite Example</button>
+              {/if}
+            {:else if import.meta.env.DEV}
               <button on:click={saveExample}><span>💾</span>Save Example</button>
             {/if}
             <button
@@ -3049,9 +3167,15 @@ href="https://github.com/semiexp/cspuz_core"
   :global(.svelte-home .log-host #sudoku_auto_solver),
   :global(.svelte-home .log-host #sudoku_solve_once),
   :global(.svelte-home .log-host #sudoku_solve_clear) {
+    width: 74px !important;
+    min-width: 74px !important;
+    max-width: 74px !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    justify-content: center !important;
     height: 26px;
     margin: 0;
-    padding: 0 8px;
+    padding: 0 4px;
     border: 1px solid #bfcad4;
     border-radius: 5px;
     color: var(--primary-color);
@@ -3856,12 +3980,79 @@ href="https://github.com/semiexp/cspuz_core"
     border-color: #536473;
     background: #263340;
   }
+  .studio-shell.embedded {
+    height: 100% !important;
+    width: 100% !important;
+  }
+  .studio-shell.embedded .mobile-header {
+    display: flex;
+  }
+  .studio-shell.embedded .column.actions,
+  .studio-shell.embedded .controls-top-drawer,
+  .studio-shell.embedded .legacy-modes-section {
+    display: none !important;
+  }
+  .studio-grid.embedded-right {
+    flex-direction: row !important;
+    align-items: stretch !important;
+  }
+  .studio-grid.embedded-right .board-column {
+    flex: 1 1 auto !important;
+    order: 1 !important;
+    height: 100% !important;
+  }
+  .studio-grid.embedded-right .column.controls {
+    order: 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 220px !important;
+    min-width: 220px !important;
+    max-width: 220px !important;
+    height: 100% !important;
+    border-left: 1px solid #d4dbe3 !important;
+    background: #fff;
+    overflow-y: auto;
+  }
+  .studio-shell.dark .studio-grid.embedded-right .column.controls {
+    border-left-color: #40505f !important;
+    background: #263340;
+  }
+  .studio-grid.embedded-right .input-modes-section {
+    order: 1 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 8px 10px !important;
+    border-radius: 0 !important;
+    border: none !important;
+    border-bottom: 1px solid #d4dbe3 !important;
+  }
+  .studio-shell.dark .studio-grid.embedded-right .input-modes-section {
+    border-bottom-color: #40505f !important;
+  }
+  .studio-grid.embedded-right .mobile-input-panel {
+    order: 2 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 8px 10px !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .studio-grid.embedded-right .mobile-input-panel .tool-input-panel {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+
   .mobile-header {
     display: none;
   }
 
   @media (max-width: 768px) {
-.studio-shell.embedded .mobile-header {
+    .studio-shell .mobile-header {
       display: flex;
       flex-direction: column;
       background: #202b36;
@@ -3874,7 +4065,7 @@ href="https://github.com/semiexp/cspuz_core"
       flex-shrink: 0;
       z-index: 101;
     }
-.studio-shell.embedded .mobile-header button {
+    .studio-shell .mobile-header button {
       padding: 6px 12px;
       font-size: 12px;
       font-weight: 700;
@@ -3887,7 +4078,7 @@ href="https://github.com/semiexp/cspuz_core"
         background 0.2s,
         color 0.2s;
     }
-.studio-shell.embedded .mobile-header button.active {
+    .studio-shell .mobile-header button.active {
       background: var(--primary-color);
       color: #fff;
       border-color: var(--primary-color);
@@ -3933,10 +4124,10 @@ href="https://github.com/semiexp/cspuz_core"
       flex: 0 1 auto;
     }
 
-.studio-shell.embedded .controls-top-drawer {
+    .studio-shell .controls-top-drawer {
       display: none;
     }
-.studio-shell.embedded .controls-top-drawer.open {
+    .studio-shell .controls-top-drawer.open {
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -3952,31 +4143,31 @@ href="https://github.com/semiexp/cspuz_core"
       max-height: 65vh;
       overflow-y: auto;
     }
-.studio-shell.embedded.dark .controls-top-drawer.open {
+    .studio-shell.dark .controls-top-drawer.open {
       background: #263340;
       border-color: #40505f;
     }
 
-.studio-shell.embedded .column.controls {
+    .studio-shell .column.controls {
       display: contents;
     }
 
-.studio-shell.embedded .legacy-modes-section {
+    .studio-shell .legacy-modes-section {
       order: 4;
       background: #ffffff;
       border-top: 1px solid #d7dee5;
       padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 12px)) 8px;
       box-sizing: border-box;
     }
-.studio-shell.embedded.dark .legacy-modes-section {
+    .studio-shell.dark .legacy-modes-section {
       background: #263340;
       border-top-color: #40505f;
     }
 
-.studio-shell.embedded .column.actions {
+    .studio-shell .column.actions {
       display: none;
     }
-.studio-shell.embedded .column.actions.open {
+    .studio-shell .column.actions.open {
       display: block;
       position: absolute;
       top: 0;
@@ -3991,13 +4182,13 @@ href="https://github.com/semiexp/cspuz_core"
       overflow-y: auto;
       height: auto;
     }
-.studio-shell.embedded.dark .column.actions.open {
+    .studio-shell.dark .column.actions.open {
       background: #263340;
       border-color: #40505f;
     }
 
     .input-modes-section.panel-above,
-.studio-shell.embedded .input-modes-section.panel-below {
+    .studio-shell .input-modes-section.panel-below {
       order: 1;
       margin: 8px 8px 0 8px !important;
       padding: 6px 12px !important;
@@ -4010,23 +4201,23 @@ href="https://github.com/semiexp/cspuz_core"
       width: calc(100% - 16px);
       z-index: 5;
     }
-.studio-shell.embedded .input-modes-section.panel-below {
+    .studio-shell .input-modes-section.panel-below {
       order: 3;
     }
     .input-modes-section.panel-above h2,
-.studio-shell.embedded .input-modes-section.panel-below h2 {
+    .studio-shell .input-modes-section.panel-below h2 {
       display: none;
     }
     .tab-key-hint,
-.studio-shell.embedded .mobile-input-panel .tool-input-panel kbd {
+    .studio-shell .mobile-input-panel .tool-input-panel kbd {
       display: none;
     }
-.studio-shell.embedded .input-mode-tools {
+    .studio-shell .input-mode-tools {
       gap: 6px;
       align-items: stretch;
       position: relative;
     }
-.studio-shell.embedded .mobile-add-variant {
+    .studio-shell .mobile-add-variant {
       display: inline-flex;
       flex: 0 0 auto;
       align-items: center;
@@ -4041,12 +4232,12 @@ href="https://github.com/semiexp/cspuz_core"
       white-space: nowrap;
     }
     .studio-shell.dark .input-modes-section.panel-above,
-.studio-shell.embedded.dark .input-modes-section.panel-below {
+    .studio-shell.dark .input-modes-section.panel-below {
       background: #32414f;
       border-color: #40505f;
     }
 
-:global(.svelte-home .studio-shell.embedded .legacy-variant-host .sudoku-variant-tools) {
+    :global(.svelte-home .studio-shell .legacy-variant-host .sudoku-variant-tools) {
       display: flex !important;
       flex-direction: row !important;
       flex-wrap: nowrap !important;
@@ -4054,10 +4245,10 @@ href="https://github.com/semiexp/cspuz_core"
       padding: 2px 0 !important;
       width: 100% !important;
     }
-:global(.svelte-home .studio-shell.embedded .legacy-variant-host button) {
+    :global(.svelte-home .studio-shell .legacy-variant-host button) {
       flex-shrink: 0 !important;
     }
-.studio-shell.embedded .input-mode-scroll-hint {
+    .studio-shell .input-mode-scroll-hint {
       display: flex;
       position: absolute;
       z-index: 2;
@@ -4074,25 +4265,25 @@ href="https://github.com/semiexp/cspuz_core"
       font-size: 22px;
       font-weight: 800;
     }
-.studio-shell.embedded.dark .input-mode-scroll-hint {
+    .studio-shell.dark .input-mode-scroll-hint {
       background: linear-gradient(90deg, transparent, #32414f 55%);
     }
-.studio-shell.embedded .input-panel-section {
+    .studio-shell .input-panel-section {
       padding: 6px !important;
       box-shadow: none !important;
       border: 1px solid #e2e8f0 !important;
       border-radius: 6px !important;
     }
-.studio-shell.embedded.dark .input-panel-section {
+    .studio-shell.dark .input-panel-section {
       border-color: #4b5a68 !important;
     }
-.studio-shell.embedded .input-panel-section .help-label {
+    .studio-shell .input-panel-section .help-label {
       display: none;
     }
-.studio-shell.embedded .desktop-input-panel {
+    .studio-shell .desktop-input-panel {
       display: none;
     }
-.studio-shell.embedded .mobile-input-panel {
+    .studio-shell .mobile-input-panel {
       display: block;
       flex: 0 0 auto;
       width: calc(100% - 16px);
@@ -4102,7 +4293,7 @@ href="https://github.com/semiexp/cspuz_core"
       box-sizing: border-box;
       background: #fff;
     }
-.studio-shell.embedded .mobile-input-panel.panel-above {
+    .studio-shell .mobile-input-panel.panel-above {
       order: 1;
       margin-top: 0 !important;
       margin-bottom: 8px !important;
@@ -4110,7 +4301,7 @@ href="https://github.com/semiexp/cspuz_core"
       border-top: none;
       box-shadow: 0 4px 8px rgba(23, 34, 49, 0.06);
     }
-.studio-shell.embedded .mobile-input-panel.panel-below {
+    .studio-shell .mobile-input-panel.panel-below {
       order: 3;
       margin-top: 0 !important;
       margin-bottom: max(8px, env(safe-area-inset-bottom)) !important;
@@ -4118,11 +4309,11 @@ href="https://github.com/semiexp/cspuz_core"
       border-top: none;
       box-shadow: 0 4px 8px rgba(23, 34, 49, 0.06);
     }
-.studio-shell.embedded.dark .mobile-input-panel {
+    .studio-shell.dark .mobile-input-panel {
       background: #32414f;
     }
 
-.studio-shell.embedded .variant-picker .variant-menu {
+    .studio-shell .variant-picker .variant-menu {
       position: absolute;
       top: calc(100% + 6px);
       bottom: auto;
@@ -4136,7 +4327,7 @@ href="https://github.com/semiexp/cspuz_core"
       background: #ffffff;
       border: 1px solid #bdc8d3;
     }
-.studio-shell.embedded .input-mode-variant-menu {
+    .studio-shell .input-mode-variant-menu {
       position: fixed;
       inset: auto 8px max(8px, env(safe-area-inset-bottom)) 8px;
       z-index: 300;
@@ -4144,11 +4335,11 @@ href="https://github.com/semiexp/cspuz_core"
       overflow-y: auto;
       border-radius: 10px;
     }
-.studio-shell.embedded.dark .variant-picker .variant-menu {
+    .studio-shell.dark .variant-picker .variant-menu {
       background: #263340;
       border-color: #40505f;
     }
-.studio-shell.embedded .mobile-input-panel-header {
+    .studio-shell .mobile-input-panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -4160,10 +4351,10 @@ href="https://github.com/semiexp/cspuz_core"
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
-.studio-shell.embedded.dark .mobile-input-panel-header {
+    .studio-shell.dark .mobile-input-panel-header {
       color: #b7c5cf;
     }
-.studio-shell.embedded .mobile-input-panel-header button {
+    .studio-shell .mobile-input-panel-header button {
       flex: 0 0 auto;
       min-height: 28px;
       padding: 4px 9px;
@@ -4176,28 +4367,28 @@ href="https://github.com/semiexp/cspuz_core"
       letter-spacing: normal;
       text-transform: none;
     }
-.studio-shell.embedded .mobile-note-modes {
+    .studio-shell .mobile-note-modes {
       margin: 0 0 6px;
     }
-.studio-shell.embedded .mobile-note-modes button {
+    .studio-shell .mobile-note-modes button {
       display: block;
       min-height: 32px;
       padding: 5px 7px;
     }
-.studio-shell.embedded .controls-top-drawer .note-modes span {
+    .studio-shell .controls-top-drawer .note-modes span {
       display: none;
     }
-.studio-shell.embedded.dark .mobile-input-panel-header button {
+    .studio-shell.dark .mobile-input-panel-header button {
       color: #dce5ec;
       border-color: #536473;
       background: #263340;
     }
-.studio-shell.embedded .mobile-header-row {
+    .studio-shell .mobile-header-row {
       display: flex;
       width: 100%;
       gap: 8px;
     }
-.studio-shell.embedded .mobile-header-row button {
+    .studio-shell .mobile-header-row button {
       flex: 1;
       padding: 6px 12px;
       font-size: 12px;
@@ -4211,12 +4402,30 @@ href="https://github.com/semiexp/cspuz_core"
         background 0.2s,
         color 0.2s;
     }
-.studio-shell.embedded .mobile-header-row button.active {
+    .studio-shell .mobile-header-row button.active {
       background: var(--primary-color);
       color: #fff;
       border-color: var(--primary-color);
     }
-.studio-shell.embedded .mobile-header-row.solver-row {
+    .studio-shell .reviewed-checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #9ab0c2;
+      cursor: pointer;
+      user-select: none;
+      padding: 4px 6px;
+      background: #1a242f;
+      border: 1px solid #344353;
+      border-radius: 6px;
+    }
+    .studio-shell .reviewed-checkbox input[type="checkbox"] {
+      cursor: pointer;
+      accent-color: var(--primary-color);
+      margin: 0;
+    }
+    .studio-shell .mobile-header-row.solver-row {
       display: flex;
       align-items: center;
       gap: 6px;
@@ -4225,29 +4434,36 @@ href="https://github.com/semiexp/cspuz_core"
       background: #1a242f;
       border-radius: 6px;
     }
-.studio-shell.embedded.dark .mobile-header-row.solver-row {
+    .studio-shell.dark .mobile-header-row.solver-row {
       background: #1b2630;
     }
-.studio-shell.embedded .solver-btn {
-      flex: 0 0 auto !important;
-      padding: 4px 8px !important;
-      font-size: 10px !important;
+    .studio-shell .solver-btn {
+      flex: 0 0 74px !important;
+      width: 74px !important;
+      min-width: 74px !important;
+      max-width: 74px !important;
+      justify-content: center !important;
+      text-align: center !important;
+      box-sizing: border-box !important;
+      padding: 4px 4px !important;
+      font-size: 11px !important;
       min-height: 28px !important;
+      white-space: nowrap !important;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       border: 1px solid #344353;
       border-radius: 6px;
       color: #bdc8d3;
       background: #2a3744;
       cursor: pointer;
     }
-.studio-shell.embedded .solver-btn.active {
+    .studio-shell .solver-btn.active {
       background: var(--primary-color) !important;
       color: #fff !important;
       border-color: var(--primary-color) !important;
     }
-.studio-shell.embedded .solver-status {
+    .studio-shell .solver-status {
       flex: 1;
       display: inline-flex;
       align-items: center;
@@ -4255,7 +4471,7 @@ href="https://github.com/semiexp/cspuz_core"
       padding: 0 6px;
       min-width: 0;
     }
-.studio-shell.embedded .solver-status .status-indicator {
+    .studio-shell .solver-status .status-indicator {
       width: 6px;
       height: 6px;
       border-radius: 50%;
@@ -4263,11 +4479,11 @@ href="https://github.com/semiexp/cspuz_core"
       box-shadow: 0 0 0 2px rgba(127, 140, 152, 0.13);
       flex-shrink: 0;
     }
-.studio-shell.embedded .solver-status .status-indicator.running {
+    .studio-shell .solver-status .status-indicator.running {
       background: #48c78e;
       box-shadow: 0 0 0 2px rgba(72, 199, 142, 0.16);
     }
-.studio-shell.embedded .solver-status .log-text {
+    .studio-shell .solver-status .log-text {
       flex: 1;
       min-width: 0;
       color: #bdc8d3;
@@ -4276,20 +4492,7 @@ href="https://github.com/semiexp/cspuz_core"
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-.studio-shell.embedded .solver-status .expand-btn {
-      flex: 0 0 auto;
-      min-width: 42px;
-      min-height: 26px;
-      padding: 3px 7px;
-      font-size: 10px;
-    }
-.studio-shell.embedded .mobile-header > .full-log-box {
-      box-sizing: border-box;
-      width: 100%;
-      max-height: 24vh;
-      margin: 0;
-    }
-.studio-shell.embedded .log-host {
+    .studio-shell .log-host {
       display: none !important;
     }
   }
@@ -4325,41 +4528,9 @@ href="https://github.com/semiexp/cspuz_core"
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .expand-btn {
-    min-height: 24px;
-    padding: 2px 8px;
-    font-size: 10px;
-    font-weight: 700;
-    border: 1px solid #bfcad4;
-    border-radius: 4px;
-    background: #f7f9fb;
-    color: var(--primary-color);
-  }
-  .full-log-box {
-    margin: 6px 0 0 0;
-    padding: 8px;
-    border: 1px solid #e0e5ea;
-    border-radius: 6px;
-    background: #fff;
-    font-size: 10px;
-    max-height: 150px;
-    overflow-y: auto;
-    white-space: pre-wrap;
-    color: #435160;
-  }
 
   .studio-shell.dark .log-text {
     color: #d5dfe7;
-  }
-  .studio-shell.dark .full-log-box {
-    background: #1f2b35;
-    border-color: #465563;
-    color: #d5dfe7;
-  }
-  .studio-shell.dark .expand-btn {
-    background: #263340;
-    border-color: #536473;
-    color: #42a5e8;
   }
 
   /* Modal light theme overrides */

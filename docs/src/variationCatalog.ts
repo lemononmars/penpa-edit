@@ -3,7 +3,6 @@ type RawVariation = {
     name: string;
     rules: Record<string, string>;
     status: "available" | "planned" | "infeasible" | "hidden";
-    scratchGeneratable: boolean;
     inputType: {
         categories: Array<"no-input" | "line" | "cage" | "shading" | "outside" | "cell" | "edge" | "intersection">;
         instructions: string[];
@@ -12,13 +11,14 @@ type RawVariation = {
     isDuplicate?: boolean;
     duplicateOf?: string;
     example?: string;
+    reviewed?: boolean;
     otherNames?: string;
     wikiOnly?: boolean;
 };
 
 type VariantMetadata = {
-    scrapedAliases: Record<string, string>;
-    markOverrides: Record<string, { position: string; mark: string }>;
+    scrapedAliases?: Record<string, string>;
+    markOverrides?: Record<string, { position: string; mark: string }>;
     variants: RawVariation[];
 };
 
@@ -29,7 +29,7 @@ export type Variation = RawVariation & {
 
 import metadataJson from "../../variant_metadata.json";
 export const variantMetadata = metadataJson as VariantMetadata;
-const scrapedAliases = variantMetadata.scrapedAliases;
+const scrapedAliases = variantMetadata.scrapedAliases || {};
 
 function stripRulePreamble(rule: string) {
     const detail = rule.replace(/^Place a digit\b[^.]*\.\s*/i, "").trim();
@@ -62,9 +62,6 @@ export const variations: Variation[] = allVariations
         all.findIndex((candidate) => candidate.value === item.value) === index)
     .sort((first, second) => first.name.localeCompare(second.name));
 
-export const scratchGeneratableVariants = new Set(variations
-    .filter((item) => item.scratchGeneratable)
-    .map((item) => item.value));
 const hiddenVariationValues = new Set(allVariations
     .filter((item) => item.status === "hidden")
     .map((item) => item.value));

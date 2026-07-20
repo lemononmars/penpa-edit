@@ -16,10 +16,10 @@ const Color = {
     GREEN: "#208020",
     GREEN_LIGHT: "#4c9900",
     GREEN_LIGHT_VERY: "#b3ffb3",
-    GREY: "#999999",
-    GREY_DARK: "#777777",
-    GREY_DARK_LIGHT: "#b3b3b3",
-    GREY_DARK_VERY: "#444444",
+    GREY: "#cccccc",
+    GREY_DARK: "#cccccc",
+    GREY_DARK_LIGHT: "#cccccc",
+    GREY_DARK_VERY: "#cccccc",
     GREY_LIGHT: "#cccccc",
     GREY_LIGHT_VERY: "#f0f0f0",
     ORANGE_LIGHT: "#ffcc80",
@@ -46,7 +46,7 @@ function set_surface_style(ctx, type) {
             ctx.fillStyle = Color.TRANSPARENTWHITE;
             break;
         case 1:
-            ctx.fillStyle = Color.GREY_DARK_VERY;
+            ctx.fillStyle = Color.GREY_LIGHT;
             break;
         case 2:
             ctx.fillStyle = Color.GREEN_LIGHT_VERY;
@@ -67,7 +67,7 @@ function set_surface_style(ctx, type) {
             ctx.fillStyle = Color.YELLOW;
             break;
         case 8:
-            ctx.fillStyle = Color.GREY;
+            ctx.fillStyle = Color.GREY_LIGHT;
             break;
         case 9:
             ctx.fillStyle = Color.PINK_LIGHT;

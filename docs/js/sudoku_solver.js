@@ -4074,7 +4074,7 @@ var SudokuTools = (function() {
     }
 
     function activeVariants() {
-        if (!pu) {
+        if (typeof pu === "undefined" || !pu) {
             return ["classic"];
         }
         if (!Array.isArray(pu.activeSudokuVariants)) {
@@ -4258,7 +4258,7 @@ var SudokuTools = (function() {
 
     function updateVariantActive() {
         var toolbar = byId("sudoku-variant-tools");
-        if (!toolbar || !pu || !pu.mode || !pu.mode[pu.mode.qa]) {
+        if (!toolbar || typeof pu === "undefined" || !pu || !pu.mode || !pu.mode[pu.mode.qa]) {
             return;
         }
         Array.prototype.forEach.call(toolbar.querySelectorAll(".sudoku-variant-mode"), function(button) {
@@ -4647,7 +4647,7 @@ var SudokuTools = (function() {
     }
 
     function finishIrregularEditor() {
-        if (!pu || !pu.irregular_mode) return;
+        if (typeof pu === "undefined" || !pu || !pu.irregular_mode) return;
         pu.irregular_mode = false;
         removeIrregularEditor();
         redrawIrregularBoundaries();

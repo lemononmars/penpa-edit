@@ -109,8 +109,11 @@
   let saveMessage = "";
   let saveSuccess = false;
 
-  function exampleUrl(example: string, variant: string) {
+  function exampleUrl(example: string, variant: string, embed = false) {
     const base = new URL(".", document.baseURI);
+    if (embed) {
+      base.searchParams.set("embed", "true");
+    }
     const stored = /[&]variants=/.test(example)
       ? example
       : `${example}&variants=${encodeURIComponent(`classic,${variant}`)}`;
@@ -286,7 +289,7 @@
                 <a href={exampleUrl(detailVariation.example, detailVariation.value)} target="_blank" rel="noreferrer">Open in full editor ↗</a>
               </div>
               <iframe
-                src={exampleUrl(detailVariation.example, detailVariation.value)}
+                src={exampleUrl(detailVariation.example, detailVariation.value, true)}
                 title="Playable {detailVariation.name} Example"
                 style="width: 100%; height: 500px; border: none;">
               </iframe>
@@ -386,6 +389,7 @@
             <th>Rule</th>
             <th>Status</th>
             <th>Has example</th>
+            <th>Reviewed</th>
             <th>Tags</th>
           </tr>
         </thead>
@@ -421,6 +425,7 @@
                 {/if}
               </td>
               <td style="text-align: center;">{variation.example ? "✅" : "❌"}</td>
+              <td style="text-align: center;">{variation.reviewed ? "✅" : "❌"}</td>
               <td class="tags">
                 {#each variation.tags as variantTag}
                   <button type="button" class="tag" on:click={() => (tag = variantTag)}>{variantTag}</button>
