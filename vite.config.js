@@ -177,6 +177,7 @@ function variantDetailPages() {
   const ids = Array.from(new Set(metadata.variants
     .filter((variant) => variant.status !== "hidden")
     .map((variant) => variant.id.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase())
+  ));
   return {
     name: "variant-detail-pages",
     writeBundle(options) {
