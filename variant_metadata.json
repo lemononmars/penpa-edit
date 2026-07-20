@@ -6740,6 +6740,28 @@
       ]
     },
     {
+      "id": "termination",
+      "name": "Termination",
+      "rules": {
+        "9x9": "When two adjacent cells contain numbers where the sum or the product of two numbers ends in digit 0, a marked 0 is placed between the two cells. All marked 0 that satisfy the above condition have been given"
+      },
+      "tags": [
+        "math",
+        "neighbour",
+        "converse"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "edge"
+        ],
+        "instructions": [
+          "Number · edge",
+          "Enter 0 on the edge."
+        ]
+      }
+    },
+    {
       "id": "citywalk",
       "name": "Citywalk",
       "rules": {

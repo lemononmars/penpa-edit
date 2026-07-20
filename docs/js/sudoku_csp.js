@@ -380,6 +380,8 @@ var SudokuCSP = (function() {
             return item.relation.replace(/([a-z])([0-9])/g, "$1 $2").replace(/([a-z])([A-Z])/g, "$1 $2");
         }
         var labels = {
+            termination: "0",
+            notTermination: "none",
             antiKing: "Anti King", antiKnight: "Anti Knight", chessKings: "Chess Kings", nonConsecutive: "Non-Consecutive",
             polePosition: "Pole Position",
             edgeRelations: "edge clue", quadRelations: "quad clue", mathdoku: "mathdoku", catalogLines: "line clue",
@@ -1882,6 +1884,8 @@ registerConstraint("threeDigitNumbersKillers", {
                 case "sum": return sum === clue.target;
                 case "product": return product === clue.target;
                 case "tenspositionproducts": return Math.floor(product / 10) === clue.target;
+                case "termination": return (sum % 10 === 0) || (product % 10 === 0);
+                case "notTermination": return (sum % 10 !== 0) && (product % 10 !== 0);
                 case "teneleven": return sum === 10 || sum === 11;
                 case "notTenEleven": return sum !== 10 && sum !== 11;
                 case "greater": return Math.max(first, second) === clue.target;

@@ -2481,7 +2481,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
 
         var catalogEdgeVariant = ["difference", "sum", "product", "arithmetic", "greater", "lesser", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts", "ratio",
             "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares",
-            "primesums", "twodigitprimenumbers", "fives", "sumnine", "oneortwodifferencepairs", "teneleven"].find(function(name) {
+            "primesums", "twodigitprimenumbers", "fives", "sumnine", "oneortwodifferencepairs", "teneleven", "termination"].find(function(name) {
                 return variantEnabled(puzzle, name);
             });
         if (catalogEdgeVariant) {
@@ -2492,7 +2492,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                 return point.neighbor.filter(function(neighbor) { return activeCells[neighbor]; })
                     .map(function(neighbor) { return keyToCell(puzzle, neighbor); }).filter(Boolean);
             }
-            if (["difference", "sum", "product", "arithmetic", "greater", "lesser", "inequality", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts", "ratio"].indexOf(catalogEdgeVariant) !== -1) {
+            if (["difference", "sum", "product", "arithmetic", "greater", "lesser", "inequality", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts", "ratio", "termination"].indexOf(catalogEdgeVariant) !== -1) {
                 Object.keys(numbers).forEach(function(key) {
                     var cells = catalogEdgeCells(key);
                     var target = numbers[key] && parseInt(numbers[key][0], 10);
@@ -2595,6 +2595,22 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                                     constraints.edgeRelations.push({ cells: [
                                         { row: fivesRow, col: fivesCol }, { row: neighbor[0], col: neighbor[1] }
                                     ], relation: "notFives" });
+                                }
+                            });
+                        }
+                    }
+                }
+                if (catalogEdgeVariant === "termination") {
+                    for (var termRow = 0; termRow < SIZE; termRow++) {
+                        for (var termCol = 0; termCol < SIZE; termCol++) {
+                            [[termRow + 1, termCol], [termRow, termCol + 1]].forEach(function(neighbor) {
+                                if (neighbor[0] >= SIZE || neighbor[1] >= SIZE) return;
+                                var termFirst = termRow * SIZE + termCol;
+                                var termSecond = neighbor[0] * SIZE + neighbor[1];
+                                if (activeCells[termFirst] && activeCells[termSecond] && !catalogMarkedEdges[Math.min(termFirst, termSecond) + ":" + Math.max(termFirst, termSecond)]) {
+                                    constraints.edgeRelations.push({ cells: [
+                                        { row: termRow, col: termCol }, { row: neighbor[0], col: neighbor[1] }
+                                    ], relation: "notTermination" });
                                 }
                             });
                         }
