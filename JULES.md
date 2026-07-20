@@ -99,6 +99,10 @@ All solver input normalization starts in `readConstraints(puzzle)` in
 6. Push the canonical variant value into `constraints.supported` only after the
    parser recognized the expected clue representation. A selected variant with
    missing/malformed required clues must not be reported as successfully parsed.
+   However, if a variant is purely logic-based and has no physical clues on the board (e.g. anti-king),
+   you MUST conditionally push its name (e.g., `if (variantEnabled(puzzle, "antiking")) constraints.supported.push("anti king")`)
+   in order for it to be recognized as supported. Forgetting to push the canonical name will result in the
+   "Auto solver didn't start because support is not implemented for: ...." error.
 
 Reuse nearby extraction helpers for the same placement family. Outside diagonal
 clues, edge-midpoint numbers, corner numbers, cages, and surface components use

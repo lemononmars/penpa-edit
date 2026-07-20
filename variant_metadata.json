@@ -6757,6 +6757,36 @@
           "Select \"Number\" (Small)."
         ]
       }
+      "id": "consecutiveonline",
+      "name": "Consecutive On-Line",
+      "rules": {
+        "9x9": "The difference of each pair of numbers that are placed in the adjoining two cells along the marked lines is 1."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "line"
+        ],
+        "instructions": []
+      },
+      "tags": [
+        "math",
+        "consecutive"
+      ]
+      "id": "pirate",
+      "name": "Pirate",
+      "rules": {
+        "9x9": "Each digit 5 cannot be adjacent to 6,7,8 and 9."
+      },
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "tags": []
     }
   ]
 }

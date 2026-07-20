@@ -3185,6 +3185,14 @@ registerConstraint("threeDigitNumbersKillers", {
                 if (new Set(assigned).size !== assigned.length) return false;
                 return !assigned.length || Math.max.apply(null, assigned) - Math.min.apply(null, assigned) < values.length;
             }
+            if (clue.relation === "consecutiveonline") {
+                for (var p = 0; p < values.length - 1; p++) {
+                    if (values[p] && values[p + 1]) {
+                        if (Math.abs(values[p] - values[p + 1]) !== 1) return false;
+                    }
+                }
+                return true;
+            }
             if (clue.relation === "creasing") {
                 var increasing = true;
                 var decreasing = true;
