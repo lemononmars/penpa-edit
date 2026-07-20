@@ -5673,7 +5673,6 @@
       },
       "tags": []
     },
-   
     {
       "id": "skyscraper",
       "name": "Skyscraper",
@@ -6139,7 +6138,7 @@
       "rules": {
         "9x9": "Each number outside the grid is the sum of the first few digits from the edge. The nearest shaded cell in the corresponding direction indicates the number of digits included in the sum."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
@@ -6242,13 +6241,15 @@
       "rules": {
         "9x9": "Adjacent cells containing numbers with the sum 9 are marked with a rhombus. Adjacent cells with no marking must not contain numbers with the sum 9."
       },
-      "status": "planned",
+      "status": "available",
       "scratchGeneratable": false,
       "inputType": {
         "categories": [
-          "cell"
+          "edge"
         ],
-        "instructions": []
+        "instructions": [
+          "Click an edge to cycle through a diamond and no clue."
+        ]
       },
       "tags": [
         "math"
@@ -6780,7 +6781,9 @@
         ],
         "instructions": []
       },
-      "tags": ["converse"]
+      "tags": [
+        "converse"
+      ]
     },
     {
       "id": "twodigitprimenumbers",
