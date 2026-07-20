@@ -4401,6 +4401,76 @@ registerConstraint("threeDigitNumbersKillers", {
         return false;
     }
 
+    function hasSequencePath(board, startValue, startRow, endValue, endRow) {
+        var size = board.length;
+        var step = startValue < endValue ? 1 : -1;
+
+        var currentReach = new Uint8Array(size * size);
+        var nextReach = new Uint8Array(size * size);
+        var anyStart = false;
+
+        for (var c = 0; c < size; c++) {
+            var val = cellValue(board, {row: startRow, col: c});
+            if (val === 0 || val === startValue) {
+                currentReach[startRow * size + c] = 1;
+                anyStart = true;
+            }
+        }
+        if (!anyStart) return false;
+
+        var dr = [-1, -1, -1, 0, 0, 1, 1, 1];
+        var dc = [-1, 0, 1, -1, 1, -1, 0, 1];
+        var currentDigit = startValue;
+
+        while (currentDigit !== endValue) {
+            var nextDigit = currentDigit + step;
+            nextReach.fill(0);
+            var anyNext = false;
+
+            for (var r = 0; r < size; r++) {
+                for (var c = 0; c < size; c++) {
+                    if (currentReach[r * size + c]) {
+                        for (var i = 0; i < 8; i++) {
+                            var nr = r + dr[i];
+                            var nc = c + dc[i];
+                            if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                                var nIdx = nr * size + nc;
+                                if (!nextReach[nIdx]) {
+                                    var val = cellValue(board, {row: nr, col: nc});
+                                    if (val === 0 || val === nextDigit) {
+                                        nextReach[nIdx] = 1;
+                                        anyNext = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (!anyNext) return false;
+            var temp = currentReach;
+            currentReach = nextReach;
+            nextReach = temp;
+            currentDigit = nextDigit;
+        }
+
+        for (var c = 0; c < size; c++) {
+            if (currentReach[endRow * size + c]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    registerConstraint("sequenceTopBottom", {
+        validatePartial: function(board) {
+            var size = board.length;
+            if (!hasSequencePath(board, 1, 0, size, size - 1)) return false;
+            if (!hasSequencePath(board, 1, size - 1, size, 0)) return false;
+            return true;
+        }
+    });
+
     function hasEvenPath(board, size) {
         var start = { row: 0, col: 0 };
         var end = { row: size - 1, col: size - 1 };

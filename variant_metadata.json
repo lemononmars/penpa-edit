@@ -6809,6 +6809,23 @@
         "instructions": []
       },
       "tags": []
+    },
+    {
+      "id": "sequence top-bottom",
+      "name": "Sequence Top-Bottom",
+      "rules": {
+        "9x9": "There are two sequences: one running from digit 1 in the top row to digit 9 in the bottom row, and another from digit 1 in the bottom row to digit 9 in the top row. Each sequence must consist of consecutive numbers, with each number touching the next either by side or corner."
+      },
+      "status": "planned",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "tags": [
+        "path"
+      ]
     }
   ]
 }
