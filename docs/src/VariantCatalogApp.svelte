@@ -32,6 +32,12 @@
     fontScale += 0.1;
   }
 
+  function highlightCode(node: HTMLElement) {
+    if ((window as any).hljs) {
+      (window as any).hljs.highlightElement(node);
+    }
+  }
+
   function decreaseFontSize() {
     fontScale = Math.max(0.5, fontScale - 0.1);
   }
@@ -257,9 +263,9 @@
           <h2>CSP constraint function</h2>
           <p>{cspApproachFor(detailVariation)}</p>
           <h3>Partial validator</h3>
-          <pre><code>{cspConstraintFunctionsFor(detailVariation).partial}</code></pre>
+          <pre><code use:highlightCode class="language-javascript">{cspConstraintFunctionsFor(detailVariation).partial}</code></pre>
           <h3>Full validator</h3>
-          <pre><code>{cspConstraintFunctionsFor(detailVariation).full}</code></pre>
+          <pre><code use:highlightCode class="language-javascript">{cspConstraintFunctionsFor(detailVariation).full}</code></pre>
           {#if detailVariation.status !== "available"}<p class="blocker">
               {automaticBlockerFor(detailVariation)}
             </p>{/if}
@@ -269,7 +275,7 @@
           <p>
             The valid case must solve; the paired violation must be rejected.
           </p>
-          <pre><code>{solverTestCasesFor(detailVariation)}</code></pre>
+          <pre><code use:highlightCode class="language-javascript">{solverTestCasesFor(detailVariation)}</code></pre>
         </section>
         </div>
         {#if detailVariation.example}

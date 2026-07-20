@@ -179,6 +179,7 @@ function cspImplementationFor(variation: Variation) {
 
             return checkSum(0, 0);
         }`;
+    }
     if (variation.value === "braille") {
         return `function validatePartial(board, clue) {
   const value = cellValue(board, clue.cell);
@@ -550,6 +551,7 @@ export function cspConstraintFunctionFor(variation: Variation) {
 export function solverTestCasesFor(variation: Variation) {
     if (variation.value === "threedigitnumberskiller") {
         return "A cage without a total must have unique digits. A cage with a total must have unique digits, and if all its 3-cell gray lines are fully populated, their values (read in either direction) must sum to the cage's total.";
+    }
     if (variation.value === "braille") {
         return `test("Braille allows subset of dots", () => {
   const board = boardWith({ 0: { 0: 6 } });
