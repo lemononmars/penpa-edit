@@ -3548,3 +3548,30 @@ test("validates new variants: one-five-nine, one touch, parity circles", () => {
     ]}).solved, false);
 });
 });
+
+test("Self-Join validation checks cell value against its box index", function() {
+    let board = emptyBoard();
+    const constraints = { supported: ["selfjoin"], selfjoin: [
+        [{ row: 0, col: 0 }, { row: 0, col: 1 }] // cells (0,0) and (0,1) are shaded
+    ]};
+
+    // (0,0) is index 1, (0,1) is index 2, (0,2) is index 3
+
+    // Valid: (0,0) is shaded and has value 1
+    board[0][0] = 1;
+    assert.equal(SudokuCSP.findConflict(board, constraints), null);
+
+    // Invalid: (0,1) is shaded but has value 3 (which is not 2)
+    board[0][1] = 3;
+    assert.equal(SudokuCSP.findConflict(board, constraints).constraint, "selfjoin");
+
+    // Reset and test invalid unshaded cell
+    board[0][1] = 0;
+    // (0,2) is not shaded, but has value 3. Should be invalid because if value === index it MUST be shaded
+    board[0][2] = 3;
+    assert.equal(SudokuCSP.findConflict(board, constraints).constraint, "selfjoin");
+
+    // Valid: (0,2) is not shaded and has value 4
+    board[0][2] = 4;
+    assert.equal(SudokuCSP.findConflict(board, constraints), null);
+});

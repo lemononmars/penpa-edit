@@ -129,7 +129,34 @@ var SudokuCSP = (function() {
         }
     });
 
-        registerConstraint("watchtowers", {
+    registerConstraint("selfjoin", {
+        validatePartial: function(board, shadedCells) {
+            var size = board.length;
+            var isShaded = {};
+            for (var i = 0; i < shadedCells.length; i++) {
+                isShaded[shadedCells[i].row + ":" + shadedCells[i].col] = true;
+            }
+            var dims = boxDimensions(size);
+            var boxHeight = dims.height;
+            var boxWidth = dims.width;
+
+            for (var r = 0; r < size; r++) {
+                for (var c = 0; c < size; c++) {
+                    var val = cellValue(board, { row: r, col: c });
+                    if (!val) continue;
+
+                    var boxPos = (r % boxHeight) * boxWidth + (c % boxWidth) + 1;
+                    var shaded = !!isShaded[r + ":" + c];
+
+                    if (val === boxPos && !shaded) return false;
+                    if (val !== boxPos && shaded) return false;
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("watchtowers", {
         validatePartial: function(board, shadedCells) {
             var size = board.length;
             var isShaded = {};
@@ -384,7 +411,8 @@ var SudokuCSP = (function() {
             edgeRelations: "edge clue", quadRelations: "quad clue", mathdoku: "mathdoku", catalogLines: "line clue",
             diagonalAllDifferent: "diagonal/region", regionAllDifferent: "region", extraLargeRegions: "extra large regions", difference2Neighbours: "difference 2 neighbours",
             regionCoverage: "region coverage", scatteredAllDifferent: "Scattered shaded cells",
-            invalidRegions: "region layout", kropki: "Kropki", xv: "XV", battenburg: "Battenburg"
+            invalidRegions: "region layout", kropki: "Kropki", xv: "XV", battenburg: "Battenburg",
+            selfjoin: "Self-Join"
         };
         return labels[name] || name.replace(/([a-z])([A-Z])/g, "$1 $2");
     }
