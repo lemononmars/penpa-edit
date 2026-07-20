@@ -331,6 +331,42 @@ test("an active Almost Palindrome remains CSP-supported after its final line is 
     assert.equal(SudokuSolver.readConstraints(puzzle).supported.includes("almostpalindrome"), true);
 });
 
+
+test("Citywalk constraint parsing and evaluation", function() {
+    var puzzle = {
+        nx: 9, ny: 9, nx0: 9, ny0: 9,
+        theta: 0, reflect: 0,
+        centerlist: [],
+        pu_q: {},
+        activeSudokuVariant: "citywalk"
+    };
+
+    var constraints = SudokuSolver.readConstraints(puzzle);
+    assert.deepEqual(constraints.citywalk, [true]);
+    assert.ok(constraints.supported.includes("citywalk"));
+
+    var board = emptyBoard();
+    // 3, 4, 5 are connected
+    board[0][0] = 3;
+    board[0][1] = 4;
+    board[0][2] = 5;
+    assert.equal(SudokuCSP.solve(board, { citywalk: [true] }).solved, true, "Citywalk allows connected 3-7 digits");
+
+    var boardDisconnected = emptyBoard();
+    // 3 and 4 are disconnected by filled non-3..7 digits
+    boardDisconnected[0][0] = 3;
+    boardDisconnected[0][1] = 1;
+    boardDisconnected[1][0] = 1;
+    boardDisconnected[0][2] = 4;
+    // Fill the rest with non-3..7 so they can't connect through empty cells
+    for(let r=0; r<9; r++) {
+        for(let c=0; c<9; c++) {
+            if (boardDisconnected[r][c] === 0) boardDisconnected[r][c] = 1;
+        }
+    }
+    assert.equal(SudokuCSP.solve(boardDisconnected, { citywalk: [true], baseBoxes: false }).solved, false, "Citywalk rejects disconnected 3-7 digits");
+});
+
 test("Three-Digit Numbers Killer constraint parsing and evaluation", function() {
     var nx0 = 13, ny0 = 13;
     const puzzle = {
@@ -785,6 +821,16 @@ test("catalog line and four-cell relations enforce their shared CSP families", f
     board[2][4] = 5;
     assert.equal(SudokuSolver.solve(board, {
         catalogLines: [{ path: line, relation: "paritylines" }]
+    }).solved, false);
+
+    board = emptyBoard();
+    board[0][0] = 3; board[1][2] = 4; board[2][4] = 5;
+    assert.equal(SudokuSolver.solve(board, {
+        catalogLines: [{ path: line, relation: "consecutiveonline" }]
+    }).solved, true);
+    board[2][4] = 6;
+    assert.equal(SudokuSolver.solve(board, {
+        catalogLines: [{ path: line, relation: "consecutiveonline" }]
     }).solved, false);
 
     const cells = [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 1, col: 0 }, { row: 1, col: 1 }];
@@ -2093,6 +2139,14 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
     }));
     assert.equal(creasing.catalogLines[0].relation, "creasing");
     assert.equal(creasing.thermos.length, 0);
+
+    const consecutiveonline = SudokuSolver.readConstraints(puzzle("consecutiveonline", {
+        pu_q: { line: { "28,29": 5, "29,42": 5 } }
+    }));
+    assert.equal(consecutiveonline.catalogLines[0].relation, "consecutiveonline");
+    assert.deepEqual(consecutiveonline.catalogLines[0].path.map(c => ({ row: c.row, col: c.col })), [
+        { row: 0, col: 0 }, { row: 0, col: 1 }, { row: 1, col: 1 }
+    ]);
 
     const cornerPoint = { 300: { neighbor: [28, 29, 41, 42] } };
     const diagonal = SudokuSolver.readConstraints(puzzle("diagonallyconsecutive", {
@@ -3493,4 +3547,34 @@ test("validates new variants: one-five-nine, one touch, parity circles", () => {
         { cells: [{row:0, col:0}, {row:0, col:1}, {row:1, col:0}, {row:1, col:1}] }
     ]}).solved, false);
 });
+});
+
+
+test("Pole Position variant", function() {
+    // Valid setups
+    var board = emptyBoard();
+    board[0][0] = 3;
+    board[0][2] = 1;
+    assert.deepEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[2][0] = 1;
+    assert.deepEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    // Invalid setups
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[0][2] = 2; // Position 3 must be 1, not 2
+    assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[0][1] = 1; // 1 is at position 2, so first cell should be 2, not 3
+    assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[1][0] = 1; // 1 is at position 2 (col 0, row 1), first cell should be 2, not 3
+    assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
 });

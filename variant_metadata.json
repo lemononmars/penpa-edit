@@ -6761,5 +6761,92 @@
         ]
       }
     }
+    {
+      "id": "citywalk",
+      "name": "Citywalk",
+      "rules": {
+        "9x9": "All cells that contain 3 to 7 are orthogonally connected in the grid. There is no restriction on connectivity in each 3x3 box"
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "tags": [
+        "global"
+      ]
+    },
+    {
+      "id": "upperrightheavykiller",
+      "name": "Upper Right Heavy Killer",
+      "rules": {
+        "9x9": "For any number in the cell that is smaller than the one in the diagonally adjacent upper right cell, there must be a clue in the cell indicating the sum of two numbers. For cells without a clue, the number cannot be smaller than the one in the diagonally adjacent upper right cell."
+      },
+      "status": "available",
+      "tags": [
+        "math",
+        "corner clue"
+      ],
+      "inputType": {
+        "categories": [
+          "number"
+        ],
+        "instructions": [
+          "Select \"Number\" (Small)."
+        ]
+      }
+    },
+    {
+      "id": "consecutiveonline",
+      "name": "Consecutive On-Line",
+      "rules": {
+        "9x9": "The difference of each pair of numbers that are placed in the adjoining two cells along the marked lines is 1."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "line"
+        ],
+        "instructions": []
+      },
+      "tags": [
+        "math",
+        "consecutive"
+      ]
+    },
+    {
+      "id": "pirate",
+      "name": "Pirate",
+      "rules": {
+        "9x9": "Each digit 5 cannot be adjacent to 6,7,8 and 9."
+      },
+      "status": "available",
+      "scratchGeneratable": false,
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "tags": []
+    },
+    {
+      "id": "poleposition",
+      "name": "Pole Position",
+      "rules": {
+        "9x9": "The digit in the first cell of each row or column specifies the position of the digit 1 within that row or column."
+      },
+      "tags": [
+        "math"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ]
+      }
+    }
   ]
 }

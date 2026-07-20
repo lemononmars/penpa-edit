@@ -383,6 +383,7 @@ var SudokuCSP = (function() {
             termination: "0",
             notTermination: "none",
             antiKing: "Anti King", antiKnight: "Anti Knight", chessKings: "Chess Kings", nonConsecutive: "Non-Consecutive",
+            polePosition: "Pole Position",
             edgeRelations: "edge clue", quadRelations: "quad clue", mathdoku: "mathdoku", catalogLines: "line clue",
             diagonalAllDifferent: "diagonal/region", regionAllDifferent: "region", extraLargeRegions: "extra large regions", difference2Neighbours: "difference 2 neighbours",
             regionCoverage: "region coverage", scatteredAllDifferent: "Scattered shaded cells",
@@ -1607,6 +1608,101 @@ registerConstraint("threeDigitNumbersKillers", {
         var second = cellValue(board, pair[1]);
         return !first || !second || first !== second;
     }
+
+
+    registerConstraint("polePosition", {
+        validatePartial: function(board, clue, helpers) {
+            var targetDigit = board.isZeroEight ? 2 : 1;
+            for (var r = 0; r < board.length; r++) {
+                var firstInRow = board[r][0];
+                if (firstInRow) {
+                    var targetCol = board.isZeroEight ? firstInRow : firstInRow - 1;
+                    if (targetCol >= 0 && targetCol < board[r].length) {
+                        if (board[r][targetCol] && board[r][targetCol] !== targetDigit) return false;
+                    }
+                }
+                for (var c = 0; c < board[r].length; c++) {
+                    if (board[r][c] === targetDigit) {
+                        var expectedFirst = board.isZeroEight ? c : c + 1;
+                        if (firstInRow && firstInRow !== expectedFirst) return false;
+                    }
+                }
+            }
+            for (var c = 0; c < board[0].length; c++) {
+                var firstInCol = board[0][c];
+                if (firstInCol) {
+                    var targetRow = board.isZeroEight ? firstInCol : firstInCol - 1;
+                    if (targetRow >= 0 && targetRow < board.length) {
+                        if (board[targetRow][c] && board[targetRow][c] !== targetDigit) return false;
+                    }
+                }
+                for (var r = 0; r < board.length; r++) {
+                    if (board[r][c] === targetDigit) {
+                        var expectedFirst = board.isZeroEight ? r : r + 1;
+                        if (firstInCol && firstInCol !== expectedFirst) return false;
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("citywalk", {
+        validatePartial: function(board, clue) {
+            var SIZE = board.length;
+            var known = [];
+            var available = {};
+
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var val = cellValue(board, {row: r, col: c});
+                    if (val >= 3 && val <= 7) {
+                        known.push({row: r, col: c});
+                        available[r + "," + c] = true;
+                    } else if (!val) {
+                        available[r + "," + c] = true;
+                    }
+                }
+            }
+
+            if (known.length === 0) return true;
+
+            var visited = {};
+            var queue = [known[0]];
+            visited[known[0].row + "," + known[0].col] = true;
+            var reachedKnown = 1;
+
+            var head = 0;
+            while (head < queue.length) {
+                var curr = queue[head++];
+                var neighbors = [
+                    {row: curr.row - 1, col: curr.col},
+                    {row: curr.row + 1, col: curr.col},
+                    {row: curr.row, col: curr.col - 1},
+                    {row: curr.row, col: curr.col + 1}
+                ];
+
+                for (var i = 0; i < neighbors.length; i++) {
+                    var nr = neighbors[i].row;
+                    var nc = neighbors[i].col;
+                    var key = nr + "," + nc;
+
+                    if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+                        if (available[key] && !visited[key]) {
+                            visited[key] = true;
+                            queue.push(neighbors[i]);
+                            var nVal = cellValue(board, neighbors[i]);
+                            if (nVal >= 3 && nVal <= 7) {
+                                reachedKnown++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return reachedKnown === known.length;
+        }
+    });
 
     registerConstraint("antiKing", {
         validatePartial: function(board, pair) {
@@ -3189,6 +3285,14 @@ registerConstraint("threeDigitNumbersKillers", {
                 if (new Set(assigned).size !== assigned.length) return false;
                 return !assigned.length || Math.max.apply(null, assigned) - Math.min.apply(null, assigned) < values.length;
             }
+            if (clue.relation === "consecutiveonline") {
+                for (var p = 0; p < values.length - 1; p++) {
+                    if (values[p] && values[p + 1]) {
+                        if (Math.abs(values[p] - values[p + 1]) !== 1) return false;
+                    }
+                }
+                return true;
+            }
             if (clue.relation === "creasing") {
                 var increasing = true;
                 var decreasing = true;
@@ -3784,6 +3888,34 @@ registerConstraint("threeDigitNumbersKillers", {
                 if (complete) {
                     if (sums.indexOf(sum) !== -1) return false;
                     sums.push(sum);
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("upperrightheavykiller", {
+        validatePartial: function(board, constraint) {
+            var urCages = constraint;
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var cellVal = cellValue(board, { row: r, col: c });
+                    if (!cellVal) continue;
+                    var mathCellVal = mathCellValue(board, { row: r, col: c });
+
+                    if (r > 0 && c < SIZE - 1) {
+                        var urVal = cellValue(board, { row: r - 1, col: c + 1 });
+                        if (!urVal) continue;
+                        var mathUrVal = mathCellValue(board, { row: r - 1, col: c + 1 });
+                        var cageTotal = urCages[r + "," + c];
+
+                        if (mathCellVal < mathUrVal) {
+                            if (cageTotal === undefined) return false;
+                            if (mathCellVal + mathUrVal !== cageTotal) return false;
+                        } else {
+                            if (cageTotal !== undefined) return false;
+                        }
+                    }
                 }
             }
             return true;

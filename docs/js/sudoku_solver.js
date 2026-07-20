@@ -536,6 +536,7 @@ var SudokuSolver = (function() {
         var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return variantEnabled(puzzle, v); });
         var constraints = {
             isZeroEight: isZeroEight,
+            citywalk: [],
             starCells: [],
             thermos: [],
             arrows: [],
@@ -548,6 +549,7 @@ var SudokuSolver = (function() {
             antiKing: [],
             antiKnight: [],
             chessKings: [],
+            polePosition: [],
             chessKings: [],
             chessKings: [],
             nonConsecutive: [],
@@ -1111,6 +1113,14 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             addGridPairs(constraints.antiKing, [[0, 1], [1, -1], [1, 0], [1, 1]]);
             constraints.supported.push("anti king");
         }
+        if (variantEnabled(puzzle, "poleposition")) {
+            constraints.polePosition = [true];
+            constraints.supported.push("poleposition");
+        }
+        if (variantEnabled(puzzle, "citywalk")) {
+            constraints.citywalk = [true];
+            constraints.supported.push("citywalk");
+        }
         if (variantEnabled(puzzle, "anti knight")) {
             addGridPairs(constraints.antiKnight, [[1, -2], [1, 2], [2, -1], [2, 1]]);
             constraints.supported.push("anti knight");
@@ -1586,7 +1596,25 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             constraints.supported.push("topheavy");
             constraints.topheavy = [{}];
         }
-        ["renban", "paritylines", "sequence"].forEach(function(variant) {
+
+        if (variantEnabled(puzzle, "upperrightheavykiller")) {
+            constraints.supported.push("upperrightheavykiller");
+            var urCages = {};
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var cellKeyText = cellKey(puzzle, r, c);
+                    var entry = puzzle.pu_q.numberS && puzzle.pu_q.numberS[cellKeyText];
+                    if (entry && entry[0] !== undefined) {
+                        var val = parseInt(entry[0], 10);
+                        if (!isNaN(val)) {
+                            urCages[r + "," + c] = val;
+                        }
+                    }
+                }
+            }
+            constraints.upperrightheavykiller = [urCages];
+        }
+        ["renban", "paritylines", "sequence", "consecutiveonline"].forEach(function(variant) {
             if (!variantEnabled(puzzle, variant)) return;
             connectedLinePaths(puzzle, 5).forEach(function(path) {
                 constraints.catalogLines.push({ path: path, relation: variant });
