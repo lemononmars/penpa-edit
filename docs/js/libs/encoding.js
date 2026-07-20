@@ -1138,7 +1138,7 @@
         }
         // TODO: Align with spec algorithm.
         if (!this._do_not_flush) {
-            do {
+            while (true) {
                 result = this._decoder.handler(input_stream, input_stream.read());
                 if (result === finished)
                     break;
@@ -1148,7 +1148,7 @@
                     output.push.apply(output, /**@type {!Array.<number>}*/ (result));
                 else
                     output.push(result);
-            } while (!input_stream.endOfStream());
+            }
             this._decoder = null;
         }
 
