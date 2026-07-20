@@ -1832,7 +1832,13 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             if (starCells.length > 0) {
                 constraints.starCells = starCells;
             }
-            if (variantEnabled(puzzle, "sudokuwithstars")) constraints.supported.push("sudokuwithstars");
+            if (variantEnabled(puzzle, "sudokuwithstars")) {
+                constraints.supported.push("sudokuwithstars");
+                constraints.sudokuwithstars = [true];
+                if (constraints.starCells) {
+                    constraints.starCellValues = constraints.starCells;
+                }
+            }
         }
         var directionalVariants = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious",
             "quadmax", "quadmin", "search9", "sumdetector", "detection", "deadoralivearrows", "twindetector"].filter(function(name) {
@@ -3345,6 +3351,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
     function applySolution(puzzle, solvedBoard) {
         SIZE = solvedBoard && solvedBoard.length || puzzleSize(puzzle) || SIZE;
         var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return variantEnabled(puzzle, v); });
+        var isSudokuWithStars = variantEnabled(puzzle, "sudokuwithstars");
         var changes = [];
         var oldQa = puzzle.mode.qa;
         puzzle.mode.qa = "pu_a";
@@ -3352,7 +3359,13 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             for (var col = 0; col < SIZE; col++) {
                 var key = cellKey(puzzle, row, col);
                 var digit = solvedBoard[row][col];
-                var displayDigit = isZeroEight && digit ? digit - 1 : digit;
+                var displayDigit = digit;
+                if (isSudokuWithStars && (digit === 8 || digit === 9)) {
+                    displayDigit = "★";
+                } else if (isZeroEight && digit) {
+                    displayDigit = digit - 1;
+                }
+
                 if (digit) {
                     if (puzzle.pu_q && puzzle.pu_q.number && puzzle.pu_q.number[key]) {
                         continue;
@@ -4777,12 +4790,13 @@ var SudokuTools = (function() {
             return;
         }
         var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return activeVariants().indexOf(v) !== -1; });
+        var isSudokuWithStars = activeVariants().indexOf("sudokuwithstars") !== -1;
         var sudokuButton = document.createElement("button");
         sudokuButton.type = "button";
         sudokuButton.className = "button sudoku-tool-button sudoku-variant-mode";
         sudokuButton.dataset.mode = "sudoku";
         sudokuButton.dataset.submode = "1";
-        sudokuButton.textContent = isZeroEight ? "0-8" : "Sudoku";
+        sudokuButton.textContent = isZeroEight ? "0-8" : (isSudokuWithStars ? "1-7 + ★" : "Sudoku");
         sudokuButton.addEventListener("click", function(event) {
             event.preventDefault();
             event.stopPropagation();

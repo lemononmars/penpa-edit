@@ -5469,7 +5469,7 @@
       "rules": {
         "9x9": "Place either a digit from 1 to 7 or a star in each empty cell, so that each digit appears exactly once in each row, column and outlined region. There must be exactly two stars in in each row, column and outlined region. Stars cannot be placed in adjacent cells that touch even at a corner."
       },
-      "status": "planned",
+      "status": "available",
       "inputType": {
         "categories": [
           "cell"

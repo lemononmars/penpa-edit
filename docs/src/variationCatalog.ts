@@ -232,6 +232,10 @@ if (variation.value === "threedigitnumberskiller") {
         add("symbol", "star", 2, ["mo_symbol_lb", "ms4", "li_star", "ms_star"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
+    if (variation.value === "sudokuwithstars") {
+        add("symbol", "star", 2, ["mo_symbol_lb", "ms4", "li_star", "ms_star"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
     if (["bust", "xsums", "numberedrooms", "sumframe", "edgedifference", "fullrank",
         "outsideparity", "parityparty", "serbianframe", "median", "ascendingstarters",
         "before9", "before1after9"].includes(variation.value)) {
