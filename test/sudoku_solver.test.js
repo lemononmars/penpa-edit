@@ -2673,7 +2673,7 @@ test("validates new variants: faded kropki, first seen odd/even, max ascending, 
     ] }).solved, true);
     assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
         { relation: "framediagonal", value: 28, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }] }
-    ] }).solved, true);
+    ] }).solved, false);
     assert.equal(SudokuCSP.solve(solved, { outsideRelations: [
         { relation: "framediagonal", value: 21, cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }, { row: 2, col: 2 }] }
     ] }).solved, false);
