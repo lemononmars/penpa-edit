@@ -605,6 +605,8 @@ sumOrProductKillers: [],
             antiConsecutive: [],
             averageArrows: [],
             countDifferent: [],
+            parityCircles: [],
+            oneTouch: [],
             countOdd: [],
             kropki: [],
             doublekropki: [],
@@ -2131,6 +2133,47 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                     }
                 }
             }
+        }
+        if (variantEnabled(puzzle, "onetouch")) {
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                var point = puzzle.point && puzzle.point[key];
+                if (!entry || !point) return;
+
+                if (entry[1] === "circle_SS" && point.type === 0) {
+                    var activeCells = {};
+                    (point.neighbor || []).forEach(function(neighbor) {
+                        activeCells[neighbor] = true;
+                    });
+                    var cells = Object.keys(activeCells).map(function(neighbor) {
+                        return keyToCell(puzzle, Number(neighbor));
+                    }).filter(Boolean);
+
+                    if (cells.length === 4) {
+                        constraints.oneTouch.push({ cells: cells });
+                    }
+                }
+            });
+            constraints.oneTouch = [constraints.oneTouch]; // Wrapping once for CSP
+            constraints.supported.push("onetouch");
+        }
+        if (variantEnabled(puzzle, "paritycircles")) {
+            Object.keys(symbols).forEach(function(key) {
+                var entry = symbols[key];
+                if (!entry || !activeCells[key]) return;
+                if (entry[1] === "circle_L") {
+                    var cell = keyToCell(puzzle, Number(key));
+                    if (cell) {
+                        constraints.parityCircles.push({ cell: cell });
+                    }
+                }
+            });
+            constraints.parityCircles = [constraints.parityCircles]; // Wrap once for CSP
+            constraints.supported.push("paritycircles");
+        }
+        if (variantEnabled(puzzle, "onefivenine")) {
+            constraints.onefivenine = [{}];
+            constraints.supported.push("onefivenine");
         }
         if (variantEnabled(puzzle, "fadedkropki")) {
             var fadedDottedEdges = {};
@@ -4429,6 +4472,9 @@ var SudokuTools = (function() {
         }
         pu.activeSudokuVariant = variant || "classic";
         pu.kropki_mode = pu.activeSudokuVariant === "kropki";
+        pu.onefivenine_mode = pu.activeSudokuVariant === "onefivenine";
+        pu.onetouch_mode = pu.activeSudokuVariant === "onetouch";
+        pu.paritycircles_mode = pu.activeSudokuVariant === "paritycircles";
         pu.consecutive_mode = pu.activeSudokuVariant === "consecutive";
         pu.even_sum_pairs_mode = pu.activeSudokuVariant === "evensumpairs";
         pu.clockfaces_mode = pu.activeSudokuVariant === "clockfaces";

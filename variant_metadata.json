@@ -3786,10 +3786,10 @@
       "rules": {
         "9x9": "Every digit 1-9 has exactly one touching pair in the grid. All these touches are marked by a circle. If there are less than 9 circles in the grid, that means there is at least one marked 2x2 block which contains two pairs of touching digits."
       },
-      "status": "planned",
+      "status": "available",
       "inputType": {
         "categories": [
-          "cell"
+          "intersection"
         ],
         "instructions": []
       },
@@ -3804,7 +3804,7 @@
       "rules": {
         "9x9": "Digits in the first column say in which column you can find number 1 in the respective row. Digits in the fifth column say in which column you can find number 5. Digits in the nineth column say in which column you can find number 9."
       },
-      "status": "planned",
+      "status": "available",
       "inputType": {
         "categories": [
           "no-input"
@@ -4095,7 +4095,7 @@
       "rules": {
         "9x9": "If there is an odd number O in a circle, there are exactly O odd numbers around it. If there is an even number E in a circle, there are exactly E even numbers around it. All possible circles are given."
       },
-      "status": "planned",
+      "status": "available",
       "inputType": {
         "categories": [
           "cell"
