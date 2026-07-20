@@ -179,7 +179,7 @@ class Puzzle_square extends Puzzle {
         this.types = [[0], [1], [2, 3], [4], [5]];
         point = this.fill_neighbors(point);
         this.point = point;
-        
+
     }
 
     reset_frame() {
@@ -1523,9 +1523,9 @@ class Puzzle_square extends Puzzle {
                 factor = 0;
             }
 
+            let angle = 0;
             if (this[pu].number[i][3]) {
                 let dir = this[pu].number[i][3];
-                let angle = 0;
                 switch (dir) {
                     case 'UR':
                         angle = -Math.PI / 4;
@@ -1554,7 +1554,6 @@ class Puzzle_square extends Puzzle {
                 this.ctx.rotate(angle);
                 this.ctx.translate(-p_x, -p_y);
 
-                // TODO: only rotate the number in arrow mode, not the arrow
             }
 
             switch (this[pu].number[i][2]) {
@@ -1587,79 +1586,84 @@ class Puzzle_square extends Puzzle {
                         direction = (360 - direction + 360) % 360;
                     }
                     switch (direction) {
-
                         case 180:
+                        case 0:
                             this.ctx.text(this[pu].number[i][0].slice(0, -2), p_x + 0.0 * this.size, p_y + 0.15 * this.size, this.size * 0.8);
-                            this.ctx.beginPath();
+                            break;
+                        case 90:
+                        case 270:
+                            this.ctx.text(this[pu].number[i][0].slice(0, -2), p_x - 0.1 * this.size, p_y + 0.05 * this.size, this.size * 0.7);
+                            break;
+                        case 45:
+                        case 225:
+                            this.ctx.text(this[pu].number[i][0].slice(0, -2), p_x + 0.05 * this.size, p_y + 0.15 * this.size, this.size * 0.7);
+                            break;
+                        case 135:
+                        case 315:
+                            this.ctx.text(this[pu].number[i][0].slice(0, -2), p_x - 0.05 * this.size, p_y + 0.15 * this.size, this.size * 0.7);
+                            break;
+                    }
+
+                    if (angle !== 0) {
+                        this.ctx.translate(p_x, p_y);
+                        this.ctx.rotate(-angle);
+                        this.ctx.translate(-p_x, -p_y);
+                    }
+
+                    this.ctx.beginPath();
+                    switch (direction) {
+                        case 180:
                             this.ctx.arrow(p_x + (arrowlength * 0.5 + 0.0) * this.size, p_y + (arrowlength * 0.0 - 0.3) * this.size,
                                 p_x + (-arrowlength * 0.5 + 0.0) * this.size, p_y + (-arrowlength * 0.0 - 0.3) * this.size,
                                 [0, 1, -0.25 * this.size, 1, -0.25 * this.size, 3]);
-                            this.ctx.stroke();
-                            this.ctx.fill();
                             break;
                         case 0:
-                            this.ctx.text(this[pu].number[i][0].slice(0, -2), p_x + 0.0 * this.size, p_y + 0.15 * this.size, this.size * 0.8);
-                            this.ctx.beginPath();
                             this.ctx.arrow(p_x - (arrowlength * 0.5 + 0.0) * this.size, p_y + (arrowlength * 0.0 - 0.3) * this.size,
                                 p_x - (-arrowlength * 0.5 + 0.0) * this.size, p_y + (-arrowlength * 0.0 - 0.3) * this.size,
                                 [0, 1, -0.25 * this.size, 1, -0.25 * this.size, 3]);
-                            this.ctx.stroke();
-                            this.ctx.fill();
                             break;
                         case 90:
-                            this.ctx.text(this[pu].number[i][0].slice(0, -2), p_x - 0.1 * this.size, p_y + 0.05 * this.size, this.size * 0.7);
-                            this.ctx.beginPath();
                             this.ctx.arrow(p_x + (arrowlength * 0.0 + 0.3) * this.size, p_y + (arrowlength * 0.5 - 0.0) * this.size,
                                 p_x + (-arrowlength * 0.0 + 0.3) * this.size, p_y + (-arrowlength * 0.5 - 0.0) * this.size,
                                 [0, 1, -0.25 * this.size, 1, -0.25 * this.size, 3]);
-                            this.ctx.stroke();
-                            this.ctx.fill();
                             break;
                         case 270:
-                            this.ctx.text(this[pu].number[i][0].slice(0, -2), p_x - 0.1 * this.size, p_y + 0.05 * this.size, this.size * 0.7);
-                            this.ctx.beginPath();
                             this.ctx.arrow(p_x + (arrowlength * 0.0 + 0.3) * this.size, p_y + (-arrowlength * 0.5 - 0.0) * this.size,
                                 p_x + (-arrowlength * 0.0 + 0.3) * this.size, p_y + (arrowlength * 0.5 - 0.0) * this.size,
                                 [0, 1, -0.25 * this.size, 1, -0.25 * this.size, 3]);
-                            this.ctx.stroke();
-                            this.ctx.fill();
                             break;
                         case 45:
-                            this.ctx.text(this[pu].number[i][0].slice(0, -2), p_x + 0.05 * this.size, p_y + 0.15 * this.size, this.size * 0.7);
-                            this.ctx.beginPath();
                             this.ctx.arrow(p_x + (-arrowlength * 0.35 - 0.2) * this.size, p_y + (arrowlength * 0.35 - 0.2) * this.size,
                                 p_x + (arrowlength * 0.35 - 0.2) * this.size, p_y + (-arrowlength * 0.35 - 0.2) * this.size,
                                 [0, 1, -0.25 * this.size, 1, -0.25 * this.size, 3]);
-                            this.ctx.stroke();
-                            this.ctx.fill();
                             break;
                         case 225:
-                            this.ctx.text(this[pu].number[i][0].slice(0, -2), p_x + 0.05 * this.size, p_y + 0.15 * this.size, this.size * 0.7);
-                            this.ctx.beginPath();
                             this.ctx.arrow(p_x + (arrowlength * 0.35 - 0.2) * this.size, p_y + (-arrowlength * 0.35 - 0.2) * this.size,
                                 p_x + (-arrowlength * 0.35 - 0.2) * this.size, p_y + (arrowlength * 0.35 - 0.2) * this.size,
                                 [0, 1, -0.25 * this.size, 1, -0.25 * this.size, 3]);
-                            this.ctx.stroke();
-                            this.ctx.fill();
                             break;
                         case 135:
-                            this.ctx.text(this[pu].number[i][0].slice(0, -2), p_x - 0.05 * this.size, p_y + 0.15 * this.size, this.size * 0.7);
-                            this.ctx.beginPath();
                             this.ctx.arrow(p_x + (arrowlength * 0.35 + 0.2) * this.size, p_y + (arrowlength * 0.35 - 0.2) * this.size,
                                 p_x + (-arrowlength * 0.35 + 0.2) * this.size, p_y + (-arrowlength * 0.35 - 0.2) * this.size,
                                 [0, 1, -0.25 * this.size, 1, -0.25 * this.size, 3]);
-                            this.ctx.stroke();
-                            this.ctx.fill();
                             break;
                         case 315:
-                            this.ctx.text(this[pu].number[i][0].slice(0, -2), p_x - 0.05 * this.size, p_y + 0.15 * this.size, this.size * 0.7);
-                            this.ctx.beginPath();
                             this.ctx.arrow(p_x + (-arrowlength * 0.35 + 0.2) * this.size, p_y + (-arrowlength * 0.35 - 0.2) * this.size,
                                 p_x + (arrowlength * 0.35 + 0.2) * this.size, p_y + (arrowlength * 0.35 - 0.2) * this.size,
                                 [0, 1, -0.25 * this.size, 1, -0.25 * this.size, 3]);
-                            this.ctx.stroke();
-                            this.ctx.fill();
                             break;
+                    }
+                    this.ctx.stroke();
+                    this.ctx.fill();
+
+                    if (angle !== 0) {
+                        this.ctx.translate(p_x, p_y);
+                        this.ctx.rotate(angle);
+                        this.ctx.translate(-p_x, -p_y);
+                    }
+
+                    break;
+
                         default:
                             set_font_style(this.ctx, 0.7 * this.size.toString(10), this[pu].number[i][1]);
                             ;
