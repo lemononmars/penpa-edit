@@ -18,6 +18,18 @@
   let darkTheme = false;
   let fontScale = 1;
 
+  let sortColumn: "name" | "status" | "example" | "reviewed" = "name";
+  let sortAscending = true;
+
+  function handleSort(column: typeof sortColumn) {
+    if (sortColumn === column) {
+      sortAscending = !sortAscending;
+    } else {
+      sortColumn = column;
+      sortAscending = true;
+    }
+  }
+
   $: if (typeof document !== "undefined") {
     document.documentElement.style.setProperty("--font-scale", fontScale.toString());
   }
@@ -102,6 +114,44 @@
           value.toLowerCase().includes(normalizedQuery),
         ))
     );
+  });
+
+  $: sortedVariations = [...filteredVariations].sort((a, b) => {
+    let valA: any;
+    let valB: any;
+
+    if (sortColumn === "name") {
+      valA = a.name.toLowerCase();
+      valB = b.name.toLowerCase();
+    } else if (sortColumn === "status") {
+      const statusPriority: Record<string, number> = {
+        available: 1,
+        planned: 2,
+        infeasible: 3,
+      };
+      valA = statusPriority[a.status] || 99;
+      valB = statusPriority[b.status] || 99;
+    } else if (sortColumn === "example") {
+      valA = a.example ? 1 : 0;
+      valB = b.example ? 1 : 0;
+    } else if (sortColumn === "reviewed") {
+      valA = a.reviewed ? 1 : 0;
+      valB = b.reviewed ? 1 : 0;
+    } else {
+      return 0;
+    }
+
+    if (valA < valB) return sortAscending ? -1 : 1;
+    if (valA > valB) return sortAscending ? 1 : -1;
+
+    // Secondary sort: default to name ascending when primary values are equal
+    if (sortColumn !== "name") {
+      const nameA = a.name.toLowerCase();
+      const nameB = b.name.toLowerCase();
+      if (nameA < nameB) return -1;
+      if (nameA > nameB) return 1;
+    }
+    return 0;
   });
 
   let metadataText = JSON.stringify(variantMetadata, null, 2);
@@ -385,16 +435,48 @@
       <table class="variant-table">
         <thead>
           <tr>
-            <th>Variant</th>
+            <th
+              class="sortable"
+              tabindex="0"
+              on:click={() => handleSort("name")}
+              on:keydown={(e) => e.key === "Enter" && handleSort("name")}
+              aria-sort={sortColumn === "name" ? (sortAscending ? "ascending" : "descending") : "none"}
+            >
+              Variant{#if sortColumn === "name"}<span class="sort-indicator">{sortAscending ? "▲" : "▼"}</span>{/if}
+            </th>
             <th>Rule</th>
-            <th>Status</th>
-            <th>Has example</th>
-            <th>Reviewed</th>
+            <th
+              class="sortable"
+              tabindex="0"
+              on:click={() => handleSort("status")}
+              on:keydown={(e) => e.key === "Enter" && handleSort("status")}
+              aria-sort={sortColumn === "status" ? (sortAscending ? "ascending" : "descending") : "none"}
+            >
+              Status{#if sortColumn === "status"}<span class="sort-indicator">{sortAscending ? "▲" : "▼"}</span>{/if}
+            </th>
+            <th
+              class="sortable"
+              tabindex="0"
+              on:click={() => handleSort("example")}
+              on:keydown={(e) => e.key === "Enter" && handleSort("example")}
+              aria-sort={sortColumn === "example" ? (sortAscending ? "ascending" : "descending") : "none"}
+            >
+              Has example{#if sortColumn === "example"}<span class="sort-indicator">{sortAscending ? "▲" : "▼"}</span>{/if}
+            </th>
+            <th
+              class="sortable"
+              tabindex="0"
+              on:click={() => handleSort("reviewed")}
+              on:keydown={(e) => e.key === "Enter" && handleSort("reviewed")}
+              aria-sort={sortColumn === "reviewed" ? (sortAscending ? "ascending" : "descending") : "none"}
+            >
+              Reviewed{#if sortColumn === "reviewed"}<span class="sort-indicator">{sortAscending ? "▲" : "▼"}</span>{/if}
+            </th>
             <th>Tags</th>
           </tr>
         </thead>
         <tbody>
-          {#each filteredVariations as variation (variation.value)}
+          {#each sortedVariations as variation (variation.value)}
             <tr>
               <th scope="row"
                 ><a
@@ -1270,5 +1352,20 @@
   .save-status.error {
     background: #fde8e9;
     color: #602d30;
+  }
+  thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th.sortable:hover {
+    background: #143544;
+  }
+  :global(html.dark) thead th.sortable:hover {
+    background: #253340 !important;
+  }
+  .sort-indicator {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 0.9em;
   }
 </style>
