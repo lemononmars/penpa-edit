@@ -6738,6 +6738,23 @@
         "0 to 8",
         "0-8"
       ]
+    },
+    {
+      "id": "citywalk",
+      "name": "Citywalk",
+      "rules": {
+        "9x9": "All cells that contain 3 to 7 are orthogonally connected in the grid. There is no restriction on connectivity in each 3x3 box"
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "tags": [
+        "global"
+      ]
     }
   ]
 }
