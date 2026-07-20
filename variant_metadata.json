@@ -6745,7 +6745,7 @@
       "rules": {
         "9x9": "All cells that contain 3 to 7 are orthogonally connected in the grid. There is no restriction on connectivity in each 3x3 box"
       },
-        "status": "available",
+      "status": "available",
       "inputType": {
         "categories": [
           "no-input"
@@ -6755,10 +6755,8 @@
       "tags": [
         "global"
       ]
-        "math",
-        "consecutive"
-      ]
     },
+    {
       "id": "upperrightheavykiller",
       "name": "Upper Right Heavy Killer",
       "rules": {
@@ -6792,8 +6790,6 @@
         "instructions": []
       },
       "tags": [
-        "global"
-      ]
         "math",
         "consecutive"
       ]
