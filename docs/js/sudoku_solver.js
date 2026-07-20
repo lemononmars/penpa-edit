@@ -1586,6 +1586,24 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             constraints.supported.push("topheavy");
             constraints.topheavy = [{}];
         }
+
+        if (variantEnabled(puzzle, "upperrightheavykiller")) {
+            constraints.supported.push("upperrightheavykiller");
+            var urCages = {};
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var cellKeyText = cellKey(puzzle, r, c);
+                    var entry = puzzle.pu_q.numberS && puzzle.pu_q.numberS[cellKeyText];
+                    if (entry && entry[0] !== undefined) {
+                        var val = parseInt(entry[0], 10);
+                        if (!isNaN(val)) {
+                            urCages[r + "," + c] = val;
+                        }
+                    }
+                }
+            }
+            constraints.upperrightheavykiller = [urCages];
+        }
         ["renban", "paritylines", "sequence", "consecutiveonline"].forEach(function(variant) {
             if (!variantEnabled(puzzle, variant)) return;
             connectedLinePaths(puzzle, 5).forEach(function(path) {

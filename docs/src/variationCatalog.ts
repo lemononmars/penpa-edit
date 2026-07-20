@@ -129,6 +129,10 @@ function genericSetting(variation: Variation) {
         add("symbol", "circle_L", 2, ["mo_symbol_lb", "ms1", "ms1_circle", "li_circle_L"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
+    if (variation.value === "upperrightheavykiller") {
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
     if (variation.value === "blocksumrelations") {
         add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
