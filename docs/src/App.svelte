@@ -54,6 +54,7 @@
   let darkTheme = true;
   let mobileActiveTab: "none" | "controls" | "actions" | "solver" = "none";
   let solverRunning = false;
+  let isEmbedded = false;
   let lastLogLine = "Idle";
   let fullLogContent = "";
   let fullLogExpanded = false;
@@ -1309,6 +1310,7 @@
   }
 
   onMount(() => {
+    isEmbedded = new URLSearchParams(window.location.search).has("embed");
     const savedPanelPosition = window.localStorage.getItem(
       "penpa-mobile-input-panel-position",
     );
@@ -1415,7 +1417,7 @@
   />
 </svelte:head>
 
-<div class="studio-shell" class:ready={initialized} class:dark={darkTheme}>
+<div class="studio-shell" class:ready={initialized} class:dark={darkTheme} class:embedded={isEmbedded}>
   <div class="mobile-header">
     <div class="mobile-header-row">
       <button
@@ -3859,7 +3861,7 @@ href="https://github.com/semiexp/cspuz_core"
   }
 
   @media (max-width: 768px) {
-    .mobile-header {
+.studio-shell.embedded .mobile-header {
       display: flex;
       flex-direction: column;
       background: #202b36;
@@ -3872,7 +3874,7 @@ href="https://github.com/semiexp/cspuz_core"
       flex-shrink: 0;
       z-index: 101;
     }
-    .mobile-header button {
+.studio-shell.embedded .mobile-header button {
       padding: 6px 12px;
       font-size: 12px;
       font-weight: 700;
@@ -3885,7 +3887,7 @@ href="https://github.com/semiexp/cspuz_core"
         background 0.2s,
         color 0.2s;
     }
-    .mobile-header button.active {
+.studio-shell.embedded .mobile-header button.active {
       background: var(--primary-color);
       color: #fff;
       border-color: var(--primary-color);
@@ -3931,10 +3933,10 @@ href="https://github.com/semiexp/cspuz_core"
       flex: 0 1 auto;
     }
 
-    .controls-top-drawer {
+.studio-shell.embedded .controls-top-drawer {
       display: none;
     }
-    .controls-top-drawer.open {
+.studio-shell.embedded .controls-top-drawer.open {
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -3950,31 +3952,31 @@ href="https://github.com/semiexp/cspuz_core"
       max-height: 65vh;
       overflow-y: auto;
     }
-    .studio-shell.dark .controls-top-drawer.open {
+.studio-shell.embedded.dark .controls-top-drawer.open {
       background: #263340;
       border-color: #40505f;
     }
 
-    .column.controls {
+.studio-shell.embedded .column.controls {
       display: contents;
     }
 
-    .legacy-modes-section {
+.studio-shell.embedded .legacy-modes-section {
       order: 4;
       background: #ffffff;
       border-top: 1px solid #d7dee5;
       padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 12px)) 8px;
       box-sizing: border-box;
     }
-    .studio-shell.dark .legacy-modes-section {
+.studio-shell.embedded.dark .legacy-modes-section {
       background: #263340;
       border-top-color: #40505f;
     }
 
-    .column.actions {
+.studio-shell.embedded .column.actions {
       display: none;
     }
-    .column.actions.open {
+.studio-shell.embedded .column.actions.open {
       display: block;
       position: absolute;
       top: 0;
@@ -3989,13 +3991,13 @@ href="https://github.com/semiexp/cspuz_core"
       overflow-y: auto;
       height: auto;
     }
-    .studio-shell.dark .column.actions.open {
+.studio-shell.embedded.dark .column.actions.open {
       background: #263340;
       border-color: #40505f;
     }
 
     .input-modes-section.panel-above,
-    .input-modes-section.panel-below {
+.studio-shell.embedded .input-modes-section.panel-below {
       order: 1;
       margin: 8px 8px 0 8px !important;
       padding: 6px 12px !important;
@@ -4008,23 +4010,23 @@ href="https://github.com/semiexp/cspuz_core"
       width: calc(100% - 16px);
       z-index: 5;
     }
-    .input-modes-section.panel-below {
+.studio-shell.embedded .input-modes-section.panel-below {
       order: 3;
     }
     .input-modes-section.panel-above h2,
-    .input-modes-section.panel-below h2 {
+.studio-shell.embedded .input-modes-section.panel-below h2 {
       display: none;
     }
     .tab-key-hint,
-    .mobile-input-panel .tool-input-panel kbd {
+.studio-shell.embedded .mobile-input-panel .tool-input-panel kbd {
       display: none;
     }
-    .input-mode-tools {
+.studio-shell.embedded .input-mode-tools {
       gap: 6px;
       align-items: stretch;
       position: relative;
     }
-    .mobile-add-variant {
+.studio-shell.embedded .mobile-add-variant {
       display: inline-flex;
       flex: 0 0 auto;
       align-items: center;
@@ -4039,12 +4041,12 @@ href="https://github.com/semiexp/cspuz_core"
       white-space: nowrap;
     }
     .studio-shell.dark .input-modes-section.panel-above,
-    .studio-shell.dark .input-modes-section.panel-below {
+.studio-shell.embedded.dark .input-modes-section.panel-below {
       background: #32414f;
       border-color: #40505f;
     }
 
-    :global(.svelte-home .legacy-variant-host .sudoku-variant-tools) {
+:global(.svelte-home .studio-shell.embedded .legacy-variant-host .sudoku-variant-tools) {
       display: flex !important;
       flex-direction: row !important;
       flex-wrap: nowrap !important;
@@ -4052,10 +4054,10 @@ href="https://github.com/semiexp/cspuz_core"
       padding: 2px 0 !important;
       width: 100% !important;
     }
-    :global(.svelte-home .legacy-variant-host button) {
+:global(.svelte-home .studio-shell.embedded .legacy-variant-host button) {
       flex-shrink: 0 !important;
     }
-    .input-mode-scroll-hint {
+.studio-shell.embedded .input-mode-scroll-hint {
       display: flex;
       position: absolute;
       z-index: 2;
@@ -4072,25 +4074,25 @@ href="https://github.com/semiexp/cspuz_core"
       font-size: 22px;
       font-weight: 800;
     }
-    .studio-shell.dark .input-mode-scroll-hint {
+.studio-shell.embedded.dark .input-mode-scroll-hint {
       background: linear-gradient(90deg, transparent, #32414f 55%);
     }
-    .input-panel-section {
+.studio-shell.embedded .input-panel-section {
       padding: 6px !important;
       box-shadow: none !important;
       border: 1px solid #e2e8f0 !important;
       border-radius: 6px !important;
     }
-    .studio-shell.dark .input-panel-section {
+.studio-shell.embedded.dark .input-panel-section {
       border-color: #4b5a68 !important;
     }
-    .input-panel-section .help-label {
+.studio-shell.embedded .input-panel-section .help-label {
       display: none;
     }
-    .desktop-input-panel {
+.studio-shell.embedded .desktop-input-panel {
       display: none;
     }
-    .mobile-input-panel {
+.studio-shell.embedded .mobile-input-panel {
       display: block;
       flex: 0 0 auto;
       width: calc(100% - 16px);
@@ -4100,7 +4102,7 @@ href="https://github.com/semiexp/cspuz_core"
       box-sizing: border-box;
       background: #fff;
     }
-    .mobile-input-panel.panel-above {
+.studio-shell.embedded .mobile-input-panel.panel-above {
       order: 1;
       margin-top: 0 !important;
       margin-bottom: 8px !important;
@@ -4108,7 +4110,7 @@ href="https://github.com/semiexp/cspuz_core"
       border-top: none;
       box-shadow: 0 4px 8px rgba(23, 34, 49, 0.06);
     }
-    .mobile-input-panel.panel-below {
+.studio-shell.embedded .mobile-input-panel.panel-below {
       order: 3;
       margin-top: 0 !important;
       margin-bottom: max(8px, env(safe-area-inset-bottom)) !important;
@@ -4116,11 +4118,11 @@ href="https://github.com/semiexp/cspuz_core"
       border-top: none;
       box-shadow: 0 4px 8px rgba(23, 34, 49, 0.06);
     }
-    .studio-shell.dark .mobile-input-panel {
+.studio-shell.embedded.dark .mobile-input-panel {
       background: #32414f;
     }
 
-    .variant-picker .variant-menu {
+.studio-shell.embedded .variant-picker .variant-menu {
       position: absolute;
       top: calc(100% + 6px);
       bottom: auto;
@@ -4134,7 +4136,7 @@ href="https://github.com/semiexp/cspuz_core"
       background: #ffffff;
       border: 1px solid #bdc8d3;
     }
-    .input-mode-variant-menu {
+.studio-shell.embedded .input-mode-variant-menu {
       position: fixed;
       inset: auto 8px max(8px, env(safe-area-inset-bottom)) 8px;
       z-index: 300;
@@ -4142,11 +4144,11 @@ href="https://github.com/semiexp/cspuz_core"
       overflow-y: auto;
       border-radius: 10px;
     }
-    .studio-shell.dark .variant-picker .variant-menu {
+.studio-shell.embedded.dark .variant-picker .variant-menu {
       background: #263340;
       border-color: #40505f;
     }
-    .mobile-input-panel-header {
+.studio-shell.embedded .mobile-input-panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -4158,10 +4160,10 @@ href="https://github.com/semiexp/cspuz_core"
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
-    .studio-shell.dark .mobile-input-panel-header {
+.studio-shell.embedded.dark .mobile-input-panel-header {
       color: #b7c5cf;
     }
-    .mobile-input-panel-header button {
+.studio-shell.embedded .mobile-input-panel-header button {
       flex: 0 0 auto;
       min-height: 28px;
       padding: 4px 9px;
@@ -4174,28 +4176,28 @@ href="https://github.com/semiexp/cspuz_core"
       letter-spacing: normal;
       text-transform: none;
     }
-    .mobile-note-modes {
+.studio-shell.embedded .mobile-note-modes {
       margin: 0 0 6px;
     }
-    .mobile-note-modes button {
+.studio-shell.embedded .mobile-note-modes button {
       display: block;
       min-height: 32px;
       padding: 5px 7px;
     }
-    .controls-top-drawer .note-modes span {
+.studio-shell.embedded .controls-top-drawer .note-modes span {
       display: none;
     }
-    .studio-shell.dark .mobile-input-panel-header button {
+.studio-shell.embedded.dark .mobile-input-panel-header button {
       color: #dce5ec;
       border-color: #536473;
       background: #263340;
     }
-    .mobile-header-row {
+.studio-shell.embedded .mobile-header-row {
       display: flex;
       width: 100%;
       gap: 8px;
     }
-    .mobile-header-row button {
+.studio-shell.embedded .mobile-header-row button {
       flex: 1;
       padding: 6px 12px;
       font-size: 12px;
@@ -4209,12 +4211,12 @@ href="https://github.com/semiexp/cspuz_core"
         background 0.2s,
         color 0.2s;
     }
-    .mobile-header-row button.active {
+.studio-shell.embedded .mobile-header-row button.active {
       background: var(--primary-color);
       color: #fff;
       border-color: var(--primary-color);
     }
-    .mobile-header-row.solver-row {
+.studio-shell.embedded .mobile-header-row.solver-row {
       display: flex;
       align-items: center;
       gap: 6px;
@@ -4223,10 +4225,10 @@ href="https://github.com/semiexp/cspuz_core"
       background: #1a242f;
       border-radius: 6px;
     }
-    .studio-shell.dark .mobile-header-row.solver-row {
+.studio-shell.embedded.dark .mobile-header-row.solver-row {
       background: #1b2630;
     }
-    .solver-btn {
+.studio-shell.embedded .solver-btn {
       flex: 0 0 auto !important;
       padding: 4px 8px !important;
       font-size: 10px !important;
@@ -4240,12 +4242,12 @@ href="https://github.com/semiexp/cspuz_core"
       background: #2a3744;
       cursor: pointer;
     }
-    .solver-btn.active {
+.studio-shell.embedded .solver-btn.active {
       background: var(--primary-color) !important;
       color: #fff !important;
       border-color: var(--primary-color) !important;
     }
-    .solver-status {
+.studio-shell.embedded .solver-status {
       flex: 1;
       display: inline-flex;
       align-items: center;
@@ -4253,7 +4255,7 @@ href="https://github.com/semiexp/cspuz_core"
       padding: 0 6px;
       min-width: 0;
     }
-    .solver-status .status-indicator {
+.studio-shell.embedded .solver-status .status-indicator {
       width: 6px;
       height: 6px;
       border-radius: 50%;
@@ -4261,11 +4263,11 @@ href="https://github.com/semiexp/cspuz_core"
       box-shadow: 0 0 0 2px rgba(127, 140, 152, 0.13);
       flex-shrink: 0;
     }
-    .solver-status .status-indicator.running {
+.studio-shell.embedded .solver-status .status-indicator.running {
       background: #48c78e;
       box-shadow: 0 0 0 2px rgba(72, 199, 142, 0.16);
     }
-    .solver-status .log-text {
+.studio-shell.embedded .solver-status .log-text {
       flex: 1;
       min-width: 0;
       color: #bdc8d3;
@@ -4274,20 +4276,20 @@ href="https://github.com/semiexp/cspuz_core"
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .solver-status .expand-btn {
+.studio-shell.embedded .solver-status .expand-btn {
       flex: 0 0 auto;
       min-width: 42px;
       min-height: 26px;
       padding: 3px 7px;
       font-size: 10px;
     }
-    .mobile-header > .full-log-box {
+.studio-shell.embedded .mobile-header > .full-log-box {
       box-sizing: border-box;
       width: 100%;
       max-height: 24vh;
       margin: 0;
     }
-    .log-host {
+.studio-shell.embedded .log-host {
       display: none !important;
     }
   }
