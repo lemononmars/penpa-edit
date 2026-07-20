@@ -1586,7 +1586,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             constraints.supported.push("topheavy");
             constraints.topheavy = [{}];
         }
-        ["renban", "paritylines", "sequence"].forEach(function(variant) {
+        ["renban", "paritylines", "sequence", "consecutiveonline"].forEach(function(variant) {
             if (!variantEnabled(puzzle, variant)) return;
             connectedLinePaths(puzzle, 5).forEach(function(path) {
                 constraints.catalogLines.push({ path: path, relation: variant });
