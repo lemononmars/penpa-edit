@@ -3191,6 +3191,7 @@ test("Big-Small Japanese Sums validate sequences", function() {
 
 test("Tic-Tac-Toe Winner validations", function() {
     assert.strictEqual(true, true);
+});
 
 test("Unicorn normalizes the constraint array with 81 entries", function() {
     const puzzle = {
@@ -3347,4 +3348,5 @@ test("Braille parsing and CSP validation", () => {
     assert.equal(validate(5, [0, 3]), false); // 5 only has dots 0, 4
 
 
+});
 });
