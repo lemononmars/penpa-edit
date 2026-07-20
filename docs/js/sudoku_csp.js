@@ -1792,6 +1792,8 @@ registerConstraint("threeDigitNumbersKillers", {
                 case "lesser": return Math.min(first, second) === clue.target;
                 case "consecutive": return difference === 1;
                 case "notConsecutive": return difference !== 1;
+                case "sumnine": return sum === 9;
+                case "notSumnine": return sum !== 9;
                 case "evenSum": return sum % 2 === 0;
                 case "oddSum": return sum % 2 === 1;
                 case "inequality": return clue.sign === "<" ? first < second : first > second;
@@ -2326,6 +2328,14 @@ registerConstraint("threeDigitNumbersKillers", {
             if (clue.relation === "oddsums" || clue.relation === "japanesesums" || clue.relation === "bigsmalljapanesesums") {
                 var values = clue.cells.map(function(cell) { return cellValue(board, cell); });
                 return checkSumsSequence(values, clue.value, clue.relation, clue.axis);
+            }
+            if (clue.relation === "sumbyx") {
+                var count = clue.targetX;
+                if (!count || count > values.length) return !count;
+                var prefix = values.slice(0, count);
+                var sum = prefix.reduce(function(total, value) { return total + value; }, 0);
+                var blanks = prefix.filter(function(value) { return !value; }).length;
+                return sum <= clue.value && sum + blanks * SIZE >= clue.value && (blanks > 0 || sum === clue.value);
             }
             if (clue.relation === "xsums") {
                 var count = values[0];

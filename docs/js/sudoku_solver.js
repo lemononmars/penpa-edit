@@ -2410,7 +2410,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
 
         var catalogEdgeVariant = ["difference", "sum", "product", "arithmetic", "greater", "lesser", "divisor", "multiples", "eitheror", "blocksumrelations", "tenspositionproducts", "ratio",
             "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares",
-            "primesums", "twodigitprimenumbers", "fives", "oneortwodifferencepairs", "teneleven"].find(function(name) {
+            "primesums", "twodigitprimenumbers", "fives", "sumnine", "oneortwodifferencepairs", "teneleven"].find(function(name) {
                 return variantEnabled(puzzle, name);
             });
         if (catalogEdgeVariant) {
@@ -2457,7 +2457,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                 Object.keys(symbols).forEach(function(key) {
                     if (catalogEdgeVariant === "consecutive" &&
                         (!symbols[key] || symbols[key][1] !== "circle_SS" || symbols[key][0] !== 1)) return;
-                    if ((catalogEdgeVariant === "xydifference" || catalogEdgeVariant === "primesums" || catalogEdgeVariant === "twodigitprimenumbers" || catalogEdgeVariant === "fives") && (!symbols[key] ||
+                    if ((catalogEdgeVariant === "xydifference" || catalogEdgeVariant === "primesums" || catalogEdgeVariant === "twodigitprimenumbers" || catalogEdgeVariant === "fives" || catalogEdgeVariant === "sumnine") && (!symbols[key] ||
                         ["diamond_L", "diamond_SS", "circle_SS"].indexOf(symbols[key][1]) === -1)) return;
                     if (catalogEdgeVariant === "perfectsquares" &&
                         (!symbols[key] || ["diamond_SS", "circle_SS"].indexOf(symbols[key][1]) === -1 || symbols[key][0] !== 1)) return;
@@ -2480,7 +2480,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                                 { row: 0, col: cells[0].col }) : null
                     });
                 });
-                if (catalogEdgeVariant === "consecutive" && puzzle.consecutiveNegativeConstraint === true) {
+                if ((catalogEdgeVariant === "consecutive" && puzzle.consecutiveNegativeConstraint === true) || catalogEdgeVariant === "sumnine") {
                     for (var catalogRow = 0; catalogRow < SIZE; catalogRow++) {
                         for (var catalogCol = 0; catalogCol < SIZE; catalogCol++) {
                             [[catalogRow + 1, catalogCol], [catalogRow, catalogCol + 1]].forEach(function(neighbor) {
@@ -2491,7 +2491,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                                     constraints.edgeRelations.push({ cells: [
                                         { row: catalogRow, col: catalogCol },
                                         { row: neighbor[0], col: neighbor[1] }
-                                    ], relation: "notConsecutive" });
+                                    ], relation: catalogEdgeVariant === "sumnine" ? "notSumnine" : "notConsecutive" });
                                 }
                             });
                         }
@@ -2831,7 +2831,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
         var activeOutsideVariants = ["starproduct", "bust", "xsums", "numberedrooms", "sumframe", "edgedifference",
             "fullrank", "outsideparity", "parityparty", "serbianframe", "median", "descriptivepairs",
             "maximin", "minimax", "ascendingstarters", "before9", "oddevenbigsmall", "before1after9", "firstseenoddeven", "maxascending",
-            "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers",
+            "innerframesum", "missingdigit", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers", "sumbyx",
             "position", "sumnexttonine", "wrongoutsidesum", "doublesandwich", "xaverage", "triplesum", "japanesesums", "oddsums", "partitionedsums", "bigsmalljapanesesums"].filter(function(name) {
             return variantEnabled(puzzle, name);
         });
@@ -2852,12 +2852,24 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                         return;
                     }
                     if (clue === null) return;
-                    constraints.outsideRelations.push({
-                        relation: relation || variant,
+                    var relationTarget = relation || variant;
+                    var clueObj = {
+                        relation: relationTarget,
                         value: clue,
                         cells: variant === "sumframe" ? cells.slice(0, frameLength) : cells,
                         axis: axis
-                    });
+                    };
+                    if (relationTarget === "sumbyx") {
+                        // find the first shaded cell in `cells`
+                        var shadedIdx = cells.findIndex(function(c) {
+                            var outsideTop = Number(puzzle.space && puzzle.space[0] || 0);
+                            var outsideLeft = Number(puzzle.space && puzzle.space[2] || 0);
+                            var k = (c.col + outsideLeft) + (c.row + outsideTop) * puzzle.nx0;
+                            return puzzle.pu_q.surface && puzzle.pu_q.surface[k];
+                        });
+                        clueObj.targetX = shadedIdx >= 0 ? shadedIdx + 1 : 0;
+                    }
+                    constraints.outsideRelations.push(clueObj);
                 }
                 for (var outsideIndex = 0; outsideIndex < SIZE; outsideIndex++) {
                     var outsideColumn = Array.from({ length: SIZE }, function(_, row) { return { row: row, col: outsideIndex }; });
@@ -4430,7 +4442,7 @@ var SudokuTools = (function() {
         pu.battenburg_mode = pu.activeSudokuVariant === "battenburg";
         pu.sudoku_edge_clue_mode = ["difference", "sum", "product", "arithmetic", "greater", "lesser",
             "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares", "multiplication", "xivi", "lc",
-            "primesums", "twodigitprimenumbers", "blocksumrelations", "divisor", "eitheror", "anticonsecutive", "fives", "fadedkropki", "doublekropki",
+            "primesums", "twodigitprimenumbers", "blocksumrelations", "divisor", "eitheror", "anticonsecutive", "fives", "sumnine", "fadedkropki", "doublekropki",
             "oneortwodifferencepairs", "teneleven", "tenspositionproducts"].indexOf(pu.activeSudokuVariant) !== -1 &&
             (mode === "number" || mode === "symbol");
         pu.sudoku_corner_clue_mode = ["quadruple", "equalsums", "equaldifferences", "equalproducts",

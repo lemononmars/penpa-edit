@@ -281,7 +281,7 @@ if (variation.value === "threedigitnumberskiller") {
         add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["inequality", "xydifference", "perfectsquares", "primesums", "twodigitprimenumbers", "fives", "wildcard"].includes(variation.value)) {
+    if (["inequality", "xydifference", "perfectsquares", "primesums", "twodigitprimenumbers", "fives", "wildcard", "sumnine"].includes(variation.value)) {
         add((variation.value === "inequality" || variation.value === "wildcard") ? "number" : "symbol",
             (variation.value === "inequality" || variation.value === "wildcard") ? "5" : "diamond_SS",
             (variation.value === "inequality" || variation.value === "wildcard") ? 6 : 2,
@@ -325,7 +325,7 @@ if (variation.value === "threedigitnumberskiller") {
         add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["outside", "outside234", "maximin", "minimax", "innerframesum", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers"].includes(variation.value)) {
+    if (["outside", "outside234", "maximin", "minimax", "innerframesum", "nextto9", "outsideconsecutive", "outsidegreaterthan", "outsidekiller", "parityskyscrapers", "sumbyx"].includes(variation.value)) {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
