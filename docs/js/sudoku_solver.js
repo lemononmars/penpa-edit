@@ -597,6 +597,7 @@ sumOrProductKillers: [],
             soloKillerGroups: [],
             outsideRelations: [],
             fullRankGroups: [],
+            differentParity: [],
             disparity: [],
             rossiniLines: [],
             cellRelations: [],
@@ -746,7 +747,7 @@ sumOrProductKillers: [],
         var cages = typeof puzzle.refreshKillerCages === "function" ?
             puzzle.refreshKillerCages("pu_q") : (puzzle.pu_q.killercages || []);
         var regionVariantNames = ["clone", "consecutiveclone", "renban", "windoku",
-            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "codedclone", "number 5 is alive", "sumset", "zones", "somewhere", "sumorproductkiller", "tableaux", "roundoff", "ordering","threedigitnumberskiller"];
+            "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "codedclone", "number 5 is alive", "sumset", "zones", "somewhere", "sumorproductkiller", "tableaux", "roundoff", "ordering","threedigitnumberskiller", "different parity"];
         var usesCagedRegions = regionVariantNames.some(function(name) { return variantEnabled(puzzle, name); });
         var regionCages = [];
         for (var k = 0; k < cages.length; k++) {
@@ -781,6 +782,12 @@ sumOrProductKillers: [],
                 }
                 if (variantEnabled(puzzle, "killer") || (!usesCagedRegions && !variantEnabled(puzzle, "extraregion"))) {
                     constraints.killers.push({ cells: cageCells, total: readKillerTotal(puzzle, cages[k]) });
+                }
+                if (variantEnabled(puzzle, "different parity")) {
+                    if (cageCells.length !== 2) {
+                        throw new Error("Different Parity cages must be exactly 2 cells long");
+                    }
+                    constraints.differentParity.push(cageCells);
                 }
             }
         }
@@ -3269,6 +3276,11 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                 }
             }
             constraints.supported.push("disparity");
+        }
+        if (variantEnabled(puzzle, "different parity")) {
+            if (constraints.differentParity.length) {
+                constraints.supported.push("different parity");
+            }
         }
         if (variantEnabled(puzzle, "countingneighbours")) {
             var markedCells = {};

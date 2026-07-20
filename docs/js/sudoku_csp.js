@@ -1037,6 +1037,18 @@ registerConstraint("threeDigitNumbersKillers", {
         }
     });
 
+
+
+    registerConstraint("differentParity", {
+        validatePartial: function(board, clue) {
+            var val1 = cellValue(board, clue[0]);
+            var val2 = cellValue(board, clue[1]);
+            if (val1 && val2) {
+                return (val1 % 2) !== (val2 % 2);
+            }
+            return true;
+        }
+    });
     registerConstraint("oddEven", {
         validatePartial: function(board, mark) {
             var value = cellValue(board, mark.cell);
