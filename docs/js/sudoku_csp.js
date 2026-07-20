@@ -3243,6 +3243,14 @@ registerConstraint("threeDigitNumbersKillers", {
                 if (new Set(assigned).size !== assigned.length) return false;
                 return !assigned.length || Math.max.apply(null, assigned) - Math.min.apply(null, assigned) < values.length;
             }
+            if (clue.relation === "consecutiveonline") {
+                for (var p = 0; p < values.length - 1; p++) {
+                    if (values[p] && values[p + 1]) {
+                        if (Math.abs(values[p] - values[p + 1]) !== 1) return false;
+                    }
+                }
+                return true;
+            }
             if (clue.relation === "creasing") {
                 var increasing = true;
                 var decreasing = true;
@@ -3838,6 +3846,34 @@ registerConstraint("threeDigitNumbersKillers", {
                 if (complete) {
                     if (sums.indexOf(sum) !== -1) return false;
                     sums.push(sum);
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("upperrightheavykiller", {
+        validatePartial: function(board, constraint) {
+            var urCages = constraint;
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var cellVal = cellValue(board, { row: r, col: c });
+                    if (!cellVal) continue;
+                    var mathCellVal = mathCellValue(board, { row: r, col: c });
+
+                    if (r > 0 && c < SIZE - 1) {
+                        var urVal = cellValue(board, { row: r - 1, col: c + 1 });
+                        if (!urVal) continue;
+                        var mathUrVal = mathCellValue(board, { row: r - 1, col: c + 1 });
+                        var cageTotal = urCages[r + "," + c];
+
+                        if (mathCellVal < mathUrVal) {
+                            if (cageTotal === undefined) return false;
+                            if (mathCellVal + mathUrVal !== cageTotal) return false;
+                        } else {
+                            if (cageTotal !== undefined) return false;
+                        }
+                    }
                 }
             }
             return true;

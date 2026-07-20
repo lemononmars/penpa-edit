@@ -823,6 +823,16 @@ test("catalog line and four-cell relations enforce their shared CSP families", f
         catalogLines: [{ path: line, relation: "paritylines" }]
     }).solved, false);
 
+    board = emptyBoard();
+    board[0][0] = 3; board[1][2] = 4; board[2][4] = 5;
+    assert.equal(SudokuSolver.solve(board, {
+        catalogLines: [{ path: line, relation: "consecutiveonline" }]
+    }).solved, true);
+    board[2][4] = 6;
+    assert.equal(SudokuSolver.solve(board, {
+        catalogLines: [{ path: line, relation: "consecutiveonline" }]
+    }).solved, false);
+
     const cells = [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 1, col: 0 }, { row: 1, col: 1 }];
     board = emptyBoard();
     board[0][0] = 1; board[0][1] = 2; board[1][0] = 3; board[1][1] = 4;
@@ -2129,6 +2139,14 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
     }));
     assert.equal(creasing.catalogLines[0].relation, "creasing");
     assert.equal(creasing.thermos.length, 0);
+
+    const consecutiveonline = SudokuSolver.readConstraints(puzzle("consecutiveonline", {
+        pu_q: { line: { "28,29": 5, "29,42": 5 } }
+    }));
+    assert.equal(consecutiveonline.catalogLines[0].relation, "consecutiveonline");
+    assert.deepEqual(consecutiveonline.catalogLines[0].path.map(c => ({ row: c.row, col: c.col })), [
+        { row: 0, col: 0 }, { row: 0, col: 1 }, { row: 1, col: 1 }
+    ]);
 
     const cornerPoint = { 300: { neighbor: [28, 29, 41, 42] } };
     const diagonal = SudokuSolver.readConstraints(puzzle("diagonallyconsecutive", {
