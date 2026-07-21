@@ -2171,6 +2171,195 @@ onload = function() {
 
     window.addEventListener('beforeunload', function(e) {
         if (UserSettings.reload_button) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+        PenpaProgress.save();
+    });
+
+    document.addEventListener("visibilitychange", function() {
+        if (document.visibilityState === "hidden") {
+            PenpaProgress.save();
+        }
+    });
+
+    function splitTextLines(ctx, text, maxWidth) {
+        var words = text.split(" ");
+        var lines = [];
+        var currentLine = words[0];
+
+        for (var i = 1; i < words.length; i++) {
+            var word = words[i];
+            var width = ctx.measureText(currentLine + " " + word).width;
+            if (width < maxWidth) {
+                currentLine += " " + word;
+            } else {
+                lines.push(currentLine);
+                currentLine = word;
+            }
+        }
+        lines.push(currentLine);
+        return lines;
+    }
+
+    // Double click to select all of a certain element
+    document.addEventListener("dblclick", window_dblclick, {passive: false});
+
+    function window_dblclick(e) {
+        if (e.target.id === "canvas") {
+            document.getElementById("inputtext").blur(); // Remove focus from text box
+            onDown(e);
+            if (checkms === 0) {
+                e.preventDefault();
+            }
+        }
+    }
+
+    //panel(drag_window)
+    var x_window;
+    var y_window;
+
+    function mdown(e) {
+        var elements = document.getElementById("float-key-header");
+        elements.classList.add("drag");
+
+        if (e.type === "mousedown") {
+            var event = e;
+        } else {
+            var event = e.changedTouches[0];
+        }
+
+        x_window = event.pageX - elements.offsetLeft;
+        y_window = event.pageY - elements.offsetTop;
+        var drag = document.getElementsByClassName("drag")[0];
+        document.body.addEventListener("touchmove", mmove, {passive: false});
+        document.body.addEventListener("mousemove", mmove, {passive: false});
+    }
+
+    function mmove(e) {
+
+        var drag = document.getElementsByClassName("drag")[0];
+        var body = document.getElementById("float-key-body");
+        if (e.type === "mousemove") {
+            var event = e;
+        } else {
+            var event = e.changedTouches[0];
+        }
+        e.preventDefault();
+
+        // restrict the panel movement to not go beyond with top header
+        let el_header = document.getElementById("header");
+        let el_floatheader = document.getElementById("float-key-header");
+
+        drag.style.top = event.pageY - y_window + "px";
+        drag.style.left = event.pageX - x_window + "px";
+
+        if (el_floatheader.getBoundingClientRect().top > el_header.getBoundingClientRect().bottom) {
+            body.style.top = event.pageY - y_window + "px";
+            body.style.left = event.pageX - x_window + "px";
+
+            window.panel_toplast = body.style.top;
+            window.panel_leftlast = body.style.left;
+        } else {
+            drag.style.top = body.style.top;
+            drag.style.left = body.style.left;
+        }
+
+        drag.addEventListener("touchend", mup, {passive: false});
+        drag.addEventListener("mouseup", mup, {passive: false});
+        document.body.addEventListener("touchleave", mup, {passive: false});
+        document.body.addEventListener("mouseleave", mup, {passive: false});
+
+    }
+
+    function mup(e) {
+        var drag = document.getElementsByClassName("drag")[0];
+        if (drag) {
+            document.body.removeEventListener("touchmove", mmove, {passive: false});
+            document.body.removeEventListener("mousemove", mmove, {passive: false});
+            drag.removeEventListener("touchend", mup, {passive: false});
+            drag.removeEventListener("mouseup", mup, {passive: false});
+            drag.classList.remove("drag");
+        }
+    }
+
+    // Panel input settings
+    var float_canvas = document.getElementById("float-canvas");
+    var panel_select;
+
+    function f_mdown(e) {
+        if (e.type === "mousedown") {
+            var event = e;
+            var xf = event.offsetX;
+            var yf = event.offsetY;
+        } else {
+            var float_canvas = document.getElementById("float-canvas");
+            var event = e.changedTouches[0];
+            var xf = event.pageX - (float_canvas.getBoundingClientRect().x - document.documentElement.getBoundingClientRect().left);
+            var yf = event.pageY - (float_canvas.getBoundingClientRect().y - document.documentElement.getBoundingClientRect().top);
+        }
+        var sizef = panel_pu.sizef;
+        var numxf = Math.floor(xf / (sizef + 3));
+        var numyf = Math.floor(yf / (sizef + 3));
+        var n = numxf + numyf * panel_pu.nxf;
+        panel_select = n;
+        var paneletc = ["ja_K", "ja_H", "Kan", "Rome", "Greek", "Cyrillic", "europe", "Chess", "card"];
+
+        if (pu.mode[pu.mode.qa].edit_mode === "symbol") {
+            panel_pu.edit_num = n;
+            if (UserSettings.panel_shown && pu.onoff_symbolmode_list[pu.mode[pu.mode.qa].symbol[0]]) {
+                if (0 <= panel_pu.edit_num && panel_pu.edit_num <= 8) {
+                    pu.key_number((panel_pu.edit_num + 1).toString());
+                } else if (panel_pu.edit_num === 9) {
+                    pu.key_number(0);
+                } else if (panel_pu.edit_num === 11) {
+                    pu.key_space();
+                }
+            }
+            panel_pu.draw_panel();
+        } else if (panel_pu.panelmode === "number") {
+            if (0 <= n && n <= 9) {
+                pu.key_number(panel_pu.cont[n].toString());
+            } else if (n === 10) {
+                pu.key_backspace();
+            } else if (n === 11) {
+                pu.key_space();
+            }
+        } else if (panel_pu.panelmode === "alphabet" || panel_pu.panelmode === "alphabet_s") {
+            if (0 <= n && n <= 27) {
+                pu.key_number(panel_pu.cont[n].toString(), true);
+            } else if (n === 28) {
+                pu.key_number(" ");
+            } else if (n >= 29) {
+                pu.key_space();
+            }
+        } else if (panel_pu.panelmode === "key_symbol") {
+            if (panel_pu.cont[n] && panel_pu.cont[n] != " ") {
+                pu.key_number(panel_pu.cont[n]);
+            } else if (panel_pu.cont[n] === " ") {
+                pu.key_space();
+            }
+        } else if (paneletc.indexOf(panel_pu.panelmode) != -1) {
+            if (panel_pu.cont[n] && panel_pu.cont[n] != "　") {
+                pu.key_number(panel_pu.cont[n]);
+            } else if (panel_pu.cont[n] === "　") {
+                pu.key_space();
+            }
+        }
+    }
+
+    // Background image handling
+    document.getElementById("edit_bg_image").addEventListener('click', () => {
+        document.getElementById('modal-bg-image').style.display = 'block';
+    });
+    document.getElementById("bg_image_url").addEventListener('change', () => pu.update_bg_image_url());
+    for (let v of ['x', 'y', 'width', 'height', 'opacity', 'foreground', 'mask_white', 'threshold'])
+        document.getElementById("bg_image_" + v).addEventListener('change', () => pu.update_bg_image_attrs());
+
+    PenpaUI.initPenpaLite();
+
+    window.addEventListener('beforeunload', function(e) {
+        if (UserSettings.reload_button) {
             // Cancel the event
             e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
             // Chrome requires returnValue to be set
@@ -2185,107 +2374,56 @@ onload = function() {
         }
     });
 
-
     // Adding on change events for general settings
-    // Theme Setting
-    document.getElementById("theme_mode_opt").onchange = function() {
-        UserSettings.color_theme = this.value;
-    }
-    // Toggle responsiveness
-    document.getElementById("responsive_settings_opt").onchange = function() {
-        UserSettings.responsive_mode = this.value;
-    }
+    const themeOpt = document.getElementById("theme_mode_opt");
+    if (themeOpt) themeOpt.onchange = function() { UserSettings.color_theme = this.value; };
 
-    // Custom Color Setting
-    document.getElementById("custom_color_opt").onchange = function() {
-        UserSettings.custom_colors_on = (parseInt(this.value, 10) === 2);
-    }
+    const respOpt = document.getElementById("responsive_settings_opt");
+    if (respOpt) respOpt.onchange = function() { UserSettings.responsive_mode = this.value; };
 
-    // Save Setting
-    document.getElementById("mousemiddle_settings_opt").onchange = function() {
-        UserSettings.mousemiddle_button = this.value;
-    }
+    const colorOpt = document.getElementById("custom_color_opt");
+    if (colorOpt) colorOpt.onchange = function() { UserSettings.custom_colors_on = (parseInt(this.value, 10) === 2); };
 
-    document.getElementById("language_opt").onchange = function() {
-        UserSettings.app_language = this.value;
-    }
+    const mouseOpt = document.getElementById("mousemiddle_settings_opt");
+    if (mouseOpt) mouseOpt.onchange = function() { UserSettings.mousemiddle_button = this.value; };
 
-    document.getElementById("starbattle_settings_opt").onchange = function() {
-        UserSettings.starbattle_dots = this.value;
-    }
+    const langOpt = document.getElementById("language_opt");
+    if (langOpt) langOpt.onchange = function() { UserSettings.app_language = this.value; };
 
-    document.getElementById("secondcolor_settings_opt").onchange = function() {
-        UserSettings.secondcolor = this.value;
-    }
+    const starOpt = document.getElementById("starbattle_settings_opt");
+    if (starOpt) starOpt.onchange = function() { UserSettings.starbattle_dots = this.value; };
 
-    // Adding on change events for general settings
-    // Theme Setting
-    document.getElementById("theme_mode_opt").onchange = function() {
-        UserSettings.color_theme = this.value;
-    }
+    const secColorOpt = document.getElementById("secondcolor_settings_opt");
+    if (secColorOpt) secColorOpt.onchange = function() { UserSettings.secondcolor = this.value; };
 
-    // Toggle responsiveness
-    document.getElementById("responsive_settings_opt").onchange = function() {
-        UserSettings.responsive_mode = this.value;
-    }
+    const sudNormOpt = document.getElementById("sudoku_settings_normal_opt");
+    if (sudNormOpt) sudNormOpt.onchange = function() { UserSettings.sudoku_normal_size = this.value; };
 
-    // Custom Color Setting
-    document.getElementById("custom_color_opt").onchange = function() {
-        UserSettings.custom_colors_on = (parseInt(this.value, 10) === 2);
-    }
+    const sudOpt = document.getElementById("sudoku_settings_opt");
+    if (sudOpt) sudOpt.onchange = function() { UserSettings.sudoku_centre_size = this.value; };
 
-    // Save Setting
-    document.getElementById("mousemiddle_settings_opt").onchange = function() {
-        UserSettings.mousemiddle_button = this.value;
-    }
+    const outlineOpt = document.getElementById("outline_text_opt");
+    if (outlineOpt) outlineOpt.onchange = function() { UserSettings.outline_text = this.value; };
 
-    document.getElementById("language_opt").onchange = function() {
-        UserSettings.app_language = this.value;
-    }
+    const reloadOpt = document.getElementById("reload_button");
+    if (reloadOpt) reloadOpt.onchange = function() { UserSettings.reload_button = parseInt(this.value, 10) === 1; };
 
-    document.getElementById("starbattle_settings_opt").onchange = function() {
-        UserSettings.starbattle_dots = this.value;
-    }
+    const storageOpt = document.getElementById("allow_local_storage");
+    if (storageOpt) storageOpt.onchange = function() { UserSettings.local_storage = (parseInt(this.value, 10) === 1); };
 
-    document.getElementById("secondcolor_settings_opt").onchange = function() {
-        UserSettings.secondcolor = this.value;
-    }
+    const autoSaveOpt = document.getElementById("auto_save_history_opt");
+    if (autoSaveOpt) autoSaveOpt.onchange = function() { UserSettings.auto_save_history = this.value; };
 
-    document.getElementById("sudoku_settings_normal_opt").onchange = function() {
-        UserSettings.sudoku_normal_size = this.value;
-    }
+    const startSizeOpt = document.getElementById("start_grid_size_opt");
+    if (startSizeOpt) startSizeOpt.onchange = function() { UserSettings.start_grid_size = this.value; };
 
-    document.getElementById("sudoku_settings_opt").onchange = function() {
-        UserSettings.sudoku_centre_size = this.value;
-    }
-
-    document.getElementById("outline_text_opt").onchange = function() {
-        UserSettings.outline_text = this.value;
-    }
-
-    document.getElementById("reload_button").onchange = function() {
-        UserSettings.reload_button = parseInt(this.value, 10) === 1;
-    }
-
-    document.getElementById("allow_local_storage").onchange = function() {
-        UserSettings.local_storage = (parseInt(this.value, 10) === 1);
-    }
-
-    document.getElementById("auto_save_history_opt").onchange = function() {
-        UserSettings.auto_save_history = this.value;
-    }
-
-    document.getElementById("start_grid_size_opt").onchange = function() {
-        UserSettings.start_grid_size = this.value;
-    }
-
-    document.getElementById("start_grid_type_opt").onchange = function() {
-        UserSettings.start_grid_type = this.value;
-    }
+    const startTypeOpt = document.getElementById("start_grid_type_opt");
+    if (startTypeOpt) startTypeOpt.onchange = function() { UserSettings.start_grid_type = this.value; };
 
     $(document).ready(function() {
+        const constraintsOpt = document.getElementById('constraints_settings_opt');
         if (!document.documentElement.classList.contains("svelte-home") && window.pu &&
-            pu.mmode !== "solve" && (pu.gridtype === "square" || pu.gridtype === "sudoku" || pu.gridtype === "kakuro")) {
+            pu.mmode !== "solve" && (pu.gridtype === "square" || pu.gridtype === "sudoku" || pu.gridtype === "kakuro") && constraintsOpt) {
             $('#constraints_settings_opt').select2({
                 'width': "resolve" // 25% was used before
             });
@@ -2298,148 +2436,141 @@ onload = function() {
         });
     };
 
-    document.getElementById("constraints_settings_opt").onchange = function() {
-        let current_constraint = document.getElementById("constraints_settings_opt").value;
-        if (current_constraint === "all") {
-            // Display the mode break line if min-width greater than 850px (defined in base-structure.css media)
-            // and responsive mode is not equal to 1
-            let responsive_mode = UserSettings.responsive_mode;
-            if (responsive_mode === 1 || (responsive_mode > 1 && window.innerWidth < 850)) {
-                document.getElementById("mode_break").classList.remove('is_hidden');
-                document.getElementById("mode_txt_space").classList.remove('is_hidden');
-                // document.getElementById("visibility_break").style.display = "none";
-            } else if (responsive_mode > 1 && window.innerWidth >= 850) {
-                // document.getElementById("visibility_break").style.display = "inline";
-            }
-
-            // set the default submode
-            for (let i = 0; i < penpa_constraints["setting"][current_constraint]["modeset"].length; i++) {
-                let modeset = penpa_constraints["setting"][current_constraint]["modeset"][i];
-                let submodeset = penpa_constraints["setting"][current_constraint]["submodeset"][i];
-                let styleset = penpa_constraints["setting"][current_constraint]["styleset"][i];
-                if (submodeset !== "") {
-                    pu.mode[pu.mode.qa][modeset][0] = submodeset;
+    const constraintsOpt = document.getElementById("constraints_settings_opt");
+    if (constraintsOpt) {
+        constraintsOpt.onchange = function() {
+            let current_constraint = constraintsOpt.value;
+            if (current_constraint === "all") {
+                let responsive_mode = UserSettings.responsive_mode;
+                if (responsive_mode === 1 || (responsive_mode > 1 && window.innerWidth < 850)) {
+                    const mb = document.getElementById("mode_break");
+                    const mts = document.getElementById("mode_txt_space");
+                    if (mb) mb.classList.remove('is_hidden');
+                    if (mts) mts.classList.remove('is_hidden');
                 }
-                if (styleset !== "") {
-                    pu.mode[pu.mode.qa][modeset][1] = styleset;
+
+                for (let i = 0; i < penpa_constraints["setting"][current_constraint]["modeset"].length; i++) {
+                    let modeset = penpa_constraints["setting"][current_constraint]["modeset"][i];
+                    let submodeset = penpa_constraints["setting"][current_constraint]["submodeset"][i];
+                    let styleset = penpa_constraints["setting"][current_constraint]["styleset"][i];
+                    if (submodeset !== "") {
+                        pu.mode[pu.mode.qa][modeset][0] = submodeset;
+                    }
+                    if (styleset !== "") {
+                        pu.mode[pu.mode.qa][modeset][1] = styleset;
+                    }
+                }
+
+                PenpaUI.set_all_modes_hidden(false);
+            } else {
+                PenpaUI.set_all_modes_hidden(true);
+
+                const mb = document.getElementById("mode_break");
+                const mts = document.getElementById("mode_txt_space");
+                if (mb) mb.classList.add('is_hidden');
+                if (mts) mts.classList.add('is_hidden');
+
+                for (var i of penpa_constraints["setting"]["general"]) {
+                    const el = document.getElementById(i);
+                    if (el) el.classList.remove('is_hidden');
+                }
+
+                for (var i of penpa_constraints["setting"][current_constraint]["show"]) {
+                    const el = document.getElementById(i);
+                    if (el) el.classList.remove('is_hidden');
+                }
+
+                for (let i = 0; i < penpa_constraints["setting"][current_constraint]["modeset"].length; i++) {
+                    let modeset = penpa_constraints["setting"][current_constraint]["modeset"][i];
+                    let submodeset = penpa_constraints["setting"][current_constraint]["submodeset"][i];
+                    let styleset = penpa_constraints["setting"][current_constraint]["styleset"][i];
+                    if (submodeset !== "") {
+                        pu.mode[pu.mode.qa][modeset][0] = submodeset;
+                    }
+                    if (styleset !== "") {
+                        pu.mode[pu.mode.qa][modeset][1] = styleset;
+                    }
+                }
+
+                if (current_constraint !== "kropki" && current_constraint !== "xv" && current_constraint !== "battenburg" &&
+                    penpa_constraints["border"].includes(current_constraint) && pu.borderwarning) {
+                    pu.borderwarning = false;
+                    Swal.fire({
+                        html: '<h2 class="info">' + PenpaText.get('border_setting_help') + '</h2>',
+                        timer: 8000,
+                        icon: 'info'
+                    });
                 }
             }
-
-            PenpaUI.set_all_modes_hidden(false);
-        } else {
-            PenpaUI.set_all_modes_hidden(true);
-
-            // Remove the mode break line
-            document.getElementById("mode_break").classList.add('is_hidden');
-            document.getElementById("mode_txt_space").classList.add('is_hidden');
-
-            // Display generic ones
-            for (var i of penpa_constraints["setting"]["general"]) {
-                document.getElementById(i).classList.remove('is_hidden');
+            if (window.SudokuTools) {
+                SudokuTools.variantChanged(current_constraint);
             }
-
-            // Display only the selected ones
-            for (var i of penpa_constraints["setting"][current_constraint]["show"]) {
-                document.getElementById(i).classList.remove('is_hidden');
-            }
-
-            // set the default submode
-            for (let i = 0; i < penpa_constraints["setting"][current_constraint]["modeset"].length; i++) {
-                let modeset = penpa_constraints["setting"][current_constraint]["modeset"][i];
-                let submodeset = penpa_constraints["setting"][current_constraint]["submodeset"][i];
-                let styleset = penpa_constraints["setting"][current_constraint]["styleset"][i];
-                if (submodeset !== "") {
-                    pu.mode[pu.mode.qa][modeset][0] = submodeset;
-                }
-                if (styleset !== "") {
-                    pu.mode[pu.mode.qa][modeset][1] = styleset;
-                }
-            }
-
-            // Display 1 time Info regarding border setting
-            if (current_constraint !== "kropki" && current_constraint !== "xv" && current_constraint !== "battenburg" &&
-                penpa_constraints["border"].includes(current_constraint) && pu.borderwarning) {
-                pu.borderwarning = false;
-                Swal.fire({
-                    html: '<h2 class="info">' + PenpaText.get('border_setting_help') + '</h2>',
-                    timer: 8000,
-                    icon: 'info'
-                })
-            }
-        }
-        if (window.SudokuTools) {
-            SudokuTools.variantChanged(current_constraint);
-        }
-        pu.redraw();
+            pu.redraw();
+        };
     }
 
-    document.getElementById("mode_choices").onchange = function() {
-        UserSettings.tab_settings = getValues('mode_choices');
+    const modeChoices = document.getElementById("mode_choices");
+    if (modeChoices) {
+        modeChoices.onchange = function() {
+            UserSettings.tab_settings = getValues('mode_choices');
 
-        if (can_use_lite()) {
-            PenpaUI.liteModeButton.disabled = false;
+            if (can_use_lite()) {
+                PenpaUI.liteModeButton.disabled = false;
 
-            // Dynamically updating the display of modes based on tab setting changes
-            let currentState = PenpaUI.liteModeButton.getAttribute('data-mode');
+                // Dynamically updating the display of modes based on tab setting changes
+                let currentState = PenpaUI.liteModeButton.getAttribute('data-mode');
 
-            if (currentState === "disable") {
-                advancecontrol_on(); // First display back everything
-                advancecontrol_off("new"); // apply new choices for penpa lite
+                if (currentState === "disable") {
+                    advancecontrol_on(); // First display back everything
+                    advancecontrol_off("new"); // apply new choices for penpa lite
+                }
+            } else {
+                // Dynamically updating the display of modes based on tab setting changes
+                advancecontrol_on();
+
+                PenpaUI.liteModeButton.disabled = true;
             }
-        } else {
-            // Dynamically updating the display of modes based on tab setting changes
-            advancecontrol_on();
+        };
+    }
 
-            PenpaUI.liteModeButton.disabled = true;
-        }
+    // Helper for safe event binding
+    function safeBindChange(id, fn) {
+        const el = document.getElementById(id);
+        if (el) el.onchange = fn;
+    }
+    function safeBindClick(id, fn) {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("click", fn);
     }
 
     // Panel Setting
-    document.getElementById("panel_button").onchange = function() {
-        panel_onoff();
-    }
+    safeBindChange("panel_button", function() { panel_onoff(); });
 
     // Quick Panel Toggle Setting
-    document.getElementById("quick_panel_dropdown").onchange = function() {
-        UserSettings.quick_panel_button = String(this.value) === "1";
-    }
+    safeBindChange("quick_panel_dropdown", function() { UserSettings.quick_panel_button = String(this.value) === "1"; });
 
     // Conflict detection
-    document.getElementById("conflict_detection_opt").onchange = function() {
-        UserSettings.conflict_detection = this.value;
-    }
+    safeBindChange("conflict_detection_opt", function() { UserSettings.conflict_detection = this.value; });
 
     // Conflict check on pencil marks
-    document.getElementById("check_pencil_marks_opt").onchange = function() {
-        UserSettings.check_pencil_marks = this.value;
-    }
+    safeBindChange("check_pencil_marks_opt", function() { UserSettings.check_pencil_marks = this.value; });
 
     // Let other colors match "green" for line/edge solution check
-    document.getElementById("ignore_line_style_opt").onchange = function() {
-        UserSettings.ignore_line_style = this.value;
-    }
+    safeBindChange("ignore_line_style_opt", function() { UserSettings.ignore_line_style = this.value; });
 
     // Enable or Disable Shortcuts
-    document.getElementById("enable_shortcuts_opt").onchange = function() {
-        UserSettings.shortcuts_enabled = String(this.value) === '1';
-    }
+    safeBindChange("enable_shortcuts_opt", function() { UserSettings.shortcuts_enabled = String(this.value) === '1'; });
 
     // Timer Bar Setting
-    document.getElementById("timer_bar_opt").onchange = function() {
-        UserSettings.timerbar_status = this.value;
-    }
+    safeBindChange("timer_bar_opt", function() { UserSettings.timerbar_status = this.value; });
 
     // Shorten links setting
-    document.getElementById("shorten_links_dropdown").onchange = function() {
-        UserSettings.shorten_links = String(this.value) === "1";
-    }
-    document.getElementById("auto_shorten_chk").onchange = function() {
-        UserSettings.shorten_links = this.checked;
-    }
+    safeBindChange("shorten_links_dropdown", function() { UserSettings.shorten_links = String(this.value) === "1"; });
+    safeBindChange("auto_shorten_chk", function() { UserSettings.shorten_links = this.checked; });
 
     // Timer pause and unpause
-    document.getElementById("sw_pause").addEventListener("click", pauseTimer);
-    document.getElementById("sw_start").addEventListener("click", startTimer);
+    safeBindClick("sw_pause", pauseTimer);
+    safeBindClick("sw_start", startTimer);
 
     function pauseTimer() {
         pu.show_pause_layer();

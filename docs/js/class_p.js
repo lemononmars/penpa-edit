@@ -1715,8 +1715,7 @@ class Puzzle {
         if (document.getElementById(name)) {
             document.getElementById(name).checked = true;
             const subVariable = document.getElementById('sub_variable');
-            const subLabel = document.getElementById(name + '_lb');
-            if (subVariable && subLabel) subVariable.textContent = subLabel.textContent;
+            if (subVariable) subVariable.textContent = (name + '_lb');
             this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] = document.getElementById(name).value;
             this.cursolcheck(); // override
 
@@ -1741,8 +1740,7 @@ class Puzzle {
         if (document.getElementById(name)) {
             document.getElementById(name).checked = true;
             const styleVariable = document.getElementById('style_variable');
-            const styleLabel = document.getElementById(name + '_lb');
-            if (styleVariable && styleLabel) styleVariable.textContent = styleLabel.textContent;
+            if (styleVariable) styleVariable.textContent = (name + '_lb');
             this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1] = parseInt(document.getElementById(name).value);
             panel_pu.draw_panel(); // Panel update
         }
@@ -1977,11 +1975,11 @@ class Puzzle {
             this.sudoku[0].toString() + "," + this.sudoku[1].toString() + "," + this.sudoku[2].toString() + "," + this.sudoku[3].toString();
 
         // Puzzle title
-        let titleinfo = document.getElementById("saveinfotitle").value;
+        let titleinfo = (document.getElementById("saveinfotitle")?.value || this.title || "");
         text += "," + "Title: " + titleinfo.replace(/,/g, '%2C');
 
         // Puzzle author
-        let authorinfo = document.getElementById("saveinfoauthor").value;
+        let authorinfo = (document.getElementById("saveinfoauthor")?.value || this.author || "");
         text += "," + "Author: " + authorinfo.replace(/,/g, '%2C');
 
         // Puzzle Source
@@ -1989,7 +1987,7 @@ class Puzzle {
         text += "," + (sourceEl ? sourceEl.value : "");
 
         // Puzzle Rules
-        let ruleinfo = document.getElementById("saveinforules").value;
+        let ruleinfo = (document.getElementById("saveinforules")?.value || this.rules || "");
         text += "," + ruleinfo.replace(/\n/g, '%2D').replace(/,/g, '%2C').replace(/&/g, '%2E').replace(/=/g, '%2F');
 
         // Border button status
@@ -14040,7 +14038,7 @@ class Puzzle {
     }
 
     check_conflict(current_sol) {
-        if (UserSettings.show_conflicts) {
+        if (!UserSettings.show_conflicts) {
             // User has disabled conflict detection.
             this.conflict_cells = [];
             this.conflict_cell_values = [];

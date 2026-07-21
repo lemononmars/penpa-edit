@@ -38,7 +38,7 @@ const UserSettings = {
         document.getElementById("app-container").classList[verb]("responsive");
         document.getElementById("app-container").classList[flipVerb]("responsive-flip");
         document.getElementById("app-container").classList[streamVerb]("streaming-mode");
-        document.getElementById("responsive_settings_opt").value = modeInt;
+        document.getElementById("responsive_settings_opt")?.value != null && (document.getElementById("responsive_settings_opt").value = modeInt);
 
         // Handle Cookie dynamically (This is to allow Solver Mode also save this setting)
         if (modeInt === 1) {
@@ -57,7 +57,7 @@ const UserSettings = {
         const valueInt = newValue ? parseInt(newValue, 10) : 1;
         this._timerbar_status = valueInt;
 
-        document.getElementById("timer_bar_opt").value = valueInt;
+        document.getElementById("timer_bar_opt") && (document.getElementById("timer_bar_opt").value = valueInt);
         document.getElementById("stop_watch").style.display = (valueInt === 2) ? 'none' : 'block';
         this.attemptSave();
     },
@@ -68,7 +68,7 @@ const UserSettings = {
     _auto_save_history: false,
     set auto_save_history(newValue) {
         this._auto_save_history = newValue === "1" || newValue === "true" || newValue === true;
-        document.getElementById("auto_save_history_opt").value = this._auto_save_history ? "1" : "0";
+        document.getElementById("auto_save_history_opt") && (document.getElementById("auto_save_history_opt").value = this._auto_save_history ? "1" : "0");
         this.attemptSave();
     },
     get auto_save_history() {
@@ -81,7 +81,7 @@ const UserSettings = {
         const valueInt = newValue ? parseInt(newValue, 10) : 1;
         this._mousemiddle_button = valueInt;
 
-        document.getElementById("mousemiddle_settings_opt").value = valueInt;
+        document.getElementById("mousemiddle_settings_opt") && (document.getElementById("mousemiddle_settings_opt").value = valueInt);
         this.attemptSave();
     },
     get mousemiddle_button() {
@@ -104,7 +104,7 @@ const UserSettings = {
         const valueInt = newValue ? parseInt(newValue, 10) : 1;
         this._conflict_detection = valueInt;
 
-        document.getElementById("conflict_detection_opt").value = valueInt;
+        document.getElementById("conflict_detection_opt") && (document.getElementById("conflict_detection_opt").value = valueInt);
 
         // Handle Cookie dynamically (This is to allow Solver Mode also save this setting)
         if (valueInt === 3) {
@@ -119,14 +119,14 @@ const UserSettings = {
         return this._conflict_detection;
     },
     get show_conflicts() {
-        return this._conflict_detection > 1
+        return this._conflict_detection === 1;
     },
 
     // Check conflicts on pencil marks
     _check_pencil_marks: false,
     set check_pencil_marks(newValue) {
         this._check_pencil_marks = newValue === "1" || newValue === "true" || newValue === true;
-        document.getElementById("check_pencil_marks_opt").value = this._check_pencil_marks ? "1" : "0";
+        document.getElementById("check_pencil_marks_opt") && (document.getElementById("check_pencil_marks_opt").value = this._check_pencil_marks ? "1" : "0");
         if (window.pu)
             pu.redraw();
         this.attemptSave();
@@ -141,7 +141,7 @@ const UserSettings = {
         const valueInt = newValue ? parseInt(newValue, 10) : 1;
         this._starbattle_dots = valueInt;
 
-        document.getElementById("starbattle_settings_opt").value = valueInt;
+        document.getElementById("starbattle_settings_opt") && (document.getElementById("starbattle_settings_opt").value = valueInt);
         this.attemptSave();
     },
     get starbattle_dots() {
@@ -154,7 +154,7 @@ const UserSettings = {
         const valueInt = newValue ? parseInt(newValue, 10) : 2;
         this._secondcolor = valueInt;
 
-        document.getElementById("secondcolor_settings_opt").value = valueInt;
+        document.getElementById("secondcolor_settings_opt") && (document.getElementById("secondcolor_settings_opt").value = valueInt);
         this.attemptSave();
     },
     get secondcolor() {
@@ -167,7 +167,8 @@ const UserSettings = {
         const valueInt = newValue ? parseInt(newValue, 10) : 1;
         this._sudoku_normal_size = valueInt;
 
-        document.getElementById("sudoku_settings_normal_opt").value = valueInt;
+        const opt = document.getElementById("sudoku_settings_normal_opt");
+        if (opt) opt.value = valueInt;
         this.attemptSave();
     },
     get sudoku_normal_size() {
@@ -182,17 +183,30 @@ const UserSettings = {
         const valueInt = newValue ? parseInt(newValue, 10) : 1;
         this._sudoku_centre_size = valueInt;
 
-        document.getElementById("sudoku_settings_opt").value = valueInt;
+        const opt = document.getElementById("sudoku_settings_opt");
+        if (opt) opt.value = valueInt;
         this.attemptSave();
     },
     get sudoku_centre_size() {
         return this._sudoku_centre_size;
     },
 
+    _author: "",
+    set author(newValue) {
+        this._author = newValue || "";
+        localStorage.setItem("penpa_author", this._author);
+        this.attemptSave();
+    },
+    get author() {
+        var val = localStorage.getItem("penpa_author");
+        if (val !== null) this._author = val;
+        return this._author || "";
+    },
+
     _outline_text: false,
     set outline_text(newValue) {
         this._outline_text = newValue === "1" || newValue === "true" || newValue === true;
-        document.getElementById("outline_text_opt").value = this._outline_text ? "1" : "0";
+        document.getElementById("outline_text_opt") && (document.getElementById("outline_text_opt").value = this._outline_text ? "1" : "0");
         if (window.pu)
             pu.redraw();
         this.attemptSave();
@@ -216,7 +230,7 @@ const UserSettings = {
             // Off
             document.getElementById('style_special').style.display = 'none';
         }
-        document.getElementById("custom_color_opt").value = valueInt;
+        document.getElementById("custom_color_opt") && (document.getElementById("custom_color_opt").value = valueInt);
 
         pu.redraw();
     },
@@ -228,7 +242,7 @@ const UserSettings = {
     _ignore_line_style: false,
     set ignore_line_style(newValue) {
         this._ignore_line_style = newValue === "1" || newValue === "true" || newValue === true;
-        document.getElementById("ignore_line_style_opt").value = this._ignore_line_style ? "1" : "0";
+        document.getElementById("ignore_line_style_opt") && (document.getElementById("ignore_line_style_opt").value = this._ignore_line_style ? "1" : "0");
         this.attemptSave();
     },
     get ignore_line_style() {
@@ -243,7 +257,7 @@ const UserSettings = {
 
         this._local_storage = (valueInt === 1);
 
-        document.getElementById("allow_local_storage").value = valueInt;
+        document.getElementById("allow_local_storage") && (document.getElementById("allow_local_storage").value = valueInt);
         this.attemptSave();
     },
     get local_storage() {
@@ -274,7 +288,7 @@ const UserSettings = {
 
         this._reload_button = valueInt;
 
-        document.getElementById("reload_button").value = valueInt;
+        document.getElementById("reload_button") && (document.getElementById("reload_button").value = valueInt);
         this.attemptSave();
     },
     get reload_button() {
@@ -285,7 +299,7 @@ const UserSettings = {
     set shortcuts_enabled(newValue) {
         this._shortcuts_enabled = newValue;
 
-        document.getElementById("enable_shortcuts_opt").value = newValue ? 1 : 2;
+        document.getElementById("enable_shortcuts_opt") && (document.getElementById("enable_shortcuts_opt").value = newValue ? 1 : 2);
     },
     get shortcuts_enabled() {
         return this._shortcuts_enabled;
@@ -412,8 +426,8 @@ const UserSettings = {
         if (newValue === "false") { newValue = false; }
         this._shorten_links = newValue;
 
-        document.getElementById("shorten_links_dropdown").value = newValue ? 1 : 0;
-        document.getElementById("auto_shorten_chk").checked = newValue ? 'checked' : null;
+        document.getElementById("shorten_links_dropdown") && (document.getElementById("shorten_links_dropdown").value = newValue ? 1 : 0);
+        document.getElementById("auto_shorten_chk") && (document.getElementById("auto_shorten_chk").checked = newValue ? 'checked' : null);
         this.attemptSave();
     },
     get shorten_links() {
@@ -426,7 +440,7 @@ const UserSettings = {
         this._panel_shown = newValue;
 
         const dropdown = document.getElementById('panel_button');
-        dropdown.value = newValue ? 1 : 2;
+        if (dropdown) dropdown.value = newValue ? 1 : 2;
 
         const button = document.getElementById("quick_panel_toggle");
         button.textContent = newValue ? PenpaText.get('on') : PenpaText.get('off');
@@ -443,7 +457,7 @@ const UserSettings = {
         this._quick_panel_btn = newValue;
 
         const dropdown = document.getElementById('quick_panel_dropdown');
-        dropdown.value = newValue ? 1 : 2;
+        if (dropdown) dropdown.value = newValue ? 1 : 2;
 
         const button = document.getElementById("quick_panel_toggle");
         const label = document.getElementById("quick_panel_toggle_label");
@@ -478,6 +492,62 @@ const UserSettings = {
         var val = localStorage.getItem("start_grid_size");
         if (val) this._start_grid_size = val;
         return this._start_grid_size;
+    },
+
+    _generator_symmetry: 'rotational180',
+    set generator_symmetry(newValue) {
+        this._generator_symmetry = newValue || 'rotational180';
+        localStorage.setItem("generator_symmetry", this._generator_symmetry);
+        var opt = document.getElementById("generator_symmetry_opt");
+        if (opt) opt.value = this._generator_symmetry;
+        this.attemptSave();
+    },
+    get generator_symmetry() {
+        var val = localStorage.getItem("generator_symmetry");
+        if (val) this._generator_symmetry = val;
+        return this._generator_symmetry;
+    },
+
+    _generator_difficulty: 'minimal',
+    set generator_difficulty(newValue) {
+        this._generator_difficulty = newValue || 'minimal';
+        localStorage.setItem("generator_difficulty", this._generator_difficulty);
+        var opt = document.getElementById("generator_difficulty_opt");
+        if (opt) opt.value = this._generator_difficulty;
+        this.attemptSave();
+    },
+    get generator_difficulty() {
+        var val = localStorage.getItem("generator_difficulty");
+        if (val) this._generator_difficulty = val;
+        return this._generator_difficulty;
+    },
+
+    _generator_difficulty_minimal: true,
+    set generator_difficulty_minimal(newValue) {
+        this._generator_difficulty_minimal = newValue === true || newValue === "true" || newValue === 1 || newValue === "1";
+        localStorage.setItem("generator_difficulty_minimal", this._generator_difficulty_minimal ? "true" : "false");
+        var opt = document.getElementById("generator_difficulty_minimal_opt");
+        if (opt) opt.checked = this._generator_difficulty_minimal;
+        this.attemptSave();
+    },
+    get generator_difficulty_minimal() {
+        var val = localStorage.getItem("generator_difficulty_minimal");
+        if (val !== null) this._generator_difficulty_minimal = val !== "false";
+        return this._generator_difficulty_minimal;
+    },
+
+    _generator_clues_on_marks: true,
+    set generator_clues_on_marks(newValue) {
+        this._generator_clues_on_marks = newValue === "true" || newValue === true || newValue === "1" || newValue === 1;
+        localStorage.setItem("generator_clues_on_marks", this._generator_clues_on_marks ? "true" : "false");
+        var opt = document.getElementById("generator_clues_on_marks_opt");
+        if (opt) opt.checked = this._generator_clues_on_marks;
+        this.attemptSave();
+    },
+    get generator_clues_on_marks() {
+        var val = localStorage.getItem("generator_clues_on_marks");
+        if (val !== null) this._generator_clues_on_marks = val === "true";
+        return this._generator_clues_on_marks;
     },
 
     _start_grid_type: "blank",

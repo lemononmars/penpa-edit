@@ -3596,3 +3596,41 @@ test("Pole Position variant", function() {
     board[1][0] = 1; // 1 is at position 2 (col 0, row 1), first cell should be 2, not 3
     assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
 });
+
+test("all recently implemented variants are recognized as supported by readConstraints", function() {
+    const variantsToTest = [
+        "different parity",
+        "sequence top-bottom",
+        "poleposition",
+        "termination",
+        "citywalk",
+        "pirate",
+        "meandering diagonals",
+        "touchy",
+        "japanesesums",
+        "scattered",
+        "starproduct",
+        "xv",
+        "xivi"
+    ];
+
+    variantsToTest.forEach(function(variant) {
+        const dummyPuzzle = {
+            nx: 9, ny: 9, nx0: 9, ny0: 9, space: [0, 0, 0, 0],
+            activeSudokuVariants: ["classic", variant],
+            centerlist: [], point: {}, pu_q: { number: {}, symbol: {}, surface: {}, killercages: [] }
+        };
+        const constraints = SudokuSolver.readConstraints(dummyPuzzle);
+        assert.equal(
+            constraints.supported.some(function(supp) {
+                return (
+                    supp.toLowerCase().replace(/[^a-z0-9]/g, "") ===
+                    variant.toLowerCase().replace(/[^a-z0-9]/g, "")
+                );
+            }),
+            true,
+            "Variant " + variant + " should be in constraints.supported"
+        );
+    });
+});
+
