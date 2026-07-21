@@ -120,7 +120,7 @@ function genericSetting(variation: Variation) {
         add("line", "2", 2, ["mo_line_lb", "sub_line2_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["clonedstrands", "equal sum line", "equal sum lines", "german whispers", "factor lines"].includes(variation.value)) {
+    if (["clonedstrands", "equal sum line", "equal sum lines", "german whispers", "factor lines", "24trio", "24-trio"].includes(variation.value)) {
         add("line", "2", 3, ["mo_line_lb", "sub_line2_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
@@ -231,7 +231,7 @@ if (variation.value === "threedigitnumberskiller") {
           add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (variation.value === "starproduct") {
+    if (variation.value === "starproduct" || variation.value === "sudokuwithstars") {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
         add("symbol", "star", 2, ["mo_symbol_lb", "ms4", "li_star", "ms_star"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
@@ -349,6 +349,10 @@ if (variation.value === "threedigitnumberskiller") {
     }
     if (variation.value === "clock") {
         add("cage", "1", 10, ["mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "termination") {
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb", "st_number0_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "xivi") {

@@ -64,9 +64,10 @@ function has(text: string, pattern: RegExp) {
 /** Provides a conservative default that can be corrected through the dev-only editor. */
 export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     const text = `${variation.name} ${variation.rule}`.toLowerCase();
+    if (variation.inputType.categories.includes("no-input")) return { position: "none", mark: "none" };
     if (variation.inputType.categories.includes("shading")) return { position: "center", mark: "surface" };
     if (variation.inputType.categories.includes("cage")) return { position: "center", mark: "cage" };
-    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "liardiagonal", "magicsquares", "onefivenine", "unicorn", "citywalk"].includes(variation.value)) {
+    if (["anti king", "anti knight", "disjoint", "queen", "disparity", "liardiagonal", "magicsquares", "onefivenine", "unicorn", "citywalk", "poleposition", "pole position", "sequence top-bottom", "pirate", "touchy"].includes(variation.value)) {
         return { position: "none", mark: "none" };
     }
     if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector", "twindetector"].includes(variation.value)) {
@@ -130,9 +131,9 @@ export function markChoiceFor(variation: Variation, config: MarkConfig = bundled
 }
 
 export function inputModesFor(variation: Variation) {
-    if (variation.inputType.instructions.length) return variation.inputType.instructions;
+    if (variation?.inputType?.instructions?.length) return variation.inputType.instructions;
     const choice = markChoiceFor(variation);
-    if (choice.position === "none") return ["No placed input", "The constraint is generated from grid geometry."];
+    if (!choice || choice.position === "none") return ["No placed input", "The constraint is generated from grid geometry."];
     return [`${choice.position} · ${choice.mark}`, penpaMarks.find((mark) => mark.id === choice.mark)?.penpaMode || choice.mark];
 }
 

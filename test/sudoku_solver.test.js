@@ -332,6 +332,24 @@ test("an active Almost Palindrome remains CSP-supported after its final line is 
 });
 
 
+test("Different Parity constraint parsing and evaluation", function() {
+    const constraints = { differentParity: [[{ row: 0, col: 0 }, { row: 0, col: 1 }]] };
+
+    var board = emptyBoard();
+    board[0][0] = 1;
+    board[0][1] = 2;
+    assert.equal(SudokuCSP.solve(board, { differentParity: constraints.differentParity, baseBoxes: false }).solved, true, "Different Parity allows 1 odd 1 even");
+
+    var board2 = emptyBoard();
+    board2[0][0] = 1;
+    board2[0][1] = 3;
+    assert.equal(SudokuCSP.solve(board2, { differentParity: constraints.differentParity, baseBoxes: false }).solved, false, "Different Parity rejects 2 odd");
+
+    var board3 = emptyBoard();
+    board3[0][0] = 2;
+    board3[0][1] = 4;
+    assert.equal(SudokuCSP.solve(board3, { differentParity: constraints.differentParity, baseBoxes: false }).solved, false, "Different Parity rejects 2 even");
+});
 test("Citywalk constraint parsing and evaluation", function() {
     var puzzle = {
         nx: 9, ny: 9, nx0: 9, ny0: 9,
@@ -3575,3 +3593,70 @@ test("Self-Join validation checks cell value against its box index", function() 
     board[0][2] = 4;
     assert.equal(SudokuCSP.findConflict(board, constraints), null);
 });
+
+test("Pole Position variant", function() {
+    // Valid setups
+    var board = emptyBoard();
+    board[0][0] = 3;
+    board[0][2] = 1;
+    assert.deepEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[2][0] = 1;
+    assert.deepEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    // Invalid setups
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[0][2] = 2; // Position 3 must be 1, not 2
+    assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[0][1] = 1; // 1 is at position 2, so first cell should be 2, not 3
+    assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[1][0] = 1; // 1 is at position 2 (col 0, row 1), first cell should be 2, not 3
+    assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+});
+
+test("all recently implemented variants are recognized as supported by readConstraints", function() {
+    const variantsToTest = [
+        "different parity",
+        "sequence top-bottom",
+        "poleposition",
+        "termination",
+        "citywalk",
+        "pirate",
+        "meandering diagonals",
+        "touchy",
+        "japanesesums",
+        "scattered",
+        "starproduct",
+        "xv",
+        "xivi"
+    ];
+
+    variantsToTest.forEach(function(variant) {
+        const dummyPuzzle = {
+            nx: 9, ny: 9, nx0: 9, ny0: 9, space: [0, 0, 0, 0],
+            activeSudokuVariants: ["classic", variant],
+            centerlist: [], point: {}, pu_q: { number: {}, symbol: {}, surface: {}, killercages: [] }
+        };
+        const constraints = SudokuSolver.readConstraints(dummyPuzzle);
+        assert.equal(
+            constraints.supported.some(function(supp) {
+                return (
+                    supp.toLowerCase().replace(/[^a-z0-9]/g, "") ===
+                    variant.toLowerCase().replace(/[^a-z0-9]/g, "")
+                );
+            }),
+            true,
+            "Variant " + variant + " should be in constraints.supported"
+        );
+    });
+});
+
