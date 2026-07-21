@@ -2158,7 +2158,7 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
     assert.equal(creasing.catalogLines[0].relation, "creasing");
     assert.equal(creasing.thermos.length, 0);
 
-    const consecutiveonline = SudokuSolver.readConstraints(puzzle("consecutiveonline", {
+    const consecutiveonline = SudokuSolver.readConstraints(puzzleFor("consecutiveonline", {
         pu_q: { line: { "28,29": 5, "29,42": 5 } }
     }));
     assert.equal(consecutiveonline.catalogLines[0].relation, "consecutiveonline");
