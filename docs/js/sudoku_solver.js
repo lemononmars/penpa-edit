@@ -3364,8 +3364,10 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             });
             constraints.supported.push("countingneighbours");
         }
+        }
         return constraints;
     }
+
 
     function getCandidates(board, constraints) {
         return SudokuCSPRuntime.getCandidates(board, constraints);
@@ -5411,6 +5413,11 @@ var SudokuTools = (function() {
         scheduleSolveOnceCheck: scheduleSolveOnceCheck
     };
 })();
+
+if (typeof window !== "undefined") {
+    window.SudokuSolver = SudokuSolver;
+    window.SudokuTools = SudokuTools;
+}
 
 if (typeof module !== "undefined" && module.exports) {
     module.exports = SudokuSolver;
