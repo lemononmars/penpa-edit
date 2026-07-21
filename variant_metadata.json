@@ -170,7 +170,6 @@
         "9x9": "Each main diagonal contains exactly three digits."
       },
       "tags": [
-        "classiclookalike",
         "diagonal"
       ],
       "status": "available",
@@ -190,7 +189,6 @@
         "9x9": "No cell that is a knight-step away can contain the same digit. A knight's move is 2 in a line and 1 to the side, as in chess."
       },
       "tags": [
-        "classiclookalike",
         "math"
       ],
       "status": "available",
@@ -1211,7 +1209,6 @@
         "9x9": "Each main diagonal contains each digit from 1 to 9."
       },
       "tags": [
-        "classiclookalike",
         "diagonal"
       ],
       "status": "available",
@@ -1334,7 +1331,6 @@
         "9x9": "Digits in diagonally touching cells must not be consecutive."
       },
       "tags": [
-        "classiclookalike",
         "consecutive",
         "neighbour",
         "math"
@@ -1446,7 +1442,6 @@
         "9x9": "No digit can appear in the same cell position in different 3x3 outlined regiones."
       },
       "tags": [
-        "classiclookalike"
       ],
       "status": "available",
       "inputType": {
@@ -3232,7 +3227,6 @@
         "9x9": "The four corner boxes contain the same digits in symmetric positions about the centre."
       },
       "tags": [
-        "classiclookalike"
       ],
       "status": "available",
       "inputType": {
@@ -3431,7 +3425,6 @@
         "9x9": "Even digits must not be in adjacent cells."
       },
       "tags": [
-        "classiclookalike",
         "neighbour",
         "parity"
       ],
@@ -3450,7 +3443,6 @@
         "9x9": "Digits in any three consecutive cells in any row or column must not be of the same parity."
       },
       "tags": [
-        "classiclookalike",
         "neighbour",
         "parity",
         "math"
@@ -3470,7 +3462,6 @@
         "9x9": "Digits in adjacent cells must not be consecutive."
       },
       "tags": [
-        "classiclookalike",
         "consecutive",
         "neighbour",
         "math"
@@ -4683,7 +4674,6 @@
         "9x9": "No 2x2 area contains four digits of the same parity."
       },
       "tags": [
-        "classiclookalike",
         "parity"
       ],
       "status": "available",
@@ -4721,7 +4711,6 @@
         "9x9": "The digit 9 must not be repeated in the same diagonal of any length."
       },
       "tags": [
-        "classiclookalike",
         "diagonal"
       ],
       "status": "available",
@@ -5854,7 +5843,6 @@
         "9x9": "Cells that are 180° symmetric about the centre must not contain the same digit."
       },
       "tags": [
-        "classiclookalike"
       ],
       "status": "available",
       "inputType": {
@@ -6106,7 +6094,6 @@
         "9x9": "Each digit has at least one consecutive digit in its adjacent cells."
       },
       "tags": [
-        "classiclookalike",
         "consecutive",
         "neighbour",
         "math"
@@ -6574,13 +6561,13 @@
       ]
     },
     {
+      "otherNames": "No Touch",
       "id": "anti king",
       "name": "Anti King",
       "rules": {
         "9x9": "Equal digits may not be a chess king move apart."
       },
       "tags": [
-        "classiclookalike"
       ],
       "status": "available",
       "inputType": {
@@ -6852,9 +6839,10 @@
     },
     {
       "id": "selfjoin",
-      "name": "Self-Join",
+      "name": "Self-Joint",
       "rules": {
         "9x9": "All 3×3 regions are numbered from 1 to 9 from the first cell to the last cell; if a number has the same numerical value as its position in any region, the cell is marked with gray, otherwise, it's white. All gray cells are given."
+      },
       "tags": [],
       "status": "available",
       "inputType": {
