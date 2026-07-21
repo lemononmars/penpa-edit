@@ -1538,6 +1538,175 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             }
         }
 
+
+        function anyKeyToCell(puzzle, key) {
+            var top = Number(puzzle.space && puzzle.space[0] || 0);
+            var left = Number(puzzle.space && puzzle.space[2] || 0);
+            var col = (key % puzzle.nx0) - 2 - left;
+            var row = ((key / puzzle.nx0) | 0) - 2 - top;
+            return { row: row, col: col, key: key };
+        }
+
+        if (variantEnabled(puzzle, "shape")) {
+            var shapeInside = [];
+            var shapeOutside = [];
+
+            var allCages = typeof puzzle.refreshKillerCages === "function" ? puzzle.refreshKillerCages("pu_q") : (puzzle.pu_q.killercages || []);
+
+            if (allCages.length > 0) {
+                for (var k = 0; k < allCages.length; k++) {
+                    var path = allCages[k];
+                    if (!Array.isArray(path)) continue;
+                    var cells = [];
+                    for (var i = 0; i < path.length; i++) {
+                        cells.push(anyKeyToCell(puzzle, path[i]));
+                    }
+                    if (!cells.length) continue;
+
+                    var isInside = cells.every(function(c) {
+                        return c.row >= 0 && c.row < SIZE && c.col >= 0 && c.col < SIZE;
+                    });
+
+                    if (isInside) shapeInside.push(cells);
+                    else shapeOutside.push(cells);
+                }
+            } else {
+                var surfaceCells = [];
+                Object.keys(puzzle.pu_q.surface || {}).forEach(function(key) {
+                    if (puzzle.pu_q.surface[key]) {
+                        surfaceCells.push(anyKeyToCell(puzzle, Number(key)));
+                    }
+                });
+
+                var surfaceLookup = {};
+                surfaceCells.forEach(function(c) { surfaceLookup[c.row + ":" + c.col] = c; });
+
+                var visited = {};
+                surfaceCells.forEach(function(c) {
+                    var startKey = c.row + ":" + c.col;
+                    if (visited[startKey]) return;
+                    var component = [];
+                    var queue = [c];
+                    visited[startKey] = true;
+                    while (queue.length) {
+                        var curr = queue.shift();
+                        component.push(curr);
+                        [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function(offset) {
+                            var nKey = (curr.row + offset[0]) + ":" + (curr.col + offset[1]);
+                            if (surfaceLookup[nKey] && !visited[nKey]) {
+                                visited[nKey] = true;
+                                queue.push(surfaceLookup[nKey]);
+                            }
+                        });
+                    }
+                    var isInside = component.every(function(compCell) {
+                        return compCell.row >= 0 && compCell.row < SIZE && compCell.col >= 0 && compCell.col < SIZE;
+                    });
+                    if (isInside) shapeInside.push(component);
+                    else shapeOutside.push(component);
+                });
+            }
+
+            var outShapesWithDigits = shapeOutside.map(function(comp) {
+                return comp.map(function(c) {
+                    var digit = null;
+                    var entry = puzzle.pu_q.number && puzzle.pu_q.number[c.key];
+                    if (entry && entry[0] !== undefined && entry[0] !== null && String(entry[0]).trim()) {
+                        var d = parseInt(String(entry[0]).trim(), 10);
+                        if (!isNaN(d) && d > 0) digit = d;
+                    }
+                    return { row: c.row, col: c.col, digit: digit, orig: c };
+                });
+            });
+
+            function normalizeShape(cells) {
+                var minRow = Math.min.apply(null, cells.map(function(c) { return c.row; }));
+                var minCol = Math.min.apply(null, cells.map(function(c) { return c.col; }));
+                var norm = cells.map(function(c) {
+                    return { row: c.row - minRow, col: c.col - minCol, orig: c.orig, digit: c.digit };
+                });
+                norm.sort(function(a, b) { return a.row - b.row || a.col - b.col; });
+                return norm;
+            }
+
+            function getShapeSig(norm) {
+                return norm.map(function(c) { return c.row + ":" + c.col; }).join("|");
+            }
+
+            function rotateShape90(cells) {
+                return cells.map(function(c) {
+                    return { row: c.col, col: -c.row, orig: c.orig, digit: c.digit };
+                });
+            }
+
+            function getShapeRotations(comp) {
+                var rots = [];
+                var curr = comp.map(function(c) { return { row: c.row, col: c.col, orig: c.orig, digit: c.digit }; });
+                for (var i = 0; i < 4; i++) {
+                    var norm = normalizeShape(curr);
+                    var sig = getShapeSig(norm);
+                    if (!rots.some(function(r) { return r.sig === sig; })) {
+                        rots.push({ sig: sig, norm: norm });
+                    }
+                    curr = rotateShape90(curr);
+                }
+                return rots;
+            }
+
+            var inNorms = shapeInside.map(function(s) {
+                var norm = normalizeShape(s.map(function(c) { return { row: c.row, col: c.col, orig: c }; }));
+                return { sig: getShapeSig(norm), norm: norm };
+            });
+            var outRots = outShapesWithDigits.map(getShapeRotations);
+
+            var matchingsSet = {};
+            var validMatchings = [];
+
+            function searchMatchings(outIndex, usedInside, currentReqs) {
+                if (outIndex === outShapesWithDigits.length) {
+                    var reqSig = currentReqs.map(function(req) { return req.row + ":" + req.col + "=" + req.digit; })
+                        .sort().join("|");
+                    if (!matchingsSet[reqSig]) {
+                        matchingsSet[reqSig] = true;
+                        validMatchings.push(currentReqs);
+                    }
+                    return;
+                }
+
+                var rots = outRots[outIndex];
+                for (var i = 0; i < inNorms.length; i++) {
+                    if (usedInside[i]) continue;
+                    var inNorm = inNorms[i];
+
+                    for (var r = 0; r < rots.length; r++) {
+                        var outRot = rots[r];
+                        if (outRot.sig === inNorm.sig) {
+                            var reqs = [];
+                            for (var c = 0; c < outRot.norm.length; c++) {
+                                var outCell = outRot.norm[c];
+                                if (outCell.digit !== null) {
+                                    var inCell = inNorm.norm[c];
+                                    reqs.push({ row: inCell.orig.row, col: inCell.orig.col, digit: outCell.digit });
+                                }
+                            }
+
+                            usedInside[i] = true;
+                            searchMatchings(outIndex + 1, usedInside, currentReqs.concat(reqs));
+                            usedInside[i] = false;
+                        }
+                    }
+                }
+            }
+
+            if (outShapesWithDigits.length > 0) {
+                var used = [];
+                for (var i = 0; i < inNorms.length; i++) used.push(false);
+                searchMatchings(0, used, []);
+                constraints.shapeMatchings = [validMatchings];
+                            }
+            constraints.supported.push("shape");
+        }
+
         if (variantEnabled(puzzle, "palindrome")) {
             var adjacency = {};
             Object.keys(puzzle.pu_q.line || {}).forEach(function(edge) {
