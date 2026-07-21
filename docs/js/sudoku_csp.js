@@ -1812,6 +1812,35 @@ registerConstraint("threeDigitNumbersKillers", {
         }
     });
 
+    registerConstraint("sudokuwithstars", {
+        validatePartial: function(board) {
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var cell = cellValue(board, { row: r, col: c });
+                    if (cell !== 8 && cell !== 9) continue;
+                    var offsets = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+                    for (var i = 0; i < offsets.length; i++) {
+                        var nr = r + offsets[i][0];
+                        var nc = c + offsets[i][1];
+                        if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+                            var ncell = cellValue(board, { row: nr, col: nc });
+                            if (ncell === 8 || ncell === 9) return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("starCellValues", {
+        validatePartial: function(board, cell) {
+            var val = cellValue(board, cell);
+            if (!val) return true;
+            return val === 8 || val === 9;
+        }
+    });
+
     registerConstraint("antiKnight", {
         validatePartial: function(board, pair) {
             return pairValuesDiffer(board, pair);

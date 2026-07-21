@@ -1968,7 +1968,7 @@ test("validates Little Killer, unordered outside, extrema, diagonal, and multipl
 });
 
 test("normalizes the new outside, no-bulb, intersection, and cage inputs", function() {
-    function puzzle(variant, options = {}) {
+    function puzzleFor(variant, options = {}) {
         const nx0 = options.nx0 || 13;
         const inset = options.inset === undefined ? 2 : options.inset;
         return {
@@ -1983,12 +1983,12 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
     }
 
     ["descriptivepairs", "maximin", "minimax"].forEach(function(variant) {
-        const constraints = SudokuSolver.readConstraints(puzzle(variant, { pu_q: { number: { 15: [51, 1, "1"] } } }));
+        const constraints = SudokuSolver.readConstraints(puzzleFor(variant, { pu_q: { number: { 15: [51, 1, "1"] } } }));
         assert.equal(constraints.outsideRelations[0].relation, variant);
     });
 
     ["outside", "outside234"].forEach(function(variant) {
-        const constraints = SudokuSolver.readConstraints(puzzle(variant, {
+        const constraints = SudokuSolver.readConstraints(puzzleFor(variant, {
             nx0: 19, inset: 5, space: [3, 3, 3, 3],
             pu_q: { number: { 81: [5, 1, "1"], 62: [3, 1, "1"], 43: [4, 1, "1"] } }
         }));
@@ -2002,7 +2002,7 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
             [[0, 0, 0, 0, 0, 1, 0, 0], "arrow_eight", 2]
         ].forEach(function(arrow) {
             ["1", "10"].forEach(function(numberMode) {
-                const constraints = SudokuSolver.readConstraints(puzzle(variant, { pu_q: {
+                const constraints = SudokuSolver.readConstraints(puzzleFor(variant, { pu_q: {
                     number: { 14: [50, 1, numberMode] }, symbol: { 14: arrow }
                 } }));
                 assert.equal(constraints.outsideRelations[0].relation, variant);
@@ -2018,7 +2018,7 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
             [[0, 0, 0, 0, 0, 1, 0, 0], "arrow_eight", 2]
         ].forEach(function(arrow) {
             ["1", "10"].forEach(function(numberMode) {
-                const constraints = SudokuSolver.readConstraints(puzzle(variant, { pu_q: {
+                const constraints = SudokuSolver.readConstraints(puzzleFor(variant, { pu_q: {
                     number: { 14: [14, 1, numberMode] }, symbol: { 14: arrow },
                     surface: { [ (1 + 2)*13 + (1 + 2) ]: 1 }
                 } }));
@@ -2031,18 +2031,18 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
         });
     });
 
-    const uniqueRectangles = SudokuSolver.readConstraints(puzzle("uniquerectangles"));
+    const uniqueRectangles = SudokuSolver.readConstraints(puzzleFor("uniquerectangles"));
     assert.equal(uniqueRectangles.uniqueRectangles.length, 1);
     assert.equal(uniqueRectangles.supported.includes("uniquerectangles"), true);
 
-    const sumSkyscrapers = SudokuSolver.readConstraints(puzzle("sumskyscrapers", {
+    const sumSkyscrapers = SudokuSolver.readConstraints(puzzleFor("sumskyscrapers", {
         pu_q: { number: { 15: [35, 1, "10"] } }
     }));
     assert.equal(sumSkyscrapers.sumskyscrapers[0].clue, 35);
     assert.deepEqual(sumSkyscrapers.sumskyscrapers[0].cells.slice(0, 2),
         [{ row: 0, col: 0 }, { row: 1, col: 0 }]);
 
-    const sumSandwich = SudokuSolver.readConstraints(puzzle("sumsandwich", {
+    const sumSandwich = SudokuSolver.readConstraints(puzzleFor("sumsandwich", {
         pu_q: { number: { 27: [19, 1, "10"] } }
     }));
     const leftSumSandwich = sumSandwich.sumsandwiches.find((clue) =>
@@ -2052,7 +2052,7 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
         [{ row: 0, col: 0 }, { row: 0, col: 1 }]);
     assert.equal(sumSandwich.sumsandwiches.length, 36);
 
-    const positionSums = SudokuSolver.readConstraints(puzzle("positionsums", {
+    const positionSums = SudokuSolver.readConstraints(puzzleFor("positionsums", {
         nx0: 15, inset: 4, space: [2, 0, 2, 0],
         pu_q: { number: {
             34: [11, 1, "10"], 49: [8, 1, "10"],
@@ -2071,72 +2071,72 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
         indexedDigitsSum: 10,
         cells: Array.from({ length: 9 }, (_, col) => ({ row: 0, col }))
     });
-    const positionInnerOnly = SudokuSolver.readConstraints(puzzle("positionsums", {
+    const positionInnerOnly = SudokuSolver.readConstraints(puzzleFor("positionsums", {
         nx0: 15, inset: 4, space: [2, 0, 2, 0], pu_q: { number: { 49: [8, 1, "10"] } }
     }));
     assert.equal(positionInnerOnly.outsideRelations[0].firstTwoSum, 8);
     assert.equal(positionInnerOnly.outsideRelations[0].indexedDigitsSum, null);
-    const positionOuterOnly = SudokuSolver.readConstraints(puzzle("positionsums", {
+    const positionOuterOnly = SudokuSolver.readConstraints(puzzleFor("positionsums", {
         nx0: 15, inset: 4, space: [2, 0, 2, 0], pu_q: { number: { 34: [11, 1, "10"] } }
     }));
     assert.equal(positionOuterOnly.outsideRelations[0].firstTwoSum, null);
     assert.equal(positionOuterOnly.outsideRelations[0].indexedDigitsSum, 11);
 
     const edgePoint = { 300: { neighbor: [28, 29] } };
-    const differencePair = SudokuSolver.readConstraints(puzzle("oneortwodifferencepairs", {
+    const differencePair = SudokuSolver.readConstraints(puzzleFor("oneortwodifferencepairs", {
         point: edgePoint, pu_q: { symbol: { 300: [1, "circle_SS", 2] } }
     }));
     assert.equal(differencePair.edgeRelations[0].relation, "oneortwodifferencepairs");
     assert.equal(differencePair.kropki.length, 0, "the shared circle is not also parsed as a Kropki dot");
 
-    const tenEleven = SudokuSolver.readConstraints(puzzle("teneleven", {
+    const tenEleven = SudokuSolver.readConstraints(puzzleFor("teneleven", {
         point: edgePoint, pu_q: { symbol: { 300: [1, "bars_G", 2] } }
     }));
     assert.equal(tenEleven.edgeRelations.some((clue) => clue.relation === "teneleven"), true);
     assert.equal(tenEleven.edgeRelations.some((clue) => clue.relation === "notTenEleven"), true);
 
-    const tensProduct = SudokuSolver.readConstraints(puzzle("tenspositionproducts", {
+    const tensProduct = SudokuSolver.readConstraints(puzzleFor("tenspositionproducts", {
         point: edgePoint, pu_q: { number: { 300: [2, 6, "5"] } }
     }));
     assert.equal(tensProduct.edgeRelations[0].target, 2);
 
-    const distances = SudokuSolver.readConstraints(puzzle("distances", {
+    const distances = SudokuSolver.readConstraints(puzzleFor("distances", {
         pu_q: { number: { 15: ["2-5:4", 1, "6"] } }
     }));
     assert.deepEqual(distances.outsideRelations[0].value, { x: 2, y: 5, z: 4 });
 
-    const starProductParsed = SudokuSolver.readConstraints(puzzle("starproduct", {
+    const starProductParsed = SudokuSolver.readConstraints(puzzleFor("starproduct", {
         pu_q: { number: { 15: ["12", 1, "1"] }, symbol: { 11: [0, "star", 2] } } // cellKey 11 is row=0, col=0
     }));
     assert.equal(starProductParsed.outsideRelations[0].value, 12);
 
-    const fullOrHalf = SudokuSolver.readConstraints(puzzle("fullorhalf", {
+    const fullOrHalf = SudokuSolver.readConstraints(puzzleFor("fullorhalf", {
         point: { 300: { neighbor: [28, 29, 41, 42] } },
         pu_q: { symbol: { 300: [1, "square_SS", 2] } }
     }));
     assert.equal(fullOrHalf.quadRelations[0].kind, "square");
 
-    const sameSum = SudokuSolver.readConstraints(puzzle("samesum", {
+    const sameSum = SudokuSolver.readConstraints(puzzleFor("samesum", {
         pu_q: { surface: { 28: 1 } }
     }));
     assert.equal(sameSum.sameSumGroups[0][0].length, 2, "a shaded corner cell uses its in-grid neighbours");
 
-    const pinocchio = SudokuSolver.readConstraints(puzzle("pinocchio", {
+    const pinocchio = SudokuSolver.readConstraints(puzzleFor("pinocchio", {
         pu_q: { number: { 28: [5, 0, "1"] } }
     }));
     assert.equal(pinocchio.cellRelations[0].relation, "pinnochio");
 
-    const xAverage = SudokuSolver.readConstraints(puzzle("xaverage", {
+    const xAverage = SudokuSolver.readConstraints(puzzleFor("xaverage", {
         pu_q: { number: { 15: [5, 1, "1"] } }
     }));
     assert.equal(xAverage.outsideRelations[0].relation, "xaverage");
 
-    const tripleSum = SudokuSolver.readConstraints(puzzle("triplesum", {
+    const tripleSum = SudokuSolver.readConstraints(puzzleFor("triplesum", {
         pu_q: { number: { 27: [6147, 1, "6"] } }
     }));
     assert.equal(tripleSum.outsideRelations[0].value, 6147);
 
-    const productFrame = SudokuSolver.readConstraints(puzzle("productframe", {
+    const productFrame = SudokuSolver.readConstraints(puzzleFor("productframe", {
         pu_q: { number: { 14: [120, 1, "6"] }, symbol: {
             14: [[0, 0, 0, 0, 0, 1, 0, 0], "arrow_eight", 2]
         } }
@@ -2145,14 +2145,14 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
     assert.deepEqual(productFrame.outsideRelations[0].cells.slice(0, 3),
         [{ row: 0, col: 0 }, { row: 1, col: 1 }, { row: 2, col: 2 }]);
 
-    const productLittleKiller = SudokuSolver.readConstraints(puzzle("product little killer", {
+    const productLittleKiller = SudokuSolver.readConstraints(puzzleFor("product little killer", {
         pu_q: { number: { 14: [120, 1, "6"] }, symbol: {
             14: [[0, 0, 0, 0, 0, 1, 0, 0], "arrow_eight", 2]
         } }
     }));
     assert.equal(productLittleKiller.outsideRelations[0].value, 120);
 
-    const creasing = SudokuSolver.readConstraints(puzzle("creasing", {
+    const creasing = SudokuSolver.readConstraints(puzzleFor("creasing", {
         pu_q: { nobulbthermo: [[28, 29, 30]] }
     }));
     assert.equal(creasing.catalogLines[0].relation, "creasing");
@@ -2167,13 +2167,13 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
     ]);
 
     const cornerPoint = { 300: { neighbor: [28, 29, 41, 42] } };
-    const diagonal = SudokuSolver.readConstraints(puzzle("diagonallyconsecutive", {
+    const diagonal = SudokuSolver.readConstraints(puzzleFor("diagonallyconsecutive", {
         point: cornerPoint, pu_q: { symbol: { 300: [[1, 1], "diagonal_consecutive", 2] } }
     }));
     assert.equal(diagonal.edgeRelations.filter((clue) => clue.relation === "diagonalConsecutive").length, 2);
     assert.equal(diagonal.edgeRelations.filter((clue) => clue.relation === "notDiagonalConsecutive").length, 126);
 
-    const multiplication = SudokuSolver.readConstraints(puzzle("multiplication", {
+    const multiplication = SudokuSolver.readConstraints(puzzleFor("multiplication", {
         pu_q: { killercages: [[28, 29, 41, 42]] }
     }));
     assert.equal(multiplication.cellRelations[0].relation, "multiplication");
@@ -2637,6 +2637,49 @@ test("validates new variants: bouncing x-sums, czech outsider, diagonal sum is n
     const starClue = { relation: "starproduct", value: 20, cells: row };
     assert.equal(SudokuCSP.solve(solved, { supported: ["starproduct"], outsideRelations: [starClue], starCells }).solved, true);
     assert.equal(SudokuCSP.solve(solved, { supported: ["starproduct"], outsideRelations: [{ ...starClue, value: 30 }], starCells }).solved, false);
+
+    // 7. sudokuwithstars parsed constraints
+    function localPuzzle(variant, options = {}) {
+        const nx0 = options.nx0 || 13;
+        const inset = options.inset === undefined ? 2 : options.inset;
+        return {
+            nx0, ny0: nx0, space: options.space || [0, 0, 0, 0],
+            activeSudokuVariant: variant,
+            centerlist: Array.from({ length: 9 }, (_, row) =>
+                Array.from({ length: 9 }, (__, col) => (row + inset) * nx0 + col + inset)).flat(),
+            point: options.point || {},
+            pu_q: { number: {}, numberS: {}, symbol: {}, wall: {}, thermo: [], nobulbthermo: [],
+                killercages: [], ...(options.pu_q || {}) },
+            pu_a: { number: {} }, mode: { qa: "pu_q" }
+        };
+    }
+    const sudokuWithStarsParsed = SudokuSolver.readConstraints(localPuzzle("sudokuwithstars", {
+        pu_q: { symbol: { 28: [0, "star", 2] } } // cellKey 28 is row=0, col=0 (since 28 = (0+2)*13 + 0+2 = 2*13+2 = 28)
+    }));
+    assert.equal(sudokuWithStarsParsed.supported.includes("sudokuwithstars"), true);
+    assert.equal(sudokuWithStarsParsed.starCells.length, 1);
+    assert.equal(sudokuWithStarsParsed.starCells[0].row, 0);
+
+    const diagTouch = emptyBoard();
+    diagTouch[0][0] = 8;
+    diagTouch[1][1] = 9;
+    assert.equal(SudokuCSP.findConflict(diagTouch, { supported: ["sudokuwithstars"], sudokuwithstars: [true] }) !== null, true);
+
+    const orthoTouch = emptyBoard();
+    orthoTouch[0][0] = 8;
+    orthoTouch[0][1] = 9;
+    assert.equal(SudokuCSP.findConflict(orthoTouch, { supported: ["sudokuwithstars"], sudokuwithstars: [true] }) !== null, true);
+
+    const validTouch = emptyBoard();
+    validTouch[0][0] = 8;
+    validTouch[0][2] = 9;
+    assert.equal(SudokuCSP.findConflict(validTouch, { supported: ["sudokuwithstars"], sudokuwithstars: [true] }) === null, true);
+
+    const invalidValue = emptyBoard();
+    invalidValue[0][0] = 5;
+    assert.equal(SudokuCSP.findConflict(invalidValue, { supported: ["sudokuwithstars"], starCellValues: [{row: 0, col: 0}] }) !== null, true);
+    invalidValue[0][0] = 8;
+    assert.equal(SudokuCSP.findConflict(invalidValue, { supported: ["sudokuwithstars"], starCellValues: [{row: 0, col: 0}] }) === null, true);
 });
 
 test("validates new variants: faded kropki, first seen odd/even, max ascending, fives, frame-diagonal, odd labyrinth, even passage, equal sum line, german whispers, factor lines", function() {
