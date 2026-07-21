@@ -3,9 +3,9 @@ type RawVariation = {
     name: string;
     rules: Record<string, string>;
     status: "available" | "planned" | "infeasible" | "hidden";
-    inputType: {
-        categories: Array<"no-input" | "line" | "cage" | "shading" | "outside" | "cell" | "edge" | "intersection">;
-        instructions: string[];
+    inputType?: {
+        categories?: Array<"no-input" | "line" | "cage" | "shading" | "outside" | "cell" | "edge" | "intersection">;
+        instructions?: string[];
     };
     tags: string[];
     isDuplicate?: boolean;
@@ -22,9 +22,13 @@ type VariantMetadata = {
     variants: RawVariation[];
 };
 
-export type Variation = RawVariation & {
+export type Variation = Omit<RawVariation, "inputType"> & {
     value: string;
     rule: string;
+    inputType: {
+        categories: Array<"no-input" | "line" | "cage" | "shading" | "outside" | "cell" | "edge" | "intersection">;
+        instructions: string[];
+    };
 };
 
 import metadataJson from "../../variant_metadata.json";
@@ -52,7 +56,8 @@ const allVariations: Variation[] = variantMetadata.variants.map((item) => {
         otherNames: item.otherNames || "",
         inputType: {
             ...item.inputType,
-            categories: item.inputType.categories
+            categories: item.inputType?.categories || [],
+            instructions: item.inputType?.instructions || []
         }
     };
 });
