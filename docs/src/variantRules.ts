@@ -11,7 +11,7 @@ export const variantRules = Object.fromEntries(variantMetadata.variants.map((var
     return [value, {
         title: variant.name,
         rule: variant.rules["9x9"] || variant.rules["6x6"] || Object.values(variant.rules)[0] || "",
-        usage: variant.inputType.instructions.join(" ")
+        usage: (variant.inputType && variant.inputType.instructions) ? variant.inputType.instructions.join(" ") : ""
     }];
 })) as Record<string, VariantGuide>;
 
