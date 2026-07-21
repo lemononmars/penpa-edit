@@ -6841,7 +6841,6 @@
         "9x9": "Each digit 5 cannot be adjacent to 6,7,8 and 9."
       },
       "status": "available",
-      "scratchGeneratable": false,
       "inputType": {
         "categories": [
           "no-input"
@@ -6860,7 +6859,7 @@
       "status": "available",
       "inputType": {
         "categories": [
-          "shading"
+          "shading",
           "no-input"
         ],
         "instructions": []
