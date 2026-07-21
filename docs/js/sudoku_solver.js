@@ -557,6 +557,7 @@ var SudokuSolver = (function() {
             noEvenNeighbours: [],
             noThreeInRow: [],
             queenDigits: [],
+            pirateCells: [],
             touchyCells: [],
             emitters: [],
             unicorn: [],
@@ -1286,20 +1287,34 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             }
             constraints.supported.push("queen");
         }
+        if (variantEnabled(puzzle, "pirate")) {
+            for (var pirateRow = 0; pirateRow < SIZE; pirateRow++) {
+                for (var pirateCol = 0; pirateCol < SIZE; pirateCol++) {
+                    [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function(offset) {
+                        var neighborRow = pirateRow + offset[0];
+                        var neighborCol = pirateCol + offset[1];
+                        if (neighborRow >= 0 && neighborRow < SIZE && neighborCol >= 0 && neighborCol < SIZE) {
+                            constraints.pirateCells.push([
+                                { row: pirateRow, col: pirateCol },
+                                { row: neighborRow, col: neighborCol }
+                            ]);
+                        }
+                    });
+                }
+            }
+            constraints.supported.push("pirate");
+        }
         if (variantEnabled(puzzle, "touchy")) {
             for (var touchRow = 0; touchRow < SIZE; touchRow++) {
                 for (var touchCol = 0; touchCol < SIZE; touchCol++) {
                     var neighbors = [];
-                    for (var rowOffset = -1; rowOffset <= 1; rowOffset++) {
-                        for (var colOffset = -1; colOffset <= 1; colOffset++) {
-                            var neighborRow = touchRow + rowOffset;
-                            var neighborCol = touchCol + colOffset;
-                            if ((rowOffset || colOffset) && neighborRow >= 0 && neighborRow < SIZE &&
-                                neighborCol >= 0 && neighborCol < SIZE) {
-                                neighbors.push({ row: neighborRow, col: neighborCol });
-                            }
+                    [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function(offset) {
+                        var neighborRow = touchRow + offset[0];
+                        var neighborCol = touchCol + offset[1];
+                        if (neighborRow >= 0 && neighborRow < SIZE && neighborCol >= 0 && neighborCol < SIZE) {
+                            neighbors.push({ row: neighborRow, col: neighborCol });
                         }
-                    }
+                    });
                     constraints.touchyCells.push({ cell: { row: touchRow, col: touchCol }, neighbors: neighbors });
                 }
             }
@@ -1629,6 +1644,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             connectedLinePaths(puzzle, 2).forEach(function(path) {
                 if (path.length > 1) constraints.catalogLines.push({ path: path, relation: variant });
             });
+            constraints.supported.push(variant);
         });
         ["alternatingstripes", "between", "odd even bridge"].forEach(function(variant) {
             if (!variantEnabled(puzzle, variant)) return;
@@ -2973,15 +2989,27 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                             outsideColumn, outsideBoxHeight, "column", "before1");
                         addOutsideRelation((outsideStartCol - 2) + (outsideStartRow + outsideIndex) * puzzle.nx0,
                             outsideRow, outsideBoxWidth, "row", "before1");
-                    } else if (variant === "partitionedsums" || variant === "bigsmalljapanesesums") {
+                    } else if (variant === "partitionedsums" || variant === "bigsmalljapanesesums" || variant === "japanesesums") {
                         var colClues = [];
                         var rowClues = [];
                         for (var layer = 0; layer < 5; layer++) {
                             var topClue = outsideClueFromEntry(numbers[(outsideStartCol + outsideIndex) + (outsideStartRow - 1 - layer) * puzzle.nx0]);
-                            if (topClue !== null) colClues.unshift(topClue);
+                            var topSeq = outsideSequenceFromEntry(numbers[(outsideStartCol + outsideIndex) + (outsideStartRow - 1 - layer) * puzzle.nx0]);
+                            var actualTop = (variant === "japanesesums" || variant === "oddsums" || variant === "oddevenbigsmall") && topSeq !== null ? topSeq : topClue;
+
+                            if (actualTop !== null) {
+                                if (Array.isArray(actualTop)) colClues.unshift(...actualTop);
+                                else colClues.unshift(actualTop);
+                            }
 
                             var leftClue = outsideClueFromEntry(numbers[(outsideStartCol - 1 - layer) + (outsideStartRow + outsideIndex) * puzzle.nx0]);
-                            if (leftClue !== null) rowClues.unshift(leftClue);
+                            var leftSeq = outsideSequenceFromEntry(numbers[(outsideStartCol - 1 - layer) + (outsideStartRow + outsideIndex) * puzzle.nx0]);
+                            var actualLeft = (variant === "japanesesums" || variant === "oddsums" || variant === "oddevenbigsmall") && leftSeq !== null ? leftSeq : leftClue;
+
+                            if (actualLeft !== null) {
+                                if (Array.isArray(actualLeft)) rowClues.unshift(...actualLeft);
+                                else rowClues.unshift(actualLeft);
+                            }
                         }
                         if (colClues.length > 0) {
                             constraints.outsideRelations.push({

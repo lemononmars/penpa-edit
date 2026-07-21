@@ -1835,6 +1835,17 @@ registerConstraint("threeDigitNumbersKillers", {
         }
     });
 
+    registerConstraint("pirateCells", {
+        validatePartial: function(board, pair) {
+            var first = cellValue(board, pair[0]);
+            var second = cellValue(board, pair[1]);
+            if (!first || !second) return true;
+            if (first === 5 && second >= 6 && second <= 9) return false;
+            if (second === 5 && first >= 6 && first <= 9) return false;
+            return true;
+        }
+    });
+
     registerConstraint("touchyCells", {
         validatePartial: function(board, item) {
             var value = cellValue(board, item.cell);
@@ -3308,6 +3319,7 @@ registerConstraint("threeDigitNumbersKillers", {
             }
             if (clue.relation === "meandering diagonals") {
                 if (new Set(assigned).size !== assigned.length) return false;
+                return true;
             }
             if (clue.relation === "alternatingstripes") {
                 if (new Set(assigned).size !== assigned.length) return false;
