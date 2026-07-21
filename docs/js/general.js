@@ -1421,6 +1421,39 @@ function saveimage() {
     document.getElementById("modal-image").style.display = 'block';
 }
 
+function syncScreenshotType(val) {
+    if (document.getElementById("nb_type1")) document.getElementById("nb_type1").checked = (val === "1");
+    if (document.getElementById("nb_type2")) document.getElementById("nb_type2").checked = (val === "2");
+    if (document.getElementById("nb_type3")) document.getElementById("nb_type3").checked = (val === "3");
+}
+
+function syncScreenshotMargin(checked) {
+    if (document.getElementById("nb_margin1")) document.getElementById("nb_margin1").checked = checked;
+    if (document.getElementById("nb_margin2")) document.getElementById("nb_margin2").checked = !checked;
+}
+
+function downloadPuzzleImage(mode) {
+    if (typeof pu === "undefined" || !pu) return;
+    var originalQa = pu.mode ? pu.mode.qa : "pu_q";
+    if (mode === "problem") {
+        if (pu.mode_qa) pu.mode_qa("pu_q");
+        saveimage_download();
+    } else if (mode === "solution") {
+        if (pu.mode_qa) pu.mode_qa("pu_a");
+        saveimage_download();
+    } else if (mode === "both") {
+        if (pu.mode_qa) pu.mode_qa("pu_q");
+        saveimage_download();
+        setTimeout(function() {
+            if (pu.mode_qa) pu.mode_qa("pu_a");
+            saveimage_download();
+            setTimeout(function() {
+                if (pu.mode_qa) pu.mode_qa(originalQa);
+            }, 300);
+        }, 500);
+    }
+}
+
 function saveimage_download() {
     var downloadLink = document.getElementById('download_link');
     var filename = get_download_filename('saveimagename');
@@ -1705,7 +1738,12 @@ async function update_textarea(text) {
         newText = shortened || newText;
     }
 
-    document.getElementById("savetextarea").value = newText;
+    const saveEl = document.getElementById("savetextarea");
+    if (saveEl) saveEl.value = newText;
+    if (document.getElementById("modal-save-url-wrapper")) {
+        document.getElementById("modal-save-url-wrapper").style.display = "block";
+    }
+    return newText;
 }
 
 function make_ppfile() {

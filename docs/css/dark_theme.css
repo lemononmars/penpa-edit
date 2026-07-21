@@ -280,3 +280,130 @@ a:active {
 #visibility_button {
     border: 1px solid var(--blueskyMedium);
 }
+
+/* ── Settings modal dark theme ──────────────────────────────────── */
+#modal-settings-content {
+    background: #263340;
+    border-color: #3c4f60;
+    color: #c8d6e0;
+}
+
+#modal-settings-content .modal-header {
+    background: transparent;
+    color: #d6e4ed;
+}
+
+#modal-settings-content .modal-subheader {
+    background: transparent;
+    color: #7fa0b8;
+    border-bottom-color: #3c4f60;
+}
+
+#settings-table td {
+    color: #c8d6e0;
+}
+
+#settings-table tr + tr td {
+    border-top-color: #344554;
+}
+
+#settings-table select,
+#settings-table button {
+    background: #1e2d3a;
+    color: #c8d6e0;
+    border-color: #3c4f60;
+}
+
+#settings-table button:hover {
+    background: #2e3f50;
+    border-color: #42a5e8;
+}
+
+#settings-table select {
+    color-scheme: dark;
+}
+
+.modal-close {
+    color: #7fa0b8;
+}
+
+.modal-close:hover {
+    background: rgba(255,255,255,0.08);
+    color: #d6e4ed;
+}
+
+/* ── Themed modal (action modals) dark mode ──────────────────── */
+.modal-styled {
+    background: #263340;
+    border-color: #3c4f60;
+    color: #c8d6e0;
+}
+
+.modal-styled .modal-header {
+    background: transparent;
+    color: #d6e4ed;
+    border-bottom-color: #3c4f60;
+}
+
+.modal-styled h4,
+.modal-styled .modal-subheader {
+    background: transparent;
+    color: #7fa0b8;
+    border-bottom-color: #3c4f60;
+}
+
+.modal-styled label.label,
+.modal-styled label.label_nb {
+    color: #c8d6e0;
+}
+
+.modal-styled input[type="text"],
+.modal-styled input[type="number"],
+.modal-styled textarea,
+.modal-styled select {
+    background: #1e2d3a;
+    color: #c8d6e0;
+    border-color: #3c4f60;
+    color-scheme: dark;
+}
+
+.modal-styled input[type="text"]:focus,
+.modal-styled input[type="number"]:focus,
+.modal-styled textarea:focus,
+.modal-styled select:focus {
+    border-color: #42a5e8;
+    box-shadow: 0 0 0 2px rgba(66, 165, 232, 0.25);
+}
+
+.modal-styled .nb_button button,
+.modal-styled .nb_button input[type="button"],
+.modal-styled .nb_button a.button {
+    background: #1e2d3a;
+    color: #c8d6e0;
+    border-color: #3c4f60;
+}
+
+.modal-styled .nb_button button:hover,
+.modal-styled .nb_button input[type="button"]:hover,
+.modal-styled .nb_button a.button:hover {
+    background: #2e3f50;
+    border-color: #42a5e8;
+    color: #42a5e8;
+}
+
+.modal-styled #modal-image-footer {
+    border-top-color: #3c4f60;
+}
+
+html.dark #sudoku-solver-log,
+.studio-shell.dark #sudoku-solver-log {
+    background: #1b2632;
+    border-color: #354756;
+}
+
+html.dark #sudoku-solver-log-output,
+.studio-shell.dark #sudoku-solver-log-output {
+    color: #dce7f0 !important;
+    background: #1b2632 !important;
+    border-color: #354756 !important;
+}

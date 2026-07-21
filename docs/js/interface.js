@@ -49,40 +49,40 @@ const PenpaUI = {
         // One time operation when the grid is created
         // Remove all modes, square grid is the reference as it has all the modes
         for (var i of allPossible.mode) {
-            document.getElementById("mo_" + i + "_lb").classList.toggle('is_hidden', selectedGrid.mode.indexOf(i) < 0);
+            document.getElementById("mo_" + i + "_lb")?.classList.toggle('is_hidden', selectedGrid.mode.indexOf(i) < 0);
         }
         for (var i of allPossible.sub) {
-            document.getElementById("sub_" + i + "_lb").classList.toggle('is_hidden', selectedGrid.sub.indexOf(i) < 0);
+            document.getElementById("sub_" + i + "_lb")?.classList.toggle('is_hidden', selectedGrid.sub.indexOf(i) < 0);
         }
         for (var i of allPossible.ms) {
-            document.getElementById("ms_" + i).parentElement.classList.toggle('is_hidden', selectedGrid.ms.indexOf(i) < 0);
+            document.getElementById("ms_" + i)?.parentElement?.classList.toggle('is_hidden', selectedGrid.ms.indexOf(i) < 0);
         }
         for (var i of allPossible.ms1) {
-            document.getElementById("ms1_" + i).parentElement.classList.toggle('is_hidden', selectedGrid.ms1.indexOf(i) < 0);
+            document.getElementById("ms1_" + i)?.parentElement?.classList.toggle('is_hidden', selectedGrid.ms1.indexOf(i) < 0);
         }
         for (var i of allPossible.ms3) {
-            document.getElementById("ms3_" + i).parentElement.classList.toggle('is_hidden', selectedGrid.ms3.indexOf(i) < 0);
+            document.getElementById("ms3_" + i)?.parentElement?.classList.toggle('is_hidden', selectedGrid.ms3.indexOf(i) < 0);
         }
         for (var i of allPossible.ms4) {
-            document.getElementById("ms4_" + i).parentElement.classList.toggle('is_hidden', selectedGrid.ms4.indexOf(i) < 0);
+            document.getElementById("ms4_" + i)?.parentElement?.classList.toggle('is_hidden', selectedGrid.ms4.indexOf(i) < 0);
         }
         for (var i of allPossible.shapemodes) {
-            document.getElementById(i).classList.toggle('is_hidden', selectedGrid.shapemodes.indexOf(i) < 0);
+            document.getElementById(i)?.classList.toggle('is_hidden', selectedGrid.shapemodes.indexOf(i) < 0);
         }
         for (var i of allPossible.combisub) {
-            document.getElementById("combisub_" + i).parentElement.classList.toggle('is_hidden', selectedGrid.combisub.indexOf(i) < 0);
+            document.getElementById("combisub_" + i)?.parentElement?.classList.toggle('is_hidden', selectedGrid.combisub.indexOf(i) < 0);
         }
         for (var i of allPossible.subcombi) {
-            document.getElementById(i).classList.toggle('is_hidden', selectedGrid.subcombi.indexOf(i) < 0);
+            document.getElementById(i)?.classList.toggle('is_hidden', selectedGrid.subcombi.indexOf(i) < 0);
         }
         for (var i of allPossible.top_buttons) {
-            document.getElementById(i).classList.toggle('is_hidden', selectedGrid.top_buttons.indexOf(i) < 0);
+            document.getElementById(i)?.classList.toggle('is_hidden', selectedGrid.top_buttons.indexOf(i) < 0);
         }
         for (var i of allPossible.exceptions) {
-            document.getElementById(i).classList.toggle('is_hidden', selectedGrid.exceptions.indexOf(i) < 0);
+            document.getElementById(i)?.classList.toggle('is_hidden', selectedGrid.exceptions.indexOf(i) < 0);
         }
         for (var i of allPossible.rot) {
-            document.getElementById("rot_" + i).parentElement.classList.toggle('is_hidden', selectedGrid.rot.indexOf(i) < 0);
+            document.getElementById("rot_" + i)?.parentElement?.classList.toggle('is_hidden', selectedGrid.rot.indexOf(i) < 0);
         }
         // document.getElementById("sub_number4_lb").innerText = (gridtype === 'sudoku') ? 'Quad' : 'Tapa';
     },

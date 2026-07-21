@@ -312,6 +312,7 @@
             {#each inputModesFor(detailVariation) as mode}<li>{mode}</li>{/each}
           </ul>
         </section>
+        {#if false}
         <section>
           <h2>CSP constraint function</h2>
           <p>{cspApproachFor(detailVariation)}</p>
@@ -330,6 +331,7 @@
           </p>
           <pre><code use:highlightCode class="language-javascript">{solverTestCasesFor(detailVariation)}</code></pre>
         </section>
+        {/if}
         </div>
         {#if detailVariation.example}
           <aside class="variant-examples">
@@ -520,44 +522,7 @@
     </div>
   {/if}
 
-  {#if import.meta.env.DEV}
-    <section class="dev-form-card">
-      <h2>Developer Options: Metadata Editor</h2>
-      <p class="dev-form-desc">
-        This development-only editor reads and writes the complete
-        <code>variant_metadata.json</code> file. Any root setting or variant
-        field can be edited here.
-      </p>
-      <form on:submit|preventDefault={saveMetadata}>
-        <label class="metadata-editor-label" for="variant-metadata-editor"
-          >Complete metadata JSON</label
-        >
-        <textarea
-          id="variant-metadata-editor"
-          class="metadata-editor"
-          bind:value={metadataText}
-          spellcheck="false"
-          aria-describedby="metadata-editor-status"
-        ></textarea>
-        <div class="form-actions">
-          <button type="button" on:click={loadMetadata} disabled={isSaving}
-            >Reload from disk</button
-          >
-          <button type="button" on:click={formatMetadata} disabled={isSaving}
-            >Validate &amp; Format</button
-          >
-          <button type="submit" disabled={isSaving}>
-            {#if isSaving}Saving...{:else}Save metadata{/if}
-          </button>
-        </div>
-        {#if saveMessage}
-          <div id="metadata-editor-status" aria-live="polite" class="save-status {saveSuccess ? 'success' : 'error'}">
-            {saveMessage}
-          </div>
-        {/if}
-      </form>
-    </section>
-  {/if}
+
 </main>
 
 <footer>Generated from the repository variation catalog.</footer>

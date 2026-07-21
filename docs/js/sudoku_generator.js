@@ -71,6 +71,14 @@ var SudokuGenerator = (function() {
         return { row: size - 1 - cell.row, col: size - 1 - cell.col };
     }
 
+    function mirrorCellH(cell, size) {
+        return { row: cell.row, col: size - 1 - cell.col };
+    }
+
+    function mirrorCellV(cell, size) {
+        return { row: size - 1 - cell.row, col: cell.col };
+    }
+
     function rotateCells(cells, size) {
         return cells.map(function(cell) { return rotateCell(cell, size); });
     }
@@ -336,11 +344,28 @@ var SudokuGenerator = (function() {
         var board = solution.map(function(row) { return row.slice(); });
         var units = [];
         var seenCells = {};
+        var symmetry = options.symmetry || 'rotational180';
         for (var cellIndex = 0; cellIndex < size * size; cellIndex++) {
             if (seenCells[cellIndex]) continue;
+            var cellRow = Math.floor(cellIndex / size);
+            var cellCol = cellIndex % size;
             var rotatedIndex = (size * size - 1) - cellIndex;
-            seenCells[cellIndex] = seenCells[rotatedIndex] = true;
-            units.push(cellIndex === rotatedIndex ? [cellIndex] : [cellIndex, rotatedIndex]);
+            var mirrorHIndex = cellRow * size + (size - 1 - cellCol);
+            var mirrorVIndex = (size - 1 - cellRow) * size + cellCol;
+            var unit;
+            if (symmetry === 'none') {
+                seenCells[cellIndex] = true;
+                unit = [cellIndex];
+            } else if (symmetry === 'all_axis') {
+                var indices = [cellIndex, rotatedIndex, mirrorHIndex, mirrorVIndex];
+                var unique = indices.filter(function(i, pos) { return indices.indexOf(i) === pos; });
+                unique.forEach(function(i) { seenCells[i] = true; });
+                unit = unique;
+            } else { // rotational180 (default)
+                seenCells[cellIndex] = seenCells[rotatedIndex] = true;
+                unit = cellIndex === rotatedIndex ? [cellIndex] : [cellIndex, rotatedIndex];
+            }
+            units.push(unit);
         }
         units = shuffle(units, random);
         var givens = size * size;
@@ -400,6 +425,19 @@ var SudokuGenerator = (function() {
         });
         if (!options.preserveExisting) {
             Object.keys(marks).forEach(function(name) { marks[name] = constraints[name] || []; });
+        }
+
+        // Non-minimal mode: add back 8 extra clues that were stripped
+        if (options.minimal === false && !options.preserveExisting) {
+            var removedIndices = [];
+            for (var ri = 0; ri < size * size; ri++) {
+                if (board[Math.floor(ri / size)][ri % size] === 0) removedIndices.push(ri);
+            }
+            var extra = shuffle(removedIndices, random).slice(0, 8);
+            extra.forEach(function(idx) {
+                board[Math.floor(idx / size)][idx % size] = solution[Math.floor(idx / size)][idx % size];
+                givens++;
+            });
         }
 
         var finalAnswers = CSP.createProblem(board, constraints).enumerateAnswers(2);

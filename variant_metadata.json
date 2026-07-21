@@ -82,7 +82,7 @@
       "status": "available",
       "inputType": {
         "categories": [
-          "cell"
+          "line"
         ],
         "instructions": []
       },
@@ -170,7 +170,6 @@
         "9x9": "Each main diagonal contains exactly three digits."
       },
       "tags": [
-        "classiclookalike",
         "diagonal"
       ],
       "status": "available",
@@ -190,7 +189,6 @@
         "9x9": "No cell that is a knight-step away can contain the same digit. A knight's move is 2 in a line and 1 to the side, as in chess."
       },
       "tags": [
-        "classiclookalike",
         "math"
       ],
       "status": "available",
@@ -795,7 +793,7 @@
       "rules": {
         "9x9": "Two cages with a dashed border are marked by the same letter if they contain the same set of digits. For each cage marked with the same letter digits in the same place must be identical. Digits may repeat in a cage."
       },
-      "status": "planned",
+      "status": "available",
       "inputType": {
         "categories": [
           "cage"
@@ -1211,7 +1209,6 @@
         "9x9": "Each main diagonal contains each digit from 1 to 9."
       },
       "tags": [
-        "classiclookalike",
         "diagonal"
       ],
       "status": "available",
@@ -1334,7 +1331,6 @@
         "9x9": "Digits in diagonally touching cells must not be consecutive."
       },
       "tags": [
-        "classiclookalike",
         "consecutive",
         "neighbour",
         "math"
@@ -1406,6 +1402,23 @@
       ]
     },
     {
+      "id": "differentparity",
+      "name": "Different Parity",
+      "rules": {
+        "9x9": "Each marked domino contains an odd and an even digit."
+      },
+      "tags": [
+        "parity",
+        "math"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cage"
+        ]
+      }
+    },
+    {
       "otherNames": "",
       "id": "disguisedpalindromes",
       "name": "Disguised Palindromes",
@@ -1429,7 +1442,6 @@
         "9x9": "No digit can appear in the same cell position in different 3x3 outlined regiones."
       },
       "tags": [
-        "classiclookalike"
       ],
       "status": "available",
       "inputType": {
@@ -1560,7 +1572,7 @@
       "rules": {
         "9x9": "Adjacent cells contianing numbers whose difference is 2 are marked with a white rhombus. Adjacent cells containing numbers whose ratio is 4 are marked with a black rhombus. Adjacent cells with no marking must not contain numbers either whose difference is 2 or whose ratio is 4."
       },
-      "status": "planned",
+      "status": "available",
       "inputType": {
         "categories": [
           "cell"
@@ -3050,7 +3062,7 @@
         "math",
         "neighbour"
       ],
-      "status": "planned",
+      "status": "available",
       "inputType": {
         "categories": [
           "edge"
@@ -3215,7 +3227,6 @@
         "9x9": "The four corner boxes contain the same digits in symmetric positions about the centre."
       },
       "tags": [
-        "classiclookalike"
       ],
       "status": "available",
       "inputType": {
@@ -3414,7 +3425,6 @@
         "9x9": "Even digits must not be in adjacent cells."
       },
       "tags": [
-        "classiclookalike",
         "neighbour",
         "parity"
       ],
@@ -3433,7 +3443,6 @@
         "9x9": "Digits in any three consecutive cells in any row or column must not be of the same parity."
       },
       "tags": [
-        "classiclookalike",
         "neighbour",
         "parity",
         "math"
@@ -3453,7 +3462,6 @@
         "9x9": "Digits in adjacent cells must not be consecutive."
       },
       "tags": [
-        "classiclookalike",
         "consecutive",
         "neighbour",
         "math"
@@ -4666,7 +4674,6 @@
         "9x9": "No 2x2 area contains four digits of the same parity."
       },
       "tags": [
-        "classiclookalike",
         "parity"
       ],
       "status": "available",
@@ -4704,7 +4711,6 @@
         "9x9": "The digit 9 must not be repeated in the same diagonal of any length."
       },
       "tags": [
-        "classiclookalike",
         "diagonal"
       ],
       "status": "available",
@@ -5837,7 +5843,6 @@
         "9x9": "Cells that are 180° symmetric about the centre must not contain the same digit."
       },
       "tags": [
-        "classiclookalike"
       ],
       "status": "available",
       "inputType": {
@@ -6089,7 +6094,6 @@
         "9x9": "Each digit has at least one consecutive digit in its adjacent cells."
       },
       "tags": [
-        "classiclookalike",
         "consecutive",
         "neighbour",
         "math"
@@ -6557,13 +6561,13 @@
       ]
     },
     {
+      "otherNames": "No Touch",
       "id": "anti king",
       "name": "Anti King",
       "rules": {
         "9x9": "Equal digits may not be a chess king move apart."
       },
       "tags": [
-        "classiclookalike"
       ],
       "status": "available",
       "inputType": {
@@ -6738,6 +6742,144 @@
         "0 to 8",
         "0-8"
       ]
+    },
+    {
+      "id": "termination",
+      "name": "Termination",
+      "rules": {
+        "9x9": "When two adjacent cells contain numbers where the sum or the product of two numbers ends in digit 0, a marked 0 is placed between the two cells. All marked 0 that satisfy the above condition have been given"
+      },
+      "tags": [
+        "math",
+        "neighbour",
+        "converse"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "edge"
+        ],
+        "instructions": [
+          "Number · edge",
+          "Enter 0 on the edge."
+        ]
+      }
+    },
+    {
+      "id": "citywalk",
+      "name": "Citywalk",
+      "rules": {
+        "9x9": "All cells that contain 3 to 7 are orthogonally connected in the grid. There is no restriction on connectivity in each 3x3 box"
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "tags": [
+        "global"
+      ],
+      "example": "zVXvb+I4EP3OX3Hy17W0sZ0YJ9J+oL9Wqra9ctder0WoSiEU2kB2A7QoVfdv3zeO2/yA7ulWOukUMG9myHsz44yzXI+zhzUPcSnDPS5wKePZr/Hp47nrfLZKk+g33luvplkOwPnvR0d8EqfLhB9f3e8dPPSeDnt/fwyulbo4nXy4P+hf3I8v/xJ9b/Yx905Tszg5O9hLP3wurk+mvcfkMNFny2w0TZN4HBfXl8ebdHFk7qYTsX883TeTeOEtv5nz8HGv/+lTZ+ASGXYGTDDOJL6CDb+zsgT23brDYee5+CN6Lm6iwfCFFxcVNBX8M3rGeho9M+WxaGBQNHFxphRMVZkaJrWkNH3ZiPqtaBem/2YGfiMa0J9lZRqY4ZupBczgzewGMPWbaUi3+rMhqirnkHKudIVHeVRcQlCJVSJCEFuViRCUaEUnJOVSiQtJ/6/xSZKv6SmK1+5XlHy3ZtdLRduFbf6VXc+xH7xQdj2wq2fXwK5f7H8OsU3CIKEwZJEESxhySUUA45dLCUHCMuCSxAjjYZYBCiEcCC41iiSsfS67aBDhbpfLEM0hHOKR99BI4jfg9xy/B37h+AX4peOX4Pcdvw9+2m2rBX7t+DX4jePHOEnaKKuloIUmWh7K3/mlAnY8Ejz1uqjpFmtgxy/BX89Hlv3BL/rgdBV0lctTUx9cXRq62ulq6Nb7o52uhq52uhq69bq009XQ1U5XQ7dLuti0S7t1+3b17artlnZpADudAfKlR7J+0SP2P/LgnMFZwpZZerNc55N4lNwkm3i0YlF55NUjDd9iPb9N8oYrzbKv6Wyxi+E11HDO7hZZnuwMkTMZ371HRaEdVLdZPm7l9BSnabOWb+s4b948muWjtOla5bOGHed59tTwzOPVtOG4jVd4dSyns69NpmTRauYqbqYYP8QttXnVjpcO2zD7xZGMJ9jQyR9GRZ8Xn6PGK4IXfRz9J9Hrm4LO/wFj2GLO5ut0NRtlaQZl58OxY2+XgIcVvLRxQvulU3jApw4DXgGWDbv5UnrOokFxzhllsGfvJsjm2SNqKDMke5TNb1HlgNX6xBUCLt1XBcxQ71fqANVrHQTLOgjtqIPK+2/rCIcv5c55/+pF/WvvjX88iDZuwrP8J0NeBdvuHaMO70+mvRbd5X9nsGvRtn9riinZ7UGGd8csw9seZ7i2JxrOraGG7525Jtb2aFNW7ekmqa0BJ6n6jOMMtugH&variants=classic%2Ccitywalk"
+    },
+    {
+      "id": "upperrightheavykiller",
+      "name": "Upper Right Heavy Killer",
+      "rules": {
+        "9x9": "For any number in the cell that is smaller than the one in the diagonally adjacent upper right cell, there must be a clue in the cell indicating the sum of two numbers. For cells without a clue, the number cannot be smaller than the one in the diagonally adjacent upper right cell."
+      },
+      "status": "available",
+      "tags": [
+        "math",
+        "corner clue"
+      ],
+      "inputType": {
+        "categories": [
+          "number"
+        ],
+        "instructions": [
+          "Select \"Number\" (Small)."
+        ]
+      }
+    },
+    {
+      "id": "consecutiveonline",
+      "name": "Consecutive On-Line",
+      "rules": {
+        "9x9": "The difference of each pair of numbers that are placed in the adjoining two cells along the marked lines is 1."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "line"
+        ],
+        "instructions": []
+      },
+      "tags": [
+        "math",
+        "consecutive"
+      ]
+    },
+    {
+      "id": "pirate",
+      "name": "Pirate",
+      "rules": {
+        "9x9": "Each digit 5 cannot be adjacent to 6,7,8 and 9."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "tags": [],
+      "example": "zVVdb9pIFH3nV6zmtSPVM2MPtqU+kIRUipps2E02m1gocsAEEoNbY5LIUfrbe+54wDaQrrbSSivDcO4Z+9wPz70sV+PsccUDXMrnDhe4lO+Yr+/Sx7HXxaxIk/A33lsV0ywH4Pz342M+idNlwk+uHw6OHnvP/d7fH70bpS7PJh8ejgaXD+Orv8TAmX3MnbPUX5yeHx2kHz6XN6fT3lPST/T5MhtN0yQex+XN1clLujj276cTcXgyPfQn8cJZfvMvgqeDwadPncgGMuxETDDOJL6CDb+zKgX23dDBsPNa/hG+lrdhNHzj5WUN/Rr+Gb5iPQtfmQxYGFHSpMWZcmGygG0IV4GQtUm3q43pmdtVfbvXBeFvTC1guhuzS2LMrW/36XlvYwYe7SOLNSEc0tO1LUiwDkcIE0BDUQiKsFvbkjTriESVYSNkoeiJwNooizDFuTbrBerFS2XWI7M6ZvXM+sXc00cZhY8gAwhJqAQBl0IajF8uKQTC0uNS+RXGYZMekiHsCS41wiKsXS67SJpwt8tl4FQ4wJF0UD7S96HvWH0H+sLqC+hLqy+h71p9F/r0powv6Gurr6HvW30cdxlU+viFL211KH7LSwVsdSR0mnnJ9f0a2OpL6DfjobNmMOJX1q+CX2Xj1FQHm5eGX239avht1kdbvxp+tfWr4beZl7Z+Nfxq61fDb5f84qVdmVd3aFbXrNq80i41SKcTIV7qiuZF5/R/xGAOoNfZMktvl6t8Eo+S2+QlHhUsrEZSc6fFLVbzuyRvUWmWfU1ni30K660WObtfZHmyd4vIZHz/nhRt7ZG6y/LxVkzPcZq2c/m2ivP2w6NZPkrbVJHPWnac59lzi5nHxbRF3MUFRvtyOvvaVkoWW8Us4naI8WO85W1el+Otw16Y+WJg4gT7NJmDsBzw8nM15dYjnJcDjObTcD3JaT5HDBMK02m+SovZKEszeLYcxo55XAL2a3hl9gkd2iHqAJ9ZDHgNWBXs9kvFnIdRecEZRXBgnibI5tkTcqgiJHuUze+QZcQadeIKGzbctQf0UO9X8oDUOg+CVR6E9uRB6f23eQTDt+rNOf/qj/TX/jf+cRC92A7P8p80eb25Te9pdbA/6fbG7j7+ncZu7G7zO11Mwe42Mtg9vQx2u51B7XY0yJ2mBvdOX5PqdmtTVNvdTa52GpxcNXscM9igHw==&variants=classic%2Cpirate"
+    },
+    {
+      "id": "selfjoin",
+      "name": "Self-Joint",
+      "rules": {
+        "9x9": "All 3×3 regions are numbered from 1 to 9 from the first cell to the last cell; if a number has the same numerical value as its position in any region, the cell is marked with gray, otherwise, it's white. All gray cells are given."
+      },
+      "tags": [],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "shading",
+          "no-input"
+        ],
+        "instructions": []
+      }
+    },
+    {
+      "id": "sequence top-bottom",
+      "name": "Sequence Top-Bottom",
+      "rules": {
+        "9x9": "There are two sequences: one running from digit 1 in the top row to digit 9 in the bottom row, and another from digit 1 in the bottom row to digit 9 in the top row. Each sequence must consist of consecutive numbers, with each number touching the next either by side or corner."
+      },
+      "status": "available",
+      "tags": [
+        "path"
+      ]
+    },
+    {
+      "id": "poleposition",
+      "name": "Pole Position",
+      "rules": {
+        "9x9": "The digit in the first cell of each row or column specifies the position of the digit 1 within that row or column."
+      },
+      "tags": [
+        "math"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ]
+      },
+      "example": "zVXbTuNIEH3PV6z6dVoad9tuX6R5CLeR0MCSXVgWrAiZxCEGJ55xHEBGzLfPqXYHXxJmtSOttHLcOVUVn1NV7uqs1tP8Yc0DXLbPLS5w2b6lb9+hj2Wu87TMkvA3PlyX87wA4Pz3oyM+i7NVwo+v7vcOHoZPh8O/P7rXtn1xOvtwfzC6uJ9e/iVGVvqxsE4zf3lydrCXffhcXZ/Mh4/JYaLOVvlkniXxNK6uL4+fs+WRfzefif3j+b4/i5fW6pt/HjzujT59GkQmkfEgYoJxJnELNv7O6hLYd+0OxoOX6o/wpboJo/Erry4a6Dfwz/AF62n4whzBwshF0cTFmePCpB4Y04fpvZkumU5jBp2oomjzrGfD9BuTmNWb6ZOu3ZgezODNDOjZhjmgZxsqYVmwZcumRFpxQfFGS0iymyKFJPpGXEhS39SFxgjdniu9nqNjvLL1eqBXS6+uXr/o3xyikcKHYIBEJFiCgEshNcY3lxIFEJYulzbaRBjbTbroAmFXcKmcGiuHSw8JEfY8LgMkTzjAprSQOPH74LcMvwV+YfgF+KXhl+Cnt0vYAb9r+F3wK8OvwO8bfmx4SX3XWja0lOGh/I1f2sCGR4KnXZfc/F4BG34J/nY+su4PvtEHo2tD1zZ5KuqDqUtBVxldBd12f5TRVdBVRldBt10XbUeNoauMroKuR7p4aZf61e3r1dGr0q/UoxEZDCLkS5u5fdEW+h95cBJg2tkqz25W62IWT5Kb5DmelCysD6V2pONbrhe3SdFxZXn+NUuXuxg2oY4zvVvmRbIzRM5kevceFYV2UN3mxbSX01OcZd1avq3jovvwJC0mWddVFmnHjosif+p4FnE57zhu4xKH+2qefu0yJcteM8u4m2L8EPfUFk07Xgfsmekbhw12sE9ncxBWI159DjuHOK9GOJxPws1ZTid0xBheMWeLdVamkzzLoWx8OHb04xLwsIGXOk5ov3YKC/jUYMArwLphN19qz1kYVeecUQZ7+mmCbJE/ooY6Q7In+eIWVUas1SduI2DS3Shghoa/UgeoNnUQrOsgtKMOKu+/rSMYv9ZvzvpXf6W/9r/xjwfRs5nwvPjJkDfBvnvHqMP7k2lvRXf53xnsVrTv35piSnZ7kOHdMcvw9scZru2JhnNrqOF7Z66JtT/alFV/uklqa8BJqj3jOIM1+gE=&variants=classic%2Cpoleposition"
     }
   ]
 }

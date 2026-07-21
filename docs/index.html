@@ -213,9 +213,9 @@
                         <button id="sudoku_undo" class="button sudoku-tool-button sudoku-toolbar-icon" title="Undo" aria-label="Undo"><i class="fa fa-undo" aria-hidden="true"></i></button>
                         <button id="sudoku_redo" class="button sudoku-tool-button sudoku-toolbar-icon" title="Redo" aria-label="Redo"><i class="fa fa-repeat" aria-hidden="true"></i></button>
                         <button id="sudoku_keypad" class="button sudoku-tool-button sudoku-toolbar-icon" title="Keypad" aria-label="Keypad"><i class="fa fa-keyboard-o" aria-hidden="true"></i></button>
-                        <button id="sudoku_auto_solver" class="button sudoku-tool-button sudoku-toolbar-icon" title="Auto Solver" aria-label="Auto Solver" aria-pressed="false"><i class="fa fa-refresh" aria-hidden="true"></i> OFF</button>
-                        <button id="sudoku_solve_once" class="button sudoku-tool-button sudoku-toolbar-icon" title="Solve" aria-label="Solve" aria-pressed="false" ><i class="fa fa-magic" aria-hidden="true"></i> Solve</button>
-                        <button id="sudoku_solve_clear" class="button sudoku-tool-button sudoku-toolbar-icon" title="Undo solver digits" aria-label="Undo solver digits" aria-pressed="false" ><i class="fa fa-eraser" aria-hidden="true"></i> Undo</button>
+                        <button id="sudoku_auto_solver" class="button sudoku-tool-button sudoku-toolbar-icon" title="Auto Solver" aria-label="Auto Solver" aria-pressed="false"><i class="fa fa-refresh" aria-hidden="true"></i> <span>OFF</span></button>
+                        <button id="sudoku_solve_once" class="button sudoku-tool-button sudoku-toolbar-icon" title="Solve" aria-label="Solve" aria-pressed="false" ><i class="fa fa-magic" aria-hidden="true"></i> <span>Solve</span></button>
+                        <button id="sudoku_solve_clear" class="button sudoku-tool-button sudoku-toolbar-icon" title="Undo solver digits" aria-label="Undo solver digits" aria-pressed="false" ><i class="fa fa-undo" aria-hidden="true"></i> <span>Undo</span></button>
                         <button id="sudoku_load_test_board" class="button sudoku-tool-button sudoku-toolbar-icon" title="Load the CSP test board" aria-label="Load Test Board"><i class="fa fa-flask" aria-hidden="true"></i></button>
                         <span id="sudoku-auto-inline-status" class="sudoku-auto-inline-status">Idle</span>
                         <span id="sudoku-variant-tools" class="sudoku-variant-tools" aria-label="Variant modes"></span>
@@ -915,7 +915,8 @@
     </div>
 </div>
 <div id="modal" class="modal">
-    <div id="modal-new-content" class="modal-content">
+    <div id="modal-new-content" class="modal-styled">
+        <button type="button" class="modal-close" onclick="document.getElementById('modal').style.display='none'">×</button>
         <h3 class="modal-header" id="modal_lb">New Grid</h3>
         <span id="modal-grid">
             <h4><label class="label_nb" id="nb_gridtype_lb">Board type:</label></h4>
@@ -1023,7 +1024,8 @@
     </div>
 </div>
 <div id="modal-newsize" class="modal">
-    <div id="modal-newsize-content" class="modal-content">
+    <div id="modal-newsize-content" class="modal-styled">
+        <button type="button" class="modal-close" onclick="document.getElementById('modal-newsize').style.display='none'">×</button>
         <h3 class="modal-header" id="modal-newsize_lb">Resize</h3>
         <span id="modal-sizeA">
             <span><label class="label_nb" id="modal-newsize_size_lb">Display size:</label></span>
@@ -1054,7 +1056,8 @@
     </div>
 </div>
 <div id="modal-bg-image" class="modal">
-    <div id="modal-bg-image-content" class="modal-content">
+    <div id="modal-bg-image-content" class="modal-styled">
+        <button type="button" class="modal-close" onclick="document.getElementById('modal-bg-image').style.display='none'">×</button>
         <h3 class="modal-header">Set Background Image</h3>
         <div>
             <table style="width: 100%">
@@ -1108,56 +1111,24 @@
         </div>
     </div>
 </div>
-<div id="modal-image" class="modal">
-    <div id="modal-image-content">
-        <h3 class="modal-header" id="saveimagetitle">Save screenshot</h3>
-        <div id="modal-image-body">
-            <h4><label class="label_imagespace" id="nb_margin_lb">White border:</label></h4>
-            <input type="radio" name="nb_margin" value="1" id="nb_margin1">
-            <label for="nb_margin1" class="label" id="nb_margin1_lb">Yes</label>
-            <input type="radio" name="nb_margin" value="2" id="nb_margin2" checked="checked">
-            <label for="nb_margin2" class="label" id="nb_margin2_lb">No</label>
-            <br>
-            <h4><label class="label_imagespace" id="nb_quality_lb">Image quality:</label></h4>
-            <input type="radio" name="nb_quality" value="1" id="nb_quality1" checked="checked">
-            <label for="nb_quality1" class="label" id="nb_quality1_lb">High</label>
-            <input type="radio" name="nb_quality" value="2" id="nb_quality2">
-            <label for="nb_quality2" class="label" id="nb_quality2_lb">Low</label>
-            <br>
-            <h4><label class="label_imagespace" id="nb_type_lb">File Type:</label></h4>
-            <input type="radio" name="nb_type" value="1" id="nb_type1" checked="checked">
-            <label for="nb_type1" class="label" id="nb_type1_lb">png</label>
-            <input type="radio" name="nb_type" value="2" id="nb_type2">
-            <label for="nb_type2" class="label" id="nb_type2_lb">jpeg</label>
-            <input type="radio" name="nb_type" value="3" id="nb_type3">
-            <label for="nb_type3" class="label" id="nb_type3_lb">svg</label>
-            <br>
-            <h4><label class="label_imagespace" id="nb_title_lb">Title &amp; Author:</label></h4>
-            <input type="radio" name="nb_title" value="1" id="nb_title1">
-            <label for="nb_title1" class="label" id="nb_title1_lb">Yes</label>
-            <input type="radio" name="nb_title" value="2" id="nb_title2" checked="checked">
-            <label for="nb_title2" class="label" id="nb_title2_lb">No</label>
-            <br>
-            <h4><label class="label_imagespace" id="nb_rules_lb">Rules:</label></h4>
-            <input type="radio" name="nb_rules" value="1" id="nb_rules1">
-            <label for="nb_rules1" class="label" id="nb_rules1_lb">Yes</label>
-            <input type="radio" name="nb_rules" value="2" id="nb_rules2" checked="checked">
-            <label for="nb_rules2" class="label" id="nb_rules2_lb">No</label>
-            <br><br>
-            <span id="saveimagename_lb"><span id="filename_lb">File name:</span><input type="text"
-                                                                                       placeholder="sample_name"
-                                                                                       id="saveimagename"></span>
-        </div>
-        <br>
-        <div class="nb_button">
-            <input type="button" id="closeBtn_image1" value="Open in new window" onclick="saveimage_window();"/>
-            <input type="button" id="closeBtn_image2" value="Download"/>
-            <input type="button" id="closeBtn_image3" value="Close"/>
-        </div>
-    </div>
+<!-- Hidden inputs for legacy canvas drawing logic -->
+<div style="display:none;" id="legacy-hidden-inputs">
+    <input type="radio" name="nb_margin" value="1" id="nb_margin1">
+    <input type="radio" name="nb_margin" value="2" id="nb_margin2" checked="checked">
+    <input type="radio" name="nb_quality" value="1" id="nb_quality1" checked="checked">
+    <input type="radio" name="nb_quality" value="2" id="nb_quality2">
+    <input type="radio" name="nb_type" value="1" id="nb_type1" checked="checked">
+    <input type="radio" name="nb_type" value="2" id="nb_type2">
+    <input type="radio" name="nb_type" value="3" id="nb_type3">
+    <input type="radio" name="nb_title" value="1" id="nb_title1">
+    <input type="radio" name="nb_title" value="2" id="nb_title2" checked="checked">
+    <input type="radio" name="nb_rules" value="1" id="nb_rules1">
+    <input type="radio" name="nb_rules" value="2" id="nb_rules2" checked="checked">
+    <input type="text" placeholder="sample_name" id="saveimagename">
 </div>
 <div id="modal-rotate" class="modal">
-    <div id="modal-rotate-content" class="modal-content">
+    <div id="modal-rotate-content" class="modal-styled">
+        <button type="button" class="modal-close" onclick="document.getElementById('modal-rotate').style.display='none'">×</button>
         <h3 class="modal-header" id="savetexttitle">Rotate / Move / Add / Remove</h3>
         <div class="nb_button">
             <h4><label id="rt1_lb">Rotate:</label></h4>
@@ -1203,46 +1174,9 @@
         </div>
     </div>
 </div>
-<div id="modal-save" class="modal">
-    <div id="modal-save-content">
-        <h3 class="modal-header" id="savetitle">Share Puzzle</h3>
-        <div id="modal-save-info">
-            <span><span id="save1_lb">Title:</span><input type="text"
-                                                                     placeholder="e.g. Thermo Sudoku or Yajilin"
-                                                                     value="" id="saveinfotitle" class="right"
-                                                                     onchange="update_title()"></span>
-            <br>
-            <span><span id="save2_lb">Author:</span><input type="text" placeholder="Puzzle creator name"
-                                                                      value="" id="saveinfoauthor"
-                                                                      onchange="update_title()"></span>
-            <br>
-            <span><span id="save3_lb">Rules:</span><textarea class="text_area" rows="1" cols="10"
-                                                                        placeholder="e.g. Classic sudoku rules."
-                                                                        value="" id="saveinforules"></textarea></span>
-        </div>
-        <div class="modal-save-inset">
-            <label class="label_nb" for="auto_shorten_chk" id="auto_shorten_chk_lb">Automatically Shorten with
-                TinyURL</label>
-            <input type="checkbox" name="auto_shorten_chk" id="auto_shorten_chk"/>
-            <br>
-            <label class="label_nb" for="verify_uniqueness_chk" id="verify_uniqueness_chk_lb">Verify uniqueness</label>
-            <input type="checkbox" name="verify_uniqueness_chk" id="verify_uniqueness_chk" checked="checked"/>
-        </div>
-        <div class="nb_button">
-            <button type="button" id="address_edit"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Editing URL</button>
-            <button type="button" id="address_solve"><i class="fa fa-play-circle" aria-hidden="true"></i> Solving URL</button>
-        </div>
-        <div id="modal-save-body1">
-            <textarea class="text_area" readonly rows="1" cols="50" id="savetextarea"></textarea>
-        </div>
-        <div class="nb_button">
-            <button type="button" id="closeBtn_save1"><i class="fa fa-copy" aria-hidden="true"></i> Copy</button>
-            <button type="button" id="closeBtn_save4"><i class="fa fa-external-link" aria-hidden="true"></i> Open</button>
-        </div>
-    </div>
-</div>
 <div id="modal-save-tag" class="modal">
-    <div id="modal-save-tag-content">
+    <div id="modal-save-tag-content" class="modal-styled">
+        <button type="button" class="modal-close" onclick="document.getElementById('modal-save-tag').style.display='none'">×</button>
         <h3 class="modal-header" id="save7texttitle">Add/Remove Genre Tags</h3>
         <div id="modal-save-tag-body">
             <select name="genre_tags" id="genre_tags_opt" multiple="multiple"> </select>
@@ -1250,7 +1184,8 @@
     </div>
 </div>
 <div id="modal-save2" class="modal">
-    <div id="modal-save2-content" class="modal-content">
+    <div id="modal-save2-content" class="modal-styled">
+        <button type="button" class="modal-close" onclick="document.getElementById('modal-save2').style.display='none'">×</button>
         <h3 class="modal-header" id="extend_lb">Extended Output</h3>
         <div class="nb_button">
             <input type="button" id="solution_open" value="Answer check"/>
@@ -1528,7 +1463,8 @@
     </div>
 </div>
 <div id="modal-replay" class="modal">
-    <div id="modal-replay-content" class="modal-content">
+    <div id="modal-replay-content" class="modal-styled">
+        <button type="button" class="modal-close" onclick="document.getElementById('modal-replay').style.display='none'">×</button>
         <h3 class="modal-header">Share Replay</h3>
         <div id="modal-replay-solution" class="nb_button">
             <input type="text" placeholder="Solver Name" value="" id="saveinfosolver"/>
@@ -1538,7 +1474,8 @@
     </div>
 </div>
 <div id="modal-input" class="modal">
-    <div id="modal-input-content">
+    <div id="modal-input-content" class="modal-styled">
+        <button type="button" class="modal-close" onclick="document.getElementById('modal-input').style.display='none'">×</button>
         <h3 class="modal-header" id="save4texttitle">Input/Output Sudoku String</h3>
         <div id="modal-save-body2">
             <textarea class="text_area" rows="1" cols="81" id="iostring"></textarea>
@@ -1579,7 +1516,8 @@
     </div>
 </div>
 <div id="modal-load" class="modal">
-    <div id="modal-load-content">
+    <div id="modal-load-content" class="modal-styled">
+        <button type="button" class="modal-close" onclick="document.getElementById('modal-load').style.display='none'">×</button>
         <h3 class="modal-header" id="save6texttitle">Load URL</h3>
         <div id="modal-save-body3">
             <textarea class="text_area" rows="1" cols="81" id="urlstring" value=""></textarea>
@@ -1589,367 +1527,10 @@
         </div>
     </div>
 </div>
-<div id="modal-settings" class="modal">
-    <div id="modal-settings-content" class="modal-content">
-        <h3 class="modal-header" id="settings_modal_header">General Settings</h3>
-        <div id="modal-settings-body">
-            <table id="settings-table">
-                <colgroup>
-                    <col width="60%"/>
-                    <col width="40%"/>
-                </colgroup>
-                <tbody>
-                <tr>
-                    <th colspan="2" class="modal-subheader" id="lb_settings_app_display">App Display</th>
-                </tr>
-                <tr class="permanently-hidden-control">
-                    <td>
-                        <label id="lb_settings_display_theme">Display Theme:</label>
-                    </td>
-                    <td>
-                        <select name="theme_mode" id="theme_mode_opt">
-                            <option value="1" selected="selected" id="lb_settings_display_theme_light">Light</option>
-                            <option value="2" id="lb_settings_display_theme_dark">Dark</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_display_layout">Display Layout:</label>
-                    </td>
-                    <td>
-                        <select name="responsive_settings" id="responsive_settings_opt">
-                            <option value="1" selected="selected" id="lb_settings_display_layout_classic">Classic
-                            </option>
-                            <option value="2" id="lb_settings_display_layout_flex_left">Flex (Tools Left)</option>
-                            <option value="3" id="lb_settings_display_layout_flex_right">Flex (Tools Right)</option>
-                            <option value="4" id="lb_settings_display_layout_streaming1">Streaming 1 (beta)</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr class="permanently-hidden-control">
-                    <td>
-                        <i class="fa fa-globe"></i>
-                    </td>
-                    <td>
-                        <select name="language" id="language_opt">
-                            <option value="EN" selected="selected">English</option>
-                            <option value="JP">日本語</option>
-                            <option value="ZH">中文</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr class="permanently-hidden-control">
-                    <td>
-                        <label id="lb_settings_timer">Timer:</label>
-                    </td>
-                    <td>
-                        <select name="timerbar" id="timer_bar_opt">
-                            <option value="1" selected="selected" id="lb_settings_timer_show">Show</option>
-                            <option value="2" id="lb_settings_timer_hide">Hide</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th colspan="2" class="modal-subheader" id="lb_settings_puzzle_display">Puzzle Display</th>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_sudoku_marks">Sudoku Pencil Marks:</label>
-                    </td>
-                    <td>
-                        <select name="sudoku_settings" id="sudoku_settings_opt">
-                            <option value="1" selected="selected" id="lb_settings_sudoku_marks_dynamic">Dynamic</option>
-                            <option value="2" id="lb_settings_sudoku_marks_large">Large</option>
-                            <option value="3" id="lb_settings_sudoku_marks_small">Small</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_sudoku_normal">Sudoku Normal:</label>
-                    </td>
-                    <td>
-                        <select name="sudoku_settings_normal" id="sudoku_settings_normal_opt">
-                            <option value="1" selected="selected" id="lb_settings_sudoku_normal_centered">Centered
-                            </option>
-                            <option value="2" id="lb_settings_sudoku_normal_bottom">Bottom</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_textoutline">Outline on Text:</label>
-                    </td>
-                    <td>
-                        <select name="outline_text" id="outline_text_opt">
-                            <option value="1" class="lb_generic_on">ON</option>
-                            <option value="0" selected="selected" class="lb_generic_off">OFF</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_starbattle_dots">Star Battle Dots:</label>
-                    </td>
-                    <td>
-                        <select name="starbattle_settings" id="starbattle_settings_opt">
-                            <option value="1" selected="selected" id="lb_settings_starbattle_dots_high_range">High
-                                Range
-                            </option>
-                            <option value="2" id="lb_settings_starbattle_dots_low_range">Low Range</option>
-                            <option value="3" id="lb_settings_starbattle_dots_disable">Disable</option>
-                        </select>
-                    </td>
-                </tr>
-                <!-- <tr>
-                    <td>
-                        <h4><label id="multitab_settings_lb">Solution Tab Setting:</label></h4>
-                    </td>
-                    <td>
-                        <select name="multitab_settings" id="multitab_settings_opt">
-                            <option value="1" selected="selected">No</option>
-                            <option value="2">Yes</option>
-                        </select>
-                    </td>
-                </tr> -->
-                <tr id="secondcolor_settings_lb">
-                    <td>
-                        <label id="lb_settings_surface_second">Surface Second Color:</label>
-                    </td>
-                    <td>
-                        <select name="secondcolor_settings" id="secondcolor_settings_opt">
-                            <option value="1" id="lb_settings_surface_second_dark">Dark Grey</option>
-                            <option value="8" id="lb_settings_surface_second_grey">Grey</option>
-                            <option value="3" id="lb_settings_surface_second_light">Light Grey</option>
-                            <option value="4" id="lb_settings_surface_second_black">Black</option>
-                            <option value="2" selected="selected" id="lb_settings_surface_second_green">Green</option>
-                            <option value="5" id="lb_settings_surface_second_blue">Blue</option>
-                            <option value="6" id="lb_settings_surface_second_red">Red</option>
-                            <option value="7" id="lb_settings_surface_second_yellow">Yellow</option>
-                            <option value="9" id="lb_settings_surface_second_pink">Pink</option>
-                            <option value="10" id="lb_settings_surface_second_orange">Orange</option>
-                            <option value="11" id="lb_settings_surface_second_purple">Purple</option>
-                            <option value="12" id="lb_settings_surface_second_brown">Brown</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th colspan="2" class="modal-subheader" id="lb_settings_tools">Tools</th>
-                </tr>
-                <tr id="custom_color_lb">
-                    <td>
-                        <label id="lb_settings_custom_colors">Custom Colors:</label>
-                    </td>
-                    <td>
-                        <select name="custom_color" id="custom_color_opt">
-                            <option value="1" selected="selected" class="lb_generic_no">No</option>
-                            <option value="2" class="lb_generic_yes">Yes</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_floating_panel">Floating Panel:</label>
-                    </td>
-                    <td>
-                        <select name="panelbutton" id="panel_button">
-                            <option value="1" selected="selected" class="lb_generic_on">ON</option>
-                            <option value="2" class="lb_generic_off">OFF</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_quick_panel">Quick Panel Button:</label>
-                    </td>
-                    <td>
-                        <select name="quickpaneldropdown" id="quick_panel_dropdown">
-                            <option value="1" selected="selected" class="lb_generic_on">ON</option>
-                            <option value="2" class="lb_generic_off">OFF</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th colspan="2" class="modal-subheader" id="lb_settings_export">Export</th>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_auto_shorten">Auto-Shorten Links:</label>
-                    </td>
-                    <td>
-                        <select id="shorten_links_dropdown">
-                            <option value="1" class="lb_generic_on">ON</option>
-                            <option value="0" selected class="lb_generic_off">OFF</option>
-                        </select>
-                    </td>
-                </tr>
-                <!-- <tr>
-                    <td>
-                        <label>Draw on Edges/Corners:</label>
-                    </td>
-                    <td>
-                        <select name="edgebutton" id="edge_button">
-                            <option value="1">ON</option>
-                            <option value="2" selected="selected">OFF</option>
-                        </select>
-                    </td>
-                </tr> -->
-                <!-- <tr>
-                    <td>
-                        <label>PenpaLite:</label>
-                    </td>
-                    <td>
-                        <select name="advancebutton" id="advance_button">
-                            <option value="1">ON</option>
-                            <option value="2" selected="selected">OFF</option>
-                        </select>
-                    </td>
-                </tr> -->
-                <tr>
-                    <th colspan="2" class="modal-subheader" id="lb_settings_input_options">Input Options</th>
-                </tr>
-                <tr id="mousemiddle_settings_lb">
-                    <td>
-                        <label id="lb_settings_mouse_middle">Mouse Middle Button:</label>
-                    </td>
-                    <td>
-                        <select name="mousemiddle" id="mousemiddle_settings_opt">
-                            <option value="1" selected="selected" class="lb_generic_no">No</option>
-                            <option value="2" class="lb_generic_yes">Yes</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_reload">Reload Protection:</label>
-                    </td>
-                    <td>
-                        <select name="reloadbutton" id="reload_button">
-                            <option value="1" class="lb_generic_on">ON</option>
-                            <option value="2" selected="selected" class="lb_generic_off">OFF</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_conflict">Conflict Detection:</label>
-                    </td>
-                    <td>
-                        <select name="conflict_detection" id="conflict_detection_opt">
-                            <option value="1" selected="selected" class="lb_generic_on">ON</option>
-                            <option value="2" id="lb_settings_conflict_off_this">OFF (this puzzle)</option>
-                            <option value="3" id="lb_settings_conflict_off_all">OFF (all puzzles)</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_pencil_marks">Check pencil marks:</label>
-                    </td>
-                    <td>
-                        <select name="check_pencil_marks" id="check_pencil_marks_opt">
-                            <option value="1" class="lb_generic_on">ON</option>
-                            <option value="0" selected="selected" class="lb_generic_off">OFF</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2" class="nb_button">
-                        <input type="button" id="saveinfogenre2" value="Edit tags for conflict checker"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_lineanycolor">Any color can match green line/edge in solution:</label>
-                    </td>
-                    <td>
-                        <select name="ignore_line_style" id="ignore_line_style_opt">
-                            <option value="1" class="lb_generic_on">ON</option>
-                            <option value="0" selected="selected" class="lb_generic_off">OFF</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_sudoku_keys">Sudoku Z/Y & XCV Keys:</label>
-                    </td>
-                    <td>
-                        <select name="enable_shortcuts" id="enable_shortcuts_opt">
-                            <option value="1" selected="selected" class="lb_generic_on">ON</option>
-                            <option value="2" class="lb_generic_off">OFF</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th colspan="2" class="modal-subheader" id="lb_settings_initial_grid">Initial Grid Settings</th>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_start_grid_size">Starting Grid Size:</label>
-                    </td>
-                    <td>
-                        <select name="start_grid_size" id="start_grid_size_opt">
-                            <option value="9" selected="selected">9x9</option>
-                            <option value="6">6x6</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_start_grid_type">Starting Grid Type:</label>
-                    </td>
-                    <td>
-                        <select name="start_grid_type" id="start_grid_type_opt">
-                            <option value="blank" selected="selected">Blank Grid</option>
-                            <option value="generated">Generated Grid</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th colspan="2" class="modal-subheader" id="lb_settings_storage">Saving/Storage</th>
-                </tr>
-                <tr id="save_settings_lb">
-                    <td>
-                        <label id="lb_settings_saved_settings">Saved Settings:</label>
-                    </td>
-                    <td>
-                        <button id="clear_settings" onclick="UserSettings.clearSettings()">Clear cookies</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label>Auto-save puzzle in browser history:</label>
-                    </td>
-                    <td>
-                        <select name="auto_save_history" id="auto_save_history_opt">
-                            <option value="1" class="lb_generic_on">ON</option>
-                            <option value="0" selected="selected" class="lb_generic_off">OFF</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label id="lb_settings_local_storage">Local Storage:</label>
-                    </td>
-                    <td>
-                        <em id="local_storage_browser_message" class="is_hidden">Your browser has disabled or doesn't
-                            support local storage.</em>
-                        <select id="allow_local_storage">
-                            <option value="1" selected="selected" class="lb_generic_on">ON</option>
-                            <option value="4" class="lb_generic_off">OFF</option>
-                        </select>
-                        <button id="clear_storage_one" onclick="clear_storage_one()">Clear this puzzle</button>
-                        <button id="clear_storage_all" onclick="clear_storage_all()">Clear all</button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+
 <div id="modal-keys" class="modal">
-    <div id="modal-keys-content" class="modal-content modal-content-wide">
+    <div id="modal-keys-content" class="modal-styled modal-styled-wide">
+        <button type="button" class="modal-close" onclick="document.getElementById('modal-keys').style.display='none'">×</button>
         <h3 class="modal-header">Keyboard Shortcuts</h3>
         <div class="modal-inner-wrapper">
             <div>
@@ -2011,7 +1592,8 @@
     </div>
 </div>
 <div id="modal-help" class="modal">
-    <div id="modal-help-content" class="modal-content">
+    <div id="modal-help-content" class="modal-styled">
+        <button type="button" class="modal-close" onclick="document.getElementById('modal-help').style.display='none'">×</button>
         <h3 class="modal-header">Welcome to Penpa+</h3>
         <div id="modal-help-body">
             <p>It's a web application and universal pencil puzzle editor capable of drawing many different kinds of

@@ -129,7 +129,34 @@ var SudokuCSP = (function() {
         }
     });
 
-        registerConstraint("watchtowers", {
+    registerConstraint("selfjoin", {
+        validatePartial: function(board, shadedCells) {
+            var size = board.length;
+            var isShaded = {};
+            for (var i = 0; i < shadedCells.length; i++) {
+                isShaded[shadedCells[i].row + ":" + shadedCells[i].col] = true;
+            }
+            var dims = boxDimensions(size);
+            var boxHeight = dims.height;
+            var boxWidth = dims.width;
+
+            for (var r = 0; r < size; r++) {
+                for (var c = 0; c < size; c++) {
+                    var val = cellValue(board, { row: r, col: c });
+                    if (!val) continue;
+
+                    var boxPos = (r % boxHeight) * boxWidth + (c % boxWidth) + 1;
+                    var shaded = !!isShaded[r + ":" + c];
+
+                    if (val === boxPos && !shaded) return false;
+                    if (val !== boxPos && shaded) return false;
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("watchtowers", {
         validatePartial: function(board, shadedCells) {
             var size = board.length;
             var isShaded = {};
@@ -380,11 +407,15 @@ var SudokuCSP = (function() {
             return item.relation.replace(/([a-z])([0-9])/g, "$1 $2").replace(/([a-z])([A-Z])/g, "$1 $2");
         }
         var labels = {
+            termination: "0",
+            notTermination: "none",
             antiKing: "Anti King", antiKnight: "Anti Knight", chessKings: "Chess Kings", nonConsecutive: "Non-Consecutive",
+            polePosition: "Pole Position",
             edgeRelations: "edge clue", quadRelations: "quad clue", mathdoku: "mathdoku", catalogLines: "line clue",
             diagonalAllDifferent: "diagonal/region", regionAllDifferent: "region", extraLargeRegions: "extra large regions", difference2Neighbours: "difference 2 neighbours",
             regionCoverage: "region coverage", scatteredAllDifferent: "Scattered shaded cells",
-            invalidRegions: "region layout", kropki: "Kropki", xv: "XV", battenburg: "Battenburg"
+            invalidRegions: "region layout", kropki: "Kropki", xv: "XV", battenburg: "Battenburg",
+            selfjoin: "Self-Join"
         };
         return labels[name] || name.replace(/([a-z])([A-Z])/g, "$1 $2");
     }
@@ -1037,6 +1068,18 @@ registerConstraint("threeDigitNumbersKillers", {
         }
     });
 
+
+
+    registerConstraint("differentParity", {
+        validatePartial: function(board, clue) {
+            var val1 = cellValue(board, clue[0]);
+            var val2 = cellValue(board, clue[1]);
+            if (val1 && val2) {
+                return (val1 % 2) !== (val2 % 2);
+            }
+            return true;
+        }
+    });
     registerConstraint("oddEven", {
         validatePartial: function(board, mark) {
             var value = cellValue(board, mark.cell);
@@ -1606,6 +1649,101 @@ registerConstraint("threeDigitNumbersKillers", {
         return !first || !second || first !== second;
     }
 
+
+    registerConstraint("polePosition", {
+        validatePartial: function(board, clue, helpers) {
+            var targetDigit = board.isZeroEight ? 2 : 1;
+            for (var r = 0; r < board.length; r++) {
+                var firstInRow = board[r][0];
+                if (firstInRow) {
+                    var targetCol = board.isZeroEight ? firstInRow : firstInRow - 1;
+                    if (targetCol >= 0 && targetCol < board[r].length) {
+                        if (board[r][targetCol] && board[r][targetCol] !== targetDigit) return false;
+                    }
+                }
+                for (var c = 0; c < board[r].length; c++) {
+                    if (board[r][c] === targetDigit) {
+                        var expectedFirst = board.isZeroEight ? c : c + 1;
+                        if (firstInRow && firstInRow !== expectedFirst) return false;
+                    }
+                }
+            }
+            for (var c = 0; c < board[0].length; c++) {
+                var firstInCol = board[0][c];
+                if (firstInCol) {
+                    var targetRow = board.isZeroEight ? firstInCol : firstInCol - 1;
+                    if (targetRow >= 0 && targetRow < board.length) {
+                        if (board[targetRow][c] && board[targetRow][c] !== targetDigit) return false;
+                    }
+                }
+                for (var r = 0; r < board.length; r++) {
+                    if (board[r][c] === targetDigit) {
+                        var expectedFirst = board.isZeroEight ? r : r + 1;
+                        if (firstInCol && firstInCol !== expectedFirst) return false;
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
+    registerConstraint("citywalk", {
+        validatePartial: function(board, clue) {
+            var SIZE = board.length;
+            var known = [];
+            var available = {};
+
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var val = cellValue(board, {row: r, col: c});
+                    if (val >= 3 && val <= 7) {
+                        known.push({row: r, col: c});
+                        available[r + "," + c] = true;
+                    } else if (!val) {
+                        available[r + "," + c] = true;
+                    }
+                }
+            }
+
+            if (known.length === 0) return true;
+
+            var visited = {};
+            var queue = [known[0]];
+            visited[known[0].row + "," + known[0].col] = true;
+            var reachedKnown = 1;
+
+            var head = 0;
+            while (head < queue.length) {
+                var curr = queue[head++];
+                var neighbors = [
+                    {row: curr.row - 1, col: curr.col},
+                    {row: curr.row + 1, col: curr.col},
+                    {row: curr.row, col: curr.col - 1},
+                    {row: curr.row, col: curr.col + 1}
+                ];
+
+                for (var i = 0; i < neighbors.length; i++) {
+                    var nr = neighbors[i].row;
+                    var nc = neighbors[i].col;
+                    var key = nr + "," + nc;
+
+                    if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+                        if (available[key] && !visited[key]) {
+                            visited[key] = true;
+                            queue.push(neighbors[i]);
+                            var nVal = cellValue(board, neighbors[i]);
+                            if (nVal >= 3 && nVal <= 7) {
+                                reachedKnown++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return reachedKnown === known.length;
+        }
+    });
+
     registerConstraint("antiKing", {
         validatePartial: function(board, pair) {
             return pairValuesDiffer(board, pair);
@@ -1766,6 +1904,17 @@ registerConstraint("threeDigitNumbersKillers", {
         }
     });
 
+    registerConstraint("pirateCells", {
+        validatePartial: function(board, pair) {
+            var first = cellValue(board, pair[0]);
+            var second = cellValue(board, pair[1]);
+            if (!first || !second) return true;
+            if (first === 5 && second >= 6 && second <= 9) return false;
+            if (second === 5 && first >= 6 && first <= 9) return false;
+            return true;
+        }
+    });
+
     registerConstraint("touchyCells", {
         validatePartial: function(board, item) {
             var value = cellValue(board, item.cell);
@@ -1815,6 +1964,8 @@ registerConstraint("threeDigitNumbersKillers", {
                 case "sum": return sum === clue.target;
                 case "product": return product === clue.target;
                 case "tenspositionproducts": return Math.floor(product / 10) === clue.target;
+                case "termination": return (sum % 10 === 0) || (product % 10 === 0);
+                case "notTermination": return (sum % 10 !== 0) && (product % 10 !== 0);
                 case "teneleven": return sum === 10 || sum === 11;
                 case "notTenEleven": return sum !== 10 && sum !== 11;
                 case "greater": return Math.max(first, second) === clue.target;
@@ -3214,6 +3365,14 @@ registerConstraint("threeDigitNumbersKillers", {
                 if (new Set(assigned).size !== assigned.length) return false;
                 return !assigned.length || Math.max.apply(null, assigned) - Math.min.apply(null, assigned) < values.length;
             }
+            if (clue.relation === "consecutiveonline") {
+                for (var p = 0; p < values.length - 1; p++) {
+                    if (values[p] && values[p + 1]) {
+                        if (Math.abs(values[p] - values[p + 1]) !== 1) return false;
+                    }
+                }
+                return true;
+            }
             if (clue.relation === "creasing") {
                 var increasing = true;
                 var decreasing = true;
@@ -3229,6 +3388,7 @@ registerConstraint("threeDigitNumbersKillers", {
             }
             if (clue.relation === "meandering diagonals") {
                 if (new Set(assigned).size !== assigned.length) return false;
+                return true;
             }
             if (clue.relation === "alternatingstripes") {
                 if (new Set(assigned).size !== assigned.length) return false;
@@ -3815,6 +3975,34 @@ registerConstraint("threeDigitNumbersKillers", {
         }
     });
 
+    registerConstraint("upperrightheavykiller", {
+        validatePartial: function(board, constraint) {
+            var urCages = constraint;
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var cellVal = cellValue(board, { row: r, col: c });
+                    if (!cellVal) continue;
+                    var mathCellVal = mathCellValue(board, { row: r, col: c });
+
+                    if (r > 0 && c < SIZE - 1) {
+                        var urVal = cellValue(board, { row: r - 1, col: c + 1 });
+                        if (!urVal) continue;
+                        var mathUrVal = mathCellValue(board, { row: r - 1, col: c + 1 });
+                        var cageTotal = urCages[r + "," + c];
+
+                        if (mathCellVal < mathUrVal) {
+                            if (cageTotal === undefined) return false;
+                            if (mathCellVal + mathUrVal !== cageTotal) return false;
+                        } else {
+                            if (cageTotal !== undefined) return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+    });
+
     registerConstraint("topheavy", {
         validatePartial: function(board) {
             for (var c = 0; c < SIZE; c++) {
@@ -4335,6 +4523,76 @@ registerConstraint("threeDigitNumbersKillers", {
         }
         return false;
     }
+
+    function hasSequencePath(board, startValue, startRow, endValue, endRow) {
+        var size = board.length;
+        var step = startValue < endValue ? 1 : -1;
+
+        var currentReach = new Uint8Array(size * size);
+        var nextReach = new Uint8Array(size * size);
+        var anyStart = false;
+
+        for (var c = 0; c < size; c++) {
+            var val = cellValue(board, {row: startRow, col: c});
+            if (val === 0 || val === startValue) {
+                currentReach[startRow * size + c] = 1;
+                anyStart = true;
+            }
+        }
+        if (!anyStart) return false;
+
+        var dr = [-1, -1, -1, 0, 0, 1, 1, 1];
+        var dc = [-1, 0, 1, -1, 1, -1, 0, 1];
+        var currentDigit = startValue;
+
+        while (currentDigit !== endValue) {
+            var nextDigit = currentDigit + step;
+            nextReach.fill(0);
+            var anyNext = false;
+
+            for (var r = 0; r < size; r++) {
+                for (var c = 0; c < size; c++) {
+                    if (currentReach[r * size + c]) {
+                        for (var i = 0; i < 8; i++) {
+                            var nr = r + dr[i];
+                            var nc = c + dc[i];
+                            if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                                var nIdx = nr * size + nc;
+                                if (!nextReach[nIdx]) {
+                                    var val = cellValue(board, {row: nr, col: nc});
+                                    if (val === 0 || val === nextDigit) {
+                                        nextReach[nIdx] = 1;
+                                        anyNext = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (!anyNext) return false;
+            var temp = currentReach;
+            currentReach = nextReach;
+            nextReach = temp;
+            currentDigit = nextDigit;
+        }
+
+        for (var c = 0; c < size; c++) {
+            if (currentReach[endRow * size + c]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    registerConstraint("sequenceTopBottom", {
+        validatePartial: function(board) {
+            var size = board.length;
+            if (!hasSequencePath(board, 1, 0, size, size - 1)) return false;
+            if (!hasSequencePath(board, 1, size - 1, size, 0)) return false;
+            return true;
+        }
+    });
 
     function hasEvenPath(board, size) {
         var start = { row: 0, col: 0 };

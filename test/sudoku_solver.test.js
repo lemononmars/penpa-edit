@@ -331,6 +331,60 @@ test("an active Almost Palindrome remains CSP-supported after its final line is 
     assert.equal(SudokuSolver.readConstraints(puzzle).supported.includes("almostpalindrome"), true);
 });
 
+
+test("Different Parity constraint parsing and evaluation", function() {
+    const constraints = { differentParity: [[{ row: 0, col: 0 }, { row: 0, col: 1 }]] };
+
+    var board = emptyBoard();
+    board[0][0] = 1;
+    board[0][1] = 2;
+    assert.equal(SudokuCSP.solve(board, { differentParity: constraints.differentParity, baseBoxes: false }).solved, true, "Different Parity allows 1 odd 1 even");
+
+    var board2 = emptyBoard();
+    board2[0][0] = 1;
+    board2[0][1] = 3;
+    assert.equal(SudokuCSP.solve(board2, { differentParity: constraints.differentParity, baseBoxes: false }).solved, false, "Different Parity rejects 2 odd");
+
+    var board3 = emptyBoard();
+    board3[0][0] = 2;
+    board3[0][1] = 4;
+    assert.equal(SudokuCSP.solve(board3, { differentParity: constraints.differentParity, baseBoxes: false }).solved, false, "Different Parity rejects 2 even");
+});
+test("Citywalk constraint parsing and evaluation", function() {
+    var puzzle = {
+        nx: 9, ny: 9, nx0: 9, ny0: 9,
+        theta: 0, reflect: 0,
+        centerlist: [],
+        pu_q: {},
+        activeSudokuVariant: "citywalk"
+    };
+
+    var constraints = SudokuSolver.readConstraints(puzzle);
+    assert.deepEqual(constraints.citywalk, [true]);
+    assert.ok(constraints.supported.includes("citywalk"));
+
+    var board = emptyBoard();
+    // 3, 4, 5 are connected
+    board[0][0] = 3;
+    board[0][1] = 4;
+    board[0][2] = 5;
+    assert.equal(SudokuCSP.solve(board, { citywalk: [true] }).solved, true, "Citywalk allows connected 3-7 digits");
+
+    var boardDisconnected = emptyBoard();
+    // 3 and 4 are disconnected by filled non-3..7 digits
+    boardDisconnected[0][0] = 3;
+    boardDisconnected[0][1] = 1;
+    boardDisconnected[1][0] = 1;
+    boardDisconnected[0][2] = 4;
+    // Fill the rest with non-3..7 so they can't connect through empty cells
+    for(let r=0; r<9; r++) {
+        for(let c=0; c<9; c++) {
+            if (boardDisconnected[r][c] === 0) boardDisconnected[r][c] = 1;
+        }
+    }
+    assert.equal(SudokuCSP.solve(boardDisconnected, { citywalk: [true], baseBoxes: false }).solved, false, "Citywalk rejects disconnected 3-7 digits");
+});
+
 test("Three-Digit Numbers Killer constraint parsing and evaluation", function() {
     var nx0 = 13, ny0 = 13;
     const puzzle = {
@@ -785,6 +839,16 @@ test("catalog line and four-cell relations enforce their shared CSP families", f
     board[2][4] = 5;
     assert.equal(SudokuSolver.solve(board, {
         catalogLines: [{ path: line, relation: "paritylines" }]
+    }).solved, false);
+
+    board = emptyBoard();
+    board[0][0] = 3; board[1][2] = 4; board[2][4] = 5;
+    assert.equal(SudokuSolver.solve(board, {
+        catalogLines: [{ path: line, relation: "consecutiveonline" }]
+    }).solved, true);
+    board[2][4] = 6;
+    assert.equal(SudokuSolver.solve(board, {
+        catalogLines: [{ path: line, relation: "consecutiveonline" }]
     }).solved, false);
 
     const cells = [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 1, col: 0 }, { row: 1, col: 1 }];
@@ -2094,6 +2158,14 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
     assert.equal(creasing.catalogLines[0].relation, "creasing");
     assert.equal(creasing.thermos.length, 0);
 
+    const consecutiveonline = SudokuSolver.readConstraints(puzzle("consecutiveonline", {
+        pu_q: { line: { "28,29": 5, "29,42": 5 } }
+    }));
+    assert.equal(consecutiveonline.catalogLines[0].relation, "consecutiveonline");
+    assert.deepEqual(consecutiveonline.catalogLines[0].path.map(c => ({ row: c.row, col: c.col })), [
+        { row: 0, col: 0 }, { row: 0, col: 1 }, { row: 1, col: 1 }
+    ]);
+
     const cornerPoint = { 300: { neighbor: [28, 29, 41, 42] } };
     const diagonal = SudokuSolver.readConstraints(puzzleFor("diagonallyconsecutive", {
         point: cornerPoint, pu_q: { symbol: { 300: [[1, 1], "diagonal_consecutive", 2] } }
@@ -3302,7 +3374,7 @@ test("Consecutive Chains", () => {
     boardInvalidSet[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
     boardInvalidSet[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
     boardInvalidSet[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
-    assert.strictEqual(SudokuCSP.solve(boardInvalidSet, {consecutiveChains: [chain4]}).solved, true);
+    assert.strictEqual(SudokuCSP.solve(boardInvalidSet, {consecutiveChains: [chain4]}).solved, false);
 
     const boardInvalidPath = emptyBoard();
     // values 1, 3, 2, 4. It's a consecutive set, but path is invalid (1 is next to 3).
@@ -3315,7 +3387,7 @@ test("Consecutive Chains", () => {
     boardInvalidPath[6] = [3, 4, 5, 6, 7, 8, 9, 1, 2];
     boardInvalidPath[7] = [6, 7, 8, 9, 1, 2, 3, 4, 5];
     boardInvalidPath[8] = [9, 1, 2, 3, 4, 5, 6, 7, 8];
-    assert.strictEqual(SudokuCSP.solve(boardInvalidPath, {consecutiveChains: [chain4]}).solved, true);
+    assert.strictEqual(SudokuCSP.solve(boardInvalidPath, {consecutiveChains: [chain4]}).solved, false);
 });
 
 test("Big-Small Japanese Sums validate sequences", function() {
@@ -3537,3 +3609,97 @@ test("validates new variants: one-five-nine, one touch, parity circles", () => {
     ]}).solved, false);
 });
 });
+
+test("Self-Join validation checks cell value against its box index", function() {
+    let board = emptyBoard();
+    const constraints = { supported: ["selfjoin"], selfjoin: [
+        [{ row: 0, col: 0 }, { row: 0, col: 1 }] // cells (0,0) and (0,1) are shaded
+    ]};
+
+    // (0,0) is index 1, (0,1) is index 2, (0,2) is index 3
+
+    // Valid: (0,0) is shaded and has value 1
+    board[0][0] = 1;
+    assert.equal(SudokuCSP.findConflict(board, constraints), null);
+
+    // Invalid: (0,1) is shaded but has value 3 (which is not 2)
+    board[0][1] = 3;
+    assert.equal(SudokuCSP.findConflict(board, constraints).constraint, "selfjoin");
+
+    // Reset and test invalid unshaded cell
+    board[0][1] = 0;
+    // (0,2) is not shaded, but has value 3. Should be invalid because if value === index it MUST be shaded
+    board[0][2] = 3;
+    assert.equal(SudokuCSP.findConflict(board, constraints).constraint, "selfjoin");
+
+    // Valid: (0,2) is not shaded and has value 4
+    board[0][2] = 4;
+    assert.equal(SudokuCSP.findConflict(board, constraints), null);
+});
+
+test("Pole Position variant", function() {
+    // Valid setups
+    var board = emptyBoard();
+    board[0][0] = 3;
+    board[0][2] = 1;
+    assert.deepEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[2][0] = 1;
+    assert.deepEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    // Invalid setups
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[0][2] = 2; // Position 3 must be 1, not 2
+    assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[0][1] = 1; // 1 is at position 2, so first cell should be 2, not 3
+    assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+
+    board = emptyBoard();
+    board[0][0] = 3;
+    board[1][0] = 1; // 1 is at position 2 (col 0, row 1), first cell should be 2, not 3
+    assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+});
+
+test("all recently implemented variants are recognized as supported by readConstraints", function() {
+    const variantsToTest = [
+        "different parity",
+        "sequence top-bottom",
+        "poleposition",
+        "termination",
+        "citywalk",
+        "pirate",
+        "meandering diagonals",
+        "touchy",
+        "japanesesums",
+        "scattered",
+        "starproduct",
+        "xv",
+        "xivi"
+    ];
+
+    variantsToTest.forEach(function(variant) {
+        const dummyPuzzle = {
+            nx: 9, ny: 9, nx0: 9, ny0: 9, space: [0, 0, 0, 0],
+            activeSudokuVariants: ["classic", variant],
+            centerlist: [], point: {}, pu_q: { number: {}, symbol: {}, surface: {}, killercages: [] }
+        };
+        const constraints = SudokuSolver.readConstraints(dummyPuzzle);
+        assert.equal(
+            constraints.supported.some(function(supp) {
+                return (
+                    supp.toLowerCase().replace(/[^a-z0-9]/g, "") ===
+                    variant.toLowerCase().replace(/[^a-z0-9]/g, "")
+                );
+            }),
+            true,
+            "Variant " + variant + " should be in constraints.supported"
+        );
+    });
+});
+

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { guideFor } from "./variantRules";
+  import { guideFor, variantRules } from "./variantRules";
   import {
     installVariationCatalog,
     outsideVariationValues,
@@ -9,6 +9,16 @@
   } from "./variationCatalog";
   import { markChoiceFor } from "./variantMarks";
   import { metadataVariantIdForActiveVariants } from "./exampleSave.mjs";
+
+  if (typeof window !== "undefined") {
+    (window as any).SudokuSolverRuleText = Object.fromEntries(
+      Object.entries(variantRules).map(([key, val]) => [key.replace(/\s+/g, ""), val.rule])
+    );
+    variantMetadata.variants.forEach((v) => {
+      (window as any).SudokuSolverRuleText[v.id] = v.rules["9x9"] || Object.values(v.rules)[0] || "";
+      (window as any).SudokuSolverRuleText[v.name.toLowerCase().replace(/[^a-z0-9]/g, "")] = v.rules["9x9"] || Object.values(v.rules)[0] || "";
+    });
+  }
 
   type VariantOption = { value: string; label: string; group: string };
   type VariantTab =
@@ -55,7 +65,16 @@
   let darkTheme = true;
   let mobileActiveTab: "none" | "controls" | "actions" | "solver" = "none";
   let solverRunning = false;
-  let isEmbedded = false;
+  function checkIsEmbedded() {
+    if (typeof window === "undefined") return false;
+    return (
+      new URLSearchParams(window.location.search).has("embed") ||
+      new URLSearchParams(window.location.hash.replace(/^#/, "?")).has("embed") ||
+      window.location.search.includes("embed") ||
+      window.location.hash.includes("embed")
+    );
+  }
+  let isEmbedded = checkIsEmbedded();
   let lastLogLine = "Idle";
   let fullLogContent = "";
   let fullLogExpanded = false;
@@ -514,8 +533,7 @@
       );
     }
     const restricted = variantInputFamilies(value).filter(
-      (family) =>
-        family === "line" || family === "cage" || family === "outside",
+      (family) => family !== "no-input",
     );
     if (!restricted.length) return null;
     return (
@@ -546,6 +564,7 @@
     const query = variantSearch.trim().toLowerCase();
     return variants.filter(
       (variant) =>
+        (variationByValue.get(variant.value)?.status === "available" || variant.value === "classic") &&
         (!query ? primaryVariantTab(variant.value) === variantTab : true) &&
         (!query ||
           variant.label.toLowerCase().includes(query) ||
@@ -623,7 +642,7 @@
         : 1;
       if (selectedVariant === "before1after9") layers = 2;
       if (selectedVariant === "positionsums") layers = 2;
-      if (selectedVariant === "bigsmalljapanesesums") layers = 5;
+      if (["bigsmalljapanesesums", "japanesesums", "partitionedsums"].includes(selectedVariant)) layers = 5;
       ensureOutsideSpace(
         layers,
         selectedVariant === "triplesum"
@@ -881,7 +900,7 @@
     actionMenu = actionMenu === menu ? null : menu;
   }
 
-  function activeVariantFilename() {
+  function activeVariantTitle() {
     const pu = (window as any).pu;
     const active = Array.isArray(pu?.activeSudokuVariants)
       ? pu.activeSudokuVariants.filter(
@@ -890,9 +909,146 @@
       : [];
     return active.length
       ? active
-          .map((variant: string) => variant.toLowerCase().replace(/\s+/g, "_"))
-          .join("_")
-      : "Classic";
+          .map((variant: string) => guideFor(variant).title)
+          .join(" ")
+      : "Classic Sudoku";
+  }
+
+  function activeVariantFilename() {
+    return activeVariantTitle();
+  }
+
+  let shareUrl = "";
+  let showShareUrl = false;
+  let shareLoading = false;
+  let shareAuthor = "";
+  let autoShorten = false;
+  let verifyUniqueness = true;
+
+  let userSettingsState = {
+    sudoku_centre_size: "1",
+    sudoku_normal_size: "1",
+    generator_symmetry: "rotational180",
+    generator_difficulty_minimal: true,
+    generator_clues_on_marks: true,
+    start_grid_size: "9",
+    start_grid_type: "blank",
+    reload_button: false,
+    author: "",
+  };
+
+  function openShareModal() {
+    shareUrl = "";
+    showShareUrl = false;
+    shareLoading = false;
+    if (typeof (window as any).UserSettings !== "undefined") {
+      shareAuthor = (window as any).UserSettings.author || "";
+      autoShorten = Boolean((window as any).UserSettings.shorten_links);
+    }
+    studioModal = "share";
+  }
+
+  function applyShareMetadata() {
+    if (typeof (window as any).pu !== "undefined" && (window as any).pu) {
+      const pu = (window as any).pu;
+      pu.title = "";
+      pu.rules = "";
+      pu.author = shareAuthor || "";
+    }
+    if (typeof (window as any).UserSettings !== "undefined") {
+      (window as any).UserSettings.author = shareAuthor || "";
+      (window as any).UserSettings.shorten_links = autoShorten;
+    }
+  }
+
+  async function handleShareEdit() {
+    if (shareLoading) return;
+    shareLoading = true;
+    showShareUrl = false;
+    shareUrl = "";
+    applyShareMetadata();
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    try {
+      if ((window as any).savetext_edit) {
+        (window as any).savetext_edit();
+      }
+      const txtEl = document.getElementById("savetextarea") as HTMLTextAreaElement;
+      if (txtEl) shareUrl = txtEl.value;
+      showShareUrl = true;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      shareLoading = false;
+    }
+  }
+
+  async function handleShareSolve() {
+    if (shareLoading) return;
+    shareLoading = true;
+    showShareUrl = false;
+    shareUrl = "";
+    applyShareMetadata();
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    try {
+      if ((window as any).savetext_solve) {
+        (window as any).savetext_solve();
+      }
+      const txtEl = document.getElementById("savetextarea") as HTMLTextAreaElement;
+      if (txtEl) shareUrl = txtEl.value;
+      showShareUrl = true;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      shareLoading = false;
+    }
+  }
+
+  function copyShareUrl() {
+    const txtEl = document.getElementById("savetextarea") as HTMLTextAreaElement;
+    const urlToCopy = txtEl?.value || shareUrl;
+    if (urlToCopy) {
+      navigator.clipboard.writeText(urlToCopy);
+      if (typeof (window as any).Swal !== "undefined") {
+        (window as any).Swal.fire({ icon: "success", title: "Copied!", timer: 1500, showConfirmButton: false });
+      }
+    }
+  }
+
+  function openShareUrl() {
+    const txtEl = document.getElementById("savetextarea") as HTMLTextAreaElement;
+    const urlToOpen = txtEl?.value || shareUrl;
+    if (urlToOpen) {
+      window.open(urlToOpen, "_blank", "noopener");
+    }
+  }
+
+  function openSettingsModal() {
+    if (typeof (window as any).UserSettings !== "undefined") {
+      const US = (window as any).UserSettings;
+      userSettingsState = {
+        sudoku_centre_size: String(US.sudoku_centre_size || "1"),
+        sudoku_normal_size: String(US.sudoku_normal_size || "1"),
+        generator_symmetry: String(US.generator_symmetry || "rotational180"),
+        generator_difficulty_minimal: Boolean(US.generator_difficulty_minimal),
+        generator_clues_on_marks: Boolean(US.generator_clues_on_marks),
+        start_grid_size: String(US.start_grid_size || "9"),
+        start_grid_type: String(US.start_grid_type || "blank"),
+        reload_button: Boolean(US.reload_button),
+        author: String(US.author || ""),
+      };
+    }
+    studioModal = "settings";
+  }
+
+  function updateSetting(key: string, val: any) {
+    if (typeof (window as any).UserSettings !== "undefined") {
+      (window as any).UserSettings[key] = val;
+    }
+    userSettingsState = { ...userSettingsState, [key]: val };
   }
 
   function openScreenshot() {
@@ -1490,19 +1646,13 @@
           type="button"
           on:click={() => legacyClick("sudoku_solve_clear")}
         >
-          <span><i class="fa fa-eraser" aria-hidden="true"></i></span> Undo Sol
-        </button>
-        <button
-          type="button"
-          on:click={() => legacyClick("sudoku_undo")}
-        >
-          <span>↶</span> Undo
+          <span><i class="fa fa-undo" aria-hidden="true"></i></span> Undo
         </button>
         <button
           type="button"
           on:click={clearMarks}
         >
-          <span>↺</span> Clear mark
+          <span>↺</span> Reset
         </button>
       </div>
     {:else}
@@ -1529,7 +1679,8 @@
           class:active={autoEnabled}
           on:click={() => legacyClick("sudoku_auto_solver")}
         >
-          Auto Solve
+          <span><i class="fa fa-refresh" aria-hidden="true"></i></span>
+          <span>{autoEnabled ? "ON" : "OFF"}</span>
         </button>
         <button
           type="button"
@@ -1562,7 +1713,6 @@
         class:open={mobileActiveTab === "controls"}
       >
         <section>
-          <h2>Editing layer</h2>
           <div class="segmented">
             <button
               class:active={layer === "problem"}
@@ -1606,19 +1756,17 @@
 
           class:hidden-section={layer !== "problem"}
         >
-          <div class="control-label" id="svelte-variant-label">Add variant</div>
           <div class="variant-search-control">
-            <span class="variant-icon">{variantIcon(selectedVariant)}</span>
             <input
               disabled={layer === "solution"}
-              aria-labelledby="svelte-variant-label"
+              aria-label="Add variant"
               aria-expanded={variantMenuOpen}
               bind:value={variantSearch}
               on:focus={() => (variantMenuOpen = true)}
               on:input={() => (variantMenuOpen = true)}
-              placeholder="Search variants…"
+              placeholder="Add variant"
             />
-            <span class="variant-chevron">⌄</span>
+            <span class="variant-chevron">+</span>
           </div>
           {#if variantMenuOpen}
             <div
@@ -1640,7 +1788,8 @@
                     class:active={variantTab === tab.value}
                     on:click={() => (variantTab = tab.value)}
                   >
-                    {tab.label}
+                    <span class="tab-icon">{inputTypeIcons[tab.value]}</span>
+                    <span>{tab.label}</span>
                   </button>
                 {/each}
               </div>
@@ -1704,47 +1853,12 @@
           {/if}
         </section>
 
-        {#if layer === "problem"}
+        {#if layer === "solution"}
           <section
             class="tool-help"
             class:hidden-section={layer === "modes"}
             aria-live="polite"
           >
-            <div>
-              <span class="help-label">Variant rule</span>
-              <strong>
-                {#if variationByValue.has(ruleVariant)}
-                  <a
-                    class="rule-wiki-link"
-                    href={`./list.html?id=${encodeURIComponent(ruleVariant)}`}
-                    target="_blank"
-                    rel="noreferrer">{ruleTitle}</a
-                  >
-                {:else}{ruleTitle}{/if}
-              </strong>
-              <p>{ruleDescription}</p>
-            </div>
-          </section>
-        {:else}
-          <section
-            class="tool-help"
-            class:hidden-section={layer === "modes"}
-            aria-live="polite"
-          >
-            <div>
-              <span class="help-label">Variant rule</span>
-              <strong>
-                {#if variationByValue.has(ruleVariant)}
-                  <a
-                    class="rule-wiki-link"
-                    href={`./list.html?id=${encodeURIComponent(ruleVariant)}`}
-                    target="_blank"
-                    rel="noreferrer">{ruleTitle}</a
-                  >
-                {:else}{ruleTitle}{/if}
-              </strong>
-              <p>{ruleDescription}</p>
-            </div>
             <div>
               <span class="help-label">Tool usage</span>
               <strong>{toolTitle}</strong>
@@ -1775,12 +1889,14 @@
         class:panel-above={mobilePanelPosition === "above"}
         class:panel-below={mobilePanelPosition === "below"}
       >
+        {#if !isEmbedded}
         <div class="input-modes-heading">
           <h2>Input modes</h2>
           <kbd class="tab-key-hint" title="Press Tab to cycle input modes"
             >Tab ↹</kbd
           >
         </div>
+        {/if}
         <div class="input-mode-tools">
           <button
             type="button"
@@ -1792,7 +1908,7 @@
             >+</button
           >
           <div bind:this={variantHost} class="legacy-variant-host"></div>
-          <span class="input-mode-scroll-hint" aria-hidden="true">›</span>
+          <span class="input-mode-scroll-hint" aria-hidden="true">▾</span>
         </div>
         {#if inputVariantMenuOpen}
           <div
@@ -1801,6 +1917,14 @@
             tabindex="-1"
             on:mouseleave={() => previewRule(null)}
           >
+            <div class="variant-search-control mobile-variant-search">
+              <input
+                disabled={layer === "solution"}
+                aria-label="Add variant"
+                bind:value={variantSearch}
+                placeholder="Search variants..."
+              />
+            </div>
             <div
               class="variant-tabs"
               role="tablist"
@@ -1959,14 +2083,30 @@
         <button on:click={() => changeZoom(0.1)} aria-label="Zoom in">+</button>
       </div>
       <div bind:this={boardHost} class="board-host">
-        {#if !initialized}<p class="loading">Preparing Penpa canvas…</p>{/if}
+        {#if !initialized}
+          <div class="skeleton-board-container" aria-label="Preparing puzzle board">
+            <img src="./grid-placeholder.png" alt="Sudoku Grid" class="placeholder-grid-img" />
+            <div class="board-loading-overlay">
+              <span class="busy-grid-pulse" aria-hidden="true">
+                <i></i><i></i><i></i>
+                <i></i><i></i><i></i>
+                <i></i><i></i><i></i>
+              </span>
+              <p class="loading">Preparing Penpa board…</p>
+            </div>
+          </div>
+        {/if}
       </div>
       <div
         class="board-busy-overlay"
         aria-live="polite"
         aria-label="CSP is working"
       >
-        <span class="busy-pulse" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="busy-grid-pulse" aria-hidden="true">
+          <i></i><i></i><i></i>
+          <i></i><i></i><i></i>
+          <i></i><i></i><i></i>
+        </span>
         <strong>CSP working…</strong>
         <small>The board is locked until this run finishes.</small>
         <button on:click={() => (window as any).SudokuTools?.stopWork?.()}
@@ -2066,14 +2206,10 @@
               {/if}
             </div>
             <button on:click={openScreenshot}><span>▣</span>Screenshot</button>
-            <button on:click={() => legacyPress("savetext")}
-              ><span>↗</span>Share</button
-            >
+            <button on:click={openShareModal}><span>↗</span>Share</button>
           </div>
           <div class="action-group">
-            <button on:click={() => legacyPress("page_settings")}
-              ><span>⚙</span>Settings</button
-            >
+            <button on:click={openSettingsModal}><span>⚙</span>Settings</button>
             <button on:click={toggleTheme}
               ><span>{darkTheme ? "☀" : "◐"}</span>{darkTheme
                 ? "Light"
@@ -2165,32 +2301,19 @@
         </div>
       {:else if studioModal === "screenshot"}
         <h2 id="studio-modal-title">Screenshot</h2>
-        <p>Export the native Penpa canvas for typesetting or sharing.</p>
-        <div class="modal-field">
-          <span>File type</span>
-          <div class="choice-group three">
-            <button
-              class:active={screenshotType === "png"}
-              on:click={() => (screenshotType = "png")}>PNG</button
-            >
-            <button
-              class:active={screenshotType === "svg"}
-              on:click={() => (screenshotType = "svg")}>SVG</button
-            >
-          </div>
-        </div>
-        <div class="modal-field">
-          <span>White border</span>
-          <div class="choice-group">
-            <button
-              class:active={!screenshotBorder}
-              on:click={() => (screenshotBorder = false)}>No</button
-            >
-            <button
-              class:active={screenshotBorder}
-              on:click={() => (screenshotBorder = true)}>Yes</button
-            >
-          </div>
+        <div class="screenshot-row">
+          <label class="modal-field-inline">
+            <span>File type</span>
+            <select bind:value={screenshotType} class="modal-select">
+              <option value="png">PNG</option>
+              <option value="jpg">JPEG</option>
+              <option value="svg">SVG</option>
+            </select>
+          </label>
+          <label class="modal-field-checkbox">
+            <input type="checkbox" bind:checked={screenshotBorder} />
+            <span>White border</span>
+          </label>
         </div>
         <label for="screenshot-name-input" class="modal-field"
           >Filename<input
@@ -2198,16 +2321,215 @@
             bind:value={screenshotName}
           /></label
         >
-        <div class="studio-modal-actions screenshot-actions">
-          <button on:click={() => exportScreenshot("problem")}
-            >Download problem</button
-          >
-          <button on:click={() => exportScreenshot("solution")}
-            >Download solution</button
-          >
-          <button class="primary" on:click={() => exportScreenshot("both")}
-            >Download both</button
-          >
+        <div class="download-row">
+          <span class="download-label">Download:</span>
+          <div class="studio-modal-actions screenshot-actions">
+            <button on:click={() => exportScreenshot("problem")}>Problem</button>
+            <button on:click={() => exportScreenshot("solution")}>Solution</button>
+            <button class="primary" on:click={() => exportScreenshot("both")}>Both</button>
+          </div>
+        </div>
+      {:else if studioModal === "share"}
+        <h2 id="studio-modal-title">Share Puzzle</h2>
+        <div class="share-row-combined">
+          <label class="modal-field-inline">
+            <span>Author</span>
+            <input
+              type="text"
+              bind:value={shareAuthor}
+              placeholder="Creator name"
+              on:input={() => updateSetting('author', shareAuthor)}
+              class="modal-input"
+              style="width: 120px;"
+            />
+          </label>
+          <label class="modal-field-checkbox">
+            <input type="checkbox" bind:checked={autoShorten} id="auto_shorten_chk" />
+            <span>Shortened</span>
+          </label>
+          <label class="modal-field-checkbox">
+            <input type="checkbox" bind:checked={verifyUniqueness} id="verify_uniqueness_chk" />
+            <span>Uniqueness</span>
+          </label>
+        </div>
+
+        <div class="studio-modal-actions share-url-buttons" style="justify-content: center; margin-top: 16px;">
+          <button on:click={handleShareEdit} disabled={shareLoading}>
+            {#if shareLoading}
+              <span class="btn-spinner"></span>
+            {:else}
+              <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+            {/if}
+            Editing URL
+          </button>
+          <button on:click={handleShareSolve} disabled={shareLoading}>
+            {#if shareLoading}
+              <span class="btn-spinner"></span>
+            {:else}
+              <i class="fa fa-play-circle" aria-hidden="true"></i>
+            {/if}
+            Solving URL
+          </button>
+        </div>
+
+        {#if shareLoading}
+          <div class="share-loading-box">
+            <div class="busy-grid-pulse" aria-hidden="true">
+              <i></i><i></i><i></i>
+            </div>
+            <span>Generating URL…</span>
+          </div>
+        {/if}
+
+        {#if showShareUrl && !shareLoading}
+          <div class="share-url-output" style="margin-top: 14px;">
+            <div id="modal-save-body1">
+              <textarea
+                id="savetextarea"
+                class="modal-textarea"
+                readonly
+                rows="2"
+                style="width: 100%; font-size: 12px;"
+                bind:value={shareUrl}
+              ></textarea>
+            </div>
+            <div class="studio-modal-actions" style="margin-top: 8px; justify-content: center;">
+              <button on:click={copyShareUrl}
+                ><i class="fa fa-copy" aria-hidden="true"></i> Copy</button
+              >
+              <button on:click={openShareUrl}
+                ><i class="fa fa-external-link" aria-hidden="true"></i> Open</button
+              >
+            </div>
+          </div>
+        {/if}
+
+      {:else if studioModal === "settings"}
+        <h2 id="studio-modal-title">General Settings</h2>
+
+        <div class="settings-section">
+          <h3>Puzzle Display</h3>
+          <div class="modal-settings-grid">
+            <label>
+              <span>Default Author</span>
+              <input
+                type="text"
+                value={userSettingsState.author}
+                placeholder="Creator name"
+                on:input={(e) => updateSetting('author', e.currentTarget.value)}
+                class="modal-input"
+                style="width: 130px;"
+              />
+            </label>
+            <label>
+              <span>Sudoku Pencil Marks</span>
+              <select
+                id="sudoku_settings_opt"
+                value={userSettingsState.sudoku_centre_size}
+                on:change={(e) => updateSetting('sudoku_centre_size', e.currentTarget.value)}
+                class="modal-select"
+              >
+                <option value="1">Dynamic</option>
+                <option value="2">Large</option>
+                <option value="3">Small</option>
+              </select>
+            </label>
+            <label>
+              <span>Sudoku Normal</span>
+              <select
+                id="sudoku_settings_normal_opt"
+                value={userSettingsState.sudoku_normal_size}
+                on:change={(e) => updateSetting('sudoku_normal_size', e.currentTarget.value)}
+                class="modal-select"
+              >
+                <option value="1">Centered</option>
+                <option value="2">Bottom</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section" style="margin-top: 14px;">
+          <h3>Generator</h3>
+          <div class="modal-settings-grid">
+            <label>
+              <span>Symmetry</span>
+              <select
+                id="generator_symmetry_opt"
+                value={userSettingsState.generator_symmetry}
+                on:change={(e) => updateSetting('generator_symmetry', e.currentTarget.value)}
+                class="modal-select"
+              >
+                <option value="none">None</option>
+                <option value="rotational180">180 rotational</option>
+                <option value="all_axis">All axis</option>
+              </select>
+            </label>
+            <label>
+              <span>Minimal clues</span>
+              <input
+                type="checkbox"
+                id="generator_difficulty_minimal_opt"
+                checked={userSettingsState.generator_difficulty_minimal}
+                on:change={(e) => updateSetting('generator_difficulty_minimal', e.currentTarget.checked)}
+              />
+            </label>
+            <label>
+              <span>Clues on marks</span>
+              <input
+                type="checkbox"
+                id="generator_clues_on_marks_opt"
+                checked={userSettingsState.generator_clues_on_marks}
+                on:change={(e) => updateSetting('generator_clues_on_marks', e.currentTarget.checked)}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section" style="margin-top: 14px;">
+          <h3>Initial Grid Settings</h3>
+          <div class="modal-settings-grid">
+            <label>
+              <span>Starting Grid Size</span>
+              <select
+                id="start_grid_size_opt"
+                value={userSettingsState.start_grid_size}
+                on:change={(e) => updateSetting('start_grid_size', e.currentTarget.value)}
+                class="modal-select"
+              >
+                <option value="9">9 × 9</option>
+                <option value="6">6 × 6</option>
+              </select>
+            </label>
+            <label>
+              <span>Generated</span>
+              <input
+                type="checkbox"
+                id="start_generated_opt"
+                checked={userSettingsState.start_grid_type === 'generated'}
+                on:change={(e) => updateSetting('start_grid_type', e.currentTarget.checked ? 'generated' : 'blank')}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section" style="margin-top: 14px;">
+          <h3>App Display</h3>
+          <div class="modal-settings-grid">
+            <label>
+              <span>Reload prevention</span>
+              <input
+                type="checkbox"
+                id="reload_button"
+                checked={userSettingsState.reload_button}
+                on:change={(e) => updateSetting('reload_button', e.currentTarget.checked ? 1 : 2)}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div class="studio-modal-actions" style="margin-top: 20px; justify-content: center;">
+          <button class="primary" on:click={() => (studioModal = null)}>Close</button>
         </div>
       {:else}
         <h2 id="studio-modal-title">About Sudotoku</h2>
@@ -2356,9 +2678,11 @@ href="https://github.com/semiexp/cspuz_core"
     align-items: center;
     justify-content: center;
     gap: 5px;
-    padding: 9px;
+    padding: 4px 6px;
+    min-height: 28px;
     border: 1px solid #bfc9d4;
     background: #f7f9fb;
+    font-size: 11px;
   }
   .segmented button:first-child {
     border-radius: 6px 0 0 6px;
@@ -2372,12 +2696,13 @@ href="https://github.com/semiexp/cspuz_core"
   .note-modes {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    margin-top: 8px;
+    margin-top: 6px;
   }
   .note-modes button {
     display: grid;
-    gap: 2px;
-    padding: 7px 3px;
+    gap: 1px;
+    padding: 3px 4px;
+    min-height: 26px;
     border: 1px solid #bfc9d4;
     border-right: 0;
     background: #f7f9fb;
@@ -2405,13 +2730,13 @@ href="https://github.com/semiexp/cspuz_core"
   }
   .variant-search-control {
     display: grid;
-    grid-template-columns: 24px 1fr 18px;
+    grid-template-columns: 1fr 18px;
     align-items: center;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    min-height: 38px;
-    padding: 6px 9px;
+    min-height: 32px;
+    padding: 4px 8px;
     border: 1px solid #bfc9d4;
     border-radius: 6px;
     color: #263443;
@@ -2476,7 +2801,7 @@ href="https://github.com/semiexp/cspuz_core"
     top: -6px;
     z-index: 3;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 3px;
     margin: -6px -6px 4px;
     padding: 6px;
@@ -2484,9 +2809,12 @@ href="https://github.com/semiexp/cspuz_core"
     background: #fff;
   }
   .variant-menu .variant-tabs button {
-    display: block;
-    min-height: 29px;
-    padding: 4px 3px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 3px 2px;
     border: 1px solid #cbd5de;
     border-radius: 4px;
     color: #526271;
@@ -2494,6 +2822,12 @@ href="https://github.com/semiexp/cspuz_core"
     text-align: center;
     font-size: 9px;
     font-weight: 750;
+    line-height: 1.1;
+  }
+  .variant-menu .variant-tabs .tab-icon {
+    font-size: 11px;
+    line-height: 1;
+    margin-bottom: 1px;
   }
   .variant-menu .variant-tabs button.active {
     color: #fff;
@@ -2572,12 +2906,20 @@ href="https://github.com/semiexp/cspuz_core"
   }
   .legacy-variant-host {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    width: 100%;
+    min-width: 100%;
+    flex: 1 1 100%;
+    align-items: stretch;
     gap: 6px;
   }
   :global(.svelte-home .legacy-variant-host .sudoku-variant-tools) {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    width: 100%;
+    min-width: 100%;
+    flex: 1 1 100%;
+    align-items: stretch;
     gap: 6px;
     border: 0;
     padding: 0;
@@ -2996,7 +3338,132 @@ href="https://github.com/semiexp/cspuz_core"
   }
   :global(.svelte-home .sudoku-variant-group) {
     --variant-icon: "◇";
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    margin-bottom: 3px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 4px !important;
+    background: #f8fafc !important;
+    overflow: hidden !important;
     gap: 0 !important;
+  }
+  :global(.svelte-home .sudoku-variant-header) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 5px !important;
+    padding: 3px 6px !important;
+    font-size: 11px !important;
+    font-weight: 650 !important;
+    color: inherit !important;
+    background: #e2e8f0 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    min-height: 22px !important;
+  }
+  :global(.svelte-home .variant-accordion-chevron) {
+    font-size: 9px !important;
+    color: #64748b !important;
+    width: 10px !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+  }
+  :global(.svelte-home .variant-accordion-icon) {
+    font-size: 11px !important;
+    color: var(--primary-color) !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+  }
+  :global(.svelte-home .sudoku-variant-title) {
+    display: inline-flex !important;
+    align-items: center !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: inherit !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+  }
+  :global(.svelte-home .sudoku-variant-close) {
+    margin-left: auto !important;
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    color: #64748b !important;
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 3px !important;
+    cursor: pointer !important;
+    opacity: 0.65 !important;
+    line-height: 1 !important;
+    min-width: 0 !important;
+    height: auto !important;
+    flex-shrink: 0 !important;
+  }
+  :global(.svelte-home .sudoku-variant-close:hover) {
+    opacity: 1 !important;
+    color: #ef4444 !important;
+    background: transparent !important;
+  }
+  :global(.svelte-home .sudoku-variant-row) {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+    padding: 3px 6px !important;
+    border-top: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+  }
+  :global(.svelte-home .sudoku-variant-row button) {
+    min-height: 20px !important;
+    height: 20px !important;
+    padding: 1px 6px !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+    border-radius: 3px !important;
+  }
+  :global(.svelte-home .sudoku-variant-rule) {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+    color: #334155 !important;
+    background: #f1f5f9 !important;
+    border-top: 1px solid #cbd5e1 !important;
+  }
+  :global(.svelte-home .sudoku-variant-rule .variant-rule-text) {
+    margin: 0 !important;
+    color: inherit !important;
+  }
+  :global(.studio-shell.dark .sudoku-variant-group) {
+    border-color: #334155 !important;
+    background: #1e293b !important;
+  }
+  :global(.studio-shell.dark .sudoku-variant-header) {
+    color: #f8fafc !important;
+    background: #0f172a !important;
+  }
+  :global(.studio-shell.dark .variant-accordion-chevron) {
+    color: #94a3b8 !important;
+  }
+  :global(.studio-shell.dark .sudoku-variant-close) {
+    color: #94a3b8 !important;
+  }
+  :global(.studio-shell.dark .sudoku-variant-close:hover) {
+    color: #f87171 !important;
+  }
+  :global(.studio-shell.dark .sudoku-variant-row) {
+    border-top-color: #334155 !important;
+    background: #1e293b !important;
+  }
+  :global(.studio-shell.dark .sudoku-variant-rule) {
+    color: #cbd5e1 !important;
+    background: #0f172a !important;
+    border-top-color: #334155 !important;
+  }
+  :global(.studio-shell.dark .sudoku-variant-rule .variant-rule-text) {
+    color: #cbd5e1 !important;
   }
   :global(.svelte-home .sudoku-variant-group[data-variant="odd even"]) {
     --variant-icon: "◐";
@@ -3046,12 +3513,7 @@ href="https://github.com/semiexp/cspuz_core"
   :global(.svelte-home .sudoku-variant-group[data-variant="sandwich"]) {
     --variant-icon: "☰";
   }
-  :global(.svelte-home .sudoku-variant-group .sudoku-variant-title::before) {
-    content: var(--variant-icon);
-    margin-right: 6px;
-    color: var(--primary-color);
-    font-size: 15px;
-  }
+
   :global(.svelte-home .sudoku-variant-tools > .sudoku-variant-mode::before) {
     content: "9";
     display: inline-grid;
@@ -3064,9 +3526,7 @@ href="https://github.com/semiexp/cspuz_core"
     font-size: 10px;
   }
   :global(.svelte-home .legacy-variant-host .sudoku-variant-close) {
-    width: 28px !important;
-    min-width: 28px !important;
-    padding: 0 !important;
+    padding: 0 3px !important;
     color: #73808d !important;
   }
   :global(.svelte-home .sudoku-variant-group > button) {
@@ -3152,14 +3612,14 @@ href="https://github.com/semiexp/cspuz_core"
     background: #fff;
   }
   :global(.svelte-home .log-host .sudoku-solver-log-header) {
-    display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr);
-    gap: 6px;
-    min-height: 38px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    min-height: 48px;
     box-sizing: border-box;
-    align-items: center;
     margin: 0;
-    padding: 8px 10px;
+    padding: 6px 10px;
     color: #263443;
     background: #f4f7f9;
     border-bottom: 1px solid #d9e0e6;
@@ -3167,19 +3627,29 @@ href="https://github.com/semiexp/cspuz_core"
   :global(.svelte-home .log-host #sudoku_auto_solver),
   :global(.svelte-home .log-host #sudoku_solve_once),
   :global(.svelte-home .log-host #sudoku_solve_clear) {
-    width: 74px !important;
-    min-width: 74px !important;
-    max-width: 74px !important;
-    box-sizing: border-box !important;
-    text-align: center !important;
+    display: inline-flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
     justify-content: center !important;
-    height: 26px;
-    margin: 0;
-    padding: 0 4px;
+    width: 58px !important;
+    min-width: 58px !important;
+    max-width: 58px !important;
+    height: 40px !important;
+    margin: 0 !important;
+    padding: 3px 2px !important;
     border: 1px solid #bfcad4;
-    border-radius: 5px;
+    border-radius: 6px;
     color: var(--primary-color);
     background: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  :global(.svelte-home .log-host #sudoku_auto_solver i),
+  :global(.svelte-home .log-host #sudoku_solve_once i),
+  :global(.svelte-home .log-host #sudoku_solve_clear i) {
+    font-size: 13px;
+    margin-bottom: 2px;
   }
   :global(.svelte-home .log-host #sudoku_auto_solver.active) {
     color: #fff;
@@ -3195,7 +3665,8 @@ href="https://github.com/semiexp/cspuz_core"
     font-weight: 650;
   }
   :global(.svelte-home .log-host #sudoku-solver-status) {
-    justify-self: end;
+    margin-left: auto !important;
+    justify-self: end !important;
   }
   :global(.svelte-home #sudoku-solver-status::before) {
     content: "";
@@ -3216,18 +3687,19 @@ href="https://github.com/semiexp/cspuz_core"
     accent-color: #42a5e8;
   }
   :global(.svelte-home .log-host #sudoku-solver-log-output) {
-    box-sizing: border-box;
-    height: 116px;
-    max-height: 116px;
-    margin: 7px 10px 10px;
-    padding: 7px 8px;
-    overflow: hidden;
-    white-space: pre-wrap;
-    color: #435160;
+    box-sizing: border-box !important;
+    height: 110px !important;
+    max-height: 110px !important;
+    margin: 6px 8px 8px !important;
+    padding: 6px 8px !important;
+    overflow-y: auto !important;
+    line-height: 1.4 !important;
+    white-space: pre-wrap !important;
+    color: #435160 !important;
     background: #fff !important;
-    border: 1px solid #e0e5ea;
-    border-radius: 5px;
-    font-size: 10px;
+    border: 1px solid #e0e5ea !important;
+    border-radius: 5px !important;
+    font-size: 11px !important;
   }
   :global(
       .svelte-home body.sudoku-solver-running .board-host #puzzle-container
@@ -3267,36 +3739,82 @@ href="https://github.com/semiexp/cspuz_core"
     background: var(--primary-color);
     font-weight: 700;
   }
-  .busy-pulse {
-    display: inline-flex;
+  .busy-grid-pulse {
+    display: grid;
+    grid-template-columns: repeat(3, 10px);
+    grid-template-rows: repeat(3, 10px);
+    gap: 4px;
+    justify-content: center;
     align-items: center;
-    gap: 6px;
-    height: 30px;
+    margin: 0 auto 6px;
   }
-  .busy-pulse i {
-    width: 8px;
-    height: 8px;
-    border-radius: 3px;
-    background: var(--primary-color);
-    animation: busy-pulse 1s ease-in-out infinite;
+  .busy-grid-pulse i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--primary-color, #2563eb);
+    animation: pulse3x3 1.2s infinite ease-in-out;
   }
-  .busy-pulse i:nth-child(2) {
-    animation-delay: 0.13s;
+  .busy-grid-pulse i:nth-child(1) { animation-delay: 0s; }
+  .busy-grid-pulse i:nth-child(2) { animation-delay: 0.1s; }
+  .busy-grid-pulse i:nth-child(3) { animation-delay: 0.2s; }
+  .busy-grid-pulse i:nth-child(4) { animation-delay: 0.1s; }
+  .busy-grid-pulse i:nth-child(5) { animation-delay: 0.2s; }
+  .busy-grid-pulse i:nth-child(6) { animation-delay: 0.3s; }
+  .busy-grid-pulse i:nth-child(7) { animation-delay: 0.2s; }
+  .busy-grid-pulse i:nth-child(8) { animation-delay: 0.3s; }
+  .busy-grid-pulse i:nth-child(9) { animation-delay: 0.4s; }
+
+  @keyframes pulse3x3 {
+    0%, 100% { transform: scale(0.4); opacity: 0.3; }
+    50% { transform: scale(1.1); opacity: 1; }
   }
-  .busy-pulse i:nth-child(3) {
-    animation-delay: 0.26s;
+
+  .skeleton-board-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: min(340px, 85vw);
+    height: min(340px, 85vw);
+    margin: auto;
+    border-radius: 8px;
+    overflow: hidden;
   }
-  @keyframes busy-pulse {
-    0%,
-    70%,
-    100% {
-      transform: translateY(0) scale(0.75);
-      opacity: 0.45;
-    }
-    35% {
-      transform: translateY(-7px) scale(1);
-      opacity: 1;
-    }
+  .placeholder-grid-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 6px;
+    background: #ffffff;
+  }
+  :global(html.dark) .placeholder-grid-img {
+    filter: invert(0.92) hue-rotate(180deg);
+  }
+  .board-loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(4px);
+    z-index: 2;
+  }
+  :global(html.dark) .board-loading-overlay {
+    background: rgba(18, 26, 36, 0.76);
+  }
+  .board-loading-overlay .loading {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  :global(html.dark) .board-loading-overlay .loading {
+    color: #e2e8f0;
   }
   .penpa-actions {
     flex: 1;
@@ -3635,11 +4153,98 @@ href="https://github.com/semiexp/cspuz_core"
     ) {
     display: none;
   }
+  .modal-settings-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    row-gap: 8px;
+    column-gap: 12px;
+  }
+  .modal-settings-grid label {
+    display: contents;
+  }
+  .modal-settings-grid span {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .modal-input,
+  .modal-textarea {
+    box-sizing: border-box;
+    padding: 5px 8px;
+    border: 1px solid #bdc8d3;
+    border-radius: 6px;
+    background: #fff;
+    color: inherit;
+    font: inherit;
+    outline: none;
+  }
+  .modal-input:focus,
+  .modal-textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.12);
+  }
+  :global(html.dark) .modal-input,
+  :global(html.dark) .modal-textarea {
+    background: #1e2d3a;
+    border-color: #3c4f60;
+    color: #c8d6e0;
+  }
+  .share-row-combined {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .share-loading-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 6px;
+    background: rgba(23, 111, 174, 0.08);
+    color: var(--primary-color, #176fae);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .btn-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: btn-spin 0.6s linear infinite;
+  }
+  @keyframes btn-spin {
+    to { transform: rotate(360deg); }
+  }
+  .share-url-buttons {
+    margin-top: 12px;
+    justify-content: flex-start;
+  }
+  .settings-section h3 {
+    margin: 10px 0 6px;
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #536170;
+    border-bottom: 1px solid #e0e8ef;
+    padding-bottom: 4px;
+  }
+  :global(html.dark) .settings-section h3 {
+    color: #7fa0b8;
+    border-bottom-color: #3c4f60;
+  }
   .studio-modal {
     position: relative;
     box-sizing: border-box;
-    width: min(480px, calc(100vw - 40px));
-    padding: 24px;
+    width: min(390px, calc(100vw - 32px));
+    padding: 20px;
     border: 1px solid #cbd5df;
     border-radius: 12px;
     color: var(--about-foreground);
@@ -3706,6 +4311,55 @@ href="https://github.com/semiexp/cspuz_core"
   .choice-group button:last-child {
     border-right: 1px solid #bdc8d3;
     border-radius: 0 6px 6px 0;
+  }
+  .screenshot-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 14px;
+  }
+  .modal-field-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .modal-field-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .modal-select {
+    padding: 6px 10px;
+    border: 1px solid #bdc8d3;
+    border-radius: 6px;
+    background: #fff;
+    color: inherit;
+    font: inherit;
+  }
+  .download-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .download-label {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .download-row .studio-modal-actions {
+    margin-top: 0;
+    width: 100%;
+  }
+  :global(html.dark) .modal-select {
+    background: #1e2d3a;
+    border-color: #3c4f60;
+    color: #c8d6e0;
   }
   .studio-modal-actions {
     display: flex;
@@ -4239,9 +4893,10 @@ href="https://github.com/semiexp/cspuz_core"
 
     :global(.svelte-home .studio-shell .legacy-variant-host .sudoku-variant-tools) {
       display: flex !important;
-      flex-direction: row !important;
+      flex-direction: column !important;
       flex-wrap: nowrap !important;
-      overflow-x: auto !important;
+      overflow-y: auto !important;
+      max-height: 180px !important;
       padding: 2px 0 !important;
       width: 100% !important;
     }
