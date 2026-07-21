@@ -1406,6 +1406,23 @@
       ]
     },
     {
+      "id": "differentparity",
+      "name": "Different Parity",
+      "rules": {
+        "9x9": "Each marked domino contains an odd and an even digit."
+      },
+      "tags": [
+        "parity",
+        "math"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cage"
+        ]
+      }
+    },
+    {
       "otherNames": "",
       "id": "disguisedpalindromes",
       "name": "Disguised Palindromes",

@@ -332,6 +332,24 @@ test("an active Almost Palindrome remains CSP-supported after its final line is 
 });
 
 
+test("Different Parity constraint parsing and evaluation", function() {
+    const constraints = { differentParity: [[{ row: 0, col: 0 }, { row: 0, col: 1 }]] };
+
+    var board = emptyBoard();
+    board[0][0] = 1;
+    board[0][1] = 2;
+    assert.equal(SudokuCSP.solve(board, { differentParity: constraints.differentParity, baseBoxes: false }).solved, true, "Different Parity allows 1 odd 1 even");
+
+    var board2 = emptyBoard();
+    board2[0][0] = 1;
+    board2[0][1] = 3;
+    assert.equal(SudokuCSP.solve(board2, { differentParity: constraints.differentParity, baseBoxes: false }).solved, false, "Different Parity rejects 2 odd");
+
+    var board3 = emptyBoard();
+    board3[0][0] = 2;
+    board3[0][1] = 4;
+    assert.equal(SudokuCSP.solve(board3, { differentParity: constraints.differentParity, baseBoxes: false }).solved, false, "Different Parity rejects 2 even");
+});
 test("Citywalk constraint parsing and evaluation", function() {
     var puzzle = {
         nx: 9, ny: 9, nx0: 9, ny0: 9,
