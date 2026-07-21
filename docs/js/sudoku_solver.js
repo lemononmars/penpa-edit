@@ -573,6 +573,7 @@ var SudokuSolver = (function() {
             regionAllDifferent: [],
             regionCoverage: [],
             watchtowers: [],
+            selfjoin: [],
             scatteredAllDifferent: [],
             invalidRegions: [],
             extraLargeRegions: [],
@@ -1381,6 +1382,10 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
         if (variantEnabled(puzzle, "watchtowers")) {
             constraints.watchtowers.push(shadedCells);
             constraints.supported.push("watchtowers");
+        }
+        if (variantEnabled(puzzle, "selfjoin")) {
+            constraints.selfjoin.push(shadedCells);
+            constraints.supported.push("selfjoin");
         }
         if (variantEnabled(puzzle, "scattered")) {
             if (shadedCells.length === SIZE) {
