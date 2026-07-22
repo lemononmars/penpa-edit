@@ -326,7 +326,7 @@ if (variation.value === "threedigitnumberskiller") {
         add("number", "8", 1, ["mo_number_lb", "sub_number8_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
-    if (variation.value === "mathdoku" || variation.value === "mathrax") {
+    if (variation.value === "mathdoku" || variation.value === "mathrax" || variation.value === "midpoint") {
         add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }

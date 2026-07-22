@@ -3703,3 +3703,31 @@ test("all recently implemented variants are recognized as supported by readConst
     });
 });
 
+
+test("validates midpoint variant across grid", function() {
+    const solved = emptyBoard();
+
+    // Target is midpoint between (0, 0) and (0, 4) -> (0, 2)
+    solved[0][0] = 1; solved[0][4] = 2;
+
+    assert.equal(SudokuCSP.solve(solved, {
+        midpoints: [{ text: "12", pairs: [
+            [{ row: 0, col: 0 }, { row: 0, col: 4 }],
+            [{ row: 0, col: 1 }, { row: 0, col: 3 }]
+        ] }]
+    }).solved, true);
+
+    assert.equal(SudokuCSP.solve(solved, {
+        midpoints: [{ text: "45", pairs: [
+            [{ row: 0, col: 0 }, { row: 0, col: 4 }],
+            [{ row: 0, col: 1 }, { row: 0, col: 3 }]
+        ] }]
+    }).solved, true);
+    solved[0][1] = 6; solved[0][3] = 7;
+    assert.equal(SudokuCSP.solve(solved, {
+        midpoints: [{ text: "45", pairs: [
+            [{ row: 0, col: 0 }, { row: 0, col: 4 }],
+            [{ row: 0, col: 1 }, { row: 0, col: 3 }]
+        ] }]
+    }).solved, false);
+});
