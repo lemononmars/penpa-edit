@@ -231,7 +231,9 @@
       "status": "planned",
       "inputType": {
         "categories": [
-          "cell"
+          "cell",
+          "line",
+          "number"
         ],
         "instructions": []
       }

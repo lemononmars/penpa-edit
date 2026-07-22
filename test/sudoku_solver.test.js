@@ -2158,7 +2158,7 @@ test("normalizes the new outside, no-bulb, intersection, and cage inputs", funct
     assert.equal(creasing.catalogLines[0].relation, "creasing");
     assert.equal(creasing.thermos.length, 0);
 
-    const consecutiveonline = SudokuSolver.readConstraints(puzzle("consecutiveonline", {
+    const consecutiveonline = SudokuSolver.readConstraints(puzzleFor("consecutiveonline", {
         pu_q: { line: { "28,29": 5, "29,42": 5 } }
     }));
     assert.equal(consecutiveonline.catalogLines[0].relation, "consecutiveonline");
@@ -3664,6 +3664,94 @@ test("Pole Position variant", function() {
     board[0][0] = 3;
     board[1][0] = 1; // 1 is at position 2 (col 0, row 1), first cell should be 2, not 3
     assert.notEqual(SudokuCSP.findConflict(board, { polePosition: [true] }), null);
+});
+
+test("Tight Fit Sudoku logic and abstract grid mapping", function() {
+    function puzzleFor(variant, options = {}) {
+        const nx0 = options.nx0 || 13;
+        const inset = options.inset === undefined ? 2 : options.inset;
+        return {
+            nx0, ny0: nx0, space: options.space || [0, 0, 0, 0],
+            nx: 6, ny: 6,
+            activeSudokuVariant: variant,
+            centerlist: Array.from({ length: 6 }, (_, row) =>
+                Array.from({ length: 6 }, (__, col) => (row + inset) * nx0 + col + inset)).flat(),
+            point: options.point || {},
+            pu_q: { number: {}, numberS: {}, symbol: {}, wall: {}, thermo: [], nobulbthermo: [],
+                killercages: [], ...(options.pu_q || {}) },
+            pu_a: { number: {}, numberS: {} },
+            mode: { qa: "pu_a" },
+            mode_qa: () => {},
+            mode_set: () => {},
+            redraw: () => {}
+        };
+    }
+
+    const tightfitPuzzle = puzzleFor("tightfit", {
+        pu_q: {
+            symbol: {
+                // Cell (0, 0) has a slash, split into top-left and bottom-right
+                // cellKey = 28
+                28: [3, "line"]
+            }
+        }
+    });
+
+    const constraints = SudokuSolver.readConstraints(tightfitPuzzle);
+    assert.ok(constraints.supported.includes("tightfit"));
+    assert.equal(constraints.baseCols, false);
+    assert.equal(constraints.baseBoxes, false);
+
+    // Visual grid is 6x6, 1 split cell => abstractSize should be 7
+    assert.ok(constraints.regionAllDifferent.length >= 6); // visual columns
+
+    // There should be a fortress relation for the split cell (0,0)
+    assert.equal(constraints.cellRelations.length, 1);
+    assert.equal(constraints.cellRelations[0].relation, "fortress");
+
+    // Test board reading mapping (split cell uses numberS)
+    tightfitPuzzle.pu_a.numberS = {
+        // corner 0 = top-left (first digit of slash) -> value 2
+        [4 * 28 + 0]: [2, 1, "1"],
+        // corner 3 = bottom-right (second digit of slash) -> value 5
+        [4 * 28 + 3]: [5, 1, "1"]
+    };
+    tightfitPuzzle.pu_a.number[29] = [4, 1, "1"]; // normal cell (0, 1)
+
+    const board = SudokuSolver.readBoard(tightfitPuzzle);
+    // board size should be abstractSize (7)
+    assert.equal(board.length, 7);
+    assert.equal(board[0].length, 7);
+
+    // The split cell (0, 0) -> mapped to (0, 0) and (0, 1)
+    assert.equal(board[0][0], 2);
+    assert.equal(board[0][1], 5);
+    // The normal cell (0, 1) -> mapped to (0, 2)
+    assert.equal(board[0][2], 4);
+
+    // Test write back (applySolution)
+    const solvedBoard = [
+        [3, 6, 8, 1, 2, 4, 5],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0]
+    ];
+
+    // Clear out pu_a
+    tightfitPuzzle.pu_a.number = {};
+    tightfitPuzzle.pu_a.numberS = {};
+
+    SudokuSolver.applySolution(tightfitPuzzle, solvedBoard);
+
+    // Cell 0,0 is split (slash). Top-left is corner 0, Bottom-right is corner 3
+    assert.equal(tightfitPuzzle.pu_a.numberS[4 * 28 + 0][0], "3");
+    assert.equal(tightfitPuzzle.pu_a.numberS[4 * 28 + 3][0], "6");
+
+    // Cell 0,1 is normal, should be in number
+    assert.equal(tightfitPuzzle.pu_a.number[29][0], "8");
 });
 
 test("all recently implemented variants are recognized as supported by readConstraints", function() {
