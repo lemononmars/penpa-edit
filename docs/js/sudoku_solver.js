@@ -2893,6 +2893,46 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             }
             constraints.supported.push(catalogEdgeVariant);
         }
+
+        if (variantEnabled(puzzle, "midpoint")) {
+            var allNumbers = Object.assign({}, puzzle.pu_q.number, puzzle.pu_q.numberS);
+            Object.keys(allNumbers).forEach(function(key) {
+                var entry = allNumbers[key];
+                if (!entry) return;
+                var text = String(entry[0]).trim();
+                if (text === "") return;
+                var point = puzzle.point && puzzle.point[key];
+                if (!point) return;
+
+                var nbrs = (point.neighbor || []).map(function(n) { return keyToCell(puzzle, n); }).filter(Boolean);
+                if (nbrs.length === 0) return;
+
+                var centerRow = nbrs.reduce(function(sum, c) { return sum + c.row; }, 0) / nbrs.length;
+                var centerCol = nbrs.reduce(function(sum, c) { return sum + c.col; }, 0) / nbrs.length;
+
+                var validPairs = [];
+                var activeKeys = Object.keys(activeCells);
+                for (var i = 0; i < activeKeys.length; i++) {
+                    var cell1 = keyToCell(puzzle, activeKeys[i]);
+                    if (!cell1) continue;
+                    for (var j = i + 1; j < activeKeys.length; j++) {
+                        var cell2 = keyToCell(puzzle, activeKeys[j]);
+                        if (!cell2) continue;
+                        if (Math.abs((cell1.row + cell2.row) / 2 - centerRow) < 0.01 &&
+                            Math.abs((cell1.col + cell2.col) / 2 - centerCol) < 0.01) {
+                            validPairs.push([cell1, cell2]);
+                        }
+                    }
+                }
+                if (validPairs.length > 0) {
+                    constraints.midpoints.push({ text: text, pairs: validPairs });
+                }
+            });
+            if (constraints.midpoints.length > 0) {
+                constraints.supported.push("midpoint");
+            }
+        }
+
         if (variantEnabled(puzzle, "anticonsecutive")) {
             // X-marked edges: cells on either side must NOT be consecutive
             // The X symbol is number entry "X" between two active cells
@@ -4865,10 +4905,10 @@ var SudokuTools = (function() {
         pu.sudoku_edge_clue_mode = ["difference", "sum", "product", "arithmetic", "greater", "lesser",
             "consecutive", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares", "multiplication", "xivi", "lc",
             "primesums", "twodigitprimenumbers", "blocksumrelations", "divisor", "eitheror", "anticonsecutive", "fives", "sumnine", "fadedkropki", "doublekropki",
-            "oneortwodifferencepairs", "teneleven", "tenspositionproducts"].indexOf(pu.activeSudokuVariant) !== -1 &&
+            "oneortwodifferencepairs", "teneleven", "tenspositionproducts", "midpoint"].indexOf(pu.activeSudokuVariant) !== -1 &&
             (mode === "number" || mode === "symbol");
         pu.sudoku_corner_clue_mode = ["quadruple", "equalsums", "equaldifferences", "equalproducts",
-            "equalratios", "consecutivequads", "quadmax", "quadmin", "exclusion", "groupsum", "wheel", "crosssums", "determinant", "fullorhalf"].indexOf(pu.activeSudokuVariant) !== -1 &&
+            "equalratios", "consecutivequads", "quadmax", "quadmin", "exclusion", "groupsum", "wheel", "crosssums", "determinant", "fullorhalf", "midpoint"].indexOf(pu.activeSudokuVariant) !== -1 &&
             (mode === "number" || mode === "symbol");
         pu.sudoku_directional_cell_mode = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious",
             "search9", "sumdetector", "detection", "deadoralivearrows", "twindetector"].indexOf(pu.activeSudokuVariant) !== -1 && mode === "symbol";

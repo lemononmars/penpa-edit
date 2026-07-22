@@ -1441,8 +1441,7 @@
       "rules": {
         "9x9": "No digit can appear in the same cell position in different 3x3 outlined regiones."
       },
-      "tags": [
-      ],
+      "tags": [],
       "status": "available",
       "inputType": {
         "categories": [
@@ -3226,8 +3225,7 @@
       "rules": {
         "9x9": "The four corner boxes contain the same digits in symmetric positions about the centre."
       },
-      "tags": [
-      ],
+      "tags": [],
       "status": "available",
       "inputType": {
         "categories": [
@@ -5842,8 +5840,7 @@
       "rules": {
         "9x9": "Cells that are 180° symmetric about the centre must not contain the same digit."
       },
-      "tags": [
-      ],
+      "tags": [],
       "status": "available",
       "inputType": {
         "categories": [
@@ -6567,8 +6564,7 @@
       "rules": {
         "9x9": "Equal digits may not be a chess king move apart."
       },
-      "tags": [
-      ],
+      "tags": [],
       "status": "available",
       "inputType": {
         "categories": [
@@ -6880,6 +6876,24 @@
         ]
       },
       "example": "zVXbTuNIEH3PV6z6dVoad9tuX6R5CLeR0MCSXVgWrAiZxCEGJ55xHEBGzLfPqXYHXxJmtSOttHLcOVUVn1NV7uqs1tP8Yc0DXLbPLS5w2b6lb9+hj2Wu87TMkvA3PlyX87wA4Pz3oyM+i7NVwo+v7vcOHoZPh8O/P7rXtn1xOvtwfzC6uJ9e/iVGVvqxsE4zf3lydrCXffhcXZ/Mh4/JYaLOVvlkniXxNK6uL4+fs+WRfzefif3j+b4/i5fW6pt/HjzujT59GkQmkfEgYoJxJnELNv7O6hLYd+0OxoOX6o/wpboJo/Erry4a6Dfwz/AF62n4whzBwshF0cTFmePCpB4Y04fpvZkumU5jBp2oomjzrGfD9BuTmNWb6ZOu3ZgezODNDOjZhjmgZxsqYVmwZcumRFpxQfFGS0iymyKFJPpGXEhS39SFxgjdniu9nqNjvLL1eqBXS6+uXr/o3xyikcKHYIBEJFiCgEshNcY3lxIFEJYulzbaRBjbTbroAmFXcKmcGiuHSw8JEfY8LgMkTzjAprSQOPH74LcMvwV+YfgF+KXhl+Cnt0vYAb9r+F3wK8OvwO8bfmx4SX3XWja0lOGh/I1f2sCGR4KnXZfc/F4BG34J/nY+su4PvtEHo2tD1zZ5KuqDqUtBVxldBd12f5TRVdBVRldBt10XbUeNoauMroKuR7p4aZf61e3r1dGr0q/UoxEZDCLkS5u5fdEW+h95cBJg2tkqz25W62IWT5Kb5DmelCysD6V2pONbrhe3SdFxZXn+NUuXuxg2oY4zvVvmRbIzRM5kevceFYV2UN3mxbSX01OcZd1avq3jovvwJC0mWddVFmnHjosif+p4FnE57zhu4xKH+2qefu0yJcteM8u4m2L8EPfUFk07Xgfsmekbhw12sE9ncxBWI159DjuHOK9GOJxPws1ZTid0xBheMWeLdVamkzzLoWx8OHb04xLwsIGXOk5ov3YKC/jUYMArwLphN19qz1kYVeecUQZ7+mmCbJE/ooY6Q7In+eIWVUas1SduI2DS3Shghoa/UgeoNnUQrOsgtKMOKu+/rSMYv9ZvzvpXf6W/9r/xjwfRs5nwvPjJkDfBvnvHqMP7k2lvRXf53xnsVrTv35piSnZ7kOHdMcvw9scZru2JhnNrqOF7Z66JtT/alFV/uklqa8BJqj3jOIM1+gE=&variants=classic%2Cpoleposition"
+    },
+    {
+      "id": "midpoint",
+      "name": "Midpoint",
+      "rules": {
+        "9x9": "A circle is the midpoint of some pair of cells with digits shown inside that clue."
+      },
+      "tags": [
+        "math"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "intersection",
+          "edge"
+        ],
+        "instructions": []
+      }
     }
   ]
 }

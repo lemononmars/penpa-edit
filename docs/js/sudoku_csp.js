@@ -415,7 +415,8 @@ var SudokuCSP = (function() {
             diagonalAllDifferent: "diagonal/region", regionAllDifferent: "region", extraLargeRegions: "extra large regions", difference2Neighbours: "difference 2 neighbours",
             regionCoverage: "region coverage", scatteredAllDifferent: "Scattered shaded cells",
             invalidRegions: "region layout", kropki: "Kropki", xv: "XV", battenburg: "Battenburg",
-            selfjoin: "Self-Join"
+            selfjoin: "Self-Join",
+            midpoints: "Midpoint"
         };
         return labels[name] || name.replace(/([a-z])([A-Z])/g, "$1 $2");
     }
@@ -989,6 +990,39 @@ registerConstraint("threeDigitNumbersKillers", {
             }
 
             return checkSum(0, 0);
+        }
+    });
+
+
+    registerConstraint("midpoints", {
+        validatePartial: function(board, clue) {
+            var digits = clue.text.split("").map(Number);
+            if (digits.length !== 2) return false;
+            var d1 = digits[0], d2 = digits[1];
+
+            var anyPossible = false;
+            for (var i = 0; i < clue.pairs.length; i++) {
+                var cell1 = clue.pairs[i][0];
+                var cell2 = clue.pairs[i][1];
+                var v1 = cellValue(board, cell1);
+                var v2 = cellValue(board, cell2);
+
+                var v1_vis = v1 ? (board.isZeroEight ? v1 - 1 : v1) : undefined;
+                var v2_vis = v2 ? (board.isZeroEight ? v2 - 1 : v2) : undefined;
+
+                var possible = true;
+                if (v1_vis !== undefined && v1_vis !== d1 && v1_vis !== d2) possible = false;
+                if (v2_vis !== undefined && v2_vis !== d1 && v2_vis !== d2) possible = false;
+                if (v1_vis !== undefined && v2_vis !== undefined && v1_vis === v2_vis && d1 !== d2) possible = false;
+                if (v1_vis !== undefined && v2_vis !== undefined && ((v1_vis === d1 && v2_vis === d2) || (v1_vis === d2 && v2_vis === d1))) {
+                    return true;
+                }
+
+                if (possible) {
+                    anyPossible = true;
+                }
+            }
+            return anyPossible;
         }
     });
 
