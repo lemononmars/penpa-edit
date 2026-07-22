@@ -393,6 +393,11 @@ if (variation.value === "threedigitnumberskiller") {
         add("symbol", "dice", 2, ["mo_symbol_lb", "ms", "ms_dice"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
+    if (variation.value === "tightfit") {
+        add("line", "2", 5, ["mo_line_lb", "sub_line2_lb"]);
+        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
 
 
     if (variation.value === "alloddalleven") {

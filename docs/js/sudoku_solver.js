@@ -30,6 +30,118 @@ var SudokuSolver = (function() {
         }
     }
 
+    function getTightFitMapping(puzzle) {
+        if (puzzle.tightFitMapping) return puzzle.tightFitMapping;
+        var size = puzzleSize(puzzle) || SIZE;
+        var mapping = {
+            isTightFit: variantEnabled(puzzle, "tightfit"),
+            size: size,
+            abstractSize: size,
+            visualToAbstract: {},
+            abstractToVisual: {}
+        };
+        if (!mapping.isTightFit || !puzzle || !puzzle.pu_q) return mapping;
+
+        var splitCells = {};
+        Object.keys(puzzle.pu_q.symbol || {}).forEach(function(key) {
+            var entry = puzzle.pu_q.symbol[key];
+            if (entry && entry[1] === "line") {
+                if (entry[0] === 3) splitCells[key] = "slash";
+                if (entry[0] === 4) splitCells[key] = "backslash";
+            } else if (entry && entry[1] === "diagonal_consecutive") {
+                if (entry[0][0] === 1) splitCells[key] = "backslash";
+                if (entry[0][1] === 1) splitCells[key] = "slash";
+            }
+        });
+        Object.keys(puzzle.pu_q.line || {}).forEach(function(key) {
+            var entry = puzzle.pu_q.line[key];
+            if (entry === 2 || entry === 5) {
+                var pts = key.split(",");
+                if (pts.length === 2) {
+                    var p1 = puzzle.point[pts[0]], p2 = puzzle.point[pts[1]];
+                    if (p1 && p2 && p1.type === 1 && p2.type === 1) { // Type 1 is corner
+                        var row1 = p1.y - 2, col1 = p1.x - 2;
+                        var row2 = p2.y - 2, col2 = p2.x - 2;
+                        if (Math.abs(row1 - row2) === 1 && Math.abs(col1 - col2) === 1) {
+                            var minRow = Math.min(row1, row2);
+                            var minCol = Math.min(col1, col2);
+                            var cellKeyVal = cellKey(puzzle, minRow, minCol);
+                            if (cellKeyVal) {
+                                if ((row1 < row2 && col1 < col2) || (row1 > row2 && col1 > col2)) {
+                                    splitCells[cellKeyVal] = "backslash";
+                                } else {
+                                    splitCells[cellKeyVal] = "slash";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        var getDiagLineKeys = typeof diagonalLineKeys === "function" ? diagonalLineKeys : function() { return []; };
+        getDiagLineKeys(puzzle).forEach(function(key) {
+            var entry = puzzle.pu_q.lineE && puzzle.pu_q.lineE[key];
+            if (entry === 12 || entry === 2) {
+                var pts = key.split(",");
+                if (pts.length === 2) {
+                    var row1 = Math.floor(pts[0] / puzzle.nx0) - 2;
+                    var col1 = (pts[0] % puzzle.nx0) - 2;
+                    var row2 = Math.floor(pts[1] / puzzle.nx0) - 2;
+                    var col2 = (pts[1] % puzzle.nx0) - 2;
+                    if (Math.abs(row1 - row2) === 1 && Math.abs(col1 - col2) === 1) {
+                        var minRow = Math.min(row1, row2);
+                        var minCol = Math.min(col1, col2);
+                        var cellKeyVal = cellKey(puzzle, minRow, minCol);
+                        if (cellKeyVal) {
+                            if ((row1 < row2 && col1 < col2) || (row1 > row2 && col1 > col2)) {
+                                splitCells[cellKeyVal] = "backslash";
+                            } else {
+                                splitCells[cellKeyVal] = "slash";
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        Object.keys(puzzle.pu_q.numberS || {}).forEach(function(key) {
+            var val = parseInt(key, 10);
+            var baseKey = Math.floor(val / 4);
+            var corner = val % 4;
+            var cellStr = String(baseKey);
+            if (!splitCells[cellStr]) {
+                if (corner === 0 || corner === 3) splitCells[cellStr] = "slash";
+                if (corner === 1 || corner === 2) splitCells[cellStr] = "backslash";
+            }
+        });
+
+        var abstractSize = 0;
+        for (var r = 0; r < size; r++) {
+            var aCol = 0;
+            for (var c = 0; c < size; c++) {
+                var vKeyStr = r + "," + c;
+                var cellKeyVal = cellKey(puzzle, r, c);
+                var isSplit = splitCells[cellKeyVal];
+                if (isSplit) {
+                    mapping.visualToAbstract[vKeyStr] = [
+                        { row: r, col: aCol },
+                        { row: r, col: aCol + 1 }
+                    ];
+                    mapping.abstractToVisual[r + "," + aCol] = { vRow: r, vCol: c, half: "top", split: isSplit };
+                    mapping.abstractToVisual[r + "," + (aCol + 1)] = { vRow: r, vCol: c, half: "bottom", split: isSplit };
+                    aCol += 2;
+                } else {
+                    mapping.visualToAbstract[vKeyStr] = { row: r, col: aCol };
+                    mapping.abstractToVisual[r + "," + aCol] = { vRow: r, vCol: c, half: "none", split: false };
+                    aCol++;
+                }
+            }
+            if (aCol > abstractSize) abstractSize = aCol;
+        }
+        mapping.abstractSize = abstractSize;
+        puzzle.tightFitMapping = mapping;
+        return mapping;
+    }
+
     function puzzleSize(puzzle) {
         if (!puzzle) return SIZE;
         var horizontalSpace = Number(puzzle.space && puzzle.space[2] || 0) +
@@ -383,26 +495,47 @@ var SudokuSolver = (function() {
     }
 
     function readBoard(puzzle, includeSolution) {
-        SIZE = puzzleSize(puzzle) || SIZE;
+        var tightFitMapping = getTightFitMapping(puzzle);
+        SIZE = tightFitMapping.isTightFit ? tightFitMapping.abstractSize : (puzzleSize(puzzle) || SIZE);
         includeSolution = includeSolution !== false;
         var board = [];
         var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return variantEnabled(puzzle, v); });
         for (var row = 0; row < SIZE; row++) {
             board[row] = [];
             for (var col = 0; col < SIZE; col++) {
-                var key = cellKey(puzzle, row, col);
-                var problemEntry = puzzle.pu_q.number[key];
-                var pinnochioClue = (variantEnabled(puzzle, "pinocchio") || variantEnabled(puzzle, "pinnochio")) &&
-                    problemEntry && problemEntry[1] === 0;
-                var problemDigit = (variantEnabled(puzzle, "pencilmarks") && problemEntry && problemEntry[2] === "7") || pinnochioClue ?
-                    0 : digitFromEntry(problemEntry);
-                if (problemDigit === 0 && isZeroEight && problemEntry && String(problemEntry[0]).trim() === "0" && (problemEntry[2] === "1" || problemEntry[2] === "2")) {
-                    problemDigit = -1; // special case to preserve explicit zero before +1
+                var aKey = row + "," + col;
+                var visualMap = tightFitMapping.isTightFit ? tightFitMapping.abstractToVisual[aKey] : null;
+                var problemDigit = 0;
+                var digit = 0;
+
+                if (tightFitMapping.isTightFit && visualMap && !visualMap.split && visualMap.half === "none") {
+                    var vKey = cellKey(puzzle, visualMap.vRow, visualMap.vCol);
+                    problemDigit = digitFromEntry(puzzle.pu_q.number[vKey]);
+                    digit = problemDigit || (includeSolution ? digitFromEntry(puzzle.pu_a.number[vKey]) : 0) || 0;
+                } else if (tightFitMapping.isTightFit && visualMap && visualMap.split) {
+                    var vKey = cellKey(puzzle, visualMap.vRow, visualMap.vCol);
+                    var topCorner = visualMap.split === "slash" ? 0 : 1;
+                    var bottomCorner = visualMap.split === "slash" ? 3 : 2;
+                    var corner = visualMap.half === "top" ? topCorner : bottomCorner;
+                    var cornerKey = 4 * vKey + corner;
+                    problemDigit = digitFromEntry(puzzle.pu_q.numberS && puzzle.pu_q.numberS[cornerKey]);
+                    digit = problemDigit || (includeSolution ? digitFromEntry(puzzle.pu_a.numberS && puzzle.pu_a.numberS[cornerKey]) : 0) || 0;
+                } else if (!tightFitMapping.isTightFit) {
+                    var key = cellKey(puzzle, row, col);
+                    var problemEntry = puzzle.pu_q.number[key];
+                    var pinnochioClue = (variantEnabled(puzzle, "pinocchio") || variantEnabled(puzzle, "pinnochio")) &&
+                        problemEntry && problemEntry[1] === 0;
+                    problemDigit = (variantEnabled(puzzle, "pencilmarks") && problemEntry && problemEntry[2] === "7") || pinnochioClue ?
+                        0 : digitFromEntry(problemEntry);
+                    if (problemDigit === 0 && isZeroEight && problemEntry && String(problemEntry[0]).trim() === "0" && (problemEntry[2] === "1" || problemEntry[2] === "2")) {
+                        problemDigit = -1; // special case to preserve explicit zero before +1
+                    }
+                    digit = problemDigit || (includeSolution ? digitFromEntry(puzzle.pu_a.number[key]) : 0) || 0;
+                    if (digit === 0 && isZeroEight && includeSolution && puzzle.pu_a.number[key] && String(puzzle.pu_a.number[key][0]).trim() === "0" && (puzzle.pu_a.number[key][2] === "1" || puzzle.pu_a.number[key][2] === "2")) {
+                        digit = -1;
+                    }
                 }
-                var digit = problemDigit || (includeSolution ? digitFromEntry(puzzle.pu_a.number[key]) : 0) || 0;
-                if (digit === 0 && isZeroEight && includeSolution && puzzle.pu_a.number[key] && String(puzzle.pu_a.number[key][0]).trim() === "0" && (puzzle.pu_a.number[key][2] === "1" || puzzle.pu_a.number[key][2] === "2")) {
-                    digit = -1;
-                }
+
                 if (isZeroEight && digit !== 0) digit = digit === -1 ? 1 : digit + 1;
                 board[row][col] = digit;
             }
@@ -532,7 +665,8 @@ var SudokuSolver = (function() {
     }
 
     function readConstraints(puzzle) {
-        SIZE = puzzleSize(puzzle) || SIZE;
+        var tightFitMapping = getTightFitMapping(puzzle);
+        SIZE = tightFitMapping.isTightFit ? tightFitMapping.abstractSize : (puzzleSize(puzzle) || SIZE);
         var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return variantEnabled(puzzle, v); });
         var constraints = {
             isZeroEight: isZeroEight,
@@ -644,17 +778,70 @@ sumOrProductKillers: [],
             return constraints;
         }
 
+        if (tightFitMapping.isTightFit) {
+            constraints.baseCols = false;
+            constraints.baseBoxes = false;
+            constraints.supported.push("tightfit");
+            var visualSize = tightFitMapping.size;
+            var visualColumns = Array.from({ length: visualSize }, function() { return []; });
+            var unusedCells = [];
+
+            for (var r = 0; r < visualSize; r++) {
+                var abstractColsUsed = 0;
+                for (var c = 0; c < visualSize; c++) {
+                    var vKey = r + "," + c;
+                    var aCells = tightFitMapping.visualToAbstract[vKey];
+                    if (Array.isArray(aCells)) {
+                        visualColumns[c].push(aCells[0]);
+                        visualColumns[c].push(aCells[1]);
+                        constraints.cellRelations.push({
+                            relation: "fortress",
+                            shaded: aCells[1], // top digit is unshaded, bottom is shaded, so bottom > top (top < bottom)
+                            unshaded: aCells[0]
+                        });
+                        abstractColsUsed += 2;
+                    } else {
+                        visualColumns[c].push(aCells);
+                        abstractColsUsed++;
+                    }
+                }
+                for (var c2 = abstractColsUsed; c2 < tightFitMapping.abstractSize; c2++) {
+                    unusedCells.push({ row: r, col: c2 });
+                }
+            }
+            if (unusedCells.length > 0) {
+                constraints.regionCoverage.push(unusedCells);
+            }
+
+            visualColumns.forEach(function(colCells) {
+                constraints.regionAllDifferent.push(colCells);
+            });
+        }
+
         var regionIdVariant = ["irregular", "scattered", "deficit", "surplus", "toroidal"].find(function(name) {
             return variantEnabled(puzzle, name);
         });
-        if (regionIdVariant) {
+        if (regionIdVariant || tightFitMapping.isTightFit) {
             var irregularGroups = {};
+            var vSize = tightFitMapping.isTightFit ? tightFitMapping.size : SIZE;
             irregularRegionIds(puzzle).forEach(function(regionId, index) {
                 var key = String(regionId);
-                (irregularGroups[key] || (irregularGroups[key] = [])).push({
-                    row: (index / SIZE) | 0,
-                    col: index % SIZE
-                });
+                var vRow = (index / vSize) | 0;
+                var vCol = index % vSize;
+                if (tightFitMapping.isTightFit) {
+                    var aCells = tightFitMapping.visualToAbstract[vRow + "," + vCol];
+                    if (Array.isArray(aCells)) {
+                        (irregularGroups[key] || (irregularGroups[key] = [])).push(aCells[0]);
+                        (irregularGroups[key] || (irregularGroups[key] = [])).push(aCells[1]);
+                    } else {
+                        (irregularGroups[key] || (irregularGroups[key] = [])).push(aCells);
+                    }
+                } else {
+                    (irregularGroups[key] || (irregularGroups[key] = [])).push({
+                        row: vRow,
+                        col: vCol
+                    });
+                }
             });
             constraints.baseBoxes = false;
             var persistedRegions = Object.keys(irregularGroups).map(function(regionId) {
@@ -670,7 +857,7 @@ sumOrProductKillers: [],
                 if (regionIdVariant === "surplus") return region.length < SIZE;
                 return region.length !== SIZE;
             });
-            if (invalidSizes.length) {
+            if (invalidSizes.length && regionIdVariant) {
                 var requirement = regionIdVariant === "deficit" ? "at most " + SIZE + " cells" :
                     regionIdVariant === "surplus" ? "at least " + SIZE + " cells" : "exactly " + SIZE + " cells";
                 constraints.invalidRegions.push({
@@ -679,7 +866,9 @@ sumOrProductKillers: [],
                         " requires every region to contain " + requirement + "."
                 });
             }
-            constraints.supported.push(regionIdVariant);
+            if (regionIdVariant) {
+                constraints.supported.push(regionIdVariant);
+            }
         }
 
         [["thermo", "thermos"], ["nobulbthermo", "thermos"]].forEach(function(names) {
@@ -3647,15 +3836,19 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
     }
 
     function applySolution(puzzle, solvedBoard) {
-        SIZE = solvedBoard && solvedBoard.length || puzzleSize(puzzle) || SIZE;
+        var tightFitMapping = getTightFitMapping(puzzle);
+        SIZE = solvedBoard && solvedBoard.length || (tightFitMapping.isTightFit ? tightFitMapping.abstractSize : puzzleSize(puzzle)) || SIZE;
         var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return variantEnabled(puzzle, v); });
         var isSudokuWithStars = variantEnabled(puzzle, "sudokuwithstars");
         var changes = [];
+        var changesS = [];
         var oldQa = puzzle.mode.qa;
         puzzle.mode.qa = "pu_a";
         for (var row = 0; row < SIZE; row++) {
             for (var col = 0; col < SIZE; col++) {
-                var key = cellKey(puzzle, row, col);
+                var aKey = row + "," + col;
+                var visualMap = tightFitMapping.isTightFit ? tightFitMapping.abstractToVisual[aKey] : null;
+
                 var digit = solvedBoard[row][col];
                 var displayDigit = digit;
                 if (isSudokuWithStars && (digit === 8 || digit === 9)) {
@@ -3665,19 +3858,42 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                 }
 
                 if (digit) {
-                    if (puzzle.pu_q && puzzle.pu_q.number && puzzle.pu_q.number[key]) {
-                        continue;
-                    }
-                    var entry = puzzle.pu_a.number[key];
-                    var currentStr = entry && String(entry[0]).trim();
-                    if (currentStr !== displayDigit.toString()) {
-                        changes.push({ key: key, value: [displayDigit.toString(), 9, "1"] });
+                    if (tightFitMapping.isTightFit && visualMap && !visualMap.split && visualMap.half === "none") {
+                        var key = cellKey(puzzle, visualMap.vRow, visualMap.vCol);
+                        if (puzzle.pu_q && puzzle.pu_q.number && puzzle.pu_q.number[key]) continue;
+                        var entry = puzzle.pu_a.number[key];
+                        var currentStr = entry && String(entry[0]).trim();
+                        if (currentStr !== displayDigit.toString()) {
+                            changes.push({ key: key, value: [displayDigit.toString(), 9, "1"] });
+                        }
+                    } else if (tightFitMapping.isTightFit && visualMap && visualMap.split) {
+                        var vKey = cellKey(puzzle, visualMap.vRow, visualMap.vCol);
+                        var topCorner = visualMap.split === "slash" ? 0 : 1;
+                        var bottomCorner = visualMap.split === "slash" ? 3 : 2;
+                        var corner = visualMap.half === "top" ? topCorner : bottomCorner;
+                        var cornerKey = 4 * vKey + corner;
+                        if (puzzle.pu_q && puzzle.pu_q.numberS && puzzle.pu_q.numberS[cornerKey]) continue;
+                        var entryS = puzzle.pu_a.numberS && puzzle.pu_a.numberS[cornerKey];
+                        var currentStrS = entryS && String(entryS[0]).trim();
+                        if (currentStrS !== displayDigit.toString()) {
+                            changesS.push({ key: cornerKey, value: [displayDigit.toString(), 2] });
+                        }
+                    } else if (!tightFitMapping.isTightFit) {
+                        var key = cellKey(puzzle, row, col);
+                        if (puzzle.pu_q && puzzle.pu_q.number && puzzle.pu_q.number[key]) {
+                            continue;
+                        }
+                        var entry = puzzle.pu_a.number[key];
+                        var currentStr = entry && String(entry[0]).trim();
+                        if (currentStr !== displayDigit.toString()) {
+                            changes.push({ key: key, value: [displayDigit.toString(), 9, "1"] });
+                        }
                     }
                 }
             }
         }
         puzzle.mode.qa = oldQa;
-        if (!changes.length) {
+        if (!changes.length && !changesS.length) {
             enterSolutionSudokuMode(puzzle);
             puzzle.redraw();
             return 0;
@@ -3686,6 +3902,12 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
         enterSolutionSudokuMode(puzzle);
         for (var i = 0; i < changes.length; i++) {
             puzzle.pu_a.number[changes[i].key] = changes[i].value;
+        }
+        if (changesS.length) {
+            puzzle.pu_a.numberS = puzzle.pu_a.numberS || {};
+            for (var j = 0; j < changesS.length; j++) {
+                puzzle.pu_a.numberS[changesS[j].key] = changesS[j].value;
+            }
         }
         puzzle.redraw();
         return changes.length;

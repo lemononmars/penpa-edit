@@ -73,6 +73,8 @@ var SudokuCSP = (function() {
         var rows = new Array(SIZE).fill(0);
         var cols = new Array(SIZE).fill(0);
         var boxes = new Array(SIZE).fill(0);
+        var useRows = !constraints || constraints.baseRows !== false;
+        var useCols = !constraints || constraints.baseCols !== false;
         var useBoxes = !constraints || constraints.baseBoxes !== false;
         var valid = true;
         for (var row = 0; row < SIZE; row++) {
@@ -83,20 +85,20 @@ var SudokuCSP = (function() {
                 }
                 var bit = 1 << digit;
                 var box = boxIndex(row, col, SIZE);
-                if ((rows[row] & bit) || (cols[col] & bit) || (useBoxes && (boxes[box] & bit))) {
+                if ((useRows && (rows[row] & bit)) || (useCols && (cols[col] & bit)) || (useBoxes && (boxes[box] & bit))) {
                     valid = false;
                 }
-                rows[row] |= bit;
-                cols[col] |= bit;
+                if (useRows) rows[row] |= bit;
+                if (useCols) cols[col] |= bit;
                 if (useBoxes) boxes[box] |= bit;
             }
         }
-        return { board: board, rows: rows, cols: cols, boxes: boxes, useBoxes: useBoxes, valid: valid };
+        return { board: board, rows: rows, cols: cols, boxes: boxes, useRows: useRows, useCols: useCols, useBoxes: useBoxes, valid: valid };
     }
 
     function coreMask(state, row, col) {
         var box = boxIndex(row, col, state.board.length);
-        return ALL_DIGITS & ~(state.rows[row] | state.cols[col] | (state.useBoxes ? state.boxes[box] : 0));
+        return ALL_DIGITS & ~((state.useRows ? state.rows[row] : 0) | (state.useCols ? state.cols[col] : 0) | (state.useBoxes ? state.boxes[box] : 0));
     }
 
     var helpers = {
@@ -359,12 +361,16 @@ var SudokuCSP = (function() {
     function duplicateConflict(board, constraints) { if (constraints && constraints.extraLargeRegions && constraints.extraLargeRegions.length) return null;
         var groups = [];
         for (var index = 0; index < SIZE; index++) {
-            groups.push({ label: "row " + (index + 1), cells: Array.from({ length: SIZE }, function(_, col) {
-                return { row: index, col: col };
-            }) });
-            groups.push({ label: "column " + (index + 1), cells: Array.from({ length: SIZE }, function(_, row) {
-                return { row: row, col: index };
-            }) });
+            if (!constraints || constraints.baseRows !== false) {
+                groups.push({ label: "row " + (index + 1), cells: Array.from({ length: SIZE }, function(_, col) {
+                    return { row: index, col: col };
+                }) });
+            }
+            if (!constraints || constraints.baseCols !== false) {
+                groups.push({ label: "column " + (index + 1), cells: Array.from({ length: SIZE }, function(_, row) {
+                    return { row: row, col: index };
+                }) });
+            }
         }
         if (!constraints || constraints.baseBoxes !== false) {
             var dimensions = boxDimensions(SIZE);
@@ -466,8 +472,8 @@ var SudokuCSP = (function() {
         var bit = 1 << digit;
         var box = boxIndex(row, col, state.board.length);
         state.board[row][col] = digit;
-        state.rows[row] |= bit;
-        state.cols[col] |= bit;
+        if (state.useRows) state.rows[row] |= bit;
+        if (state.useCols) state.cols[col] |= bit;
         if (state.useBoxes) state.boxes[box] |= bit;
     }
 
@@ -475,8 +481,8 @@ var SudokuCSP = (function() {
         var bit = ~(1 << digit);
         var box = boxIndex(row, col, state.board.length);
         state.board[row][col] = 0;
-        state.rows[row] &= bit;
-        state.cols[col] &= bit;
+        if (state.useRows) state.rows[row] &= bit;
+        if (state.useCols) state.cols[col] &= bit;
         if (state.useBoxes) state.boxes[box] &= bit;
     }
 
