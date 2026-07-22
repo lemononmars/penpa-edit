@@ -223,20 +223,19 @@
       "id": "argyle",
       "name": "Argyle",
       "rules": {
-        "9x9": "No digit can repeat in any of the marked diagonals."
+        "9x9": "Digits along each of the marked 8 dashed diagonal lines must be distinct."
       },
-      "tags": [
-        "diagonal"
-      ],
-      "status": "planned",
+      "status": "available",
       "inputType": {
         "categories": [
-          "cell",
-          "line",
-          "number"
+          "no-input"
         ],
         "instructions": []
-      }
+      },
+      "tags": [
+        "diagonal",
+        "line"
+      ]
     },
     {
       "id": "arithmetic",
@@ -6378,12 +6377,9 @@
       "status": "available",
       "inputType": {
         "categories": [
-          "cage"
+          "no-input"
         ],
-        "instructions": [
-          "Cage",
-          "On a 9 × 9 grid, four 3 × 3 cages are created automatically at r2c2, r2c5, r5c2, and r5c5."
-        ]
+        "instructions": []
       }
     },
     {
@@ -6763,6 +6759,7 @@
         ]
       }
     },
+
     {
       "id": "citywalk",
       "name": "Citywalk",

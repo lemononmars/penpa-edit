@@ -57,6 +57,7 @@
   let activeVariantHasExample = false;
   let activeVariantReviewed = false;
   let noteMode = "1";
+  let currentVariant = "classic";
   let variantSearch = "";
   let variantTab: VariantTab = "no-input";
   let screenshotType: "png" | "jpg" | "svg" = "png";
@@ -95,6 +96,8 @@
     input?: string;
     action?: "backspace" | "delete";
     submode?: string;
+    sym?: string;
+    num?: number;
   };
   let toolPanelOptions: ToolPanelOption[] = [];
   let toolPanelSelected = new Set<string>();
@@ -186,6 +189,7 @@
     const setting = pu?.mode?.[pu?.mode?.qa]?.[mode] || [];
     const submode = String(setting[0] || "");
     const variant = String(pu?.activeSudokuVariant || "classic");
+    currentVariant = variant;
 
     const size = Math.max(
       1,
@@ -235,90 +239,145 @@
     } else if (mode === "number" && variant === "multiplication") {
       toolPanelOptions = [{ value: "×", label: "×" }];
     } else if (
-      mode === "symbol" &&
-      [
-        "detection",
-        "little killer",
-        "product little killer",
-        "bouncing x-sums",
-        "czech outsider",
-        "framediagonal",
-        "pointingdifferents",
-      ].includes(variant) &&
+      (mode === "symbol" || [
+        "search9",
+        "search6",
+        "smallestneighbours",
+        "biggestneighbours",
+        "pointtonext",
+        "pointtoprevious",
+        "twindetector",
+        "sumdetector",
+        "eliminate",
+        "quadmax",
+        "quadmin",
+        "rossini",
+      ].includes(variant)) &&
       /^arrow_/.test(submode)
     ) {
-      toolPanelOptions = [1, 3, 5, 7].map((index) => ({
-        value: String(index + 1),
-        label: arrows[index],
-      }));
+      if (
+        [
+          "eliminate",
+          "quadmax",
+          "quadmin",
+          "little killer",
+          "product little killer",
+        ].includes(variant)
+      ) {
+        toolPanelOptions = [1, 3, 5, 7].map((index) => ({
+          value: String(index + 1),
+          label: arrows[index],
+          sym: submode,
+          num: index + 1,
+        }));
+      } else if (variant === "rossini") {
+        toolPanelOptions = [0, 2, 4, 6].map((index) => ({
+          value: String(index + 1),
+          label: arrows[index],
+          sym: submode,
+          num: index + 1,
+        }));
+      } else {
+        toolPanelOptions = arrows.map((label, index) => ({
+          value: String(index + 1),
+          label,
+          sym: submode,
+          num: index + 1,
+        }));
+      }
     } else if (
-      mode === "symbol" &&
       (variant === "kropki" || variant === "clockfaces") &&
-      submode === "circle_SS"
+      (submode === "circle_SS" || mode === "symbol")
     ) {
       toolPanelOptions = [
-        { value: "1", label: "White" },
-        { value: "2", label: "Black" },
+        { value: "1", label: "White", sym: "circle_SS", num: 1 },
+        { value: "2", label: "Black", sym: "circle_SS", num: 2 },
       ];
+    } else if (variant === "sudokuwithstars") {
+      toolPanelOptions = [
+        ...Array.from({ length: 7 }, (_, index) => ({
+          value: String(index + 1),
+          label: String(index + 1),
+        })),
+        { value: "star", input: "1", label: "★", submode: "star", sym: "star", num: 1 },
+      ];
+    } else if (variant === "braille") {
+      toolPanelOptions = Array.from({ length: 4 }, (_, index) => ({
+        value: String(index + 1),
+        label: String(index + 1),
+        sym: "braille",
+        num: index + 1,
+      }));
+    } else if (variant === "lc") {
+      toolPanelOptions = [
+        { value: "L", label: "L", submode: "3", input: "L" },
+        { value: "C", label: "C", submode: "3", input: "C" },
+      ];
+    } else if (variant === "upperrightheavykiller") {
+      toolPanelOptions = Array.from({ length: 10 }, (_, index) => ({
+        value: String(index),
+        label: String(index),
+        submode: "3",
+      }));
+    } else if (variant === "anticonsecutive" || variant === "nonconsecutive") {
+      toolPanelOptions = [{ value: "X", label: "X", submode: "cross", sym: "cross", num: 1 }];
+    } else if (variant === "termination") {
+      toolPanelOptions = [{ value: "0", label: "0" }];
     } else if (
-      mode === "symbol" &&
       (variant === "consecutive" ||
         variant === "evensumpairs" ||
+        variant === "oddsumpairs" ||
         variant === "fadedkropki" ||
         variant === "oneortwodifferencepairs") &&
-      submode === "circle_SS"
+      (submode === "circle_SS" || mode === "symbol" || mode === "sudoku")
     ) {
-      toolPanelOptions = [{ value: "1", label: "White" }];
-    } else if (mode === "symbol" && variant === "fullorhalf") {
+      toolPanelOptions = [{ value: "1", label: "White", sym: "circle_SS", num: 1 }];
+    } else if (variant === "fullorhalf") {
       toolPanelOptions = [
-        { value: "full", input: "1", label: "Full â—‹", submode: "circle_SS" },
-        { value: "half", input: "1", label: "Half â–¡", submode: "square_SS" },
+        { value: "full", input: "1", label: "Full ○", submode: "circle_SS", sym: "circle_SS", num: 1 },
+        { value: "half", input: "1", label: "Half □", submode: "square_SS", sym: "square_SS", num: 1 },
       ];
-    } else if (mode === "symbol" && variant === "teneleven") {
-      toolPanelOptions = [{ value: "1", label: "Gray bar" }];
+    } else if (variant === "teneleven") {
+      toolPanelOptions = [{ value: "1", label: "Gray bar", sym: "bars_G", num: 1 }];
     } else if (
-      mode === "symbol" &&
       [
+        "sumnine",
+        "diagonalsumisnine",
         "xydifference",
         "perfectsquares",
         "primesums",
         "twodigitprimenumbers",
         "fives",
       ].includes(variant) &&
-      submode === "diamond_SS"
+      (submode === "diamond_SS" || mode === "symbol" || mode === "sudoku")
     ) {
-      toolPanelOptions = [{ value: "1", label: "Diamond" }];
+      toolPanelOptions = [{ value: "1", label: "Diamond", sym: "diamond_SS", num: 1 }];
     } else if (
-      mode === "symbol" &&
       variant === "doublekropki" &&
-      submode === "diamond_SS"
+      (submode === "diamond_SS" || mode === "symbol")
     ) {
       toolPanelOptions = [
-        { value: "1", label: "White" },
-        { value: "2", label: "Black" },
+        { value: "1", label: "White", sym: "diamond_SS", num: 1 },
+        { value: "2", label: "Black", sym: "diamond_SS", num: 2 },
       ];
-    } else if (
-      mode === "symbol" &&
-      variant === "battenburg" &&
-      submode === "sudokuetc"
-    ) {
-      toolPanelOptions = [{ value: "1", label: "Battenburg" }];
-    } else if (mode === "symbol" && variant === "odd even") {
+    } else if (variant === "battenburg") {
+      toolPanelOptions = [{ value: "1", label: "Battenburg", sym: "sudokuetc", num: 1 }];
+    } else if (variant === "odd even") {
       toolPanelOptions = [
-        { value: "odd", input: "3", label: "Odd ○", submode: "circle_L" },
-        { value: "even", input: "3", label: "Even □", submode: "square_L" },
+        { value: "odd", input: "3", label: "Odd ○", submode: "circle_L", sym: "circle_L", num: 1 },
+        { value: "even", input: "3", label: "Even □", submode: "square_L", sym: "square_L", num: 2 },
       ];
-    } else if (mode === "symbol" && variant === "mastermind") {
+    } else if (variant === "mastermind") {
       toolPanelOptions = [
-        { value: "mastermind-black", input: "1", label: "Black ●", submode: "circle_SS" },
-        { value: "mastermind-white", input: "2", label: "White ○", submode: "circle_SS" },
-        { value: "mastermind-cross", input: "3", label: "Cross ⨯", submode: "cross" },
+        { value: "mastermind-black", input: "1", label: "Black ●", submode: "circle_SS", sym: "circle_SS", num: 2 },
+        { value: "mastermind-white", input: "2", label: "White ○", submode: "circle_SS", sym: "circle_SS", num: 1 },
+        { value: "mastermind-cross", input: "3", label: "Cross ⨯", submode: "cross", sym: "cross", num: 1 },
       ];
-    } else if (mode === "symbol" && variant === "trio") {
+    } else if (variant === "trio") {
       toolPanelOptions = [
-        { value: "trio-low", input: "3", label: "1–3 ○", submode: "circle_L" },
-        { value: "trio-mid", input: "3", label: "4–6 □", submode: "square_L" },
-        { value: "trio-high", input: "3", label: "7–9 △", submode: "triup_L" },
+        { value: "trio-low", input: "3", label: "1–3 ○", submode: "circle_L", sym: "circle_L", num: 1 },
+        { value: "trio-mid", input: "3", label: "4–6 □", submode: "square_L", sym: "square_L", num: 2 },
+        { value: "trio-high", input: "3", label: "7–9 △", submode: "triup_L", sym: "triup_L", num: 1 },
       ];
     } else if (
       mode === "symbol" &&
@@ -326,7 +385,7 @@
         variant,
       )
     ) {
-      toolPanelOptions = [{ value: "4", label: "×" }];
+      toolPanelOptions = [{ value: "4", label: "×", sym: "cross", num: 1 }];
     } else if (
       mode === "symbol" &&
       [
@@ -340,46 +399,39 @@
         { value: "2", label: "Right diagonal" },
       ];
     } else if (
-      mode === "symbol" &&
+      mode === "number" ||
       [
-        "eliminate",
-        "quadmax",
-        "quadmin",
-        "little killer",
-        "product little killer",
-      ].includes(variant) &&
-      /^arrow_/.test(submode)
+        "killer", "upperrightheavykiller", "productkiller", "solokiller", "sumorproductkiller",
+        "threedigitnumberskiller", "outsidekiller", "sandwich", "evensandwich", "doublesandwich",
+        "paritysandwich", "sumsandwich", "xsums", "bouncingxsums", "skyscraper", "sumskyscrapers",
+        "parityskyscrapers", "littlekiller", "weightedlittlekiller", "productlittlekiller",
+        "japanesesums", "bigsmalljapanesesums", "oddevensum", "samesum", "triplesum", "partitionedsums",
+        "positionsums", "innerframesum", "wrongoutsidesum", "sumnexttonine", "diagonalsumisnine",
+        "diagonaltens", "teneleven", "tenspositionproducts", "multiplication", "clock", "tableaux"
+      ].includes(variant)
     ) {
-      toolPanelOptions = [1, 3, 5, 7].map((index) => ({
-        value: String(index + 1),
-        label: arrows[index],
-      }));
-    } else if (
-      mode === "symbol" &&
-      variant === "rossini" &&
-      /^arrow_/.test(submode)
-    ) {
-      toolPanelOptions = [0, 2, 4, 6].map((index) => ({
-        value: String(index + 1),
-        label: arrows[index],
-      }));
-    } else if (mode === "symbol" && /^arrow_/.test(submode)) {
-      toolPanelOptions = arrows.map((label, index) => ({
-        value: String(index + 1),
-        label,
-      }));
-    } else if (mode === "number" && variant === "killer") {
-      toolPanelOptions = Array.from({ length: 10 }, (_, index) => ({
-        value: String(index),
-        label: String(index),
+      const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+      toolPanelOptions = digits.map((val) => ({
+        value: String(val),
+        label: String(val),
+        submode: variant === "upperrightheavykiller" ? "3" : undefined,
       }));
     } else if (["symbol", "number", "sudoku"].includes(mode)) {
+      const symbolname = mode === "symbol" ? String(pu?.mode?.[pu?.mode?.qa]?.symbol?.[0] || "circle_L") : undefined;
+      const count = mode === "symbol"
+        ? Number(pu?.onoff_symbolmode_list?.[symbolname] || 9)
+        : size;
       toolPanelOptions = Array.from(
-        { length: mode === "symbol" ? 9 : size },
-        (_, index) => ({
-          value: String(isZeroEight ? index : index + 1),
-          label: String(isZeroEight ? index : index + 1),
-        }),
+        { length: count },
+        (_, index) => {
+          const numVal = isZeroEight ? index : index + 1;
+          return {
+            value: String(numVal),
+            label: String(numVal),
+            sym: symbolname,
+            num: numVal,
+          };
+        },
       );
     } else {
       toolPanelOptions = [];
@@ -437,6 +489,56 @@
     event.preventDefault();
     event.stopPropagation();
     applyToolPanelOption(option);
+  }
+
+  function renderSymbol(
+    node: HTMLCanvasElement,
+    params: { sym?: string; num?: number; darkTheme?: boolean },
+  ) {
+    function draw() {
+      const pu = (window as any).pu;
+      if (!node || !params.sym || params.num === undefined) return;
+      const ctx = node.getContext("2d");
+      if (!ctx) return;
+      const dpr = window.devicePixelRatio || 1;
+      const w = 24;
+      const h = 24;
+      node.width = w * dpr;
+      node.height = h * dpr;
+      node.style.width = `${w}px`;
+      node.style.height = `${h}px`;
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, w, h);
+
+      if (pu && typeof pu.draw_symbol_select === "function") {
+        const origSize = pu.size;
+        pu.size = 20;
+        try {
+          pu.draw_symbol_select(
+            ctx,
+            w / 2,
+            h / 2,
+            params.num,
+            params.sym,
+            "panel",
+            "panel",
+          );
+        } catch (e) {
+          // ignore error
+        } finally {
+          pu.size = origSize;
+        }
+      }
+      ctx.restore();
+    }
+    draw();
+    return {
+      update(newParams: { sym?: string; num?: number; darkTheme?: boolean }) {
+        params = newParams;
+        draw();
+      },
+    };
   }
 
   function toolPanelNumberShortcut(event: KeyboardEvent) {
@@ -562,14 +664,16 @@
 
   function visibleVariants() {
     const query = variantSearch.trim().toLowerCase();
-    return variants.filter(
-      (variant) =>
-        (variationByValue.get(variant.value)?.status === "available" || variant.value === "classic") &&
-        (!query ? primaryVariantTab(variant.value) === variantTab : true) &&
-        (!query ||
-          variant.label.toLowerCase().includes(query) ||
-          variant.value.toLowerCase().includes(query)),
-    );
+    return variants
+      .filter(
+        (variant) =>
+          (variationByValue.get(variant.value)?.status === "available" || variant.value === "classic") &&
+          (!query ? primaryVariantTab(variant.value) === variantTab : true) &&
+          (!query ||
+            variant.label.toLowerCase().includes(query) ||
+            variant.value.toLowerCase().includes(query)),
+      )
+      .sort((a, b) => a.label.localeCompare(b.label));
   }
 
   function inputMenuVariants() {
@@ -934,6 +1038,8 @@
     start_grid_size: "9",
     start_grid_type: "blank",
     reload_button: false,
+    local_storage: true,
+    auto_save_history: false,
     author: "",
   };
 
@@ -971,12 +1077,15 @@
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     try {
+      showShareUrl = true;
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      let res: any = "";
       if ((window as any).savetext_edit) {
-        (window as any).savetext_edit();
+        res = await (window as any).savetext_edit();
       }
       const txtEl = document.getElementById("savetextarea") as HTMLTextAreaElement;
-      if (txtEl) shareUrl = txtEl.value;
-      showShareUrl = true;
+      shareUrl = res || txtEl?.value || "";
+      if (txtEl && shareUrl) txtEl.value = shareUrl;
     } catch (e) {
       console.error(e);
     } finally {
@@ -994,12 +1103,15 @@
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     try {
+      showShareUrl = true;
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      let res: any = "";
       if ((window as any).savetext_solve) {
-        (window as any).savetext_solve();
+        res = await (window as any).savetext_solve();
       }
       const txtEl = document.getElementById("savetextarea") as HTMLTextAreaElement;
-      if (txtEl) shareUrl = txtEl.value;
-      showShareUrl = true;
+      shareUrl = res || txtEl?.value || "";
+      if (txtEl && shareUrl) txtEl.value = shareUrl;
     } catch (e) {
       console.error(e);
     } finally {
@@ -1038,6 +1150,8 @@
         start_grid_size: String(US.start_grid_size || "9"),
         start_grid_type: String(US.start_grid_type || "blank"),
         reload_button: Boolean(US.reload_button),
+        local_storage: Boolean(US.local_storage),
+        auto_save_history: Boolean(US.auto_save_history),
         author: String(US.author || ""),
       };
     }
@@ -1383,18 +1497,20 @@
       "constraints_settings_opt",
     ) as HTMLSelectElement | null;
     if (select?.options.length) {
-      variants = Array.from(select.options).map((option) => ({
-        value: option.value,
-        // Never expose the internal option value as the menu label. The
-        // catalog is backed directly by variant_metadata.json's `name` field.
-        label:
-          variationByValue.get(option.value)?.name ||
-          option.textContent ||
-          "Unnamed variant",
-        group:
-          (option.parentElement as HTMLOptGroupElement | null)?.label ||
-          "Variants",
-      }));
+      variants = Array.from(select.options)
+        .map((option) => ({
+          value: option.value,
+          // Never expose the internal option value as the menu label. The
+          // catalog is backed directly by variant_metadata.json's `name` field.
+          label:
+            variationByValue.get(option.value)?.name ||
+            option.textContent ||
+            "Unnamed variant",
+          group:
+            (option.parentElement as HTMLOptGroupElement | null)?.label ||
+            "Variants",
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label));
       selectedVariant = select.value || "classic";
     }
     if (isEmbedded) {
@@ -1562,7 +1678,6 @@
       [
         document.getElementById("constraints_settings_opt"),
         document.getElementById("sudoku_auto_solver"),
-        document.getElementById("sudoku-variant-tools"),
       ]
         .filter(Boolean)
         .forEach((node) =>
@@ -1597,9 +1712,12 @@
     document.addEventListener("penpa-theme-change", syncDisplayTheme);
     const closeVariantMenu = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
-      if (!target?.closest(".variant-picker")) variantMenuOpen = false;
-      if (!target?.closest(".input-modes-section"))
+      if (!target?.closest(".variant-menu, .variant-search-control")) {
+        variantMenuOpen = false;
+      }
+      if (!target?.closest(".input-mode-variant-menu, .mobile-add-variant")) {
         inputVariantMenuOpen = false;
+      }
       if (!target?.closest(".action-dropdown")) actionMenu = null;
       if (
         !target?.closest(
@@ -1714,15 +1832,17 @@
       >
         <section>
           <div class="segmented">
-            <button
-              class:active={layer === "problem"}
-              on:click={() => chooseLayer("problem")}
-              ><i class="fa fa-pencil" aria-hidden="true"></i>Set</button
-            >
+            {#if currentVariant !== "sudokuwithstars"}
+              <button
+                class:active={layer === "problem"}
+                on:click={() => chooseLayer("problem")}
+                ><i class="fa fa-pencil" aria-hidden="true"></i>Set</button
+              >
+            {/if}
             <button
               class:active={layer === "solution"}
               on:click={() => chooseLayer("solution")}
-              ><i class="fa fa-check" aria-hidden="true"></i>Solve</button
+              ><i class="fa fa-check" aria-hidden="true"></i>{currentVariant === "sudokuwithstars" ? "Star" : "Solve"}</button
             >
             <button
               class:active={layer === "modes"}
@@ -1733,19 +1853,22 @@
           {#if layer === "solution"}
             <div class="note-modes" aria-label="Note input style">
               <button
+                type="button"
                 class:active={noteMode === "1"}
                 on:click={() => chooseNoteMode("1")}
-                ><span>Z</span>Normal</button
+                >Normal <kbd>z</kbd></button
               >
               <button
+                type="button"
                 class:active={noteMode === "3"}
                 on:click={() => chooseNoteMode("3")}
-                ><span>X</span>Center</button
+                >Center <kbd>x</kbd></button
               >
               <button
+                type="button"
                 class:active={noteMode === "2"}
                 on:click={() => chooseNoteMode("2")}
-                ><span>C</span>Corner</button
+                >Corner <kbd>c</kbd></button
               >
             </div>
           {/if}
@@ -1898,6 +2021,7 @@
         </div>
         {/if}
         <div class="input-mode-tools">
+          <div bind:this={variantHost} class="legacy-variant-host"></div>
           <button
             type="button"
             class="mobile-add-variant"
@@ -1907,7 +2031,6 @@
               (inputVariantMenuOpen = !inputVariantMenuOpen)}
             >+</button
           >
-          <div bind:this={variantHost} class="legacy-variant-host"></div>
           <span class="input-mode-scroll-hint" aria-hidden="true">▾</span>
         </div>
         {#if inputVariantMenuOpen}
@@ -1922,8 +2045,9 @@
                 disabled={layer === "solution"}
                 aria-label="Add variant"
                 bind:value={variantSearch}
-                placeholder="Search variants..."
+                placeholder="Add variant"
               />
+              <span class="variant-chevron">+</span>
             </div>
             <div
               class="variant-tabs"
@@ -1937,12 +2061,15 @@
                   aria-selected={variantTab === tab.value}
                   class:active={variantTab === tab.value}
                   on:click={() => (variantTab = tab.value)}
-                >{tab.label}</button>
+                >
+                  <span class="tab-icon">{inputTypeIcons[tab.value]}</span>
+                  <span>{tab.label}</span>
+                </button>
               {/each}
             </div>
-            {#each [...new Set(inputMenuVariants().map((variant) => variant.group))] as group}
+            {#each [...new Set(visibleVariants().map((variant) => variant.group))] as group}
               <div class="variant-menu-group">{group}</div>
-              {#each inputMenuVariants().filter((variant) => variant.group === group) as variant}
+              {#each visibleVariants().filter((variant) => variant.group === group) as variant}
                 {@const conflict = conflictingVariant(variant.value)}
                 {@const unavailable = unavailableVariant(variant.value)}
                 <button
@@ -1960,9 +2087,18 @@
                   <span class="variant-icon">{variantIcon(variant.value)}</span>
                   <span>{variant.label}</span>
                   <span class="capability-badges">
+                    {#if variationByValue.get(variant.value)?.example}
+                      <span
+                        class="example-badge"
+                        title="Example puzzle available"
+                        aria-label="Example puzzle available">📖</span
+                      >
+                    {/if}
                     {#if variationByValue.get(variant.value)?.status === "available"}
-                      <span class="csp-badge" title="CSP solver implemented"
-                        >⬢</span
+                      <span
+                        class="csp-badge"
+                        title="CSP solver implemented"
+                        aria-label="CSP solver implemented">⬢</span
                       >
                     {:else}
                       <span class="unsupported-badge" title="Planned"
@@ -1970,10 +2106,22 @@
                       >
                     {/if}
                   </span>
+                  {#if conflict}<span class="input-conflict"
+                      >Used by {guideFor(conflict).title}</span
+                    >{/if}
+                  {#if unavailable}<span class="input-conflict"
+                      >9 × 9 only</span
+                    >{/if}
                 </button>
               {/each}
             {/each}
           </div>
+          {#if hoveredVariant}
+            <div class="variant-rule-preview mobile-variant-rule-preview" role="tooltip">
+              <strong>{guideFor(hoveredVariant).title}</strong>
+              <span>{guideFor(hoveredVariant).rule}</span>
+            </div>
+          {/if}
         {/if}
         {#if selectedVariant === "slotmachine"}
           <div class="slot-column-controls" aria-label="Slot Machine columns">
@@ -2008,9 +2156,15 @@
                 class:panel-action={Boolean(option.action)}
                 on:pointerdown={(event) => useToolPanelOption(event, option)}
               >
-                {option.label}{#if !option.action && index < 9}<kbd
-                    >{index + 1}</kbd
-                  >{/if}
+                {#if option.sym && option.num !== undefined}
+                  <canvas
+                    use:renderSymbol={{ sym: option.sym, num: option.num, darkTheme }}
+                    class="symbol-canvas"
+                  ></canvas>
+                {:else}
+                  {option.label}
+                {/if}
+                {#if !option.action && index < 9}<kbd>{index + 1}</kbd>{/if}
               </button>
             {/each}
           </div>
@@ -2037,17 +2191,20 @@
               <button
                 type="button"
                 class:active={noteMode === "1"}
-                on:click={() => chooseNoteMode("1")}>Normal</button
+                on:click={() => chooseNoteMode("1")}
+                >Normal <kbd>z</kbd></button
               >
               <button
                 type="button"
                 class:active={noteMode === "3"}
-                on:click={() => chooseNoteMode("3")}>Center</button
+                on:click={() => chooseNoteMode("3")}
+                >Center <kbd>x</kbd></button
               >
               <button
                 type="button"
                 class:active={noteMode === "2"}
-                on:click={() => chooseNoteMode("2")}>Corner</button
+                on:click={() => chooseNoteMode("2")}
+                >Corner <kbd>c</kbd></button
               >
             </div>
           {/if}
@@ -2062,9 +2219,15 @@
                 class:panel-action={Boolean(option.action)}
                 on:pointerdown={(event) => useToolPanelOption(event, option)}
               >
-                {option.label}{#if !option.action && index < 9}<kbd
-                    >{index + 1}</kbd
-                  >{/if}
+                {#if option.sym && option.num !== undefined}
+                  <canvas
+                    use:renderSymbol={{ sym: option.sym, num: option.num, darkTheme }}
+                    class="symbol-canvas"
+                  ></canvas>
+                {:else}
+                  {option.label}
+                {/if}
+                {#if !option.action && index < 9}<kbd>{index + 1}</kbd>{/if}
               </button>
             {/each}
           </div>
@@ -2514,6 +2677,30 @@
         </div>
 
         <div class="settings-section" style="margin-top: 14px;">
+          <h3>Saving & Storage</h3>
+          <div class="modal-settings-grid">
+            <label>
+              <span>Local storage saving</span>
+              <input
+                type="checkbox"
+                id="allow_local_storage_chk"
+                checked={userSettingsState.local_storage}
+                on:change={(e) => updateSetting('local_storage', e.currentTarget.checked)}
+              />
+            </label>
+            <label>
+              <span>Auto save history</span>
+              <input
+                type="checkbox"
+                id="auto_save_history_chk"
+                checked={userSettingsState.auto_save_history}
+                on:change={(e) => updateSetting('auto_save_history', e.currentTarget.checked)}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section" style="margin-top: 14px;">
           <h3>App Display</h3>
           <div class="modal-settings-grid">
             <label>
@@ -2608,6 +2795,18 @@ href="https://github.com/semiexp/cspuz_core"
       "Segoe UI",
       sans-serif;
   }
+  :global(.svelte-home button),
+  :global(.svelte-home input),
+  :global(.svelte-home select),
+  :global(.svelte-home textarea),
+  :global(.svelte-home kbd),
+  :global(.svelte-home legend),
+  :global(.svelte-home label),
+  :global(.svelte-home table),
+  :global(.svelte-home pre),
+  :global(.svelte-home code) {
+    font-family: inherit;
+  }
   :global(.svelte-home #header),
   :global(.svelte-home #tool-container),
   :global(.svelte-home #bottom_button) {
@@ -2699,14 +2898,18 @@ href="https://github.com/semiexp/cspuz_core"
     margin-top: 6px;
   }
   .note-modes button {
-    display: grid;
-    gap: 1px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
     padding: 3px 4px;
     min-height: 26px;
+    height: 26px;
     border: 1px solid #bfc9d4;
     border-right: 0;
     background: #f7f9fb;
     font-size: 11px;
+    white-space: nowrap;
   }
   .note-modes button:first-child {
     border-radius: 6px 0 0 6px;
@@ -2715,9 +2918,29 @@ href="https://github.com/semiexp/cspuz_core"
     border-right: 1px solid #bfc9d4;
     border-radius: 0 6px 6px 0;
   }
-  .note-modes span {
+  .note-modes kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 3px;
     font-size: 9px;
-    opacity: 0.7;
+    font-weight: 700;
+    font-family: inherit;
+    text-transform: lowercase;
+    color: #4a5568;
+    background: #edf2f7;
+    border: 1px solid #cbd5e0;
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    line-height: 1;
+    box-sizing: border-box;
+  }
+  .note-modes button.active kbd {
+    color: #1a202c;
+    background: #ffffff;
+    border-color: #cbd5e0;
   }
   button.active {
     background: var(--primary-color) !important;
@@ -2887,6 +3110,7 @@ href="https://github.com/semiexp/cspuz_core"
     top: 54px;
     left: calc(100% + 8px);
     z-index: 26;
+    pointer-events: none;
     display: grid;
     gap: 3px;
     width: 220px;
@@ -3253,6 +3477,13 @@ href="https://github.com/semiexp/cspuz_core"
       Consolas,
       monospace;
     opacity: 0.55;
+  }
+  .symbol-canvas {
+    display: inline-block;
+    vertical-align: middle;
+    pointer-events: none;
+    width: 24px;
+    height: 24px;
   }
   .tool-input-panel button:hover,
   .tool-input-panel button.selected {
@@ -4522,8 +4753,8 @@ href="https://github.com/semiexp/cspuz_core"
     color: #b8c5cf;
   }
   .studio-shell.dark :global(.log-host #sudoku-solver-log-output) {
-    color: #d5dfe7;
-    border-color: #465563;
+    color: #d5dfe7 !important;
+    border-color: #465563 !important;
     background: #1f2b35 !important;
   }
   .studio-shell.dark :global(#float-key),
@@ -4867,13 +5098,15 @@ href="https://github.com/semiexp/cspuz_core"
       display: none;
     }
     .studio-shell .input-mode-tools {
+      display: flex;
+      flex-direction: column;
       gap: 6px;
       align-items: stretch;
       position: relative;
     }
     .studio-shell .mobile-add-variant {
       display: inline-flex;
-      flex: 0 0 auto;
+      justify-content: center;
       align-items: center;
       min-height: 32px;
       padding: 5px 9px;
@@ -4881,9 +5114,17 @@ href="https://github.com/semiexp/cspuz_core"
       border-radius: 5px;
       color: var(--primary-color);
       background: #fff;
-      font-size: 10px;
+      font-size: 13px;
       font-weight: 750;
       white-space: nowrap;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .mobile-variant-rule-preview {
+      position: relative;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 6px;
     }
     .studio-shell.dark .input-modes-section.panel-above,
     .studio-shell.dark .input-modes-section.panel-below {
@@ -5026,9 +5267,13 @@ href="https://github.com/semiexp/cspuz_core"
       margin: 0 0 6px;
     }
     .studio-shell .mobile-note-modes button {
-      display: block;
-      min-height: 32px;
-      padding: 5px 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-height: 26px;
+      height: 26px;
+      padding: 3px 4px;
     }
     .studio-shell .controls-top-drawer .note-modes span {
       display: none;

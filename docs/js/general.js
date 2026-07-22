@@ -1586,15 +1586,14 @@ function show_genretags() {
 
 function savetext_edit() {
     var text = pu.maketext();
-    update_textarea(text);
+    return update_textarea(text);
 }
 
 function savetext_solve() {
     const verifyUniqueness = document.getElementById("verify_uniqueness_chk")?.checked;
     if (!verifyUniqueness) {
         var text = pu.maketext_solve();
-        update_textarea(text);
-        return;
+        return update_textarea(text);
     }
     const pu = window.pu;
     const SudokuSolver = window.SudokuSolver;

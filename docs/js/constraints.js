@@ -1,11 +1,12 @@
 const penpa_constraints = {
-    "implemented_sudoku": ["classic", "0 to 8", "odd even", "odd even bridge", "odd even count", "odd even sum", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv", "battenburg", "skyscraper", "sandwich", "uniquerectangles", "sumskyscrapers", "sumsandwich", "positionsums", "inequalitytriples", "oneortwodifferencepairs", "teneleven", "tenspositionproducts", "fullorhalf", "samesum", "xaverage", "triplesum", "partitionedsums", "oneknightstep", "zones", "somewhere"],
+    "implemented_sudoku": ["classic", "0 to 8", "odd even", "odd even bridge", "odd even count", "odd even sum", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "arrow", "thermo", "killer", "kropki", "palindrome", "xv", "battenburg", "skyscraper", "sandwich", "uniquerectangles", "sumskyscrapers", "sumsandwich", "positionsums", "inequalitytriples", "oneortwodifferencepairs", "teneleven", "tenspositionproducts", "fullorhalf", "samesum", "xaverage", "triplesum", "partitionedsums", "oneknightstep", "zones", "somewhere", "argyle"],
     "options_groups": ["general", "sudoku", "puzzle"],
     "options": {
         "general": ["all"],
         "sudoku": ["classic","0 to 8","odd even","diagonal","anti diagonal","anti king","anti knight","non consecutive","arrow","thermo","little killer","killer","difference","kropki","palindrome","sandwich","quadruple","xv","between","battenburg","skyscraper","uniquerectangles","sumskyscrapers","sumsandwich","positionsums","inequalitytriples","oneortwodifferencepairs","teneleven","tenspositionproducts","fullorhalf","samesum","xaverage","triplesum","partitionedsums","oneknightstep","windoku","odd even bridge","odd even count","odd even sum",
             "zones",
-            "somewhere"],
+            "somewhere",
+            "argyle"],
         "puzzle": [
             "slitherlink",
             "tapa",
@@ -393,10 +394,16 @@ const penpa_constraints = {
             "outside": true
         },
         "windoku": {
-            "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb", "mo_surface_lb"],
-            "modeset": ["sudoku", "surface"],
-            "submodeset": ["1", ""],
-            "styleset": ["", 1]
+            "show": [],
+            "modeset": [],
+            "submodeset": [],
+            "styleset": []
+        },
+        "argyle": {
+            "show": [],
+            "modeset": [],
+            "submodeset": [],
+            "styleset": []
         },
         "alternatingstripes": {
             "show": ["mo_sudoku_lb", "sub_sudoku1_lb", "sub_sudoku2_lb", "sub_sudoku3_lb",

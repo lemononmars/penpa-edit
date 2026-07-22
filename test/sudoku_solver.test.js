@@ -310,15 +310,22 @@ test("an active Count the odd ones variant is CSP-supported when its first clue 
     assert.equal(SudokuSolver.readConstraints(puzzle).supported.includes("counttheoddones"), true);
 });
 
-test("Almost Palindrome accepts a sequence made palindromic by deleting one digit", function() {
-    const path = [{ row: 0, col: 0 }, { row: 1, col: 3 }, { row: 2, col: 6 }, { row: 3, col: 8 }];
+test("Almost Palindrome accepts all but a single mismatching pair", function() {
+    const path = [{ row: 0, col: 0 }, { row: 1, col: 2 }, { row: 2, col: 4 }, { row: 3, col: 6 }, { row: 4, col: 8 }];
     const accepted = emptyBoard();
-    [1, 9, 1, 3].forEach(function(value, index) { accepted[path[index].row][path[index].col] = value; });
+    [1, 2, 3, 4, 1].forEach(function(value, index) { accepted[path[index].row][path[index].col] = value; });
     assert.equal(SudokuCSP.findConflict(accepted, { almostPalindromes: [path] }), null);
 
     const rejected = emptyBoard();
-    [1, 9, 2, 3].forEach(function(value, index) { rejected[path[index].row][path[index].col] = value; });
+    [1, 5, 3, 4, 2].forEach(function(value, index) { rejected[path[index].row][path[index].col] = value; });
     assert.equal(SudokuCSP.findConflict(rejected, { almostPalindromes: [path] })?.constraint, "almostPalindromes");
+});
+
+test("Disguised Palindrome accepts a sequence made palindromic by deleting one digit", function() {
+    const path = [{ row: 0, col: 0 }, { row: 1, col: 3 }, { row: 2, col: 6 }, { row: 3, col: 8 }];
+    const accepted = emptyBoard();
+    [1, 9, 1, 3].forEach(function(value, index) { accepted[path[index].row][path[index].col] = value; });
+    assert.equal(SudokuCSP.findConflict(accepted, { disguisedPalindromes: [path] }), null);
 });
 
 test("an active Almost Palindrome remains CSP-supported after its final line is removed", function() {
@@ -3818,4 +3825,15 @@ test("validates midpoint variant across grid", function() {
             [{ row: 0, col: 1 }, { row: 0, col: 3 }]
         ] }]
     }).solved, false);
+});
+
+test("Argyle Sudoku enforces all-different on 8 dashed diagonal lines", function() {
+    const dummyPuzzle = {
+        nx: 9, ny: 9, nx0: 9, ny0: 9, space: [0, 0, 0, 0],
+        activeSudokuVariants: ["classic", "argyle"],
+        centerlist: [], point: {}, pu_q: { number: {}, symbol: {}, surface: {}, killercages: [] }
+    };
+    const constraints = SudokuSolver.readConstraints(dummyPuzzle);
+    assert.equal(constraints.supported.includes("argyle"), true);
+    assert.equal(constraints.diagonalAllDifferent.length >= 8, true);
 });

@@ -4043,17 +4043,15 @@ registerConstraint("threeDigitNumbersKillers", {
                 for (var c = 0; c < SIZE; c++) {
                     var cellVal = cellValue(board, { row: r, col: c });
                     if (!cellVal) continue;
-                    var mathCellVal = mathCellValue(board, { row: r, col: c });
 
                     if (r > 0 && c < SIZE - 1) {
                         var urVal = cellValue(board, { row: r - 1, col: c + 1 });
                         if (!urVal) continue;
-                        var mathUrVal = mathCellValue(board, { row: r - 1, col: c + 1 });
                         var cageTotal = urCages[r + "," + c];
 
-                        if (mathCellVal < mathUrVal) {
+                        if (cellVal < urVal) {
                             if (cageTotal === undefined) return false;
-                            if (mathCellVal + mathUrVal !== cageTotal) return false;
+                            if (cellVal + urVal !== cageTotal) return false;
                         } else {
                             if (cageTotal !== undefined) return false;
                         }
@@ -4093,14 +4091,33 @@ registerConstraint("threeDigitNumbersKillers", {
         return false;
     }
 
-    // Almost Palindrome: removing exactly one digit leaves a palindrome.
+    // Almost Palindrome: all but a single symmetric pair is a palindrome.
     registerConstraint("almostPalindromes", {
         validatePartial: function(board, path) {
             var values = path.map(function(cell) { return cellValue(board, cell); });
-            return values.some(function(value) { return !value; }) || canDeleteOneForPalindrome(values);
+            var N = values.length;
+            var mismatches = 0;
+            for (var i = 0; i < Math.floor(N / 2); i++) {
+                var a = values[i];
+                var b = values[N - 1 - i];
+                if (a && b && a !== b) {
+                    mismatches++;
+                }
+            }
+            return mismatches <= 1;
         },
         validateComplete: function(board, path) {
-            return canDeleteOneForPalindrome(path.map(function(cell) { return cellValue(board, cell); }));
+            var values = path.map(function(cell) { return cellValue(board, cell); });
+            var N = values.length;
+            var mismatches = 0;
+            for (var i = 0; i < Math.floor(N / 2); i++) {
+                var a = values[i];
+                var b = values[N - 1 - i];
+                if (a !== b) {
+                    mismatches++;
+                }
+            }
+            return mismatches === 1;
         }
     });
 

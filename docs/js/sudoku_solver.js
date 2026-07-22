@@ -938,7 +938,7 @@ sumOrProductKillers: [],
 
         var cages = typeof puzzle.refreshKillerCages === "function" ?
             puzzle.refreshKillerCages("pu_q") : (puzzle.pu_q.killercages || []);
-        var regionVariantNames = ["clone", "consecutiveclone", "renban", "windoku",
+        var regionVariantNames = ["clone", "consecutiveclone", "renban",
             "productkiller", "solokiller", "fortress", "multiplication", "clock", "codedpairs", "codedclone", "number 5 is alive", "sumset", "zones", "somewhere", "sumorproductkiller", "tableaux", "roundoff", "ordering","threedigitnumberskiller", "different parity"];
         var usesCagedRegions = regionVariantNames.some(function(name) { return variantEnabled(puzzle, name); });
         var regionCages = [];
@@ -1017,35 +1017,24 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
 
 
         if (variantEnabled(puzzle, "threedigitnumberskiller")) {
-            var lines = connectedLinePaths(puzzle, 5);
             for (var tIndex = 0; tIndex < cages.length; tIndex++) {
                 var tCells = pathToCells(puzzle, cages[tIndex]);
                 var tTotal = readKillerTotal(puzzle, cages[tIndex]);
                 if (tCells.length) {
-                    var intersectingLines = [];
-                    for (var lg = 0; lg < lines.length; lg++) {
-                        var lineGroup = lines[lg];
-                        if (lineGroup.length === 3) {
-                            var allInCage = true;
-                            for (var lgc = 0; lgc < lineGroup.length; lgc++) {
-                                var found = false;
-                                for (var tc = 0; tc < tCells.length; tc++) {
-                                    if (lineGroup[lgc].row === tCells[tc].row && lineGroup[lgc].col === tCells[tc].col) {
-                                        found = true;
-                                        break;
-                                    }
-                                }
-                                if (!found) {
-                                    allInCage = false;
-                                    break;
-                                }
-                            }
-                            if (allInCage) {
-                                intersectingLines.push(lineGroup);
-                            }
+                    var rowGroups = {};
+                    tCells.forEach(function(cell) {
+                        rowGroups[cell.row] = rowGroups[cell.row] || [];
+                        rowGroups[cell.row].push(cell);
+                    });
+                    var numberLines = [];
+                    Object.keys(rowGroups).forEach(function(r) {
+                        var rCells = rowGroups[r];
+                        rCells.sort(function(a, b) { return a.col - b.col; });
+                        if (rCells.length === 3) {
+                            numberLines.push(rCells);
                         }
-                    }
-                    constraints.threeDigitNumbersKillers.push({ cells: tCells, total: tTotal, lines: intersectingLines });
+                    });
+                    constraints.threeDigitNumbersKillers.push({ cells: tCells, total: tTotal, lines: numberLines });
                 }
             }
             constraints.supported.push("threedigitnumberskiller");
@@ -1288,6 +1277,22 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
         if (variantEnabled(puzzle, "anti diagonal")) {
             constraints.antiDiagonals.push(mainDiagonal, reverseDiagonal);
             constraints.supported.push("anti diagonal");
+        }
+        if (variantEnabled(puzzle, "argyle")) {
+            var argylePaths = [
+                [{row:0,col:1},{row:1,col:2},{row:2,col:3},{row:3,col:4},{row:4,col:5},{row:5,col:6},{row:6,col:7},{row:7,col:8}],
+                [{row:0,col:4},{row:1,col:5},{row:2,col:6},{row:3,col:7},{row:4,col:8}],
+                [{row:0,col:4},{row:1,col:3},{row:2,col:2},{row:3,col:1},{row:4,col:0}],
+                [{row:0,col:7},{row:1,col:6},{row:2,col:5},{row:3,col:4},{row:4,col:3},{row:5,col:2},{row:6,col:1},{row:7,col:0}],
+                [{row:1,col:0},{row:2,col:1},{row:3,col:2},{row:4,col:3},{row:5,col:4},{row:6,col:5},{row:7,col:6},{row:8,col:7}],
+                [{row:1,col:8},{row:2,col:7},{row:3,col:6},{row:4,col:5},{row:5,col:4},{row:6,col:3},{row:7,col:2},{row:8,col:1}],
+                [{row:4,col:0},{row:5,col:1},{row:6,col:2},{row:7,col:3},{row:8,col:4}],
+                [{row:4,col:8},{row:5,col:7},{row:6,col:6},{row:7,col:5},{row:8,col:4}]
+            ];
+            argylePaths.forEach(function(path) {
+                constraints.diagonalAllDifferent.push(path);
+            });
+            constraints.supported.push("argyle");
         }
 
         function addGridPairs(target, offsets) {
@@ -1549,10 +1554,15 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             constraints.supported.push("disjoint");
         }
         if (variantEnabled(puzzle, "windoku") && SIZE === 9) {
-            regionCages.forEach(function(cells) {
-                if (windokuRegionSignatures.indexOf(regionSignature(cells)) !== -1) {
-                    constraints.regionAllDifferent.push(cells);
+            var windokuStarts = [[1, 1], [1, 5], [5, 1], [5, 5]];
+            windokuStarts.forEach(function(start) {
+                var windowCells = [];
+                for (var r = 0; r < 3; r++) {
+                    for (var c = 0; c < 3; c++) {
+                        windowCells.push({ row: start[0] + r, col: start[1] + c });
+                    }
                 }
+                constraints.regionAllDifferent.push(windowCells);
             });
             constraints.supported.push("windoku");
         }
@@ -2013,14 +2023,24 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
         });
         ["alternatingstripes", "between", "odd even bridge"].forEach(function(variant) {
             if (!variantEnabled(puzzle, variant)) return;
-            connectedLinePaths(puzzle, 2).forEach(function(path) {
-                if (path.length > 1) constraints.catalogLines.push({ path: path, relation: variant === "odd even bridge" ? "oddevenbridge" : variant });
+            [1, 2].forEach(function(style) {
+                connectedLinePaths(puzzle, style).forEach(function(path) {
+                    if (path.length > 1) constraints.catalogLines.push({ path: path, relation: variant === "odd even bridge" ? "oddevenbridge" : variant });
+                });
             });
             connectedLinePaths(puzzle, 5).forEach(function(path) {
                 if (path.length > 1 && variant === "odd even bridge") constraints.catalogLines.push({ path: path, relation: "oddevenbridge" });
             });
             constraints.supported.push(variant);
         });
+        if (variantEnabled(puzzle, "zones")) constraints.supported.push("zones");
+        if (variantEnabled(puzzle, "somewhere")) constraints.supported.push("somewhere");
+        if (variantEnabled(puzzle, "disguisedpalindromes") || variantEnabled(puzzle, "disguisedpalindrome")) {
+            connectedLinePaths(puzzle, 5).forEach(function(path) {
+                if (path.length > 1) constraints.disguisedPalindromes.push(path);
+            });
+            constraints.supported.push("disguisedpalindromes");
+        }
         if (variantEnabled(puzzle, "clonedstrands")) {
             var clonedStrands = connectedLinePaths(puzzle, 3);
             if (clonedStrands.length) constraints.cellRelations.push({ relation: "clonedstrands", strands: clonedStrands });
@@ -2174,7 +2194,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                 var entry = symbols[key];
                 if (entry && entry[1] && entry[1].indexOf("circle_") === 0) {
                     var cell = keyToCell(puzzle, Number(key));
-                    if (cell && isRealCell(cell)) {
+                    if (cell) {
                         emitterCells.push(cell);
                     }
                 }
@@ -2649,14 +2669,20 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             Object.keys(symbols).forEach(function(key) {
                 var entry = symbols[key];
                 var point = puzzle.point && puzzle.point[key];
-                if (!entry || entry[1] !== "dice" || !point) return;
+                if (!entry || entry[1] !== "braille" || !point) return;
                 var cell = keyToCell(puzzle, Number(key));
                 if (!cell) return;
                 var dots = [];
-                for (var i = 0; i < 9; i++) {
-                    if (entry[0][i] === 1) dots.push(i);
+                if (Array.isArray(entry[0])) {
+                    for (var i = 0; i < 4; i++) {
+                        if (entry[0][i] === 1) dots.push(i);
+                    }
+                } else if (typeof entry[0] === "number") {
+                    if (entry[0] >= 1 && entry[0] <= 4) dots.push(entry[0] - 1);
                 }
-                constraints.braille.push({ cell: cell, dots: dots });
+                if (dots.length) {
+                    constraints.braille.push({ cell: cell, dots: dots });
+                }
             });
             constraints.supported.push("braille");
         }
@@ -4840,7 +4866,7 @@ var SudokuTools = (function() {
             endSize = end + 1;
         }
         var keys = [];
-        var base = puzzle.nx0 * puzzle.nx0;
+        var base = puzzle.nx0 * puzzle.ny0;
         for (var i = start; i <= end; i++) {
             var first = puzzle.nx0 * i + i + base;
             var second = puzzle.nx0 * (i + 1) + (i + 1) + base;
@@ -4848,7 +4874,7 @@ var SudokuTools = (function() {
 
             var reverseFirst = puzzle.nx0 * i + endSize + 2 - i + base;
             var reverseSecond = puzzle.nx0 * (i + 1) + endSize + 1 - i + base;
-            keys.push(reverseSecond + "," + reverseFirst);
+            keys.push(Math.min(reverseFirst, reverseSecond) + "," + Math.max(reverseFirst, reverseSecond));
         }
         return keys;
     }
@@ -4862,21 +4888,61 @@ var SudokuTools = (function() {
         });
     }
 
+    function argyleLineKeys(puzzle) {
+        if (!puzzle || !puzzle.pu_q || !puzzle.pu_q.lineE || puzzle.nx !== 9) {
+            return [];
+        }
+        var base = puzzle.nx0 * puzzle.ny0;
+        var getCornerPoint = function(vRow, vCol) {
+            return base + puzzle.nx0 * vRow + vCol;
+        };
+        var paths = [
+            [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9]],
+            [[0, 4], [1, 5], [2, 6], [3, 7], [4, 8], [5, 9]],
+            [[0, 5], [1, 4], [2, 3], [3, 2], [4, 1], [5, 0]],
+            [[0, 8], [1, 7], [2, 6], [3, 5], [4, 4], [5, 3], [6, 2], [7, 1], [8, 0]],
+            [[1, 0], [2, 1], [3, 2], [4, 3], [5, 4], [6, 5], [7, 6], [8, 7], [9, 8]],
+            [[1, 9], [2, 8], [3, 7], [4, 6], [5, 5], [6, 4], [7, 3], [8, 2], [9, 1]],
+            [[4, 0], [5, 1], [6, 2], [7, 3], [8, 4], [9, 5]],
+            [[4, 9], [5, 8], [6, 7], [7, 6], [8, 5], [9, 4]]
+        ];
+        var keys = [];
+        paths.forEach(function(path) {
+            for (var i = 0; i < path.length - 1; i++) {
+                var p1 = getCornerPoint(path[i][0], path[i][1]);
+                var p2 = getCornerPoint(path[i + 1][0], path[i + 1][1]);
+                keys.push(Math.min(p1, p2) + "," + Math.max(p1, p2));
+            }
+        });
+        return keys;
+    }
+
     function syncDiagonalLines() {
         if (!pu || !pu.pu_q || !pu.pu_q.lineE) {
             return;
         }
-        var enabled = hasVariant("diagonal") || hasVariant("anti diagonal");
+        var diagEnabled = hasVariant("diagonal") || hasVariant("anti diagonal");
+        var argyleEnabled = hasVariant("argyle");
+        var argyleKeys = argyleLineKeys(pu);
+        var argyleSet = new Set(argyleKeys);
+
         diagonalLineKeys(pu).forEach(function(key) {
-            if (enabled) {
+            if (diagEnabled) {
                 pu.pu_q.lineE[key] = 12;
-            } else if (pu.pu_q.lineE[key] === 12) {
+            } else if (pu.pu_q.lineE[key] === 12 && !argyleSet.has(key)) {
+                delete pu.pu_q.lineE[key];
+            }
+        });
+        argyleKeys.forEach(function(key) {
+            if (argyleEnabled) {
+                pu.pu_q.lineE[key] = 12;
+            } else if (pu.pu_q.lineE[key] === 12 && !diagEnabled) {
                 delete pu.pu_q.lineE[key];
             }
         });
         if (Array.isArray(pu.sudoku)) {
-            pu.sudoku[0] = enabled ? 1 : 0;
-            pu.sudoku[3] = enabled ? 1 : 0;
+            pu.sudoku[0] = diagEnabled ? 1 : 0;
+            pu.sudoku[3] = diagEnabled ? 1 : 0;
         }
     }
 
@@ -5340,29 +5406,18 @@ var SudokuTools = (function() {
     }
 
     function ensureWindokuCages() {
-        if (!pu || SudokuSolver.puzzleSize(pu) !== 9 || typeof pu.cage_for_selection !== "function") return;
-        var added = Array.isArray(pu.windokuCageSegments) ? pu.windokuCageSegments.slice() : [];
-        [[1, 1], [1, 4], [4, 1], [4, 4]].forEach(function(start) {
-            var cells = [];
+        if (!pu || SudokuSolver.puzzleSize(pu) !== 9) return;
+        [[1, 1], [1, 5], [5, 1], [5, 5]].forEach(function(start) {
             for (var row = 0; row < 3; row++) {
-                for (var col = 0; col < 3; col++) cells.push(cellKey(pu, start[0] + row, start[1] + col));
+                for (var col = 0; col < 3; col++) {
+                    var cell = SudokuSolver.cellKey(pu, start[0] + row, start[1] + col);
+                    if (pu.pu_q.surface === undefined) pu.pu_q.surface = {};
+                    if (pu.pu_q.surface[cell] === undefined || pu.pu_q.surface[cell] === 0) {
+                        pu.set_value("surface", cell, 1, null);
+                    }
+                }
             }
-            var segments = pu.cage_for_selection(cells);
-            segments[0].concat(segments[1]).forEach(function(segment) {
-                if (pu.pu_q.cage[segment] === undefined) {
-                    pu.set_value("cage", segment, 10, null);
-                    added.push(segment);
-                }
-            });
-            cells.forEach(function(cell) {
-                if (pu.pu_q.surface === undefined) pu.pu_q.surface = {};
-                if (pu.pu_q.surface[cell] === undefined || pu.pu_q.surface[cell] === 0) {
-                    pu.set_value("surface", cell, 1, null);
-                }
-            });
         });
-        pu.windokuCageSegments = added;
-        if (typeof pu.refreshKillerCages === "function") pu.refreshKillerCages("pu_q");
     }
 
     function ensureOneFiveNine() {
@@ -5371,7 +5426,7 @@ var SudokuTools = (function() {
         for (var row = 0; row < 9; row++) {
             for (var i = 0; i < cols.length; i++) {
                 var col = cols[i];
-                var cell = cellKey(pu, row, col);
+                var cell = SudokuSolver.cellKey(pu, row, col);
                 if (pu.pu_q.surface === undefined) pu.pu_q.surface = {};
                 if (pu.pu_q.surface[cell] === undefined || pu.pu_q.surface[cell] === 0) {
                     pu.set_value("surface", cell, 1, null);
@@ -5560,6 +5615,11 @@ var SudokuTools = (function() {
                 }
             }
             if (variant === "kropki" || variant === "doublekropki" || variant === "consecutive" || variant === "xv" || variant === "lc" || variant === "battenburg") {
+                var isKropki = variant === "kropki";
+                var isDoubleKropki = variant === "doublekropki";
+                var isConsecutive = variant === "consecutive";
+                var isXV = variant === "xv";
+                var isLC = variant === "lc";
                 var negative = document.createElement("button");
                 negative.id = isKropki ? "sudoku_kropki_negative" :
                     isDoubleKropki ? "sudoku_doublekropki_negative" :
@@ -5859,13 +5919,18 @@ var SudokuTools = (function() {
             pu.xvNegativeConstraint = false;
         } else if (variant === "battenburg") {
             pu.battenburgNegativeConstraint = false;
-        } else if (variant === "windoku" && Array.isArray(pu.windokuCageSegments)) {
-            pu.windokuCageSegments.forEach(function(segment) { delete pu.pu_q.cage[segment]; });
-            pu.windokuCageSegments = [];
-            [[1, 1], [1, 4], [4, 1], [4, 4]].forEach(function(start) {
+        } else if (variant === "argyle") {
+            argyleLineKeys(pu).forEach(function(key) {
+                if (pu.pu_q && pu.pu_q.lineE && pu.pu_q.lineE[key] === 12) {
+                    delete pu.pu_q.lineE[key];
+                }
+            });
+            syncDiagonalLines();
+        } else if (variant === "windoku") {
+            [[1, 1], [1, 5], [5, 1], [5, 5]].forEach(function(start) {
                 for (var row = 0; row < 3; row++) {
                     for (var col = 0; col < 3; col++) {
-                        var cell = cellKey(pu, start[0] + row, start[1] + col);
+                        var cell = SudokuSolver.cellKey(pu, start[0] + row, start[1] + col);
                         if (pu.pu_q.surface !== undefined) delete pu.pu_q.surface[cell];
                     }
                 }
@@ -5876,7 +5941,7 @@ var SudokuTools = (function() {
             for (var row = 0; row < 9; row++) {
                 for (var i = 0; i < cols.length; i++) {
                     var col = cols[i];
-                    var cell = cellKey(pu, row, col);
+                    var cell = SudokuSolver.cellKey(pu, row, col);
                     if (pu.pu_q.surface !== undefined) delete pu.pu_q.surface[cell];
                 }
             }

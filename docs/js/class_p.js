@@ -1665,21 +1665,26 @@ class Puzzle {
             if (cc) {
                 $("#colorpicker_special").spectrum("set", cc);
             }
-            document.getElementById('style_special').style.display = 'inline';
+            var styleSpecial = document.getElementById('style_special');
+            if (styleSpecial) styleSpecial.style.display = 'inline';
         } else {
-            document.getElementById('style_special').style.display = 'none';
+            var styleSpecial = document.getElementById('style_special');
+            if (styleSpecial) styleSpecial.style.display = 'none';
         }
 
         // If panel is ON, show Mode info on header
-        document.getElementById('float-key-header-lb').innerHTML = "Mode: " + mode_names[mode];
+        var floatHeader = document.getElementById('float-key-header-lb');
+        if (floatHeader) floatHeader.innerHTML = "Mode: " + mode_names[mode];
 
         if (mode === "number") {
             // Update cursolS after mode switch, because it is not set in all modes.
             pu.cursolS = 4 * (pu.cursol + pu.nx0 * pu.ny0);
             let isNumberS = ["3", "9", "11"].includes(pu.mode[pu.mode.qa][pu.mode[pu.mode.qa].edit_mode][0])
             let enableLoadButton = (!isNumberS && pu[pu.mode.qa].number[pu.cursol]) || (isNumberS && pu[pu.mode.qa].numberS[pu.cursolS]);
-            document.getElementById("closeBtn_input3").disabled = !enableLoadButton;
-            document.getElementById('orientation_button').style.display = 'block';
+            var closeBtn3 = document.getElementById("closeBtn_input3");
+            if (closeBtn3) closeBtn3.disabled = !enableLoadButton;
+            var orientBtn = document.getElementById('orientation_button');
+            if (orientBtn) orientBtn.style.display = 'block';
         }
 
         if (!skipredraw)
@@ -1827,28 +1832,17 @@ class Puzzle {
         if (subVariable) subVariable.textContent = '';
         const styleVariable = document.getElementById('style_variable');
         if (styleVariable) styleVariable.textContent = '';
-        document.getElementById('mode_line').style.display = 'none';
-        document.getElementById('mode_lineE').style.display = 'none';
-        document.getElementById('mode_number').style.display = 'none';
-        document.getElementById('mode_symbol').style.display = 'none';
-        document.getElementById('mode_special').style.display = 'none';
-        document.getElementById('mode_cage').style.display = 'none';
-        document.getElementById('mode_move').style.display = 'none';
-        document.getElementById('mode_combi').style.display = 'none';
-        document.getElementById('mode_sudoku').style.display = 'none';
 
-        document.getElementById('style_surface').style.display = 'none';
-        document.getElementById('style_line').style.display = 'none';
-        document.getElementById('style_lineE').style.display = 'none';
-        document.getElementById('style_wall').style.display = 'none';
-        document.getElementById('style_number').style.display = 'none';
-        document.getElementById('style_symbol').style.display = 'none';
-        document.getElementById('style_special').style.display = 'none';
-        document.getElementById('style_cage').style.display = 'none';
-        document.getElementById('style_combi').style.display = 'none';
-        document.getElementById('style_sudoku').style.display = 'none';
-
-        document.getElementById('orientation_button').style.display = 'none';
+        [
+            'mode_line', 'mode_lineE', 'mode_number', 'mode_symbol',
+            'mode_special', 'mode_cage', 'mode_move', 'mode_combi', 'mode_sudoku',
+            'style_surface', 'style_line', 'style_lineE', 'style_wall',
+            'style_number', 'style_symbol', 'style_special', 'style_cage',
+            'style_combi', 'style_sudoku', 'orientation_button'
+        ].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
     }
 
     reset_selectedmode() {
@@ -12966,8 +12960,14 @@ class Puzzle {
     }
 
     set_redoundocolor() {
-        document.getElementById('tb_redo').disabled = (this[this.mode.qa].command_redo.__a.length === 0) ? 'disabled' : '';
-        document.getElementById('tb_undo').disabled = (this[this.mode.qa].command_undo.__a.length === 0) ? 'disabled' : '';
+        var redo = document.getElementById('tb_redo');
+        var undo = document.getElementById('tb_undo');
+        if (redo) {
+            redo.disabled = (this[this.mode.qa].command_redo.__a.length === 0) ? 'disabled' : '';
+        }
+        if (undo) {
+            undo.disabled = (this[this.mode.qa].command_undo.__a.length === 0) ? 'disabled' : '';
+        }
     }
 
     flushcanvas(svgcall) {

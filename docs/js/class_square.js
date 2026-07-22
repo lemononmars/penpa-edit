@@ -1510,9 +1510,11 @@ class Puzzle_square extends Puzzle {
         var str_alph_low = "abcdefghijklmnopqrstuvwxyz";
         for (var i in this[pu].number) {
             if (i.slice(-1) === "E") { // Overwriting in Edge Mode
+                if (!this.point[i.slice(0, -1)]) continue;
                 p_x = this.point[i.slice(0, -1)].x;
                 p_y = this.point[i.slice(0, -1)].y;
             } else {
+                if (!this.point[i]) continue;
                 p_x = this.point[i].x;
                 p_y = this.point[i].y;
             }
@@ -1927,9 +1929,11 @@ class Puzzle_square extends Puzzle {
         var p_x, p_y;
         for (var i in this[pu].number) {
             if (i.slice(-1) === "E") { // Overwriting in Edge Mode
+                if (!this.point[i.slice(0, -1)]) continue;
                 p_x = this.point[i.slice(0, -1)].x;
                 p_y = this.point[i.slice(0, -1)].y;
             } else {
+                if (!this.point[i]) continue;
                 p_x = this.point[i].x;
                 p_y = this.point[i].y;
             }
@@ -3122,9 +3126,10 @@ class Puzzle_square extends Puzzle {
             [-0.2, 0.2],
             [0.2, 0.2]
         ];
+        let dots = Array.isArray(num) ? num : (typeof num === "number" ? [1, 2, 3, 4].map(d => d === num ? 1 : 0) : []);
         ctx.fillStyle = ccolor || Color.GREY;
         for (let i = 0; i < 4; i++) {
-            if (num[i] === 1) {
+            if (dots[i] === 1) {
                 ctx.beginPath();
                 ctx.arc(x + p[i][0] * this.size, y + p[i][1] * this.size, r * this.size, 0, Math.PI * 2, false);
                 ctx.fill();

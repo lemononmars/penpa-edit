@@ -68,10 +68,19 @@ const UserSettings = {
     _auto_save_history: false,
     set auto_save_history(newValue) {
         this._auto_save_history = newValue === "1" || newValue === "true" || newValue === true;
+        try {
+            localStorage.setItem("penpa_auto_save_history", this._auto_save_history ? "1" : "0");
+        } catch (e) {}
         document.getElementById("auto_save_history_opt") && (document.getElementById("auto_save_history_opt").value = this._auto_save_history ? "1" : "0");
         this.attemptSave();
     },
     get auto_save_history() {
+        try {
+            var stored = localStorage.getItem("penpa_auto_save_history");
+            if (stored !== null) {
+                this._auto_save_history = stored === "1";
+            }
+        } catch (e) {}
         return this._auto_save_history;
     },
 
@@ -256,11 +265,20 @@ const UserSettings = {
         const valueInt = (valueString === 'true' || valueString === '1') ? 1 : 4;
 
         this._local_storage = (valueInt === 1);
+        try {
+            localStorage.setItem("penpa_allow_local_storage", this._local_storage ? "1" : "0");
+        } catch (e) {}
 
         document.getElementById("allow_local_storage") && (document.getElementById("allow_local_storage").value = valueInt);
         this.attemptSave();
     },
     get local_storage() {
+        try {
+            var stored = localStorage.getItem("penpa_allow_local_storage");
+            if (stored !== null) {
+                this._local_storage = stored === "1";
+            }
+        } catch (e) {}
         return this._local_storage;
     },
 

@@ -103,6 +103,60 @@ function genericSetting(variation: Variation) {
             outside: false, regionEditor: true
         };
     }
+    if (variation.value === "arrow") {
+        add("special", "arrow", "", ["mo_special_lb", "sub_specialarrow_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (["search9", "search6", "smallestneighbours", "biggestneighbours", "pointtonext", "pointtoprevious", "sumdetector", "twindetector"].includes(variation.value)) {
+        add("symbol", "arrow_B_G", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (["arrowsum", "countdifferentarrow", "counttheoddonesarrow", "averagearrows", "eliminate", "detection"].includes(variation.value)) {
+        add("symbol", "arrow_eight", 2, ["mo_symbol_lb", "ms3", "li_arrow_eight"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (["quadmax", "quadmin"].includes(variation.value)) {
+        add("symbol", "arrow_B_B", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "deadoralivearrows") {
+        add("symbol", "arrow_B_W", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"]);
+        add("symbol", "arrow_B_G", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"], true);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "rossini") {
+        add("symbol", "arrow_N_G", 2, ["mo_symbol_lb", "ms3", "li_arrow_N"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
+    }
+    if (variation.value === "braille") {
+        add("symbol", "braille", 2, ["mo_symbol_lb", "ms", "ms_braille"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "lc") {
+        add("symbol", "text", 1, ["mo_symbol_lb", "ms_text"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "anticonsecutive" || variation.value === "nonconsecutive") {
+        add("symbol", "cross", 2, ["mo_symbol_lb", "ms1", "li_cross"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (["consecutive", "evensumpairs", "oddsumpairs", "fadedkropki"].includes(variation.value)) {
+        add("symbol", "circle_SS", 2, ["mo_symbol_lb", "ms1", "ms1_circle", "li_circle_SS"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (["sumnine", "diagonalsumisnine", "xydifference", "perfectsquares", "primesums", "twodigitprimenumbers", "fives"].includes(variation.value)) {
+        add("symbol", "diamond_SS", 2, ["mo_symbol_lb", "ms1", "li_diamond"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "termination") {
+        add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "sudokuwithstars") {
+        add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
+        add("symbol", "star", 2, ["mo_symbol_lb", "ms4", "li_star", "ms_star"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
     if (variation.inputType.categories.includes("no-input")) {
         return { show, modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
@@ -135,17 +189,16 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "upperrightheavykiller") {
-        add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
+        add("number", "3", 1, ["mo_number_lb", "sub_number3_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "blocksumrelations") {
         add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-if (variation.value === "threedigitnumberskiller") {
+    if (variation.value === "threedigitnumberskiller") {
         add("cage", "1", 10, ["mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb"]);
         add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);
-        add("line", "2", 5, ["mo_line_lb", "sub_line2_lb", "st_line5_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "ordering") {
@@ -275,8 +328,8 @@ if (variation.value === "threedigitnumberskiller") {
         add("symbol", "diamond_SS", 2, ["mo_symbol_lb", "ms1", "li_diamond"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (variation.value === "averagearrows") {
-        add("special", "arrow", "", ["mo_special_lb", "sub_specialarrow_lb"]);
+    if (["countdifferentarrow", "counttheoddonesarrow", "averagearrows"].includes(variation.value)) {
+        add("symbol", "arrow_eight", 2, ["mo_symbol_lb", "ms3", "li_arrow_eight"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "rossini") {
@@ -412,8 +465,8 @@ if (variation.value === "threedigitnumberskiller") {
     if (/thermometer|thermo/.test(text)) {
         add("special", "thermo", "", ["mo_special_lb", "sub_specialthermo_lb", "sub_specialnobulbthermo_lb"]);
     }
-    if (/arrow/.test(text) && !/outside/.test(text)) {
-        add("special", "arrows", "", ["mo_special_lb", "sub_specialarrows_lb", "sub_specialdirection_lb"]);
+    if (variation.value === "arrow") {
+        add("special", "arrow", "", ["mo_special_lb", "sub_specialarrow_lb"]);
     }
     if (/\bline\b|path|diagonal/.test(text)) {
         add("line", "2", 5, ["mo_line_lb", "sub_line1_lb", "sub_line2_lb", "sub_line3_lb"]);
@@ -435,10 +488,14 @@ if (variation.value === "threedigitnumberskiller") {
     };
 }
 
+let _installingCatalog = false;
 export function installVariationCatalog() {
+    if (_installingCatalog) return;
     const constraints = (window as any).penpa_constraints;
     const select = document.getElementById("constraints_settings_opt") as HTMLSelectElement | null;
     if (!constraints || !select) return;
+    _installingCatalog = true;
+    try {
     constraints.options.sudoku = constraints.options.sudoku.filter((value: string) => !hiddenVariationValues.has(value));
     Array.from(select.options).filter((option) => hiddenVariationValues.has(option.value)).forEach((option) => option.remove());
 
@@ -484,6 +541,21 @@ export function installVariationCatalog() {
             targetGroup.appendChild(option);
         }
     });
+    [implementedGroup, unsupportedGroup].forEach((group) => {
+        if (!group) return;
+        const sorted = Array.from(group.children).sort((a, b) =>
+            (a.textContent || "").localeCompare(b.textContent || "")
+        );
+        sorted.forEach((option) => group.appendChild(option));
+    });
     if (unsupportedGroup.children.length && !unsupportedGroup.parentElement) select.appendChild(unsupportedGroup);
     select.dataset.variationCatalog = "ready";
+    if (typeof (window as any).$ === "function") {
+        try {
+            (window as any).$('#constraints_settings_opt').trigger('change.select2');
+        } catch (e) {}
+    }
+    } finally {
+        _installingCatalog = false;
+    }
 }
