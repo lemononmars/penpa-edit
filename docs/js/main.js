@@ -304,7 +304,7 @@ onload = function() {
             let skip_mouseevent = restrict_mouse(num);
             if (skip_mouseevent) {
                 onOut();
-            } else if (pu.point[num].use === 1) {
+            } else if (pu.point[num]?.use === 1) {
                 // Handle alt+drag for rectangular selection
                 if (event.buttons > 0 && pu.rect_select_base !== null) {
                     pu.selection = pu.old_selection.slice();
@@ -973,7 +973,6 @@ onload = function() {
         var key = e.key;
 
         const keylocation = e.location;
-
         // See if we're releasing the key that started a temporary mode override
         if (keylocation !== 3 && pu.mode[pu.mode.qa].edit_mode === "sudoku") {
             if (isShiftKeyPressed(key)) {
@@ -1054,14 +1053,12 @@ onload = function() {
                 pu.type = type;
         }
 
-        //const endTime = performance.now();
-        //console.log(endTime - startTime);
         num = parseInt(num);
         var obj = new Object();
         obj.x = x;
         obj.y = y;
         obj.num = num;
-        obj.index = pu.point[num].index;
+        obj.index = (pu && pu.point && pu.point[num]) ? pu.point[num].index : 0;
         return obj;
     }
 
@@ -1071,21 +1068,25 @@ onload = function() {
     var undo_button = document.getElementById("tb_undo");
     var redo_button = document.getElementById("tb_redo");
 
-    undo_button.addEventListener("touchstart", undoDown, {passive: false});
-    undo_button.addEventListener("mousedown", undoDown, {passive: false});
-    undo_button.addEventListener("touchend", undoUp, {passive: false});
-    undo_button.addEventListener("mouseup", undoUp, {passive: false});
-    undo_button.addEventListener("touchend", undoLeave, {passive: false});
-    undo_button.addEventListener("mouseleave", undoLeave, {passive: false});
-    undo_button.addEventListener("contextmenu", offcontext, {passive: false});
+    if (undo_button) {
+        undo_button.addEventListener("touchstart", undoDown, {passive: false});
+        undo_button.addEventListener("mousedown", undoDown, {passive: false});
+        undo_button.addEventListener("touchend", undoUp, {passive: false});
+        undo_button.addEventListener("mouseup", undoUp, {passive: false});
+        undo_button.addEventListener("touchend", undoLeave, {passive: false});
+        undo_button.addEventListener("mouseleave", undoLeave, {passive: false});
+        undo_button.addEventListener("contextmenu", offcontext, {passive: false});
+    }
 
-    redo_button.addEventListener("touchstart", redoDown, {passive: false});
-    redo_button.addEventListener("mousedown", redoDown, {passive: false});
-    redo_button.addEventListener("touchend", redoUp, {passive: false});
-    redo_button.addEventListener("mouseup", redoUp, {passive: false});
-    redo_button.addEventListener("touchend", redoLeave, {passive: false});
-    redo_button.addEventListener("mouseleave", redoLeave, {passive: false});
-    redo_button.addEventListener("contextmenu", offcontext, {passive: false});
+    if (redo_button) {
+        redo_button.addEventListener("touchstart", redoDown, {passive: false});
+        redo_button.addEventListener("mousedown", redoDown, {passive: false});
+        redo_button.addEventListener("touchend", redoUp, {passive: false});
+        redo_button.addEventListener("mouseup", redoUp, {passive: false});
+        redo_button.addEventListener("touchend", redoLeave, {passive: false});
+        redo_button.addEventListener("mouseleave", redoLeave, {passive: false});
+        redo_button.addEventListener("contextmenu", offcontext, {passive: false});
+    }
 
     function offcontext(e) {
         e.preventDefault();
@@ -1093,7 +1094,7 @@ onload = function() {
 
     function undoDown(e) {
         e.preventDefault();
-        undo_button.classList.add('active');
+        if (undo_button) undo_button.classList.add('active');
         count_redo = 0;
         new_timer = setInterval(() => {
             count_undo++;
@@ -1109,7 +1110,6 @@ onload = function() {
         }
         timer = new_timer;
     }
-
     function undoUp(e) {
         e.preventDefault();
         undo_button.classList.remove('active');
@@ -1173,20 +1173,23 @@ onload = function() {
             document.getElementById(eventTarget.id).style.display = 'none';
             e.preventDefault();
         }
+
+        if (typeof pu === 'undefined' || !pu) return;
+
         if (!pu.ondown_key) {
             pu.ondown_key = ondown_key;
         }
 
         // Middle click for switching problem and solution
         // Applicable only in setter mode
-        if (document.getElementById("title").textContent.toLowerCase().includes("setter")) {
+        if (document.getElementById("title") && document.getElementById("title").textContent.toLowerCase().includes("setter")) {
             if (UserSettings.mousemiddle_button === 2) { // If user setting is yes
                 if (ondown_key === "mousedown" && e.button === 1) {
-                    if (pu.mode.qa === "pu_a") {
+                    if (pu.mode && pu.mode.qa === "pu_a") {
                         pu.mode_qa("pu_q");
                         document.getElementById('dvique').style.borderColor = Color.BLACK_LIGHT;
                         e.returnValue = false;
-                    } else {
+                    } else if (pu.mode) {
                         pu.mode_qa("pu_a");
                         document.getElementById('dvique').style.borderColor = Color.GREEN_LIGHT;
                         e.returnValue = false;
@@ -1196,7 +1199,6 @@ onload = function() {
         }
 
         switch (eventTarget.id) {
-            //canvas
             case "canvas":
                 document.getElementById("inputtext").blur(); // Remove focus from text box
                 if (!e.penpaCanvasHandled) {

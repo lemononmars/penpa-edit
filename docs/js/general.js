@@ -1589,7 +1589,7 @@ function savetext_edit() {
     return update_textarea(text);
 }
 
-function savetext_solve() {
+async function savetext_solve() {
     const verifyUniqueness = document.getElementById("verify_uniqueness_chk")?.checked;
     if (!verifyUniqueness) {
         var text = pu.maketext_solve();
@@ -1664,7 +1664,7 @@ function savetext_solve() {
             }
         });
         const text = pu.maketext_solve_solution();
-        update_textarea(text);
+        const finalUrl = await update_textarea(text);
         checkboxes.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -1673,6 +1673,7 @@ function savetext_solve() {
         });
         pu.pu_a = original_pu_a;
         pu.redraw();
+        return finalUrl;
     } catch (e) {
         const msg = "Solver error: " + e.message;
         if (typeof Swal !== "undefined") {
@@ -2159,8 +2160,8 @@ async function load(urlParam, type = 'url', origurl = null) {
             document.getElementById("nb_penrose1").value = rtext_para[11];
         }
         if (rtext_para[12]) {
-            document.getElementById("nb_penrose2").value = rtext_para[12];
-            document.getElementById("nb_penrose2_sl").value = rtext_para[12];
+            if (document.getElementById("nb_penrose2")) document.getElementById("nb_penrose2").value = rtext_para[12];
+            if (document.getElementById("nb_penrose2_sl")) document.getElementById("nb_penrose2_sl").value = rtext_para[12];
         }
     }
     if (rtext_para[15]) {
@@ -2168,7 +2169,7 @@ async function load(urlParam, type = 'url', origurl = null) {
         ptitle = ptitle.replace(/^Title\:\s/, '');
         if (ptitle !== "Title: ") {
             ptitle = DOMPurify.sanitize(ptitle);
-            document.getElementById("saveinfotitle").value = ptitle;
+            if (document.getElementById("saveinfotitle")) document.getElementById("saveinfotitle").value = ptitle;
         }
     }
     if (rtext_para[16]) {
@@ -2176,14 +2177,14 @@ async function load(urlParam, type = 'url', origurl = null) {
         pauthor = pauthor.replace(/^Author\:\s/, '');
         if (pauthor != "") {
             pauthor = DOMPurify.sanitize(pauthor);
-            document.getElementById("saveinfoauthor").value = pauthor;
+            if (document.getElementById("saveinfoauthor")) document.getElementById("saveinfoauthor").value = pauthor;
         }
     }
     if (rtext_para[17] && rtext_para[17] !== "") {
         psource = DOMPurify.sanitize(rtext_para[17]);
-        document.getElementById("puzzlesourcelink").href = psource;
-        document.getElementById("puzzlesource").innerHTML = "Source";
-        document.getElementById("saveinfosource").value = psource;
+        if (document.getElementById("puzzlesourcelink")) document.getElementById("puzzlesourcelink").href = psource;
+        if (document.getElementById("puzzlesource")) document.getElementById("puzzlesource").innerHTML = "Source";
+        if (document.getElementById("saveinfosource")) document.getElementById("saveinfosource").value = psource;
     }
 
     update_title();
@@ -2200,11 +2201,11 @@ async function load(urlParam, type = 'url', origurl = null) {
     UserSettings.loadFromCookies("others");
 
     if (rtext_para[18] && rtext_para[18] !== "") {
-        document.getElementById("puzzlerules").classList.add("rules-present");
+        if (document.getElementById("puzzlerules")) document.getElementById("puzzlerules").classList.add("rules-present");
         pu.rules = rtext_para[18].replace(/%2C/g, ',').replace(/%2D/g, '<br>').replace(/%2E/g, '&').replace(/%2F/g, '=');
         pu.rules = DOMPurify.sanitize(pu.rules);
-        document.getElementById("ruletext").innerHTML = pu.rules;
-        document.getElementById("saveinforules").value = pu.rules.replace(/<br>/g, '\n');
+        if (document.getElementById("ruletext")) document.getElementById("ruletext").innerHTML = pu.rules;
+        if (document.getElementById("saveinforules")) document.getElementById("saveinforules").value = pu.rules.replace(/<br>/g, '\n');
     }
 
     // Border button status
@@ -2312,7 +2313,7 @@ async function load(urlParam, type = 'url', origurl = null) {
     // This is to add tags for the previously created URLs
     if (pu.user_tags.length === 0) {
         let wordsRegex = /([^\x00-\x7F]|\w)+/g;
-        let title = document.getElementById("saveinfotitle").value;
+        let title = document.getElementById("saveinfotitle")?.value || "";
         let title_words = title.match(wordsRegex);
         let allow_genres = ["arrow", "thermo", "even", "consecutive", "killer", "nonconsecutive"];
 
@@ -2360,6 +2361,17 @@ async function load(urlParam, type = 'url', origurl = null) {
     }
 
     set_genre_tags(pu.user_tags, callid = 'load');
+
+    if (Array.isArray(pu.user_tags) && pu.user_tags.length > 0) {
+        if (!Array.isArray(pu.activeSudokuVariants)) {
+            pu.activeSudokuVariants = ["classic"];
+        }
+        pu.user_tags.forEach(function(tag) {
+            if (tag && tag !== "classic" && pu.activeSudokuVariants.indexOf(tag) === -1) {
+                pu.activeSudokuVariants.push(tag);
+            }
+        });
+    }
 
     // Set some genre specific settings
     if ($('#genre_tags_opt').select2("val").includes("alphabet")) {
@@ -2822,6 +2834,22 @@ async function load(urlParam, type = 'url', origurl = null) {
             console.error("Failed to parse variants parameter", e);
         }
     }
+    if (typeof SudokuSolver !== "undefined" && typeof SudokuSolver.readConstraints === "function") {
+        try {
+            var constraints = SudokuSolver.readConstraints(pu);
+            if (constraints && Array.isArray(constraints.variants) && constraints.variants.length > 0) {
+                if (!Array.isArray(pu.activeSudokuVariants)) pu.activeSudokuVariants = ["classic"];
+                constraints.variants.forEach(function(v) {
+                    if (v && pu.activeSudokuVariants.indexOf(v) === -1) {
+                        pu.activeSudokuVariants.push(v);
+                    }
+                });
+                if (pu.activeSudokuVariants.length > 1) {
+                    pu.activeSudokuVariant = pu.activeSudokuVariants[pu.activeSudokuVariants.length - 1];
+                }
+            }
+        } catch (e) {}
+    }
     pu.load_compat_fixes();
     SudokuTools.init();
 }
@@ -3263,49 +3291,66 @@ function loadqa_arrayver1(qa, rtext_qa) {
 function set_solvemode(type = "url") {
     pu.mmode = "solve";
     pu.mode.qa = "pu_a";
-    document.getElementById("title").innerHTML = PenpaText.get('solver_mode');
-    document.getElementById("nb_size3_r").value = UserSettings.displaysize;
-    document.getElementById("newsize").style.display = "inline";
-    document.getElementById("pu_a").checked = true;
-    document.getElementById("edit_txt").style.display = "none";
-    document.getElementById("pu_q_label").style.display = "none";
-    document.getElementById("pu_a_label").style.display = "none";
-    document.getElementById("newboard").style.display = "none";
-    document.getElementById("rotation").style.display = "none";
-    document.getElementById("mo_board_lb").classList.add('is_hidden');
-    document.getElementById("sub_number2_lb").style.display = "none";
-    document.getElementById("sub_number4_lb").style.display = "none";
-    document.getElementById("sub_number11_lb").style.display = "none";
+    var titleEl = document.getElementById("title");
+    if (titleEl) titleEl.innerHTML = PenpaText.get('solver_mode');
+    var nbSize3 = document.getElementById("nb_size3_r");
+    if (nbSize3) nbSize3.value = UserSettings.displaysize;
+    var newSize = document.getElementById("newsize");
+    if (newSize) newSize.style.display = "inline";
+    var puA = document.getElementById("pu_a");
+    if (puA) puA.checked = true;
+    var editTxt = document.getElementById("edit_txt");
+    if (editTxt) editTxt.style.display = "none";
+    var puQ = document.getElementById("pu_q_label");
+    if (puQ) puQ.style.display = "none";
+    var puAL = document.getElementById("pu_a_label");
+    if (puAL) puAL.style.display = "none";
+    var newBoard = document.getElementById("newboard");
+    if (newBoard) newBoard.style.display = "none";
+    var rot = document.getElementById("rotation");
+    if (rot) rot.style.display = "none";
+    var moBoardLb = document.getElementById("mo_board_lb");
+    if (moBoardLb) moBoardLb.classList.add('is_hidden');
+    var subNum2 = document.getElementById("sub_number2_lb");
+    if (subNum2) subNum2.style.display = "none";
+    var subNum4 = document.getElementById("sub_number4_lb");
+    if (subNum4) subNum4.style.display = "none";
+    var subNum11 = document.getElementById("sub_number11_lb");
+    if (subNum11) subNum11.style.display = "none";
 
     // Hide Visibility button
-    document.getElementById("visibility_button0").style.display = "none";
-    document.getElementById("visibility_button").style.display = "none";
+    var vis0 = document.getElementById("visibility_button0");
+    if (vis0) vis0.style.display = "none";
+    var vis = document.getElementById("visibility_button");
+    if (vis) vis.style.display = "none";
 
     // Hide Load button
-    document.getElementById("input_url").style.display = "none";
-
-    // [SG] This was added to disable custom colors in solver mode as it may mess with answer checking colors.
-    // But with recent developments of answer match with any color, this restriction may not be needed and hence commenting it.
-    // // custom color disabled
-    // document.getElementById('colorpicker_special').style.display = 'none';
-    // document.getElementById('custom_color_lb').style.display = 'none';
+    var inputUrl = document.getElementById("input_url");
+    if (inputUrl) inputUrl.style.display = "none";
 
     // Save settings
-    document.getElementById('save_settings_lb').style.display = 'none';
+    var saveSet = document.getElementById('save_settings_lb');
+    if (saveSet) saveSet.style.display = 'none';
 
     // Middle Button settings not applicable in Solve mode
-    document.getElementById('mousemiddle_settings_lb').style.display = 'none';
-    document.getElementById('mousemiddle_settings_opt').style.display = 'none';
+    var mmLb = document.getElementById('mousemiddle_settings_lb');
+    if (mmLb) mmLb.style.display = 'none';
+    var mmOpt = document.getElementById('mousemiddle_settings_opt');
+    if (mmOpt) mmOpt.style.display = 'none';
 
     // Hide Custom Answer Message
-    document.getElementById('save6texttitle').style.display = 'none';
-    document.getElementById('custom_message').style.display = 'none';
+    var s6Title = document.getElementById('save6texttitle');
+    if (s6Title) s6Title.style.display = 'none';
+    var cMsg = document.getElementById('custom_message');
+    if (cMsg) cMsg.style.display = 'none';
 
     // Hide Answer check Generate Button
-    document.getElementById('closeBtn_save5').style.display = 'none';
+    var btnSave5 = document.getElementById('closeBtn_save5');
+    if (btnSave5) btnSave5.style.display = 'none';
 
     // Constraints
-    document.getElementById('constraints').style.display = 'none';
+    var cStr = document.getElementById('constraints');
+    if (cStr) cStr.style.display = 'none';
     if (type.includes('local')) {
         try {
             $('select').toggleSelect2(false);
@@ -3313,10 +3358,12 @@ function set_solvemode(type = "url") {
             // pass
         }
     }
-    document.getElementById('constraints_settings_opt').style.display = 'none';
+    var cOpt = document.getElementById('constraints_settings_opt');
+    if (cOpt) cOpt.style.display = 'none';
 
     // No need of Solving URL in Solver Mode, instead show replay url
-    document.getElementById('address_solve').style.display = 'none';
+    var addrSolve = document.getElementById('address_solve');
+    if (addrSolve) addrSolve.style.display = 'none';
     var replayExpansion = document.getElementById('expansion_replay');
     if (replayExpansion) replayExpansion.style.display = '';
 }
@@ -3401,11 +3448,11 @@ function hide_element_by_id(s) {
 }
 
 function update_title() {
-    let title = document.getElementById("saveinfotitle").value;
-    let author = document.getElementById("saveinfoauthor").value;
+    let title = document.getElementById("saveinfotitle")?.value || "";
+    let author = document.getElementById("saveinfoauthor")?.value || "";
 
-    document.getElementById('puzzletitle').innerHTML = DOMPurify.sanitize(title);
-    document.getElementById('puzzleauthor').innerHTML = DOMPurify.sanitize(author);
+    if (document.getElementById('puzzletitle')) document.getElementById('puzzletitle').innerHTML = DOMPurify.sanitize(title);
+    if (document.getElementById('puzzleauthor')) document.getElementById('puzzleauthor').innerHTML = DOMPurify.sanitize(author);
 
     let auth_str = (author ? (title ? ' by ' + author : author) : '');
     let auth_tit_str = (title ? title : (auth_str ? '' : 'Puzzle')) + auth_str;

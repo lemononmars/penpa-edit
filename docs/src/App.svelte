@@ -1115,14 +1115,13 @@
   async function handleShareEdit() {
     if (shareLoading) return;
     shareLoading = true;
-    showShareUrl = false;
+    showShareUrl = true;
     shareUrl = "";
     applyShareMetadata();
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     try {
-      showShareUrl = true;
       await new Promise((resolve) => setTimeout(resolve, 20));
       let res: any = "";
       if ((window as any).savetext_edit) {
@@ -2593,8 +2592,8 @@
           </div>
         {/if}
 
-        {#if showShareUrl && !shareLoading}
-          <div class="share-url-output" style="margin-top: 14px;">
+        {#if showShareUrl}
+          <div class="share-url-output" style="margin-top: 14px; {shareLoading ? 'display:none;' : ''}">
             <div id="modal-save-body1">
               <textarea
                 id="savetextarea"

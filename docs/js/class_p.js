@@ -2057,8 +2057,31 @@ class Puzzle {
     __export_checker_shared() {
         var text = JSON.stringify(this.__get_answer_settings("_or")) + "\n";
 
-        // Save genre tags
-        text += JSON.stringify($('#genre_tags_opt').select2("val"));
+        // Save genre tags and include active variants
+        var tags = (typeof $ !== "undefined" && $('#genre_tags_opt').length) ? ($('#genre_tags_opt').select2("val") || []) : (this.user_tags || []);
+        if (!Array.isArray(tags)) tags = tags ? [tags] : [];
+
+        var active = [];
+        if (Array.isArray(this.activeSudokuVariants)) {
+            active = active.concat(this.activeSudokuVariants);
+        } else if (this.activeSudokuVariant) {
+            active.push(this.activeSudokuVariant);
+        }
+        if (typeof SudokuSolver !== "undefined" && typeof SudokuSolver.readConstraints === "function") {
+            try {
+                var constraints = SudokuSolver.readConstraints(this);
+                if (constraints && Array.isArray(constraints.variants)) {
+                    active = active.concat(constraints.variants);
+                }
+            } catch (e) {}
+        }
+        active.forEach(function(v) {
+            if (v && v !== "classic" && tags.indexOf(v) === -1) {
+                tags.push(v);
+            }
+        });
+        this.user_tags = tags;
+        text += JSON.stringify(tags);
 
         return text;
     }
@@ -2079,6 +2102,28 @@ class Puzzle {
             return location.href.split('#')[0];
         else
             return location.href.split('?')[0];
+    }
+
+    __get_variants_param() {
+        var variants = Array.isArray(this.activeSudokuVariants) ? this.activeSudokuVariants.slice() : [];
+        if (variants.length === 0 && this.activeSudokuVariant) {
+            variants = [this.activeSudokuVariant];
+        }
+        if (typeof SudokuSolver !== "undefined" && typeof SudokuSolver.readConstraints === "function") {
+            try {
+                var constraints = SudokuSolver.readConstraints(this);
+                if (constraints && Array.isArray(constraints.variants)) {
+                    constraints.variants.forEach(function(v) {
+                        if (v && variants.indexOf(v) === -1) variants.push(v);
+                    });
+                }
+            } catch (e) {}
+        }
+        var filtered = variants.filter(function(v) { return v && v !== "classic"; });
+        if (filtered.length > 0) {
+            return "&variants=" + encodeURIComponent(variants.join(","));
+        }
+        return "";
     }
 
     maketext() {
@@ -2154,7 +2199,7 @@ class Puzzle {
         var url = this.maketext_baseurl();
         var ba = this.__export_finalize_shared(text);
 
-        return url + "#m=edit&p=" + ba;
+        return url + "#m=edit&p=" + ba + this.__get_variants_param();
     }
 
     maketext_duplicate() {
@@ -2251,9 +2296,9 @@ class Puzzle {
                 solution_clone = this.solution;
             }
             var ba_s = encrypt_data(solution_clone);
-            return url + "#m=edit&p=" + ba + "&a=" + ba_s;
+            return url + "#m=edit&p=" + ba + "&a=" + ba_s + this.__get_variants_param();
         } else {
-            return url + "#m=edit&p=" + ba;
+            return url + "#m=edit&p=" + ba + this.__get_variants_param();
         }
     }
 
