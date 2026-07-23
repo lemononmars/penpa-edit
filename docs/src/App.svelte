@@ -9,6 +9,7 @@
   } from "./variationCatalog";
   import { markChoiceFor } from "./variantMarks";
   import { metadataVariantIdForActiveVariants } from "./exampleSave.mjs";
+  import ToastContainer, { type ToastItem, type ToastType } from "./ToastContainer.svelte";
 
   if (typeof window !== "undefined") {
     (window as any).SudokuSolverRuleText = Object.fromEntries(
@@ -19,6 +20,55 @@
       (window as any).SudokuSolverRuleText[v.name.toLowerCase().replace(/[^a-z0-9]/g, "")] = v.rules["9x9"] || Object.values(v.rules)[0] || "";
     });
   }
+
+  let toasts: ToastItem[] = [];
+  let nextToastId = 1;
+
+  function showToast(
+    message: string,
+    type: ToastType = "info",
+    title?: string,
+    duration = 4000
+  ) {
+    if (!message) return;
+    const id = nextToastId++;
+    const newToast: ToastItem = { id, type, title, message, duration };
+    toasts = [newToast, ...toasts.filter(t => t.id !== id)].slice(0, 4);
+
+    if (duration > 0) {
+      window.setTimeout(() => {
+        dismissToast(id);
+      }, duration);
+    }
+  }
+
+  function dismissToast(id: number) {
+    toasts = toasts.filter(t => t.id !== id);
+  }
+
+  if (typeof window !== "undefined") {
+    (window as any).showToast = showToast;
+    window.alert = (msg: string) => {
+      showToast(String(msg), "warning");
+    };
+    (window as any).Swal = {
+      fire: (opts: any) => {
+        if (typeof opts === "string") {
+          showToast(opts, "info");
+          return Promise.resolve({ isConfirmed: true, isDismissed: false });
+        }
+        const icon = opts?.icon;
+        const type: ToastType = icon === "error" ? "error" : icon === "warning" ? "warning" : icon === "success" ? "success" : "info";
+        const title = opts?.title;
+        const msg = opts?.text || opts?.html || opts?.title || "";
+        showToast(msg, type, title !== msg ? title : undefined);
+        return Promise.resolve({ isConfirmed: true, isDismissed: false });
+      }
+    };
+  }
+
+  $: isNoSolution = /no solution|invalid|unsatisfiable|unsupported|conflict/i.test(lastLogLine);
+
 
   type VariantOption = { value: string; label: string; group: string };
   type VariantTab =
@@ -1523,13 +1573,6 @@
     }
     noteMode = String((window as any).pu?.mode?.pu_a?.sudoku?.[0] || "1");
     if (layer === "solution") variantMenuOpen = false;
-    variantHost
-      ?.querySelectorAll<HTMLButtonElement>("button")
-      .forEach((button) => {
-        const shouldDisable = !isEmbedded && layer === "solution";
-        if (button.disabled !== shouldDisable)
-          button.disabled = shouldDisable;
-      });
     autoEnabled =
       document
         .getElementById("sudoku_auto_solver")
@@ -1727,7 +1770,16 @@
         mobileActiveTab = "none";
       }
     };
+    const clearConflictHighlights = () => {
+      const pu = (window as any).pu;
+      if (pu && pu.conflict_cells && pu.conflict_cells.length > 0) {
+        pu.conflict_cells.length = 0;
+        pu.redraw?.();
+      }
+    };
     document.addEventListener("pointerdown", closeVariantMenu);
+    document.addEventListener("pointerdown", clearConflictHighlights);
+    document.addEventListener("keydown", clearConflictHighlights);
     return () => {
       observer?.disconnect();
       resizeObserver?.disconnect();
@@ -1738,6 +1790,8 @@
       document.removeEventListener("sudoku-solved", requestSync);
       document.removeEventListener("penpa-theme-change", syncDisplayTheme);
       document.removeEventListener("pointerdown", closeVariantMenu);
+      document.removeEventListener("pointerdown", clearConflictHighlights);
+      document.removeEventListener("keydown", clearConflictHighlights);
     };
   });
 </script>
@@ -1751,6 +1805,8 @@
 </svelte:head>
 
 <div class="studio-shell" class:ready={initialized} class:dark={darkTheme} class:embedded={isEmbedded}>
+  <ToastContainer {toasts} onDismiss={dismissToast} />
+
   <div class="mobile-header">
     {#if isEmbedded}
       <div class="mobile-header-row">
@@ -1815,7 +1871,7 @@
           <span>↶</span> Undo
         </button>
         <div class="solver-status">
-          <span class="status-indicator" class:running={solverRunning}></span>
+          <span class="status-indicator" class:running={solverRunning && !isNoSolution} class:error-bulb={isNoSolution} title={isNoSolution ? "No solution found" : (solverRunning ? "Solver running" : "Solver idle")}></span>
           <span class="log-text">{lastLogLine}</span>
         </div>
       </div>
@@ -2007,7 +2063,6 @@
 
       <section
         class="input-modes-section"
-        class:disabled-section={!isEmbedded && layer === "solution"}
         class:hidden-section={layer === "modes"}
         class:panel-above={mobilePanelPosition === "above"}
         class:panel-below={mobilePanelPosition === "below"}
@@ -2395,12 +2450,12 @@
           </div>
           <div class="action-group bottom-actions">
             {#if activeVariantHasExample}
-              <button on:click={loadExample}><span>📖</span>Load Example</button>
+              <button on:click={loadExample}><span><i class="fa fa-book" aria-hidden="true"></i></span>Load Example</button>
               {#if import.meta.env.DEV}
-                <button on:click={confirmOverwriteExample}><span>💾</span>Overwrite Example</button>
+                <button on:click={confirmOverwriteExample}><span><i class="fa fa-floppy-o" aria-hidden="true"></i></span>Overwrite Example</button>
               {/if}
             {:else if import.meta.env.DEV}
-              <button on:click={saveExample}><span>💾</span>Save Example</button>
+              <button on:click={saveExample}><span><i class="fa fa-floppy-o" aria-hidden="true"></i></span>Save Example</button>
             {/if}
             <button
               class="info-action"
@@ -3215,15 +3270,6 @@ href="https://github.com/semiexp/cspuz_core"
     margin-top: 80px;
     color: #6d7986;
   }
-  .disabled-section {
-    opacity: 0.48;
-  }
-  .disabled-section h2 {
-    color: #7f8994;
-  }
-  :global(.svelte-home .disabled-section .legacy-variant-host) {
-    pointer-events: none;
-  }
   .action-list {
     display: grid;
     gap: 6px;
@@ -3932,9 +3978,7 @@ href="https://github.com/semiexp/cspuz_core"
     border-radius: 5px !important;
     font-size: 11px !important;
   }
-  :global(
-      .svelte-home body.sudoku-solver-running .board-host #puzzle-container
-    ) {
+  :global(body.sudoku-solver-running) .board-host #puzzle-container {
     pointer-events: none;
     cursor: progress;
   }
@@ -3953,7 +3997,7 @@ href="https://github.com/semiexp/cspuz_core"
     backdrop-filter: blur(3px);
     cursor: progress;
   }
-  :global(.svelte-home body.sudoku-solver-running) .board-busy-overlay {
+  :global(body.sudoku-solver-running) .board-busy-overlay {
     display: flex;
   }
   .board-busy-overlay small {
@@ -5419,6 +5463,16 @@ href="https://github.com/semiexp/cspuz_core"
   .status-indicator.running {
     background: #48c78e;
     box-shadow: 0 0 0 3px rgba(72, 199, 142, 0.16);
+  }
+  .status-indicator.error-bulb {
+    background: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35), 0 0 10px rgba(239, 68, 68, 0.8) !important;
+    animation: bulbGlow 1.2s infinite ease-in-out;
+  }
+
+  @keyframes bulbGlow {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35), 0 0 10px rgba(239, 68, 68, 0.8); }
+    50% { opacity: 0.7; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2), 0 0 5px rgba(239, 68, 68, 0.4); }
   }
   .log-text {
     flex: 1;

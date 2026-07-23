@@ -3836,4 +3836,16 @@ test("Argyle Sudoku enforces all-different on 8 dashed diagonal lines", function
     const constraints = SudokuSolver.readConstraints(dummyPuzzle);
     assert.equal(constraints.supported.includes("argyle"), true);
     assert.equal(constraints.diagonalAllDifferent.length >= 8, true);
+
+    // Verify duplicate digit on Argyle diagonal returns conflict cells for highlighting
+    const board = Array.from({ length: 9 }, () => Array(9).fill(0));
+    // Line 1 contains r2c1 (row 1, col 0) and r9c8 (row 8, col 7)
+    board[1][0] = 5;
+    board[8][7] = 5;
+    const candidatesResult = SudokuSolver.getCandidates(board, constraints);
+    assert.equal(candidatesResult.valid, false);
+    assert.ok(candidatesResult.conflict);
+    assert.equal(candidatesResult.conflict.kind, "duplicate");
+    assert.deepEqual(candidatesResult.conflict.cells, [{ row: 1, col: 0 }, { row: 8, col: 7 }]);
 });
+

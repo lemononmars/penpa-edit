@@ -388,6 +388,21 @@ var SudokuCSP = (function() {
                 }
             }
         }
+        if (constraints && constraints.diagonalAllDifferent && constraints.diagonalAllDifferent.length) {
+            constraints.diagonalAllDifferent.forEach(function(diagonal, i) {
+                groups.push({ label: "diagonal line " + (i + 1), cells: diagonal });
+            });
+        }
+        if (constraints && constraints.regionAllDifferent && constraints.regionAllDifferent.length) {
+            constraints.regionAllDifferent.forEach(function(region, i) {
+                groups.push({ label: "region " + (i + 1), cells: region });
+            });
+        }
+        if (constraints && constraints.scatteredAllDifferent && constraints.scatteredAllDifferent.length) {
+            constraints.scatteredAllDifferent.forEach(function(scattered, i) {
+                groups.push({ label: "shaded group " + (i + 1), cells: scattered });
+            });
+        }
         for (var groupIndex = 0; groupIndex < groups.length; groupIndex++) {
             var byDigit = {};
             groups[groupIndex].cells.forEach(function(cell) {

@@ -238,6 +238,11 @@ var SudokuSolver = (function() {
                     if (event.type === "done" || event.type === "invalid" ||
                         event.type === "unsatisfiable" || event.type === "cancelled") {
                         candidateCache.conflict = event.conflict || null;
+                        if (typeof puzzle !== "undefined" && puzzle) {
+                            showConflict(puzzle, event.conflict);
+                        } else if (typeof pu !== "undefined" && pu) {
+                            showConflict(pu, event.conflict);
+                        }
                         setSolverRunning(false);
                         var terminalEvent = timedOut && event.type === "cancelled" ? "timeout" : event.type;
                         appendSolverLog(Object.assign({}, event, {
@@ -246,6 +251,13 @@ var SudokuSolver = (function() {
                                 " Total runtime: " +
                                 ((Date.now() - startedAt) / 1000).toFixed(3) + " s."
                         }));
+                        if (event.type !== "cancelled" && typeof window !== "undefined" && window.showToast) {
+                            if (event.type === "done") {
+                                window.showToast(event.message || "Auto Solver complete.", "success", "Auto Solver");
+                            } else if (event.type === "invalid" || event.type === "unsatisfiable") {
+                                window.showToast(event.message || "No solution found.", "warning", "Auto Solver Conflict");
+                            }
+                        }
                     }
                 }
             }
@@ -369,7 +381,19 @@ var SudokuSolver = (function() {
 
     function showConflict(puzzle, conflict) {
         candidateCache.conflict = conflict || null;
-        if (puzzle) puzzle.redraw();
+        if (puzzle) {
+            puzzle.conflict_cells = puzzle.conflict_cells || [];
+            puzzle.conflict_cells.length = 0;
+            if (conflict && Array.isArray(conflict.cells)) {
+                conflict.cells.forEach(function(cell) {
+                    var k = cellKey(puzzle, cell.row, cell.col);
+                    if (k) puzzle.conflict_cells.push(k);
+                });
+            }
+            if (typeof puzzle.redraw === "function") {
+                puzzle.redraw();
+            }
+        }
     }
 
     function isClassicSudoku(puzzle) {
@@ -3988,7 +4012,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             }
             return;
         }
-        var board = readBoard(puzzle, puzzle.mode && puzzle.mode.qa === "pu_a");
+        var board = readBoard(puzzle, true);
         var constraints = readConstraints(puzzle);
         var signature = JSON.stringify([board, constraints]);
         if (candidateCache.signature !== signature) {
@@ -4058,7 +4082,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             drawAutoCandidates(puzzle);
             return false;
         }
-        var board = readBoard(puzzle, puzzle.mode && puzzle.mode.qa === "pu_a");
+        var board = readBoard(puzzle, true);
         var constraints = readConstraints(puzzle);
         var activeVariants = Array.isArray(puzzle.activeSudokuVariants) ?
             puzzle.activeSudokuVariants : [puzzle.activeSudokuVariant || "classic"];
@@ -4083,7 +4107,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
         }
         var constraintsSignature = JSON.stringify(constraints);
         var signature = JSON.stringify([board, constraints]);
-        if (candidateCache.signature === signature) {
+        if ((candidateCache.signature === signature && candidateCache.result) || candidateCache.pendingSignature === signature) {
             return true;
         }
         if (candidateCache.pendingSignature !== signature) {
@@ -4230,6 +4254,11 @@ var SudokuTools = (function() {
         SudokuTools.autoEnabled = !SudokuTools.autoEnabled;
         if (!SudokuTools.autoEnabled) {
             SudokuSolver.cancelCandidateAnalysis();
+        } else {
+            SudokuSolver.invalidateCandidateAnalysis();
+            if (typeof pu !== "undefined" && pu) {
+                SudokuSolver.startAutoAnalysis(pu);
+            }
         }
         setToolbarState();
         if (pu) {
@@ -4290,12 +4319,19 @@ var SudokuTools = (function() {
                 if (icon) icon.className = "fa fa-check";
                 if (button) button.title = "The grid has at least 1 solution";
                 generatorLog("✓", "The grid has at least 1 solution.");
+                if (typeof window !== "undefined" && window.showToast) {
+                    window.showToast("The grid has at least 1 solution.", "success", "Solve Once");
+                }
             } else {
                 var conflict = result && result.conflict;
                 SudokuSolver.showConflict(puzzle, conflict);
                 if (icon) icon.className = "fa fa-exclamation-triangle";
                 if (button) button.title = "No solution";
-                generatorLog("No solution", result && result.reason ? result.reason : "No complete solution exists.");
+                var reason = result && result.reason ? result.reason : "No complete solution exists.";
+                generatorLog("No solution", reason);
+                if (typeof window !== "undefined" && window.showToast) {
+                    window.showToast(reason, "warning", "No Solution");
+                }
             }
         }
         if (typeof Worker === "undefined") {
@@ -4376,10 +4412,15 @@ var SudokuTools = (function() {
                 pu.redraw();
                 document.dispatchEvent(new CustomEvent("sudoku-solved"));
                 generatorLog("Solved", "Puzzle solved successfully.");
+                if (typeof window !== "undefined" && window.showToast) {
+                    window.showToast("Puzzle solved successfully!", "success", "Solve Once");
+                }
             } else {
                 const msg = result && result.reason ? result.reason : "No complete solution exists for the current grid.";
                 generatorLog("No solution", msg);
-                if (typeof Swal !== "undefined") {
+                if (typeof window !== "undefined" && window.showToast) {
+                    window.showToast(msg, "error", "No Solution Found");
+                } else if (typeof Swal !== "undefined") {
                     Swal.fire({ icon: "warning", title: "No Solution", text: msg });
                 } else {
                     alert(msg);
@@ -4894,16 +4935,16 @@ var SudokuTools = (function() {
         }
         var base = puzzle.nx0 * puzzle.ny0;
         var getCornerPoint = function(vRow, vCol) {
-            return base + puzzle.nx0 * vRow + vCol;
+            return base + puzzle.nx0 * (vRow + 1) + (vCol + 1);
         };
         var paths = [
             [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9]],
             [[0, 4], [1, 5], [2, 6], [3, 7], [4, 8], [5, 9]],
+            [[1, 0], [2, 1], [3, 2], [4, 3], [5, 4], [6, 5], [7, 6], [8, 7], [9, 8]],
+            [[4, 0], [5, 1], [6, 2], [7, 3], [8, 4], [9, 5]],
             [[0, 5], [1, 4], [2, 3], [3, 2], [4, 1], [5, 0]],
             [[0, 8], [1, 7], [2, 6], [3, 5], [4, 4], [5, 3], [6, 2], [7, 1], [8, 0]],
-            [[1, 0], [2, 1], [3, 2], [4, 3], [5, 4], [6, 5], [7, 6], [8, 7], [9, 8]],
             [[1, 9], [2, 8], [3, 7], [4, 6], [5, 5], [6, 4], [7, 3], [8, 2], [9, 1]],
-            [[4, 0], [5, 1], [6, 2], [7, 3], [8, 4], [9, 5]],
             [[4, 9], [5, 8], [6, 7], [7, 6], [8, 5], [9, 4]]
         ];
         var keys = [];
