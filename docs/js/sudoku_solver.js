@@ -17,6 +17,8 @@ var SudokuSolver = (function() {
     };
     var analysisTimer = null;
     var activeAnalysisAbort = null;
+    var conflictHighlightTimer = null;
+    var CONFLICT_HIGHLIGHT_MS = 4000;
 
     function setSolverRunning(running) {
         if (typeof document === "undefined") return;
@@ -268,7 +270,7 @@ var SudokuSolver = (function() {
                 return SudokuCSPRuntime.getCandidatesAsync(board, constraints, analysisOptions);
             }
             return new Promise(function(resolve, reject) {
-                var worker = new Worker("./js/sudoku_solver_worker.js?v=3.3.28");
+                var worker = new Worker("./js/sudoku_solver_worker.js?v=3.3.30");
                 var settled = false;
                 function finish(result, error) {
                     if (settled) return;
@@ -376,10 +378,18 @@ var SudokuSolver = (function() {
         candidateCache.constraintsSignature = null;
         candidateCache.witnesses = [];
         candidateCache.conflict = null;
+        if (conflictHighlightTimer !== null) {
+            clearTimeout(conflictHighlightTimer);
+            conflictHighlightTimer = null;
+        }
         setSolverRunning(false);
     }
 
     function showConflict(puzzle, conflict) {
+        if (conflictHighlightTimer !== null) {
+            clearTimeout(conflictHighlightTimer);
+            conflictHighlightTimer = null;
+        }
         candidateCache.conflict = conflict || null;
         if (puzzle) {
             puzzle.conflict_cells = puzzle.conflict_cells || [];
@@ -392,6 +402,19 @@ var SudokuSolver = (function() {
             }
             if (typeof puzzle.redraw === "function") {
                 puzzle.redraw();
+            }
+        }
+        if (puzzle && conflict && Array.isArray(conflict.cells) && conflict.cells.length) {
+            conflictHighlightTimer = setTimeout(function() {
+                conflictHighlightTimer = null;
+                candidateCache.conflict = null;
+                puzzle.conflict_cells.length = 0;
+                if (typeof puzzle.redraw === "function") {
+                    puzzle.redraw();
+                }
+            }, CONFLICT_HIGHLIGHT_MS);
+            if (conflictHighlightTimer && typeof conflictHighlightTimer.unref === "function") {
+                conflictHighlightTimer.unref();
             }
         }
     }
@@ -1302,7 +1325,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             constraints.antiDiagonals.push(mainDiagonal, reverseDiagonal);
             constraints.supported.push("anti diagonal");
         }
-        if (variantEnabled(puzzle, "argyle")) {
+        if (variantEnabled(puzzle, "argyle") && SIZE === 9) {
             var argylePaths = [
                 [{row:0,col:1},{row:1,col:2},{row:2,col:3},{row:3,col:4},{row:4,col:5},{row:5,col:6},{row:6,col:7},{row:7,col:8}],
                 [{row:0,col:4},{row:1,col:5},{row:2,col:6},{row:3,col:7},{row:4,col:8}],
@@ -4338,7 +4361,7 @@ var SudokuTools = (function() {
             window.setTimeout(function() { finish(SudokuSolver.solve(board, constraints)); }, 0);
             return;
         }
-        var checkWorker = new Worker("./js/sudoku_solver_worker.js?v=3.3.28");
+        var checkWorker = new Worker("./js/sudoku_solver_worker.js?v=3.3.30");
         solveOnceWorker = checkWorker;
         checkWorker.onmessage = function(event) {
             if (event.data.type !== "result") return;
@@ -4416,6 +4439,7 @@ var SudokuTools = (function() {
                     window.showToast("Puzzle solved successfully!", "success", "Solve Once");
                 }
             } else {
+                SudokuSolver.showConflict(pu, result && result.conflict);
                 const msg = result && result.reason ? result.reason : "No complete solution exists for the current grid.";
                 generatorLog("No solution", msg);
                 if (typeof window !== "undefined" && window.showToast) {
@@ -4442,7 +4466,7 @@ var SudokuTools = (function() {
         }
 
         try {
-            solveWorker = new Worker("./js/sudoku_solver_worker.js?v=3.3.28");
+            solveWorker = new Worker("./js/sudoku_solver_worker.js?v=3.3.30");
             solveTimeout = setTimeout(function() {
                 cleanup();
                 const msg = "Solving timed out after 30 seconds.";
@@ -4730,7 +4754,7 @@ var SudokuTools = (function() {
             }
             return;
         }
-        generatorWorker = new Worker("./js/sudoku_generator_worker.js?v=3.3.28");
+        generatorWorker = new Worker("./js/sudoku_generator_worker.js?v=3.3.30");
         generatorWorker.onmessage = function(event) {
             if (event.data.type === "progress") {
                 generatorLog("Generating", null, event.data.progress);
@@ -4930,7 +4954,8 @@ var SudokuTools = (function() {
     }
 
     function argyleLineKeys(puzzle) {
-        if (!puzzle || !puzzle.pu_q || !puzzle.pu_q.lineE || puzzle.nx !== 9) {
+        if (!puzzle || !puzzle.pu_q || !puzzle.pu_q.lineE ||
+            SudokuSolver.puzzleSize(puzzle) !== 9) {
             return [];
         }
         var base = puzzle.nx0 * puzzle.ny0;
@@ -4963,7 +4988,7 @@ var SudokuTools = (function() {
             return;
         }
         var diagEnabled = hasVariant("diagonal") || hasVariant("anti diagonal");
-        var argyleEnabled = hasVariant("argyle");
+        var argyleEnabled = hasVariant("argyle") && SudokuSolver.puzzleSize(pu) === 9;
         var argyleKeys = argyleLineKeys(pu);
         var argyleSet = new Set(argyleKeys);
 
@@ -6069,6 +6094,14 @@ var SudokuTools = (function() {
             if (sizeSelect) sizeSelect.value = "classic";
             if (typeof Swal !== "undefined") {
                 Swal.fire({ icon: "warning", title: "Windoku requires 9 × 9", text: "Create or resize the grid to 9 × 9 first." });
+            }
+            return;
+        }
+        if (variant === "argyle" && SudokuSolver.puzzleSize(pu) !== 9) {
+            var sizeSelectArgyle = byId("constraints_settings_opt");
+            if (sizeSelectArgyle) sizeSelectArgyle.value = "classic";
+            if (typeof Swal !== "undefined") {
+                Swal.fire({ icon: "warning", title: "Argyle requires 9 × 9", text: "Create or resize the grid to 9 × 9 first." });
             }
             return;
         }

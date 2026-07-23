@@ -3849,3 +3849,38 @@ test("Argyle Sudoku enforces all-different on 8 dashed diagonal lines", function
     assert.deepEqual(candidatesResult.conflict.cells, [{ row: 1, col: 0 }, { row: 8, col: 7 }]);
 });
 
+test("Argyle Sudoku is unsupported outside a 9x9 grid", function() {
+    const dummyPuzzle = {
+        nx: 8, ny: 8, nx0: 8, ny0: 8, space: [0, 0, 0, 0],
+        activeSudokuVariants: ["classic", "argyle"],
+        centerlist: [], point: {}, pu_q: { number: {}, symbol: {}, surface: {}, killercages: [] }
+    };
+    const constraints = SudokuSolver.readConstraints(dummyPuzzle);
+    assert.equal(constraints.supported.includes("argyle"), false);
+    assert.equal(constraints.diagonalAllDifferent.length, 0);
+});
+
+test("solver conflict highlights clear after the toast duration", function() {
+    const originalSetTimeout = global.setTimeout;
+    let redraws = 0;
+    const puzzle = {
+        nx0: 9,
+        space: [0, 0, 0, 0],
+        conflict_cells: [],
+        redraw() { redraws++; }
+    };
+    global.setTimeout = function(callback) {
+        callback();
+        return { unref() {} };
+    };
+    try {
+        SudokuSolver.showConflict(puzzle, {
+            cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }]
+        });
+    } finally {
+        global.setTimeout = originalSetTimeout;
+    }
+    assert.deepEqual(puzzle.conflict_cells, []);
+    assert.equal(redraws, 2);
+});
+

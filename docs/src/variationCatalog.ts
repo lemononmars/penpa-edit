@@ -494,6 +494,7 @@ export function installVariationCatalog() {
     const constraints = (window as any).penpa_constraints;
     const select = document.getElementById("constraints_settings_opt") as HTMLSelectElement | null;
     if (!constraints || !select) return;
+    if (select.dataset.variationCatalog === "ready") return;
     _installingCatalog = true;
     try {
     constraints.options.sudoku = constraints.options.sudoku.filter((value: string) => !hiddenVariationValues.has(value));

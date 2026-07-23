@@ -707,12 +707,13 @@
       Number(pu?.ny || 0) -
       Number(pu?.space?.[0] || 0) -
       Number(pu?.space?.[1] || 0);
-    return value === "windoku" && size !== 9
-      ? "Windoku requires a 9 × 9 grid"
-      : "";
+    if (size === 9) return "";
+    if (value === "windoku") return "Windoku requires a 9 × 9 grid";
+    if (value === "argyle") return "Argyle requires a 9 × 9 grid";
+    return "";
   }
 
-  function visibleVariants() {
+  $: visibleVariantOptions = (() => {
     const query = variantSearch.trim().toLowerCase();
     return variants
       .filter(
@@ -724,13 +725,7 @@
             variant.value.toLowerCase().includes(query)),
       )
       .sort((a, b) => a.label.localeCompare(b.label));
-  }
-
-  function inputMenuVariants() {
-    return variants.filter(
-      (variant) => primaryVariantTab(variant.value) === variantTab,
-    );
-  }
+  })();
 
   function ensureOutsideSpace(target = 1, sides = [0, 1, 2, 3]) {
     const pu = (window as any).pu;
@@ -1523,7 +1518,6 @@
   }
 
   function syncState() {
-    installVariationCatalog();
     const pu = (window as any).pu;
     if (pu) {
       activeVariantId = metadataVariantIdForActiveVariants(
@@ -1972,9 +1966,9 @@
                   </button>
                 {/each}
               </div>
-              {#each [...new Set(visibleVariants().map((variant) => variant.group))] as group}
+              {#each [...new Set(visibleVariantOptions.map((variant) => variant.group))] as group}
                 <div class="variant-menu-group">{group}</div>
-                {#each visibleVariants().filter((variant) => variant.group === group) as variant}
+                {#each visibleVariantOptions.filter((variant) => variant.group === group) as variant}
                   {@const conflict = conflictingVariant(variant.value)}
                   {@const unavailable = unavailableVariant(variant.value)}
                   <button
@@ -2122,9 +2116,9 @@
                 </button>
               {/each}
             </div>
-            {#each [...new Set(visibleVariants().map((variant) => variant.group))] as group}
+            {#each [...new Set(visibleVariantOptions.map((variant) => variant.group))] as group}
               <div class="variant-menu-group">{group}</div>
-              {#each visibleVariants().filter((variant) => variant.group === group) as variant}
+              {#each visibleVariantOptions.filter((variant) => variant.group === group) as variant}
                 {@const conflict = conflictingVariant(variant.value)}
                 {@const unavailable = unavailableVariant(variant.value)}
                 <button
@@ -2318,14 +2312,14 @@
       <div
         class="board-busy-overlay"
         aria-live="polite"
-        aria-label="CSP is working"
+        aria-label="Solver running"
       >
         <span class="busy-grid-pulse" aria-hidden="true">
           <i></i><i></i><i></i>
           <i></i><i></i><i></i>
           <i></i><i></i><i></i>
         </span>
-        <strong>CSP working…</strong>
+        <strong>Solver running…</strong>
         <small>The board is locked until this run finishes.</small>
         <button on:click={() => (window as any).SudokuTools?.stopWork?.()}
           >Stop</button
