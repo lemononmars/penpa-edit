@@ -10,6 +10,8 @@
   import { markChoiceFor } from "./variantMarks";
   import { metadataVariantIdForActiveVariants } from "./exampleSave.mjs";
   import ToastContainer, { type ToastItem, type ToastType } from "./ToastContainer.svelte";
+  import FloatingInputPanel from "./FloatingInputPanel.svelte";
+  import SudokuKeypad from "./SudokuKeypad.svelte";
 
   type SolverTimeLimit = "60" | "120" | "none";
   const solverTimeLimitStorageKey = "sudotoku-solver-time-limit";
@@ -135,6 +137,16 @@
 
 
   type VariantOption = { value: string; label: string; group: string };
+  type PickerChoice = { id: string; label: string; value: string };
+  type PickerItem = {
+    id: string;
+    label: string;
+    actionId?: string;
+    properties: PickerChoice[];
+    previewAction?: string;
+  };
+  type PickerCategory = { id: string; label: string; items: PickerItem[] };
+  type PickerQuickChoice = { id: string; label: string };
   type VariantTab =
     | "no-input"
     | "line"
@@ -157,6 +169,35 @@
   let logHost: HTMLElement;
   let solverSettingsButton: HTMLButtonElement;
   let legacyControlsHost: HTMLElement;
+  let pickerMode = "surface";
+  let pickerModes: PickerChoice[] = [];
+  let pickerSubOptions: PickerChoice[] = [];
+  let pickerStyleOptions: PickerChoice[] = [];
+  let pickerCategories: PickerCategory[] = [];
+  let pickerCategory = "";
+  let pickerItem = "";
+  let mobilePickerStep: "category" | "item" | "property" = "category";
+  let pickerSubValue = "";
+  let pickerStyleValue = "";
+  let pickerAction = "";
+  let pickerSelection = "Surface";
+  let pickerFavoriteActions: string[] = [];
+  let pickerFavoriteChoices: PickerQuickChoice[] = [];
+  let pickerActionChoices: PickerQuickChoice[] = [];
+  let activePickerCategory: PickerCategory | undefined;
+  let activePickerItem: PickerItem | undefined;
+  let filteredPickerItems: PickerItem[] = [];
+  $: activePickerCategory = pickerCategories.find((entry) => entry.id === pickerCategory);
+  $: filteredPickerItems = activePickerCategory?.items || [];
+  $: activePickerItem = activePickerCategory?.items.find((entry) => entry.id === pickerItem);
+  $: pickerActionChoices = pickerCategories.flatMap((category) =>
+    category.items.flatMap((item) => item.properties.length
+      ? item.properties.map((property) => ({ id: property.id, label: `${item.label} · ${property.label}` }))
+      : item.actionId ? [{ id: item.actionId, label: item.label }] : []),
+  );
+  $: pickerFavoriteChoices = pickerFavoriteActions
+    .map((id) => pickerActionChoices.find((choice) => choice.id === id))
+    .filter((choice): choice is PickerQuickChoice => Boolean(choice));
   let variants: VariantOption[] = [];
   let selectedVariant = "classic";
   let layer = "solution";
@@ -253,10 +294,11 @@
     action?: "backspace" | "delete";
     submode?: string;
     sym?: string;
-    num?: number;
+    num?: number | number[];
   };
   let toolPanelOptions: ToolPanelOption[] = [];
   let toolPanelSelected = new Set<string>();
+  let floatingInputPanelOpen = false;
   let slotColumns: boolean[] = [];
   let mobilePanelPosition: "above" | "below" = "below";
 
@@ -427,6 +469,20 @@
     queueMicrotask(syncMobileToolSelection);
   }
 
+  function keypadMode(): "normal" | "center" | "corner" {
+    return noteMode === "3" ? "center" : noteMode === "2" ? "corner" : "normal";
+  }
+
+  function chooseKeypadMode(mode: "normal" | "center" | "corner") {
+    chooseNoteMode(mode === "center" ? "3" : mode === "corner" ? "2" : "1");
+  }
+
+  function symbolPreviewNumber(sym: string, index = 0): number | number[] {
+    const count = Number((window as any).pu?.onoff_symbolmode_list?.[sym] || 0);
+    if (!count) return index + 1;
+    return Array.from({ length: count }, (_, bit) => bit === index ? 1 : 0);
+  }
+
   function syncToolPanel() {
     const pu = (window as any).pu;
     if (pu?.irregular_mode) {
@@ -435,7 +491,7 @@
       toolPanelSelected = new Set<string>();
       return;
     }
-    const mode = pu?.mode?.[pu?.mode?.qa]?.edit_mode || "sudoku";
+    const mode = layer === "solution" ? "sudoku" : pu?.mode?.[pu?.mode?.qa]?.edit_mode || "sudoku";
     const setting = pu?.mode?.[pu?.mode?.qa]?.[mode] || [];
     const submode = String(setting[0] || "");
     const variant = String(pu?.activeSudokuVariant || "classic");
@@ -676,7 +732,7 @@
             value: String(numVal),
             label: String(numVal),
             sym: symbolname,
-            num: numVal,
+            num: mode === "symbol" && symbolname ? symbolPreviewNumber(symbolname, index) : numVal,
           };
         },
       );
@@ -741,7 +797,7 @@
 
   function renderSymbol(
     node: HTMLCanvasElement,
-    params: { sym?: string; num?: number; darkTheme?: boolean },
+    params: { sym?: string; num?: number | number[]; darkTheme?: boolean; size?: number },
   ) {
     function draw() {
       const pu = (window as any).pu;
@@ -749,8 +805,8 @@
       const ctx = node.getContext("2d");
       if (!ctx) return;
       const dpr = window.devicePixelRatio || 1;
-      const w = 24;
-      const h = 24;
+      const w = params.size || 24;
+      const h = params.size || 24;
       node.width = w * dpr;
       node.height = h * dpr;
       node.style.width = `${w}px`;
@@ -761,7 +817,7 @@
 
       if (pu && typeof pu.draw_symbol_select === "function") {
         const origSize = pu.size;
-        pu.size = 20;
+        pu.size = Math.max(20, w - 4);
         try {
           pu.draw_symbol_select(
             ctx,
@@ -782,7 +838,7 @@
     }
     draw();
     return {
-      update(newParams: { sym?: string; num?: number; darkTheme?: boolean }) {
+      update(newParams: { sym?: string; num?: number | number[]; darkTheme?: boolean; size?: number }) {
         params = newParams;
         draw();
       },
@@ -843,6 +899,310 @@
     select.dispatchEvent(new Event("change", { bubbles: true }));
     (window as any).advancecontrol_on?.();
     queueMicrotask(syncState);
+  }
+
+  const pickerModeIcons: Record<string, string> = {
+    surface: "▧", multicolor: "▦", line: "╱", lineE: "□", wall: "▥",
+    cage: "⌗", board: "▣", move: "✥", number: "7", sudoku: "9",
+    symbol: "◇", special: "↗", combi: "⊕",
+  };
+
+  const numberSubmodeNames: Record<string, string> = {
+    "7": "Candidates", "3": "Corner", "9": "Edge", "4": "Tapa", "11": "Killer",
+  };
+  const numberSubmodeTooltips: Record<string, string> = {
+    "7": "Candidates — place digits 1–9 in their 3×3 candidate positions",
+    "3": "Corner — place a small number in the cell corner",
+    "9": "Edge — place a small number just inside a cell edge",
+    "4": "Tapa — place up to four clues around the cell edges",
+    "11": "Killer — place a clue in the upper-left of a dotted cage",
+  };
+  const surfaceSwatchColors: Record<string, string> = {
+    "1": "#555555",
+    "8": "#cccccc",
+    "3": "#cccccc",
+    "4": "#000000",
+    "2": "#b3ffb3",
+    "5": "#c0e0ff",
+    "6": "#ffa3a3",
+    "7": "#ffffa3",
+    "9": "#ffb3ff",
+    "10": "#ffcc80",
+    "11": "#cc99ff",
+    "12": "#eecab1",
+  };
+  const numberStyleNames: Record<string, string> = {
+    "1": "Black", "2": "Light green", "8": "Light blue", "3": "Gray",
+    "9": "Blue", "10": "Red", "4": "White", "0": "Hollow",
+    "6": "Black on white circle", "7": "White on black circle",
+    "11": "White on red circle", "5": "Black on white circle, no border",
+  };
+  const cageStyleNames: Record<string, string> = {
+    "10": "Black dash",
+    "16": "Black line",
+    "15": "Grey dash",
+    "7": "Grey line",
+  };
+
+  function pickerSubmodeTitle(option: PickerChoice) {
+    return pickerMode === "number"
+      ? numberSubmodeTooltips[option.value] || option.label
+      : option.label;
+  }
+
+  function pickerStyleTitle(option: PickerChoice) {
+    if (pickerMode === "number" || pickerMode === "sudoku")
+      return numberStyleNames[option.value] || option.label;
+    if (pickerMode === "cage") return cageStyleNames[option.value] || option.label;
+    return option.label;
+  }
+
+  function pickerText(node: Element | null, fallback = "") {
+    return (node?.textContent || fallback).replace(/\s+/g, " ").trim();
+  }
+
+  function pickerRadioChoices(container: Element | null): PickerChoice[] {
+    if (!container) return [];
+    return Array.from(container.querySelectorAll<HTMLInputElement>('input[type="radio"]'))
+      .filter((input) => !input.disabled)
+      .map((input) => {
+        const label = document.querySelector<HTMLLabelElement>(`label[for="${input.id}"]`);
+        const value = input.name === "mode" && input.id.startsWith("mo_")
+          ? input.id.slice(3)
+          : input.value;
+        const surfaceNames: Record<string, string> = {
+          "1": "Dark gray", "8": "Gray", "3": "Light gray", "4": "Black",
+          "2": "Green", "5": "Blue", "6": "Red", "7": "Yellow",
+          "9": "Pink", "10": "Orange", "11": "Purple", "12": "Brown",
+        };
+        const strokeNames: Record<string, string> = {
+          "2": "Black", "3": "Gray", "5": "Green", "8": "Red", "9": "Blue",
+          "12": "Dotted", "13": "Fat dots", "17": "Fat dots", "21": "Thicker",
+          "30": "Double", "40": "Short", "80": "Thin",
+        };
+        const semanticLabel = input.name === "style_surface" ? surfaceNames[value]
+          : ["style_line", "style_lineE", "style_wall"].includes(input.name) ? strokeNames[value]
+          : input.name === "style_cage" ? cageStyleNames[value]
+          : ["style_number", "style_sudoku"].includes(input.name) ? numberStyleNames[value]
+          : input.name === "mode_number" ? numberSubmodeNames[value]
+          : "";
+        return { id: input.id, value, label: semanticLabel || pickerText(label, value) };
+      });
+  }
+
+  function orderPickerSubOptions(options: PickerChoice[]) {
+    if (pickerMode !== "number") return options;
+    const order = ["1", "10", "6", "5", "2", "8", "7", "3", "9", "4", "11"];
+    return [...options].sort((a, b) => {
+      const aIndex = order.indexOf(a.value);
+      const bIndex = order.indexOf(b.value);
+      return (aIndex < 0 ? order.length : aIndex) - (bIndex < 0 ? order.length : bIndex);
+    });
+  }
+
+  function orderPickerStyleOptions(options: PickerChoice[]) {
+    if (pickerMode !== "cage") return options;
+    const order = ["10", "16", "15", "7"];
+    return [...options].sort((a, b) => order.indexOf(a.value) - order.indexOf(b.value));
+  }
+
+  function pickerTree(containerId: string, actionPrefix: string): PickerCategory[] {
+    const root = document.querySelector(`#${containerId} > .nav`);
+    if (!root) return [];
+    const categories = Array.from(root.children).map((categoryNode, categoryIndex) => {
+      const categoryLabel = categoryNode.querySelector<HTMLElement>(':scope > span');
+      const list = categoryNode.querySelector<HTMLElement>(':scope > ul');
+      const items = Array.from(list?.children || []).map((itemNode, itemIndex) => {
+        const itemLabel = itemNode.querySelector<HTMLElement>(':scope > span');
+        const nested = itemNode.querySelector<HTMLElement>(':scope > ul');
+        const properties = Array.from(nested?.children || []).map((propertyNode) => {
+          const action = propertyNode.querySelector<HTMLElement>(':scope > span[id]');
+          return {
+            id: action?.id || "",
+            value: action?.id?.slice(actionPrefix.length) || "",
+            label: pickerText(action),
+          };
+        }).filter((choice) => choice.id.startsWith(actionPrefix) && Boolean(choice.label));
+        const actionId = !nested && itemLabel?.id?.startsWith(actionPrefix) ? itemLabel.id : undefined;
+        return {
+          id: `${containerId}-${categoryIndex}-${itemIndex}`,
+          label: pickerText(itemLabel),
+          actionId,
+          properties,
+          previewAction: categoryLabel?.id === "ms3" ||
+            ["circle", "square", "triup", "tridown", "triright", "trileft", "hexpoint", "hexflat"]
+              .some((name) => (properties[0]?.id || actionId || "").startsWith(`ms_${name}`))
+            ? properties[0]?.id || actionId
+            : undefined,
+        };
+      }).filter((item) => Boolean(item.label) && Boolean(item.actionId || item.properties.length));
+      return {
+        id: categoryLabel?.id || `${containerId}-${categoryIndex}`,
+        label: pickerText(categoryLabel, `Group ${categoryIndex + 1}`),
+        items,
+      };
+    }).filter((category) => category.items.length > 0);
+    if (containerId === "mode_symbol") {
+      const numberCategory = categories.find((category) => category.id === "ms2");
+      const digital = numberCategory?.items.find((item) => item.properties.some((property) => property.value === "degital_B"));
+      const frame = numberCategory?.items.find((item) => item.actionId === "ms_degital_f");
+      if (digital && frame?.actionId && numberCategory) {
+        digital.properties = [...digital.properties, { id: frame.actionId, value: "degital_f", label: "Gray bg" }];
+        numberCategory.items = numberCategory.items.filter((item) => item !== frame);
+      }
+    }
+    return categories;
+  }
+
+  function activePickerAction() {
+    const pu = (window as any).pu;
+    if (!pu?.mode?.[pu.mode.qa]) return "";
+    if (pickerMode === "symbol") return `ms_${pu.mode[pu.mode.qa].symbol?.[0] || ""}`;
+    if (pickerMode === "combi") return `combisub_${pu.mode[pu.mode.qa].combi?.[0] || ""}`;
+    return "";
+  }
+
+  function syncLegacyPicker() {
+    const pu = (window as any).pu;
+    const modeState = pu?.mode?.[pu.mode?.qa];
+    if (!modeState) return;
+    pickerMode = modeState.edit_mode || "surface";
+    pickerSubValue = String(modeState[pickerMode]?.[0] ?? "");
+    pickerModes = pickerRadioChoices(document.getElementById("legacy_mode_controls"));
+    pickerSubOptions = orderPickerSubOptions(pickerMode === "symbol" || pickerMode === "combi"
+      ? []
+      : pickerRadioChoices(document.getElementById(`mode_${pickerMode}`)));
+    const styleMode = pickerMode === "multicolor" ? "surface"
+      : pickerMode === "combi" && ["linex", "lineox", "linedir", "yajilin", "rassisillai", "tents"].includes(modeState.combi?.[0]) ? "line"
+      : pickerMode === "combi" && ["edgex", "edgexoi"].includes(modeState.combi?.[0]) ? "lineE"
+      : pickerMode;
+    pickerStyleValue = String(
+      pickerMode === "combi" ? modeState.combi?.[1] : modeState[styleMode]?.[1] ?? "",
+    );
+    pickerStyleOptions = orderPickerStyleOptions(
+      pickerRadioChoices(document.getElementById(`style_${styleMode}`)),
+    );
+    pickerCategories = pickerMode === "symbol"
+      ? pickerTree("mode_symbol", "ms_")
+      : pickerMode === "combi"
+        ? pickerTree("mode_combi", "combisub_")
+        : [];
+    const previousAction = pickerAction;
+    const action = activePickerAction();
+    pickerAction = action;
+    const activeCategory = pickerCategories.find((category) =>
+      category.items.some((item) => item.actionId === action || item.properties.some((property) => property.id === action)),
+    );
+    if (action && action !== previousAction && activeCategory) {
+      pickerCategory = activeCategory.id;
+    } else if (!pickerCategories.some((category) => category.id === pickerCategory)) {
+      pickerCategory = activeCategory?.id || pickerCategories[0]?.id || "";
+    }
+    const category = pickerCategories.find((entry) => entry.id === pickerCategory);
+    const activeItem = category?.items.find((item) =>
+      item.actionId === action || item.properties.some((property) => property.id === action),
+    );
+    if (action && action !== previousAction && activeItem) {
+      pickerItem = activeItem.id;
+    } else if (!category?.items.some((item) => item.id === pickerItem)) {
+      pickerItem = activeItem?.id || category?.items[0]?.id || "";
+    }
+    const modeLabel = pickerModes.find((choice) => choice.value === pickerMode)?.label || pickerMode;
+    const subLabel = pickerSubOptions.find((choice) => choice.value === pickerSubValue)?.label;
+    const treeItem = pickerCategories.flatMap((entry) => entry.items).find((item) =>
+      item.actionId === action || item.properties.some((property) => property.id === action),
+    );
+    const property = treeItem?.properties.find((choice) => choice.id === action)?.label;
+    const styleLabel = pickerStyleOptions.find((choice) => choice.value === pickerStyleValue)?.label;
+    pickerSelection = [modeLabel, treeItem?.label || subLabel, property, styleLabel]
+      .filter(Boolean).join(" · ");
+  }
+
+  function finishPickerAction() {
+    window.requestAnimationFrame(() => {
+      syncLegacyPicker();
+      syncState();
+    });
+  }
+
+  function choosePickerMode(mode: string) {
+    (window as any).pu?.mode_set?.(mode);
+    pickerCategory = "";
+    pickerItem = "";
+    mobilePickerStep = "category";
+    finishPickerAction();
+  }
+
+  function choosePickerSub(id: string) {
+    (window as any).pu?.submode_check?.(id);
+    finishPickerAction();
+  }
+
+  function choosePickerStyle(id: string) {
+    const pu = (window as any).pu;
+    if (pickerMode === "multicolor") {
+      const digit = Number(id.replace(/^st_surface/, ""));
+      pu?.stylemode_check?.(id);
+      if (digit) pu?.key_number?.(digit);
+    } else {
+      pu?.stylemode_check?.(id);
+    }
+    finishPickerAction();
+  }
+
+  function choosePickerTreeAction(id: string) {
+    const pu = (window as any).pu;
+    if (id.startsWith("ms_")) pu?.subsymbolmode?.(id.slice(3));
+    else if (id.startsWith("combisub_")) pu?.subcombimode?.(id.slice(9));
+    finishPickerAction();
+  }
+
+  function savePickerPreferences() {
+    try {
+      window.localStorage.setItem("penpa-tool-picker-favorites", JSON.stringify(pickerFavoriteActions));
+    } catch {
+      // Keep the preferences for the current session when storage is unavailable.
+    }
+  }
+
+  function loadPickerPreferences() {
+    try {
+      const favorites = JSON.parse(window.localStorage.getItem("penpa-tool-picker-favorites") || "[]");
+      pickerFavoriteActions = Array.isArray(favorites) ? favorites.filter((id) => typeof id === "string") : [];
+    } catch {
+      pickerFavoriteActions = [];
+    }
+  }
+
+  function togglePickerFavorite() {
+    if (!pickerAction) return;
+    pickerFavoriteActions = pickerFavoriteActions.includes(pickerAction)
+      ? pickerFavoriteActions.filter((id) => id !== pickerAction)
+      : [pickerAction, ...pickerFavoriteActions];
+    savePickerPreferences();
+  }
+
+  function choosePickerCategory(id: string) {
+    pickerCategory = id;
+    pickerItem = pickerCategories.find((entry) => entry.id === id)?.items[0]?.id || "";
+    mobilePickerStep = "item";
+  }
+
+  function choosePickerItem(item: PickerItem) {
+    const owner = pickerCategories.find((category) => category.items.some((entry) => entry.id === item.id));
+    if (owner) pickerCategory = owner.id;
+    pickerItem = item.id;
+    if (item.actionId) choosePickerTreeAction(item.actionId);
+    else if (item.properties.length) {
+      choosePickerTreeAction(item.properties[0].id);
+      mobilePickerStep = "property";
+    }
+  }
+
+  function pickerItemPreview(item: PickerItem) {
+    const action = item.previewAction || "";
+    const sym = action.startsWith("ms_") ? action.slice(3) : "";
+    return sym ? { sym, num: symbolPreviewNumber(sym, 0) } : null;
   }
 
   function variantInputFamilies(value: string): VariantTab[] {
@@ -1865,6 +2225,7 @@
     }
     updateToolDescription();
     syncToolPanel();
+    syncLegacyPicker();
     if (selectedVariant === "slotmachine") readSlotColumns();
   }
 
@@ -1954,6 +2315,7 @@
 
   onMount(() => {
     loadSolverPreferences();
+    loadPickerPreferences();
     hideLeftSidebar = checkUrlFlag("hideSidebar");
     isEmbedded =
       new URLSearchParams(window.location.search).has("embed") ||
@@ -2224,44 +2586,13 @@
           {#if mobileInputModeCount > 1}<i class="fa fa-refresh cycle-indicator" aria-hidden="true"></i>{/if}
         </button>
       {:else}
-        {#each ["1", "2", "3", "4", "5", "6", "7", "8", "9"] as digit, index}
-          <button type="button" class="digit-key"
-            style={`grid-column: ${(index % 3) + 2}; grid-row: ${Math.floor(index / 3) + 1}`}
-            aria-label={`Enter ${digit}`}
-            on:pointerdown={(event) => {
-              event.preventDefault();
-              useMobileDigit(digit);
-            }}>{digit}</button>
-        {/each}
-        <button type="button" class="key-clear" aria-label="Clear selected cell"
-          title="Clear" on:pointerdown={(event) => {
-            event.preventDefault();
-            useMobileClear();
-          }}><i class="fa fa-times" aria-hidden="true"></i></button>
-        <button type="button" class="key-zero digit-key" aria-label="Enter 0"
-          on:pointerdown={(event) => {
-            event.preventDefault();
-            useMobileDigit("0");
-          }}>0</button>
-        <button type="button" class="key-undo" aria-label="Undo" title="Undo"
-          on:click={() => legacyClick("sudoku_undo")}
-        ><i class="fa fa-undo" aria-hidden="true"></i></button>
-
-        <button type="button" class="note-key note-normal"
-          class:active={noteMode === "1"} aria-label="Normal digit input"
-          title="Normal" on:click={() => chooseNoteMode("1")}
-        ><span class="note-icon"><b>1</b></span></button>
-        <button type="button" class="note-key note-center"
-          class:active={noteMode === "3"} aria-label="Center note input"
-          title="Center notes" on:click={() => chooseNoteMode("3")}
-        ><span class="note-icon"><small>23</small></span></button>
-        <button type="button" class="note-key note-corner"
-          class:active={noteMode === "2"} aria-label="Corner note input"
-          title="Corner notes" on:click={() => chooseNoteMode("2")}>
-          <span class="note-icon corner-numbers">
-            <small>4</small><small>5</small><small>6</small><small>7</small>
-          </span>
-        </button>
+        <div class="solver-shared-keypad">
+          <SudokuKeypad
+            mode={keypadMode()}
+            onMode={chooseKeypadMode}
+            onDigit={(digit) => useMobileDigit(String(digit))}
+          />
+        </div>
       {/if}
       <button type="button" class="note-key note-clear"
         aria-label="Clear marks" title="Clear marks" on:click={clearMarks}
@@ -2371,8 +2702,18 @@
         <div class="solver-status">
           <span class="status-indicator" class:running={solverRunning && !isNoSolution} class:error-bulb={isNoSolution} title={isNoSolution ? "No solution found" : (solverRunning ? "Solver running" : "Solver idle")}></span>
           <span class="log-text">{lastLogLine}{solverRunning ? ` · ${solverElapsedLabel}` : ""}</span>
+          <button
+            type="button"
+            class="expand-btn"
+            aria-label={fullLogExpanded ? "Collapse solver log" : "Expand solver log"}
+            aria-expanded={fullLogExpanded}
+            on:click={() => (fullLogExpanded = !fullLogExpanded)}
+          >{fullLogExpanded ? "▴" : "▾"}</button>
         </div>
       </div>
+      {#if fullLogExpanded}
+        <pre class="solver-full-log">{fullLogContent || lastLogLine}</pre>
+      {/if}
     {/if}
       <div bind:this={legacyMobileVariantSlot} class="mobile-variant-slot"></div>
     </div>
@@ -2407,28 +2748,6 @@
               ><i class="fa fa-sliders" aria-hidden="true"></i>Misc <kbd>F4</kbd></button
             >
           </div>
-          {#if layer === "solution"}
-            <div class="note-modes" aria-label="Note input style">
-              <button
-                type="button"
-                class:active={noteMode === "1"}
-                on:click={() => chooseNoteMode("1")}
-                >Normal <kbd>z</kbd></button
-              >
-              <button
-                type="button"
-                class:active={noteMode === "3"}
-                on:click={() => chooseNoteMode("3")}
-                >Center <kbd>x</kbd></button
-              >
-              <button
-                type="button"
-                class:active={noteMode === "2"}
-                on:click={() => chooseNoteMode("2")}
-                >Corner <kbd>c</kbd></button
-              >
-            </div>
-          {/if}
         </section>
 
         <section
@@ -2545,11 +2864,186 @@
         >
           <div class="modes-heading">
             <h2>Mode controls</h2>
-            <button type="button" on:click={revealAllModes}>Reveal all</button>
+            <button type="button" on:click={revealAllModes}>All modes</button>
+          </div>
+          <div class="tool-picker" aria-label="Penpa tool picker">
+            <div class="tool-picker-modes" aria-label="Mode">
+              {#each pickerModes as mode}
+                <button
+                  type="button"
+                  class:active={pickerMode === mode.value}
+                  aria-pressed={pickerMode === mode.value}
+                  title={mode.label}
+                  on:click={() => choosePickerMode(mode.value)}
+                ><span class="mode-glyph">{pickerModeIcons[mode.value] || "•"}</span><span>{mode.label}</span></button>
+              {/each}
+            </div>
+
+            {#if pickerCategories.length}
+              {#if pickerFavoriteChoices.length}
+                <div class="tool-picker-quick">
+                  <span class="tool-picker-label">Favorites</span>
+                  <div>{#each pickerFavoriteChoices as choice}<button type="button" class:active={pickerAction === choice.id} on:click={() => choosePickerTreeAction(choice.id)}>★ {choice.label}</button>{/each}</div>
+                </div>
+              {/if}
+              <div class="mobile-picker-nav">
+                {#if mobilePickerStep !== "category"}
+                  <button type="button" on:click={() => (mobilePickerStep = mobilePickerStep === "property" ? "item" : "category")}>← Back</button>
+                {/if}
+                <strong>{mobilePickerStep === "category" ? "Choose category" : mobilePickerStep === "item" ? activePickerCategory?.label : activePickerItem?.label}</strong>
+              </div>
+              <div class="tool-picker-columns">
+                <div class="tool-picker-column category-column" class:mobile-picker-hidden={mobilePickerStep !== "category"}>
+                  <span class="tool-picker-label">Category</span>
+                  {#each pickerCategories as category}
+                    <button type="button" class:active={pickerCategory === category.id} on:click={() => choosePickerCategory(category.id)}>{category.label}</button>
+                  {/each}
+                </div>
+                <div class="tool-picker-column item-column" class:mobile-picker-hidden={mobilePickerStep !== "item"}>
+                  <span class="tool-picker-label">{pickerMode === "symbol" ? "Symbol" : "Tool"}</span>
+                  {#each filteredPickerItems as item}
+                    {@const preview = pickerItemPreview(item)}
+                    <button type="button" class:active={pickerItem === item.id} class:symbol-item-preview={Boolean(preview)} class:arrow-item-preview={Boolean(preview?.sym?.startsWith("arrow_"))} title={item.label} aria-label={item.label} on:click={() => choosePickerItem(item)}>
+                      {#if preview}
+                        <canvas use:renderSymbol={{ sym: preview.sym, num: preview.num, darkTheme }} class="symbol-canvas"></canvas>
+                      {:else}
+                        {item.label}
+                      {/if}
+                    </button>
+                  {:else}
+                    <small>No matching tools</small>
+                  {/each}
+                </div>
+                <div class="tool-picker-column property-column" class:mobile-picker-hidden={mobilePickerStep !== "property"}>
+                  <span class="tool-picker-label">Properties</span>
+                  {#if activePickerItem?.properties.length}
+                    {#each activePickerItem.properties as property}
+                      <button type="button" class:active={pickerAction === property.id} on:click={() => choosePickerTreeAction(property.id)}>{property.label}</button>
+                    {/each}
+                  {:else}
+                    <small>{activePickerItem?.actionId ? "Ready to draw" : "No extra properties"}</small>
+                  {/if}
+                </div>
+              </div>
+            {:else if pickerSubOptions.length}
+              <div class="tool-picker-section">
+                <span class="tool-picker-label">Sub-mode</span>
+                <div class="tool-picker-options">
+                  {#each pickerSubOptions as option}
+                    <button
+                      type="button"
+                      class:active={pickerSubValue === option.value}
+                      class:number-preview-button={pickerMode === "number" && Boolean(numberSubmodeNames[option.value])}
+                      title={pickerSubmodeTitle(option)}
+                      aria-label={pickerSubmodeTitle(option)}
+                      on:click={() => choosePickerSub(option.id)}
+                    >
+                      {#if pickerMode === "number" && numberSubmodeNames[option.value]}
+                        <svg class="cell-preview" viewBox="0 0 36 36" aria-hidden="true">
+                          <rect x="2" y="2" width="32" height="32" rx="1" />
+                          {#if option.value === "7"}
+                            {#each [1,2,3,4,5,6,7,8,9] as digit, index}
+                              <text x={8 + (index % 3) * 10} y={12 + Math.floor(index / 3) * 10}>{digit}</text>
+                            {/each}
+                          {:else if option.value === "3"}
+                            <text class="small-clue" x="7" y="12">1</text>
+                          {:else if option.value === "9"}
+                            <text class="small-clue" x="18" y="12">2</text>
+                          {:else if option.value === "4"}
+                            <text class="tapa-clue" x="18" y="11">2</text>
+                            <text class="tapa-clue" x="28" y="22">4</text>
+                            <text class="tapa-clue" x="18" y="33">6</text>
+                            <text class="tapa-clue" x="8" y="22">8</text>
+                          {:else if option.value === "11"}
+                            <rect class="killer-cage" x="5" y="5" width="26" height="26" rx="3" />
+                            <text class="killer-clue" x="9" y="14">1</text>
+                          {/if}
+                        </svg>
+                      {:else}
+                        {option.label}
+                      {/if}
+                    </button>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+
+            {#if pickerStyleOptions.length}
+              <div class="tool-picker-section">
+                <span class="tool-picker-label">Style</span>
+                <div class="tool-picker-options style-options">
+                  {#each pickerStyleOptions as option}
+                    <button
+                      type="button"
+                      class:active={pickerStyleValue === option.value}
+                      class:surface-swatch={pickerMode === "surface" || pickerMode === "multicolor"}
+                      class:number-style-preview={pickerMode === "number" || pickerMode === "sudoku"}
+                      data-style-value={option.value}
+                      title={pickerStyleTitle(option)}
+                      aria-label={pickerStyleTitle(option)}
+                      on:click={() => choosePickerStyle(option.id)}
+                    >
+                      {#if pickerMode === "number" || pickerMode === "sudoku"}
+                        <svg class="number-style-svg" viewBox="0 0 36 36" aria-hidden="true">
+                          <rect class:white-cell={option.value === "4"} x="2" y="2" width="32" height="32" rx="1" />
+                          {#if ["5", "6", "7", "11"].includes(option.value)}
+                            <circle
+                              cx="18" cy="18" r="11"
+                              fill={option.value === "7" ? "#000" : option.value === "11" ? "#f00" : "#fff"}
+                              stroke={option.value === "6" ? "#000" : "none"}
+                            />
+                          {/if}
+                          <text
+                            class:hollow-digit={option.value === "0"}
+                            x="18" y="25"
+                            fill={option.value === "2" ? "#4c9900" : option.value === "8" ? "#187bcd" : option.value === "3" ? "#ccc" : option.value === "9" ? "#00f" : option.value === "10" ? "#f00" : ["4", "7", "11"].includes(option.value) ? "#fff" : "#000"}
+                          >1</text>
+                        </svg>
+                      {:else if pickerMode === "cage"}
+                        <svg class="cage-style-svg" viewBox="0 0 48 36" aria-hidden="true">
+                          <rect
+                            x="5" y="5" width="38" height="26" rx="3"
+                            stroke={["7", "15"].includes(option.value) ? "#666" : "#000"}
+                            stroke-dasharray={["10", "15"].includes(option.value) ? "4 3" : "none"}
+                          />
+                        </svg>
+                      {:else if pickerMode === "symbol" && ["1", "2"].includes(option.value)}
+                        <svg class="symbol-layer-style-svg" viewBox="0 0 48 36" aria-hidden="true">
+                          <rect x="1" y="1" width="46" height="34" rx="4" />
+                          {#if option.value === "1"}
+                            <path class="layer-arrows" d="M14 29V8 M9 13L14 8L19 13 M34 29V8 M29 13L34 8L39 13" />
+                            <path class="layer-line-outline" d="M5 19H43" />
+                            <path class="layer-line" d="M5 19H43" />
+                          {:else}
+                            <path class="layer-line-outline" d="M5 19H43" />
+                            <path class="layer-line" d="M5 19H43" />
+                            <path class="layer-arrows" d="M14 29V8 M9 13L14 8L19 13 M34 29V8 M29 13L34 8L39 13" />
+                          {/if}
+                        </svg>
+                      {:else}
+                        <span
+                          class="style-preview"
+                          style:background-color={(pickerMode === "surface" || pickerMode === "multicolor") ? surfaceSwatchColors[option.value] : undefined}
+                          aria-hidden="true"
+                        ></span><span>{option.label || `Style ${option.value}`}</span>
+                      {/if}
+                    </button>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+            <div class="tool-picker-current">
+              <span>Current</span><strong>{pickerSelection}</strong>
+              {#if pickerAction}
+                <button type="button" class="favorite-current" class:active={pickerFavoriteActions.includes(pickerAction)} aria-label="Toggle current tool favorite" title="Toggle favorite" on:click={togglePickerFavorite}>★</button>
+              {/if}
+            </div>
           </div>
           <div
             bind:this={legacyControlsHost}
             class="legacy-controls-host"
+            hidden
+            aria-hidden="true"
           ></div>
         </section>
       </div>
@@ -2558,7 +3052,7 @@
       <section
         bind:this={inputModesSection}
         class="input-modes-section"
-        class:hidden-section={layer === "modes"}
+        class:hidden-section={layer !== "problem"}
         class:panel-above={mobilePanelPosition === "above"}
         class:panel-below={mobilePanelPosition === "below"}
       >
@@ -2681,8 +3175,24 @@
           class="input-panel-section desktop-input-panel"
           aria-label={`${toolPanelMode} input panel section`}
         >
-          <span class="help-label">Input · Penpa {toolPanelMode}</span>
-          <div
+          <div class="input-panel-heading">
+            <span class="help-label">Input · Penpa {toolPanelMode}</span>
+            <button
+              type="button"
+              class="floating-panel-toggle"
+              class:active={floatingInputPanelOpen}
+              aria-pressed={floatingInputPanelOpen}
+              on:click={() => (floatingInputPanelOpen = !floatingInputPanelOpen)}
+            >{floatingInputPanelOpen ? "Close large panel" : "Large panel"}</button>
+          </div>
+          {#if layer === "solution"}
+            <SudokuKeypad
+              mode={keypadMode()}
+              onMode={chooseKeypadMode}
+              onDigit={(digit) => useMobileDigit(String(digit))}
+              onClear={useMobileClear}
+            />
+          {:else}<div
             class="tool-input-panel"
             aria-label={`${toolPanelMode} input panel`}
           >
@@ -2704,7 +3214,7 @@
                 {#if !option.action && index < 9}<kbd>{index + 1}</kbd>{/if}
               </button>
             {/each}
-          </div>
+          </div>{/if}
         </div>
       {/if}
       {#if toolPanelOptions.length}
@@ -2716,36 +3226,21 @@
         >
           <div class="mobile-input-panel-header">
             <span>Input · Penpa {toolPanelMode}</span>
-            <button type="button" on:click={toggleMobilePanelPosition}>
-              Move {mobilePanelPosition === "above" ? (isEmbedded ? "right" : "below") : "above"}
-            </button>
-          </div>
-          {#if layer === "solution" && toolPanelMode === "Sudoku"}
-            <div
-              class="note-modes mobile-note-modes"
-              aria-label="Note input style"
-            >
-              <button
-                type="button"
-                class:active={noteMode === "1"}
-                on:click={() => chooseNoteMode("1")}
-                >Normal <kbd>z</kbd></button
-              >
-              <button
-                type="button"
-                class:active={noteMode === "3"}
-                on:click={() => chooseNoteMode("3")}
-                >Center <kbd>x</kbd></button
-              >
-              <button
-                type="button"
-                class:active={noteMode === "2"}
-                on:click={() => chooseNoteMode("2")}
-                >Corner <kbd>c</kbd></button
-              >
+            <div>
+              <button type="button" on:click={() => (floatingInputPanelOpen = !floatingInputPanelOpen)}>Large panel</button>
+              <button type="button" on:click={toggleMobilePanelPosition}>
+                Move {mobilePanelPosition === "above" ? (isEmbedded ? "right" : "below") : "above"}
+              </button>
             </div>
-          {/if}
-          <div
+          </div>
+          {#if layer === "solution"}
+            <SudokuKeypad
+              mode={keypadMode()}
+              onMode={chooseKeypadMode}
+              onDigit={(digit) => useMobileDigit(String(digit))}
+              onClear={useMobileClear}
+            />
+          {:else}<div
             class="tool-input-panel"
             aria-label={`${toolPanelMode} mobile input panel`}
           >
@@ -2767,8 +3262,19 @@
                 {#if !option.action && index < 9}<kbd>{index + 1}</kbd>{/if}
               </button>
             {/each}
-          </div>
+          </div>{/if}
         </section>
+      {/if}
+      {#if floatingInputPanelOpen && toolPanelOptions.length}
+        <FloatingInputPanel
+          title={`Input · Penpa ${toolPanelMode}`}
+          options={toolPanelOptions}
+          selected={toolPanelSelected}
+          symbolRenderer={renderSymbol}
+          darkTheme={darkTheme}
+          onSelect={applyToolPanelOption}
+          onClose={() => (floatingInputPanelOpen = false)}
+        />
       {/if}
     </aside>
     {/if}
@@ -3529,56 +4035,6 @@
   .segmented button.active kbd {
     color: #1a202c;
   }
-  .note-modes {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    margin-top: 6px;
-  }
-  .note-modes button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 3px 4px;
-    min-height: 26px;
-    height: 26px;
-    border: 1px solid #bfc9d4;
-    border-right: 0;
-    background: #f7f9fb;
-    font-size: 11px;
-    white-space: nowrap;
-  }
-  .note-modes button:first-child {
-    border-radius: 6px 0 0 6px;
-  }
-  .note-modes button:last-child {
-    border-right: 1px solid #bfc9d4;
-    border-radius: 0 6px 6px 0;
-  }
-  .note-modes kbd {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 14px;
-    height: 14px;
-    padding: 0 3px;
-    font-size: 9px;
-    font-weight: 700;
-    font-family: inherit;
-    text-transform: lowercase;
-    color: #4a5568;
-    background: #edf2f7;
-    border: 1px solid #cbd5e0;
-    border-bottom-width: 2px;
-    border-radius: 3px;
-    line-height: 1;
-    box-sizing: border-box;
-  }
-  .note-modes button.active kbd {
-    color: #1a202c;
-    background: #ffffff;
-    border-color: #cbd5e0;
-  }
   button.active {
     background: var(--primary-color) !important;
     color: white !important;
@@ -4063,7 +4519,7 @@
     border: 1px solid #bdc8d3;
     border-radius: 5px;
     color: #344353;
-    background: #fff;
+    background: #f1f3f5;
     font-size: 12px;
     font-weight: 700;
     touch-action: manipulation;
@@ -4089,18 +4545,19 @@
   }
   .tool-input-panel button:hover,
   .tool-input-panel button.selected {
-    color: #fff;
+    color: var(--primary-color);
     border-color: var(--primary-color);
-    background: var(--primary-color);
+    background: #f1f3f5;
+    box-shadow: inset 0 0 0 2px rgba(var(--primary-color-rgb), 0.14);
   }
   .tool-input-panel button.panel-action {
     color: #8a3b3b;
     font-size: 10px;
   }
   .tool-input-panel button.panel-action:hover {
-    color: #fff;
+    color: #b94b4b;
     border-color: #b94b4b;
-    background: #b94b4b;
+    background: #f1f3f5;
   }
   .input-panel-section {
     flex: 0 0 auto;
@@ -4861,9 +5318,340 @@
     backdrop-filter: blur(5px);
   }
   .legacy-controls-host {
+    display: none;
+  }
+  .input-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+  .input-panel-heading .help-label { margin-bottom: 0; }
+  .floating-panel-toggle {
+    min-height: 26px;
+    padding: 3px 8px;
+    border: 1px solid #bdc8d3;
+    border-radius: 5px;
+    color: #385063;
+    background: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .floating-panel-toggle.active {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+  .tool-picker {
     display: grid;
+    gap: 10px;
+    margin-top: 7px;
+    padding: 9px;
+    border: 1px solid #d7dee5;
+    border-radius: 8px;
+    background: #f8fafc;
+  }
+  .tool-picker button {
+    min-width: 0;
+    min-height: 32px;
+    padding: 5px 7px;
+    overflow: hidden;
+    border: 1px solid #bdc8d3;
+    border-radius: 6px;
+    color: #344353;
+    background: #fff;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+  }
+  .tool-picker button:hover {
+    border-color: var(--primary-color);
+  }
+  .tool-picker button.active {
+    color: #fff;
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+  }
+  .tool-picker-modes {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .tool-picker-modes button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 48px;
+  }
+  .mode-glyph {
+    font-size: 17px;
+    line-height: 1;
+  }
+  .tool-picker-columns {
+    display: grid;
+    grid-template-columns: minmax(74px, 0.8fr) minmax(86px, 1.25fr) minmax(70px, 0.8fr);
     gap: 6px;
-    margin-top: 6px;
+    min-height: 150px;
+  }
+  .mobile-picker-nav {
+    display: none;
+  }
+  .tool-picker-quick {
+    display: grid;
+    gap: 4px;
+    padding: 6px;
+    border: 1px solid #d7dee5;
+    border-radius: 6px;
+    background: #fff;
+  }
+  .tool-picker-quick > div {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 1px;
+  }
+  .tool-picker-quick button {
+    min-height: 28px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .tool-picker-column {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    min-width: 0;
+    max-height: 220px;
+    padding: 5px;
+    overflow-y: auto;
+    border: 1px solid #d7dee5;
+    border-radius: 6px;
+    background: #fff;
+  }
+  .tool-picker-column button {
+    flex: 0 0 auto;
+    text-align: left;
+  }
+  .tool-picker-column button.symbol-item-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+  }
+  .tool-picker-column button.arrow-item-preview {
+    border: 1px solid #9aa7b2;
+    background: #fff;
+  }
+  .tool-picker-column.item-column {
+    scrollbar-width: thin;
+    scrollbar-color: #9eabb6 transparent;
+  }
+  .tool-picker-column.item-column::-webkit-scrollbar { width: 5px; }
+  .tool-picker-column.item-column::-webkit-scrollbar-track { background: transparent; }
+  .tool-picker-column.item-column::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #9eabb6;
+  }
+  .tool-picker-column small {
+    padding: 7px 4px;
+    color: #73808c;
+    font-size: 10px;
+  }
+  .tool-picker-label {
+    display: block;
+    margin: 0 1px 2px;
+    color: #657381;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .tool-picker-section {
+    display: grid;
+    gap: 5px;
+  }
+  .tool-picker-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .tool-picker-options button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .tool-picker-options .number-preview-button,
+  .tool-picker-options .number-style-preview {
+    width: 40px;
+    min-height: 38px;
+    padding: 1px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    text-align: center;
+  }
+  .cell-preview,
+  .number-style-svg {
+    display: block;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+  }
+  .tool-picker-options .number-preview-button .cell-preview,
+  .tool-picker-options .number-style-preview .number-style-svg {
+    width: 34px;
+    height: 34px;
+  }
+  .cell-preview > rect:first-child,
+  .number-style-svg > rect:first-child {
+    fill: #fff;
+    stroke: #536170;
+    stroke-width: 1.25;
+  }
+  .cell-preview text {
+    fill: #17212a;
+    font-size: 10px;
+    font-weight: 700;
+    text-anchor: middle;
+  }
+  .cell-preview .small-clue { font-size: 16px; }
+  .cell-preview .tapa-clue { font-size: 14px; }
+  .cell-preview .killer-cage {
+    fill: none;
+    stroke: #17212a;
+    stroke-width: 1;
+    stroke-dasharray: 2 2;
+  }
+  .cell-preview .killer-clue {
+    font-size: 14px;
+    text-anchor: middle;
+  }
+  .number-style-svg > rect.white-cell {
+    fill: #64748b;
+  }
+  .number-style-svg text {
+    font-size: 22px;
+    font-weight: 700;
+    text-anchor: middle;
+  }
+  .number-style-svg text.hollow-digit {
+    fill: none;
+    stroke: #000;
+    stroke-width: 0.8;
+  }
+  .symbol-layer-style-svg {
+    display: block;
+    width: 48px;
+    height: 36px;
+  }
+  .cage-style-svg {
+    display: block;
+    width: 48px;
+    height: 36px;
+  }
+  .cage-style-svg rect { fill: none; stroke-width: 2; }
+  .symbol-layer-style-svg rect {
+    fill: #84919b;
+    stroke: #536170;
+  }
+  .symbol-layer-style-svg path { fill: none; }
+  .symbol-layer-style-svg .layer-arrows {
+    stroke: #000;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .symbol-layer-style-svg .layer-line-outline {
+    stroke: #000;
+    stroke-width: 6;
+  }
+  .symbol-layer-style-svg .layer-line {
+    stroke: #fff;
+    stroke-width: 3.5;
+  }
+  .style-preview {
+    display: inline-block;
+    width: 20px;
+    height: 4px;
+    flex: 0 0 auto;
+    border-radius: 2px;
+    background: currentColor;
+  }
+  .style-options button[data-style-value="5"] .style-preview { background: #22a05a; }
+  .style-options button[data-style-value="8"] .style-preview { background: #dc3f35; }
+  .style-options button[data-style-value="9"] .style-preview { background: #287ccb; }
+  .style-options button[data-style-value="12"] .style-preview,
+  .style-options button[data-style-value="13"] .style-preview,
+  .style-options button[data-style-value="17"] .style-preview {
+    background: repeating-linear-gradient(90deg, currentColor 0 3px, transparent 3px 6px);
+  }
+  .style-options button[data-style-value="13"] .style-preview,
+  .style-options button[data-style-value="17"] .style-preview { height: 6px; }
+  .style-options button[data-style-value="30"] .style-preview {
+    height: 7px;
+    border-top: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    border-radius: 0;
+    background: transparent;
+  }
+  .style-options button[data-style-value="80"] .style-preview { height: 2px; }
+  .style-options button[data-style-value="21"] .style-preview { height: 7px; }
+  .style-options button[data-style-value="40"] .style-preview { width: 12px; }
+  .surface-swatch .style-preview {
+    width: 14px;
+    height: 14px;
+    border: 1px solid #7b8791;
+    border-radius: 3px;
+  }
+  .surface-swatch[data-style-value="1"] .style-preview { background: #555; }
+  .surface-swatch[data-style-value="8"] .style-preview,
+  .surface-swatch[data-style-value="3"] .style-preview { background: #ccc; }
+  .surface-swatch[data-style-value="4"] .style-preview { background: #000; }
+  .surface-swatch[data-style-value="2"] .style-preview { background: #b3ffb3; }
+  .surface-swatch[data-style-value="5"] .style-preview { background: #c0e0ff; }
+  .surface-swatch[data-style-value="6"] .style-preview { background: #ffa3a3; }
+  .surface-swatch[data-style-value="7"] .style-preview { background: #ffffa3; }
+  .surface-swatch[data-style-value="9"] .style-preview { background: #ffb3ff; }
+  .surface-swatch[data-style-value="10"] .style-preview { background: #ffcc80; }
+  .surface-swatch[data-style-value="11"] .style-preview { background: #cc99ff; }
+  .surface-swatch[data-style-value="12"] .style-preview { background: #eecab1; }
+  .tool-picker-current {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 30px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    color: #324252;
+    background: #eaf1f6;
+    font-size: 10px;
+  }
+  .tool-picker-current strong {
+    min-width: 0;
+    flex: 1;
+  }
+  .tool-picker-current .favorite-current {
+    min-width: 28px;
+    min-height: 26px;
+    margin-left: auto;
+    padding: 2px 6px;
+    color: #7a8792;
+    background: transparent;
+  }
+  .tool-picker-current .favorite-current.active {
+    color: #fff4ad;
+    border-color: #a87912;
+    background: #8a6512;
+  }
+  .tool-picker-current span {
+    color: #687784;
+    font-weight: 700;
+    text-transform: uppercase;
   }
   .slot-column-controls {
     display: grid;
@@ -5377,8 +6165,12 @@
   }
   .studio-shell.dark .modes-heading button,
   .studio-shell.dark .tool-input-panel button {
-    color: #dce5ec;
+    color: #253746;
     border-color: #536473;
+    background: #f1f3f5;
+  }
+  .studio-shell.dark .modes-heading button {
+    color: #dce5ec;
     background: #263340;
   }
   .studio-shell.dark .tool-input-panel {
@@ -5399,9 +6191,9 @@
   }
   .studio-shell.dark .tool-input-panel button:hover,
   .studio-shell.dark .tool-input-panel button.selected {
-    color: #fff;
+    color: #2b8bc7;
     border-color: #2b8bc7;
-    background: var(--primary-color);
+    background: #f1f3f5;
   }
   .studio-shell.dark .action-group {
     border-color: #40505f;
@@ -5424,6 +6216,31 @@
   .studio-shell.dark .action-menu button:hover {
     color: #fff !important;
     background: #3a4a58 !important;
+  }
+  .studio-shell.dark .tool-picker {
+    color: #dce5ec;
+    border-color: #4b5a68;
+    background: #32414f;
+  }
+  .studio-shell.dark .tool-picker button,
+  .studio-shell.dark .tool-picker-column,
+  .studio-shell.dark .tool-picker-quick {
+    color: #dce5ec;
+    border-color: #536473;
+    background: #263340;
+  }
+  .studio-shell.dark .tool-picker button.active {
+    color: #fff;
+    border-color: #2b8bc7;
+    background: var(--primary-color);
+  }
+  .studio-shell.dark .tool-picker-label,
+  .studio-shell.dark .tool-picker-column small {
+    color: #aebdca;
+  }
+  .studio-shell.dark .tool-picker-current {
+    color: #e6eef4;
+    background: #202d38;
   }
   .studio-shell.dark :global(.legacy-controls-host #legacy_mode_controls),
   .studio-shell.dark :global(.legacy-controls-host #submode_button),
@@ -5530,6 +6347,32 @@
   }
 
   @media (max-width: 768px) {
+    .tool-picker {
+      padding: 6px;
+    }
+    .tool-picker-modes {
+      grid-template-columns: repeat(5, minmax(52px, 1fr));
+      overflow-x: auto;
+    }
+    .mobile-picker-nav {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 30px;
+    }
+    .mobile-picker-nav button {
+      min-height: 28px;
+    }
+    .tool-picker-columns {
+      display: block;
+      min-height: 0;
+    }
+    .tool-picker-column {
+      max-height: 150px;
+    }
+    .tool-picker-column.mobile-picker-hidden {
+      display: none;
+    }
     .studio-shell .mobile-header {
       display: flex;
       flex-direction: column;
@@ -5893,17 +6736,9 @@
       letter-spacing: normal;
       text-transform: none;
     }
-    .studio-shell .mobile-note-modes {
-      margin: 0 0 6px;
-    }
-    .studio-shell .mobile-note-modes button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+    .studio-shell .mobile-input-panel-header > div {
+      display: flex;
       gap: 4px;
-      min-height: 26px;
-      height: 26px;
-      padding: 3px 4px;
     }
     .studio-shell.dark .mobile-input-panel-header button {
       color: #dce5ec;
@@ -6010,6 +6845,28 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+    .studio-shell .solver-status .expand-btn {
+      flex: 0 0 26px;
+      min-width: 26px;
+      min-height: 24px;
+      padding: 0;
+      border-radius: 5px;
+      font-size: 13px;
+      line-height: 1;
+    }
+    .studio-shell .solver-full-log {
+      width: 100%;
+      max-height: 150px;
+      margin: 2px 0 0;
+      padding: 7px 9px;
+      overflow: auto;
+      border: 1px solid #465563;
+      border-radius: 6px;
+      background: #17212a;
+      color: #d5dfe7;
+      font: 10px/1.35 ui-monospace, SFMono-Regular, Consolas, monospace;
+      white-space: pre-wrap;
     }
     .studio-shell .log-host {
       display: none !important;
@@ -6278,14 +7135,9 @@
     grid-template-rows: repeat(4, minmax(38px, 1fr));
     gap: 5px;
   }
+  .solver-shared-keypad { grid-column: 1 / -1; width: 100%; }
   .mobile-keypad > button {
     font-size: 17px;
-  }
-  .mobile-keypad > .digit-key {
-    background: #334756;
-  }
-  .mobile-keypad > .digit-key:hover {
-    background: #3b5263;
   }
   .mobile-keypad .deck-action {
     color: #9fd3f4;
@@ -6389,37 +7241,6 @@
   .variant-input-key .symbol-canvas {
     display: block;
     margin: auto;
-  }
-  .note-icon {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 25px;
-    height: 25px;
-    box-sizing: border-box;
-    border: 1.5px solid currentColor;
-    border-radius: 2px;
-  }
-  .note-icon b {
-    font-size: 17px;
-    line-height: 1;
-  }
-  .note-icon > small {
-    font-size: 9px;
-    line-height: 1;
-  }
-  .corner-numbers {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    justify-items: center;
-    margin: auto;
-    font-size: 7px;
-    line-height: 1;
-  }
-  .corner-numbers small {
-    font-size: 7px;
   }
   .mobile-deck-pane {
     position: relative;
@@ -6607,9 +7428,6 @@
       width: 100%;
       min-height: 0;
       padding: 2px;
-    }
-    .studio-shell.battle .mobile-keypad .key-zero {
-      display: none;
     }
   }
   .studio-shell.embedded.battle .mobile-input-deck,

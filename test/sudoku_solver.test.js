@@ -1154,7 +1154,7 @@ test("generated XV marks survive the Penpa round trip and preserve the generated
     assert.deepEqual(answers[0], generated.solution);
 });
 
-test("generation board animator places and removes one digit every 25ms", function() {
+test("generation board animator places and removes one digit every 20ms", function() {
     const scheduled = [];
     const applied = [];
     const animator = SudokuSolver.createGenerationBoardAnimator({
@@ -1170,30 +1170,30 @@ test("generation board animator places and removes one digit every 25ms", functi
     animator.enqueue([[4, 7]]);
     animator.enqueue([[0, 7]]);
     assert.equal(scheduled.length, 1);
-    assert.equal(scheduled[0].delay, 25);
+    assert.equal(scheduled[0].delay, 20);
 
     scheduled.shift().callback();
     assert.deepEqual(applied, [[0, 0, 4]]);
-    assert.equal(scheduled[0].delay, 25);
+    assert.equal(scheduled[0].delay, 20);
     scheduled.shift().callback();
     assert.deepEqual(applied, [[0, 0, 4], [0, 1, 7]]);
     scheduled.shift().callback();
     assert.deepEqual(applied, [[0, 0, 4], [0, 1, 7], [0, 0, 0]]);
 });
 
-test("generation board animator uses 25ms ticks and randomizes the initial full grid", function() {
+test("generation board animator uses 20ms ticks and randomizes the initial full grid", function() {
     const scheduled = [];
     const applied = [];
     const animator = SudokuSolver.createGenerationBoardAnimator({
         initialBoard: [[0, 0, 0]],
-        intervalMs: 25,
+        intervalMs: 20,
         random: function() { return 0; },
         schedule: function(callback, delay) { scheduled.push({ callback, delay }); return scheduled.length; },
         cancel: function() {},
         applyCell: function(row, col, digit) { applied.push([row, col, digit]); }
     });
     animator.enqueue([[1, 2, 3]], { randomize: true });
-    assert.equal(scheduled[0].delay, 25);
+    assert.equal(scheduled[0].delay, 20);
     while (scheduled.length) scheduled.shift().callback();
     assert.deepEqual(applied.map((change) => change[1]), [1, 2, 0]);
 });
@@ -5132,5 +5132,40 @@ test("canGenerateFromScratch recognizes supported variants and full clue markers
     assert.equal(!!SudokuSolver.generateWithFullClues.kropkipairs, false);
     assert.equal(!!SudokuSolver.generateWithFullClues.xvpairs, false);
     assert.equal(!!SudokuSolver.generateWithFullClues.consecutivepairs, false);
+    ["xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"].forEach(function(variant) {
+        assert.equal(SudokuSolver.canGenerateFromScratch(["classic", variant]), true, variant);
+        assert.equal(SudokuSolver.generateWithFullClues[variant], true, variant);
+    });
+});
+
+test("outside scratch generation derives a full clue from every side of a solved grid", function() {
+    const solution = Array.from({ length: 9 }, (_, row) =>
+        Array.from({ length: 9 }, (_, col) => ((row * 3 + Math.floor(row / 3) + col) % 9) + 1));
+    ["xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"].forEach(function(variant) {
+        const generated = SudokuGenerator.outsideCluesForSolution(solution, [variant]);
+        assert.equal(generated.marks.length, 36, variant + " should cover four sides");
+        assert.deepEqual(new Set(generated.marks.map((mark) => mark.side)), new Set(["top", "bottom", "left", "right"]));
+        if (variant === "rossini") assert.equal(generated.constraints.rossiniLines.length, 36);
+        else if (variant === "skyscraper") assert.equal(generated.constraints.skyscrapers.length, 36);
+        else if (variant === "sandwich") assert.equal(generated.constraints.sandwiches.length, 36);
+        else assert.equal(generated.constraints.outsideRelations.length, 36);
+    });
+});
+
+test("outside scratch variants prune digits and remain uniquely solvable", function() {
+    ["xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"].forEach(function(variant, index) {
+        const generated = SudokuGenerator.generate({
+            size: 9,
+            variants: ["classic", variant],
+            seed: 7728017 + index,
+            minimal: false,
+            extraClues: 4
+        });
+        const answers = SudokuCSP.createProblem(generated.board, generated.constraints).enumerateAnswers(2);
+        assert.ok(generated.givens < 81, variant + " should prune solved-grid digits");
+        assert.equal(generated.outsideMarks.length, 36, variant + " should retain every outside position");
+        assert.equal(answers.length, 1, variant);
+        assert.deepEqual(answers[0], generated.solution, variant);
+    });
 });
 

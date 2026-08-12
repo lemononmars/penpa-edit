@@ -1,8 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type { RealtimeChannel } from "@supabase/supabase-js";
-  import { generateBattleName, loadBattleName, saveBattleName } from "./battle/names";
+  import type { RealtimeChannel, User } from "@supabase/supabase-js";
+  import { loadBattleName, saveBattleName } from "./battle/names";
   import { variations, variationByValue } from "./variationCatalog";
+  import SudokuKeypad from "./SudokuKeypad.svelte";
+  import BattleSettingsModal from "./BattleSettingsModal.svelte";
+  import { battleLocale, setBattleLocale, t as i18nT, type BattleLocale } from "./battle/i18n";
+  import { ensureBattleProfile } from "./battle/profile";
   import {
     battleConfigurationError, boardFrameSource, leaveBattleChannel, normalizeRoomCode,
     playerToken, supabase, type BattlePlayer, type BattleRoom, type ConfirmedMove,
@@ -14,11 +18,22 @@
   // Keep these lists explicit so supported battle variants are easy to edit.
   const battleVariantIdsBySize: Record<6 | 9, string[]> = {
     6: ["classic", "diagonal", "anti king", "anti knight", "non consecutive", "kropki", "xv", "consecutive", "battenburg", "disjoint", "mirror", "symmetric unequal"],
-    9: ["classic", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "kropki", "xv", "consecutive", "battenburg", "disjoint", "windoku", "mirror", "symmetric unequal"],
+    9: ["classic", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "kropki", "xv", "consecutive", "battenburg", "disjoint", "windoku", "mirror", "symmetric unequal", "xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"],
   };
   const basicBattleVariantIds = new Set(["classic", "diagonal", "xv", "kropki", "consecutive", "anti knight", "anti king", "windoku"]);
+  const thaiVariantRules: Record<string, string> = {
+    diagonal: "ตัวเลข 1–9 ต้องไม่ซ้ำกันบนเส้นทแยงที่กำหนด", "anti diagonal": "ตัวเลขบนเส้นทแยงหลักต้องไม่ซ้ำกัน",
+    "anti king": "ช่องที่ห่างกันหนึ่งก้าวแบบคิงหมากรุกต้องมีตัวเลขต่างกัน", "anti knight": "ช่องที่ห่างกันหนึ่งก้าวแบบไนต์หมากรุกต้องมีตัวเลขต่างกัน",
+    "non consecutive": "ช่องที่ติดกันในแนวตั้งหรือแนวนอนห้ามมีค่าต่างกัน 1", kropki: "จุดขาวหมายถึงเลขติดกัน จุดดำหมายถึงเลขหนึ่งเป็นสองเท่าของอีกเลข",
+    xv: "V ระบุว่าคู่ช่องรวมกันได้ 5 และ X ระบุว่ารวมกันได้ 10", consecutive: "แถบระหว่างช่องระบุว่าตัวเลขต่างกัน 1",
+    battenburg: "เครื่องหมายแบตเทนเบิร์กระบุว่าช่องรอบมุมสลับคี่และคู่", disjoint: "ช่องตำแหน่งเดียวกันในแต่ละกล่องต้องไม่ซ้ำกัน",
+    windoku: "พื้นที่หน้าต่างเพิ่มเติมแต่ละพื้นที่ต้องมีตัวเลขไม่ซ้ำกัน", mirror: "ช่องที่เป็นภาพสะท้อนต้องเป็นไปตามเงื่อนไขกระจก",
+    "symmetric unequal": "ช่องที่สมมาตรกันต้องมีค่าไม่เท่ากัน", xsums: "คำใบ้นอกตารางคือผลรวมของ X ช่องแรก โดย X คือเลขช่องแรก",
+    skyscraper: "คำใบ้นอกตารางบอกจำนวนตึกที่มองเห็นจากด้านนั้น", numberedrooms: "เลขช่องแรกบอกตำแหน่งของค่าที่ต้องเท่ากับคำใบ้นอกตาราง",
+    rossini: "ลูกศรบอกว่าสามช่องแรกเพิ่มขึ้นหรือลดลงตามทิศลูกศร", sandwich: "คำใบ้คือผลรวมของเลขที่อยู่ระหว่าง 1 และ 9",
+    sumframe: "คำใบ้คือผลรวมของช่องในกรอบจากด้านนั้น"
+  };
   $: variantOptions = battleVariantIdsBySize[gridSize]
-    .filter((value) => advancedVariants || basicBattleVariantIds.has(value))
     .map((value) => ({
     value,
     label: value === "classic" ? "Classic" : variationByValue.get(value)?.name || (value.charAt(0).toUpperCase() + value.slice(1)),
@@ -38,15 +53,19 @@
   let boardFrame: HTMLIFrameElement;
   let playerName = loadBattleName();
   let draftName = playerName;
-  let editingName = false;
+  let settingsOpen = false;
   let roomCode = normalizeRoomCode(new URLSearchParams(location.search).get("room") || "");
+  const tournamentCode = normalizeRoomCode(new URLSearchParams(location.search).get("tournament") || "");
   let spectatorMode = new URLSearchParams(location.search).get("watch") === "1";
   let gridSize: 6 | 9 = 9;
   let difficulty: Difficulty = "easy";
   let selectedVariants: string[] = [];
   let selectedVariant = "classic";
-  let advancedVariants = false;
+  let selectedVariantGroup: "classic" | "basic" | "advanced" = "classic";
+  let showSelectedVariantRule = false;
+  $: language = $battleLocale;
   let landingMode: "create" | null = null;
+  let roomKind: "casual" | "ranked" = "casual";
   let room: BattleRoom | null = null;
   let players: BattlePlayer[] = [];
   let activeRooms: ActiveRoom[] = [];
@@ -77,6 +96,42 @@
   let knownSolution: number[][] = [];
   let playerMoveStats: Record<string, { correct: number; incorrect: number }> = {};
   let botClocks: number[] = [];
+  let authUser: User | null = null;
+  let answerCheckUrl = "";
+
+  function snapshotPenpaLayer(layer: any) {
+    if (!layer || typeof layer !== "object") return {};
+    const snapshot: Record<string, any> = {};
+    for (const [mode, value] of Object.entries(layer)) {
+      if (mode.startsWith("command_") || value === undefined) continue;
+      snapshot[mode] = JSON.parse(JSON.stringify(value));
+    }
+    return snapshot;
+  }
+
+  function generatedMarksPayload(result: any, puzzle: any) {
+    const visible = (marks: any[]) => (marks || []).filter((mark) => mark?.kind !== "none");
+    return {
+      oddEvenMarks: result?.oddEvenMarks || result?.marks?.oddEven || [],
+      kropkiMarks: visible(result?.kropkiMarks || result?.marks?.kropki),
+      consecutiveMarks: visible(result?.consecutiveMarks || result?.marks?.consecutive),
+      xvMarks: visible(result?.xvMarks || result?.marks?.xv),
+      battenburgMarks: visible(result?.battenburgMarks || result?.marks?.battenburg),
+      outsideMarks: result?.outsideMarks || [],
+      questionLayers: {
+        pu_q: snapshotPenpaLayer(puzzle?.pu_q),
+        pu_q_col: snapshotPenpaLayer(puzzle?.pu_q_col),
+      },
+    };
+  }
+
+  function generatedMarksFromHash(hash: string | null | undefined) {
+    if (!hash) return null;
+    const match = hash.match(/[&]generatedMarks=([^&]*)/);
+    if (!match) return null;
+    try { return JSON.parse(decodeURIComponent(match[1])); }
+    catch { return null; }
+  }
   let clock: number | undefined;
   let generationClock: number | undefined;
   let heartbeatClock: number | undefined;
@@ -84,7 +139,8 @@
 
   $: boardSrc = boardFrameSource(room?.puzzle_hash || "");
   $: isHost = Boolean(room && myPlayerId === room.host_player_id);
-  $: boardVisible = Boolean((room?.status === "playing" || room?.status === "finished") && countdown === 0 && boardLoaded);
+  $: boardVisible = Boolean(room?.status === "playing" && countdown === 0 && boardLoaded);
+  $: boardRevealed = Boolean((room?.status === "playing" || room?.status === "finished") && countdown === 0 && boardLoaded);
   $: if (room?.status === "playing") roomInfoOpen = false;
   let previousRoomStatus: string | undefined = undefined;
   $: if (room?.status === "finished" && previousRoomStatus !== "finished") {
@@ -97,6 +153,9 @@
     previousRoomStatus = room.status;
   }
   $: if (room?.status === "playing" && isHost && botTokens.length) { if (!botClocks.length) startBotLoop(); } else if (room?.status !== "playing") { stopBotLoop(); }
+  $: if (room?.status === "finished" && boardLoaded && !answerCheckUrl) {
+    setTimeout(() => { answerCheckUrl = frameWindow()?.SudokuTools?.battleAnswerCheckLink?.() || ""; }, 0);
+  }
   $: syncBattleReveal(boardVisible);
   $: elapsedLabel = formatTime(elapsedSeconds);
   $: myColor = players.find((player) => player.id === myPlayerId)?.color || "blue";
@@ -108,6 +167,48 @@
     .filter((v) => v !== "classic")
     .map((v) => variations.find((entry) => entry.value === v))
     .filter((item): item is typeof variations[0] => Boolean(item));
+  $: basicVariantOptions = variantOptions.filter((option) => option.value !== "classic" && basicBattleVariantIds.has(option.value));
+  $: advancedVariantOptions = variantOptions.filter((option) => option.value !== "classic" && !basicBattleVariantIds.has(option.value));
+  $: selectedVariantRule = selectedVariant === "classic" ? t("classicRule") : variationByValue.get(selectedVariant)?.rule || "";
+
+  async function loadAuthProfile() {
+    if (!supabase || !authUser) return;
+    const profile = await ensureBattleProfile(authUser, playerName);
+    if (profile?.display_name) { playerName = saveBattleName(profile.display_name); draftName = playerName; }
+  }
+
+  async function signOut() {
+    if (!supabase) return;
+    await supabase.auth.signOut(); authUser = null; roomKind = "casual";
+  }
+
+  const translations: Record<string, [string, string]> = {
+    createRoom: ["Create room", "สร้างห้อง"], createARoom: ["Create a room", "สร้างห้องใหม่"],
+    back: ["Back", "กลับ"], grid: ["Grid", "ตาราง"], difficulty: ["Difficulty", "ความยาก"],
+    easy: ["Easy", "ง่าย"], normal: ["Normal", "ปกติ"], hard: ["Hard", "ยาก"],
+    variants: ["Variants", "รูปแบบ"], classic: ["Classic", "คลาสสิก"], basicVariant: ["Basic variant", "รูปแบบพื้นฐาน"],
+    advancedVariant: ["Advanced variant", "รูปแบบขั้นสูง"], random: ["Random", "สุ่ม"], showRule: ["Show rule", "แสดงกติกา"],
+    activeRooms: ["Active rooms", "ห้องที่เปิดอยู่"], refresh: ["Refresh", "รีเฟรช"], join: ["Join", "เข้าร่วม"], watch: ["Watch", "ชม"],
+    noRooms: ["No rooms are active yet.", "ยังไม่มีห้องที่เปิดอยู่"], youAre: ["You are", "คุณคือ"], save: ["Save", "บันทึก"],
+    light: ["Light", "สว่าง"], dark: ["Dark", "มืด"], rules: ["Rules", "กติกา"], players: ["Players", "ผู้เล่น"],
+    startBattle: ["Start battle", "เริ่มแข่งขัน"], retryBoard: ["Retry board", "สร้างกระดานใหม่"], lobby: ["Lobby", "ล็อบบี้"],
+    invite: ["Invite", "เชิญ"], copied: ["Copied", "คัดลอกแล้ว"], preparing: ["Preparing a unique puzzle", "กำลังสร้างปริศนาเฉพาะ"],
+    backToLobby: ["Back to lobby", "กลับล็อบบี้"], readyLobby: ["Ready in the lobby", "พร้อมในล็อบบี้"],
+    boardHidden: ["The board is loaded and hidden until battle starts.", "โหลดกระดานแล้วและจะซ่อนไว้จนเริ่มแข่งขัน"],
+    loadingBoard: ["Loading the board", "กำลังโหลดกระดาน"], getReady: ["Get ready!", "เตรียมตัว!"],
+    appearance: ["Appearance", "การแสดงผล"], copyInvite: ["Copy invite", "คัดลอกคำเชิญ"],
+    classicSudoku: ["Classic Sudoku", "ซูโดกุคลาสสิก"], classicRule: ["Place each digit once in every row, column, and box.", "ใส่ตัวเลขแต่ละตัวหนึ่งครั้งในทุกแถว ทุกคอลัมน์ และทุกกล่อง"],
+    preparingStatus: ["Preparing", "กำลังเตรียม"], playing: ["Playing", "กำลังแข่งขัน"], finished: ["Finished", "จบแล้ว"],
+    abort: ["Abort", "ยุติ"], abortBattle: ["Abort battle", "ยุติการแข่งขัน"], rematch: ["Rematch", "แข่งอีกครั้ง"],
+    roomInfo: ["Room information", "ข้อมูลห้อง"], removePlayer: ["Remove player", "นำผู้เล่นออก"], points: ["pts", "คะแนน"],
+    timeLimit: ["Time limit reached", "หมดเวลา"], battleComplete: ["Battle complete", "การแข่งขันจบแล้ว"],
+    finalScores: ["Final scores recorded.", "บันทึกคะแนนสุดท้ายแล้ว"], winsWith: ["wins with", "ชนะด้วย"], tieWith: ["tie with", "เสมอกันด้วย"],
+    tournament: ["Back to tournament", "กลับการแข่งขัน"],
+  };
+  $: t = (key: string) => (language, i18nT(key));
+  $: localizedVariantRule = (value: string, fallback: string) =>
+    language === "th" ? thaiVariantRules[value] || fallback : fallback;
+  function changeLocale(locale: BattleLocale) { setBattleLocale(locale); }
 
   function formatTime(seconds: number) {
     return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
@@ -133,9 +234,15 @@
     if (!battleVariantIdsBySize[size].includes(selectedVariant)) chooseVariant("classic");
   }
 
-  function toggleAdvancedVariants(enabled: boolean) {
-    advancedVariants = enabled;
-    if (!enabled && !basicBattleVariantIds.has(selectedVariant)) chooseVariant("classic");
+  function chooseVariantGroup(group: "classic" | "basic" | "advanced") {
+    selectedVariantGroup = group;
+    const options = group === "basic" ? basicVariantOptions : group === "advanced" ? advancedVariantOptions : [];
+    chooseVariant(group === "classic" ? "classic" : options[0]?.value || "classic");
+  }
+
+  function chooseRandomVariant() {
+    const options = selectedVariantGroup === "basic" ? basicVariantOptions : advancedVariantOptions;
+    if (options.length) chooseVariant(options[Math.floor(Math.random() * options.length)].value);
   }
 
   function syncBattleReveal(visible: boolean) {
@@ -144,12 +251,12 @@
     if (spectatorMode) return;
     if (initialCellFocused) return;
     initialCellFocused = true;
-    setTimeout(() => frameWindow()?.SudokuTools?.focusBattleCell?.(0, 0), 0);
-  }
-
-  function randomizeName() {
-    draftName = generateBattleName();
-    playerName = saveBattleName(draftName);
+    const readyFrame = frameWindow();
+    setTimeout(() => {
+      if (readyFrame === frameWindow() && readyFrame?.pu) {
+        readyFrame.SudokuTools?.focusBattleCell?.(0, 0);
+      }
+    }, 0);
   }
 
   function showBattleToast(message: string) {
@@ -183,19 +290,29 @@
 
   function chooseBattleNoteMode(mode: "normal" | "center" | "corner") {
     noteMode = mode;
-    const shortcut = mode === "normal" ? ["z", "KeyZ"] : mode === "center" ? ["x", "KeyX"] : ["c", "KeyC"];
-    dispatchBoardKey(shortcut[0], shortcut[1]);
+    frameWindow()?.SudokuTools?.setBattleInputMode?.(mode);
   }
 
   function enterBattleDigit(digit: number) {
-    dispatchBoardKey(String(digit), `Digit${digit}`);
+    const frame = frameWindow();
+    if (!boardVisible || !frame?.SudokuTools?.enterBattleDigit) return;
+    frame.SudokuTools.enterBattleDigit(digit, noteMode);
+    setTimeout(inspectBoardInput, 0);
   }
 
   async function waitForBoard() {
-    for (let attempt = 0; attempt < 200; attempt += 1) {
+    for (let attempt = 0; attempt < 600; attempt += 1) {
       const frame = frameWindow();
-      if (frame?.pu && frame?.SudokuTools && frame?.SudokuSolver) return frame;
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      if (frame?.pu && frame?.SudokuTools && frame?.SudokuSolver &&
+          (frame.penpaBoardReady === true || !frame.penpaBoardReadyPromise)) return frame;
+      if (frame?.penpaBoardReadyPromise) {
+        await Promise.race([
+          frame.penpaBoardReadyPromise,
+          new Promise((resolve) => setTimeout(resolve, 50)),
+        ]);
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
     }
     throw new Error("The Penpa board did not finish loading.");
   }
@@ -203,16 +320,16 @@
   async function generatePuzzle() {
     const frame = frameWindow();
     if (!frame?.SudokuTools || !frame?.pu) throw new Error("Penpa frame is not ready.");
-    frame.SudokuTools.prepareBattleGrid(room?.grid_size || gridSize);
+    const roomVariants = room?.variants || ["classic", ...selectedVariants];
+    frame.SudokuTools.prepareBattleGrid(Number(room?.grid_size || gridSize), roomVariants);
     generating = true;
     generationStatusMessage = "";
     generationSeconds = 0;
     generationClock = window.setInterval(() => generationSeconds += 1, 1000);
     try {
-      const roomVariants = room?.variants || ["classic", ...selectedVariants];
       const roomDifficulty = room?.difficulty || difficulty;
       const result: any = await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error("Puzzle generation timed out.")), 65000);
+        const timeout = setTimeout(() => reject(new Error("Puzzle generation timed out.")), 25000);
         const generated = (event: Event) => { cleanup(); resolve((event as CustomEvent).detail); };
         const failed = (event: Event) => { cleanup(); reject(new Error((event as CustomEvent).detail || "Puzzle generation failed.")); };
         const progress = (event: Event) => {
@@ -236,7 +353,10 @@
       const hashIndex = duplicate.indexOf("#");
       if (hashIndex < 0) throw new Error("Could not serialize the generated board.");
       const variantParam = `&variants=${encodeURIComponent(roomVariants.join(","))}`;
-      const puzzleHash = duplicate.slice(hashIndex).replace(/&variants=[^&]*/g, "") + variantParam;
+      const markParam = `&generatedMarks=${encodeURIComponent(JSON.stringify(generatedMarksPayload(result, frame.pu)))}`;
+      const puzzleHash = duplicate.slice(hashIndex)
+        .replace(/&variants=[^&]*/g, "")
+        .replace(/&generatedMarks=[^&]*/g, "") + variantParam + markParam;
       return { result, puzzleHash };
     } finally {
       generating = false; clearInterval(generationClock);
@@ -261,8 +381,9 @@
     difficulty = room.difficulty || "easy"; gridSize = room.grid_size;
     selectedVariants = room.variants.filter((item) => item !== "classic");
     selectedVariant = selectedVariants[0] || "classic";
-    boardLoaded = false; knownBoard = [];
-    history.replaceState(null, "", `${location.pathname}?room=${room.code}${watching ? "&watch=1" : ""}`);
+    selectedVariantGroup = selectedVariant === "classic" ? "classic" : basicBattleVariantIds.has(selectedVariant) ? "basic" : "advanced";
+    boardLoaded = false; knownBoard = []; answerCheckUrl = "";
+    history.replaceState(null, "", `${location.pathname}?room=${room.code}${watching ? "&watch=1" : ""}${tournamentCode ? `&tournament=${tournamentCode}` : ""}`);
   }
 
   async function createRoom() {
@@ -270,9 +391,10 @@
     busy = true; error = "";
     try {
       playerName = saveBattleName(playerName);
-      const { data, error: rpcError } = await supabase.rpc("create_battle_room_v2", {
+      if (roomKind === "ranked" && !authUser) throw new Error("Sign in to create a ranked room.");
+      const { data, error: rpcError } = await supabase.rpc("create_battle_room_v3", {
         p_player_name: playerName, p_player_token: playerToken(), p_grid_size: gridSize,
-        p_variants: ["classic", ...selectedVariants], p_difficulty: difficulty,
+        p_variants: ["classic", ...selectedVariants], p_difficulty: difficulty, p_ranked: roomKind === "ranked",
       });
       if (rpcError) throw rpcError;
       acceptRoom(data, false); await subscribeToRoom();
@@ -282,7 +404,7 @@
 
   async function prepareRoomBoard() {
     if (!supabase || !room || !isHost || room.status !== "preparing" || preparingBoard) return;
-    preparingBoard = true; error = ""; resetSessionTimers(); generating = true;
+    error = ""; resetSessionTimers(); preparingBoard = true; generating = true;
     generationClock = window.setInterval(() => generationSeconds += 1, 1000);
     try {
       const { result, puzzleHash } = await generatePuzzle();
@@ -457,7 +579,7 @@
     try {
       const { error: rpcError } = await supabase.rpc("begin_battle_rematch", { p_room_id: room.id, p_player_token: playerToken() });
       if (rpcError) throw rpcError;
-      boardLoaded = false; knownBoard = []; knownSolution = [];
+      boardLoaded = false; knownBoard = []; knownSolution = []; answerCheckUrl = "";
       await refreshRoom(); await refreshPlayers();
     } catch (cause: any) { error = cause?.message || "Could not start rematch."; }
     finally { busy = false; }
@@ -479,17 +601,21 @@
     finally { busy = false; }
   }
 
-  async function saveName() {
+  async function saveName(name = draftName) {
     try {
-      playerName = saveBattleName(draftName); editingName = false;
+      draftName = name;
+      playerName = saveBattleName(draftName);
+      if (supabase && authUser) {
+        const { error: profileError } = await supabase.from("battle_profiles").update({ display_name: playerName }).eq("id", authUser.id);
+        if (profileError) throw profileError;
+      }
       if (supabase && room) {
         const { error: rpcError } = await supabase.rpc("update_battle_player_name", { p_room_id: room.id, p_player_token: playerToken(), p_name: playerName });
         if (rpcError) throw rpcError; await refreshPlayers();
       }
+      settingsOpen = false;
     } catch (cause: any) { error = cause?.message || "Could not update the name."; }
   }
-
-  function editName() { draftName = playerName; editingName = true; }
 
   async function copyInvite() {
     if (!room) return;
@@ -501,13 +627,16 @@
     stopBotLoop(); resetSessionTimers();
     if (supabase && room && !spectatorMode) await supabase.rpc("leave_battle_room", { p_room_id: room.id, p_player_token: playerToken() });
     await leaveBattleChannel(channel); channel = null; room = null; players = []; myPlayerId = "";
-    botTokens = []; boardLoaded = false; spectatorMode = false; history.replaceState(null, "", location.pathname); await refreshLobby();
+    botTokens = []; boardLoaded = false; spectatorMode = false;
+    if (tournamentCode) { location.href = `./tournament/?tournament=${tournamentCode}`; return; }
+    history.replaceState(null, "", location.pathname); await refreshLobby();
   }
 
   async function addBots(count: number) {
     if (!supabase || !room || !isHost) return;
     busy = true; error = "";
     try {
+      if (room.ranked) throw new Error("Bots are not allowed in ranked battles.");
       const names = ["🤖 Bot Alpha", "🤖 Bot Beta", "🤖 Bot Gamma"];
       for (let i = 0; i < count; i++) {
         const token = crypto.randomUUID();
@@ -603,7 +732,10 @@
         if (!data.correct) frame.SudokuTools.setBattleDigit(change.row, change.col, null);
       }
       knownBoard = frame.SudokuSolver.readBoard(frame.pu, true);
-    } catch (cause: any) { error = cause?.message || "Move could not be submitted."; knownBoard = frame.SudokuSolver.readBoard(frame.pu, true); }
+    } catch (cause: any) {
+      error = cause?.message || "Move could not be submitted.";
+      for (const change of changes) frame.SudokuTools.setBattleDigit(change.row, change.col, knownBoard[change.row]?.[change.col] || null);
+    }
     finally { inputBusy = false; }
   }
 
@@ -611,9 +743,19 @@
     if (spectatorMode || !boardVisible || !boardFrame || event.defaultPrevented) return;
     const target = event.target as HTMLElement;
     if (target?.matches("input, textarea, select, button, [contenteditable=true]")) return;
+    if (["z", "x", "c"].includes(event.key.toLowerCase())) {
+      chooseBattleNoteMode(event.key.toLowerCase() === "z" ? "normal" : event.key.toLowerCase() === "x" ? "center" : "corner");
+      event.preventDefault();
+      return;
+    }
     const accepted = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Backspace", "Delete"];
     if (!accepted.includes(event.key) && !/^[0-9]$/.test(event.key)) return;
     const frame = frameWindow(); if (!frame?.document) return;
+    if (/^[1-9]$/.test(event.key) && frame.SudokuTools?.enterBattleDigit) {
+      const mode = event.shiftKey ? "corner" : (event.ctrlKey || event.metaKey) ? "center" : noteMode;
+      frame.SudokuTools.enterBattleDigit(Number(event.key), mode);
+      event.preventDefault(); setTimeout(inspectBoardInput, 0); return;
+    }
     const init = { key: event.key, code: event.code, location: event.location, shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, altKey: event.altKey, metaKey: event.metaKey, bubbles: true, cancelable: true };
     frame.document.dispatchEvent(new frame.KeyboardEvent("keydown", init));
     frame.document.dispatchEvent(new frame.KeyboardEvent("keyup", init));
@@ -623,18 +765,45 @@
   async function boardReady() {
     if (!room) return;
     if (room.status === "preparing") { await prepareRoomBoard(); return; }
-    boardLoaded = true;
-    const frame = await waitForBoard(); knownBoard = frame.SudokuSolver.readBoard(frame.pu, true);
-    applyThemeToBoard();
-    if (frame?.pu?.mode?.pu_a) {
-      if (frame.pu.mode.pu_a.sudoku) frame.pu.mode.pu_a.sudoku[1] = 1;
-      if (frame.pu.mode.pu_a.number) frame.pu.mode.pu_a.number[1] = 1;
+    boardLoaded = false;
+    try {
+      const frame = await waitForBoard();
+      frame.SudokuTools.setBattleInputMode?.(noteMode);
+      const generatedMarks = generatedMarksFromHash(room.puzzle_hash);
+      if (generatedMarks) frame.SudokuTools.restoreGeneratedMarks?.(generatedMarks);
+      knownBoard = frame.SudokuSolver.readBoard(frame.pu, true);
+      applyThemeToBoard();
+      if (frame?.pu?.mode?.pu_a) {
+        if (frame.pu.mode.pu_a.sudoku) frame.pu.mode.pu_a.sudoku[1] = 1;
+        if (frame.pu.mode.pu_a.number) frame.pu.mode.pu_a.number[1] = 1;
+      }
+      if (!spectatorMode) {
+        frame.document.addEventListener("keydown", handleFrameBattleKeydown, true);
+        frame.document.addEventListener("keyup", inspectBoardInput);
+        frame.document.addEventListener("pointerup", inspectBoardInput);
+      }
+      await loadConfirmedMoves();
+      if (generatedMarks) frame.SudokuTools.restoreGeneratedMarks?.(generatedMarks);
+      if (room.status === "finished") answerCheckUrl = frame.SudokuTools.battleAnswerCheckLink?.() || "";
+      boardLoaded = true;
+    } catch (cause: any) {
+      boardLoaded = false;
+      error = cause?.message || "The Penpa board did not finish loading.";
     }
-    if (!spectatorMode) {
-      frame.document.addEventListener("keyup", inspectBoardInput);
-      frame.document.addEventListener("pointerup", inspectBoardInput);
+  }
+
+  function handleFrameBattleKeydown(event: KeyboardEvent) {
+    if (spectatorMode || !boardVisible || event.defaultPrevented) return;
+    const key = event.key.toLowerCase();
+    if (["z", "x", "c"].includes(key)) {
+      chooseBattleNoteMode(key === "z" ? "normal" : key === "x" ? "center" : "corner");
+      event.preventDefault(); event.stopImmediatePropagation(); return;
     }
-    await loadConfirmedMoves();
+    if (/^[1-9]$/.test(event.key)) {
+      const mode = event.shiftKey ? "corner" : (event.ctrlKey || event.metaKey) ? "center" : noteMode;
+      frameWindow()?.SudokuTools?.enterBattleDigit?.(Number(event.key), mode);
+      event.preventDefault(); event.stopImmediatePropagation(); setTimeout(inspectBoardInput, 0);
+    }
   }
 
   onMount(() => {
@@ -650,7 +819,11 @@
       await supabase.rpc("touch_battle_player", { p_room_id: room.id, p_player_token: playerToken() });
       await refreshRoom();
     }, 10000);
+    let authSubscription: { unsubscribe: () => void } | undefined;
     if (supabase) {
+      supabase.auth.getSession().then(({ data }) => { authUser = data.session?.user || null; loadAuthProfile(); });
+      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => { authUser = session?.user || null; loadAuthProfile(); });
+      authSubscription = authListener.subscription;
       lobbyChannel = supabase.channel("battle-lobby")
         .on("postgres_changes", { event: "*", schema: "public", table: "battle_rooms" }, () => refreshLobby(false))
         .on("postgres_changes", { event: "*", schema: "public", table: "battle_players" }, () => refreshLobby(false))
@@ -661,60 +834,67 @@
       clearInterval(clock); clearInterval(generationClock); clearInterval(heartbeatClock); clearTimeout(toastClock); window.removeEventListener("keydown", forwardBattleKeyboard);
       window.removeEventListener("beforeunload", protectReload);
       leaveBattleChannel(channel); leaveBattleChannel(lobbyChannel);
+      authSubscription?.unsubscribe();
     };
   });
 </script>
 
-<svelte:head><title>Sudoku Battle</title><meta name="description" content="A realtime multiplayer Sudoku battle." /></svelte:head>
+<svelte:head><title>Sudoku Battle 2</title><meta name="description" content="A realtime multiplayer Sudoku battle." /></svelte:head>
 
-<main class:in-room={Boolean(room)} class:dark={darkMode}>
-  {#if !room}<header><h1>Sudoku Battle</h1><button class="theme-toggle" on:click={toggleTheme}>{darkMode ? "☀ Light" : "☾ Dark"}</button></header>{/if}
+<main class:in-room={Boolean(room)} class:dark={darkMode} lang={language}>
+  {#if !room}<header><h1>Sudoku Battle 2</h1><div class="header-actions user-menu"><span><strong>{playerName}</strong><small>{authUser ? t("loggedIn") : t("guest")}</small></span><button aria-label={t("settings")} title={t("settings")} on:click={() => settingsOpen = true}>⚙</button></div></header>{/if}
   {#if !room}
-    <div class="lobby-profile card">
-      <div class="identity"><span>You are</span>{#if editingName}<input maxlength="24" bind:value={draftName} on:keydown={(event) => event.key === "Enter" && saveName()} /><button class="small" on:click={saveName}>Save</button>{:else}<strong>{playerName}</strong><button class="icon-button" aria-label="Edit name" title="Edit name" on:click={editName}>✎</button><button class="icon-button" aria-label="Generate random name" title="Generate random name" on:click={randomizeName}>↻</button>{/if}</div>
-    </div>
     <section class="lobby-layout">
       <div class="card create-card">
         {#if !landingMode}
-          <div class="landing-choices"><button class="primary" on:click={() => landingMode = "create"}>Create room</button></div>
+          <div class="landing-choices"><button class="primary" on:click={() => { roomKind = "casual"; landingMode = "create"; }}>{t("createCasual")}</button><button class="ranked-button" disabled={!authUser} title={!authUser ? t("rankedLogin") : t("ratedBattle")} on:click={() => { roomKind = "ranked"; landingMode = "create"; }}>{t("createRanked")}</button><a class="button-link" href="./leaderboard/">{t("viewLeaderboard")}</a></div>
         {:else if landingMode === "create"}
-          <div class="section-title"><h2>Create a room</h2><button class="small" on:click={() => landingMode = null}>Back</button></div>
-          <div class="choice-row"><span>Grid</span><button class:active={gridSize === 6} on:click={() => chooseGridSize(6)}>6×6</button><button class:active={gridSize === 9} on:click={() => chooseGridSize(9)}>9×9</button></div>
-          <div class="choice-row difficulty"><span>Difficulty</span>{#each ["easy", "normal", "hard"] as level}<button class:active={difficulty === level} on:click={() => difficulty = level as Difficulty}>{level}</button>{/each}</div>
-          <label class="variant-select"><span>Variants</span><select value={selectedVariant} on:change={(event) => chooseVariant(event.currentTarget.value)}>{#each variantOptions as option}<option value={option.value}>{option.label}</option>{/each}</select></label>
-          <label class="advanced-toggle"><span>Advanced</span><input type="checkbox" checked={advancedVariants} on:change={(event) => toggleAdvancedVariants(event.currentTarget.checked)} /></label>
-          <button class="primary wide" disabled={busy} on:click={createRoom}>{busy ? "Creating…" : "Create room"}</button>
+          <div class="section-title"><h2>{roomKind === "ranked" ? t("createRanked") : t("createCasual")} {#if roomKind === "ranked"}<span class="ranked-badge">{t("ranked")}</span>{/if}</h2><button class="small" on:click={() => landingMode = null}>{t("back")}</button></div>
+          <div class="choice-row"><span>{t("grid")}</span><button class:active={gridSize === 6} on:click={() => chooseGridSize(6)}>6×6</button><button class:active={gridSize === 9} on:click={() => chooseGridSize(9)}>9×9</button></div>
+          <div class="choice-row difficulty"><span>{t("difficulty")}</span>{#each ["easy", "normal", "hard"] as level}<button class:active={difficulty === level} on:click={() => difficulty = level as Difficulty}>{t(level)}</button>{/each}</div>
+          <div class="variant-builder">
+            <span>{t("variants")}</span>
+            <div class="variant-group-buttons"><button class:active={selectedVariantGroup === "classic"} on:click={() => chooseVariantGroup("classic")}>{t("classic")}</button><button class:active={selectedVariantGroup === "basic"} on:click={() => chooseVariantGroup("basic")}>{t("basicVariant")}</button><button class:active={selectedVariantGroup === "advanced"} on:click={() => chooseVariantGroup("advanced")}>{t("advancedVariant")}</button></div>
+            {#if selectedVariantGroup !== "classic"}
+              <div class="variant-dropdown-row"><select value={selectedVariant} on:change={(event) => chooseVariant(event.currentTarget.value)}>{#each selectedVariantGroup === "basic" ? basicVariantOptions : advancedVariantOptions as option}<option value={option.value}>{option.label}</option>{/each}</select><button type="button" title={t("random")} aria-label={t("random")} on:click={chooseRandomVariant}>⚄</button></div>
+              <label class="rule-toggle"><input type="checkbox" bind:checked={showSelectedVariantRule} /> {t("showRule")}</label>
+              {#if showSelectedVariantRule}<p class="selected-rule">{selectedVariantRule}</p>{/if}
+            {/if}
+          </div>
+          {#if roomKind === "ranked"}<p class="muted">{t("rankedDescription")}</p>{/if}
+          <button class="primary wide" disabled={busy || (roomKind === "ranked" && !authUser)} on:click={createRoom}>{busy ? `${t("createRoom")}…` : roomKind === "ranked" ? t("createRanked") : t("createCasual")}</button>
         {/if}
       </div>
       <div class="card active-list">
-        <div class="section-title"><h2>Active rooms</h2><button class="small" on:click={() => refreshLobby()}>Refresh</button></div>
+        <div class="section-title"><h2>{t("activeRooms")}</h2><button class="small" on:click={() => refreshLobby()}>{t("refresh")}</button></div>
         {#if lobbyLoading}<div class="skeleton-list">{#each [1,2,3] as _}<div class="skeleton"></div>{/each}</div>
         {:else if activeRooms.length}{#each activeRooms as active}
-          <div class="room-row"><span><strong>{active.code}</strong><small>{active.grid_size}×{active.grid_size} · {active.difficulty} · {active.status}</small></span><span class="room-count">{active.playerCount}/4</span><div class="room-row-actions"><button disabled={busy || active.status !== "lobby" || active.playerCount >= 4} on:click={() => joinRoom(active.code)}>Join</button><button on:click={() => watchRoom(active.code)}>Watch</button></div></div>
-        {/each}{:else}<p class="muted">No rooms are active yet.</p>{/if}
+          <div class="room-row"><span><strong>{active.code} {#if active.ranked}<span class="ranked-badge">{t("ranked")}</span>{/if}</strong><small>{active.grid_size}×{active.grid_size} · {t(active.difficulty)} · {t(active.status === "preparing" ? "preparingStatus" : active.status)}</small></span><span class="room-count">{active.playerCount}/{active.ranked ? 2 : 4}</span><div class="room-row-actions"><button disabled={busy || active.status !== "lobby" || active.playerCount >= (active.ranked ? 2 : 4) || (active.ranked && !authUser)} on:click={() => joinRoom(active.code)}>{t("join")}</button><button on:click={() => watchRoom(active.code)}>{t("watch")}</button></div></div>
+        {/each}{:else}<p class="muted">{t("noRooms")}</p>{/if}
       </div>
     </section>
   {:else}
     <section class="room-shell">
       <div class="mobile-room-summary">
         <div class="mobile-top-bar">
-          <strong class="mobile-variant-label">{variantLabel}</strong>
+          <strong class="mobile-variant-label">{variantLabel} {#if room.ranked}<span class="ranked-badge">Ranked</span>{/if}</strong>
           <div class="mobile-actions">
-            <button class="small" on:click={returnToLobby}>← Lobby</button>
+            <button class="small" on:click={returnToLobby}>← {t("lobby")}</button>
             {#if !spectatorMode}
               {#if room.status !== "playing"}
-                <button class="small" on:click={copyInvite}>{copied ? "✓ Copied" : "⧉ Invite"}</button>
+                <button class="small" on:click={copyInvite}>{copied ? `✓ ${t("copied")}` : `⧉ ${t("invite")}`}</button>
               {/if}
-              {#if room.status === "playing" && isHost}
-                <button class="small danger" disabled={busy} on:click={abortBattle}>Abort</button>
+              {#if room.status === "playing" && isHost && !room.ranked && !tournamentCode}
+                <button class="small danger" disabled={busy} on:click={abortBattle}>{t("abort")}</button>
               {/if}
-              {#if room.status === "finished" && isHost}
-                <button class="small primary" disabled={busy} on:click={rematch}>Rematch</button>
+              {#if room.status === "finished" && isHost && !room.ranked && !tournamentCode}
+                <button class="small primary" disabled={busy} on:click={rematch}>{t("rematch")}</button>
               {/if}
             {/if}
           </div>
+          <button class="small language-toggle" aria-label={t("settings")} title={t("settings")} on:click={() => settingsOpen = true}>⚙</button>
           <b class="timer">{elapsedLabel}</b>
-          <button class="info-button" aria-label="Room information" title="Room information" on:click={() => roomInfoOpen = !roomInfoOpen}>
+          <button class="info-button" aria-label={t("roomInfo")} title={t("roomInfo")} on:click={() => roomInfoOpen = !roomInfoOpen}>
             {roomInfoOpen ? "×" : "ⓘ"}
           </button>
         </div>
@@ -726,11 +906,11 @@
                   <i class="player-dot"></i>
                   <span class="player-name">{player.name}{player.id === room?.host_player_id ? " ★" : ""}</span>
                   {#if isHost && player.id !== myPlayerId && room?.status === "lobby"}
-                    <button class="remove-player-btn" title="Remove player" on:click={() => kickPlayer(player)}>×</button>
+                    <button class="remove-player-btn" title={t("removePlayer")} on:click={() => kickPlayer(player)}>×</button>
                   {/if}
                 </div>
                 <div class="player-bottom-row">
-                  <span class="player-score">{player.score} pts</span>
+                  <span class="player-score">{player.score} {t("points")}</span>
                   <span class="player-stats">
                     <small class="stat-correct">✓{playerMoveStats[player.id]?.correct || 0}</small>
                     <small class="stat-incorrect">✗{playerMoveStats[player.id]?.incorrect || 0}</small>
@@ -743,21 +923,21 @@
       </div>
       <div class="room-layout">
         <aside class="room-sidebar" class:open={roomInfoOpen}>
-          <div class="sidebar-section room-summary"><div class="sidebar-title"><strong>{variantLabel}</strong><span>{room.grid_size}×{room.grid_size} · {room.difficulty}</span></div></div>
+          <div class="sidebar-section room-summary"><div class="sidebar-title"><strong>{variantLabel} {#if room.ranked}<span class="ranked-badge">Ranked</span>{/if}</strong><span>{room.grid_size}×{room.grid_size} · {t(room.difficulty)}</span></div></div>
           <hr class="sidebar-divider" />
           <div class="sidebar-section variant-rules-section">
-            <small>Rules</small>
+            <small>{t("rules")}</small>
             {#if activeVariantRules.length}
               {#each activeVariantRules as v}
-                <div class="variant-rule-item"><strong>{v.name}</strong><p>{v.rule}</p></div>
+                <div class="variant-rule-item"><strong>{v.name}</strong><p>{localizedVariantRule(v.value, v.rule)}</p></div>
               {/each}
             {:else}
-              <div class="variant-rule-item"><strong>Classic Sudoku</strong><p>Place digits 1 to {room?.grid_size || 9} into each row, column, and box without repeating.</p></div>
+              <div class="variant-rule-item"><strong>{t("classicSudoku")}</strong><p>{t("classicRule")}</p></div>
             {/if}
           </div>
           <hr class="sidebar-divider" />
           <div class="sidebar-section player-section">
-            <small>Players</small>
+            <small>{t("players")}</small>
             <div class="players">
               {#each players as player}
                 <div class="player-card" class:me={player.id === myPlayerId} style={`--player-color:${penpaColors[player.color]}`}>
@@ -765,11 +945,11 @@
                     <i class="player-dot"></i>
                     <span class="player-name">{player.name}{player.id === room.host_player_id ? " ★" : ""}</span>
                     {#if isHost && player.id !== myPlayerId && room?.status === "lobby"}
-                      <button class="remove-player-btn" title="Remove player" on:click={() => kickPlayer(player)}>×</button>
+                      <button class="remove-player-btn" title={t("removePlayer")} on:click={() => kickPlayer(player)}>×</button>
                     {/if}
                   </div>
                   <div class="player-bottom-row">
-                    <span class="player-score">{player.score} pts</span>
+                    <span class="player-score">{player.score} {t("points")}</span>
                     <span class="player-stats">
                       <small class="stat-correct">✓{playerMoveStats[player.id]?.correct || 0}</small>
                       <small class="stat-incorrect">✗{playerMoveStats[player.id]?.incorrect || 0}</small>
@@ -780,24 +960,18 @@
             </div>
           </div>
           <hr class="sidebar-divider" />
-          <div class="battle-actions">{#if spectatorMode}<button on:click={returnToLobby}>← Back to lobby</button>{:else}{#if room.status !== "playing"}<button on:click={copyInvite}>{copied ? "✓ Copied!" : "⧉ Copy invite"}</button><button on:click={returnToLobby}>← Back to lobby</button>{/if}{#if room.status === "playing" && isHost}<button class="danger" disabled={busy} on:click={abortBattle}>Abort battle</button>{/if}{#if room.status === "finished" && isHost}<button class="primary" disabled={busy} on:click={rematch}>Rematch</button>{/if}{/if}</div>
+          <div class="battle-actions">{#if spectatorMode}<button on:click={returnToLobby}>← {t("backToLobby")}</button>{:else}{#if room.status !== "playing"}<button on:click={copyInvite}>{copied ? `✓ ${t("copied")}` : `⧉ ${t("copyInvite")}`}</button><button on:click={returnToLobby}>← {t(tournamentCode ? "tournament" : "backToLobby")}</button>{/if}{#if room.status === "playing" && isHost && !room.ranked && !tournamentCode}<button class="danger" disabled={busy} on:click={abortBattle}>{t("abortBattle")}</button>{/if}{#if room.status === "finished" && isHost && !room.ranked && !tournamentCode}<button class="primary" disabled={busy} on:click={rematch}>{t("rematch")}</button>{/if}{/if}{#if room.status === "finished" && answerCheckUrl}<a class="button-link answer-link" href={answerCheckUrl} target="_blank" rel="noreferrer">↗ {t("openPuzzleCheck")}</a>{/if}</div>
         </aside>
         <div class="play-area" class:spectator={spectatorMode}>
-          <div class="board-stage" class:revealed={boardVisible} class:board-complete={room?.status === "finished"}>
-            {#if room.status === "preparing"}<iframe class="board hidden-board" title="Sudoku generator" bind:this={boardFrame} src={boardFrameSource()} on:load={boardReady}></iframe>{:else if room.puzzle_hash}<iframe class="board" title="Shared Sudoku board" bind:this={boardFrame} src={boardSrc} on:load={boardReady}></iframe>{/if}
-            {#if !boardVisible}<div class="board-cover">{#if room.status === "preparing"}<strong>preparing a unique puzzle</strong><div class="prep-bar-container"><div class="prep-bar-fill" style={`width: ${Math.min(100, Math.max(0, (generationSeconds / 20) * 100))}%`}></div></div><span class="prep-countdown-text">{Math.max(0, 20 - generationSeconds)}s</span>{#if error || generationSeconds > 20}<div class="prep-actions"><button class="primary small" on:click={prepareRoomBoard}>↻ Retry board</button><button class="small" on:click={returnToLobby}>← Back to lobby</button></div>{/if}{:else if room.status === "lobby"}<strong>Ready in the lobby</strong><span>{boardLoaded ? "The board is loaded and hidden until battle starts." : "Loading the board…"}</span>{#if isHost}<button class="primary start-in-grid" disabled={busy || !boardLoaded} on:click={startBattle}>Start battle</button><div class="bot-buttons-row"><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(1)}>🤖 1</button><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(2)}>🤖 2</button><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(3)}>🤖 3</button></div>{/if}{:else if countdown > 0}<strong class="countdown">{countdown}</strong><span>Get ready!</span>{:else if room.status === "finished"}<strong>{room.finish_reason === "time_limit" ? "Time limit reached" : "Battle complete"}</strong><span>{winners.length ? `${winners.map((player) => player.name).join(" & ")} ${winners.length > 1 ? "tie" : "wins"} with ${winners[0].score} points.` : "Final scores recorded."}</span>{:else}<strong>Loading the board</strong>{/if}</div>{/if}
+          <div class="board-stage" class:revealed={boardRevealed} class:board-complete={room?.status === "finished"}>
+            {#if room.status === "preparing"}<iframe class="board hidden-board" title={t("sudokuGenerator")} bind:this={boardFrame} src={boardFrameSource()} on:load={boardReady}></iframe>{:else if room.puzzle_hash}<iframe class="board" title={t("sharedBoard")} bind:this={boardFrame} src={boardSrc} on:load={boardReady}></iframe>{/if}
+            {#if !boardVisible}<div class="board-cover" class:finished-cover={room.status === "finished"}>{#if room.status === "preparing"}<strong>{t("preparing")}</strong><div class="prep-bar-container"><div class="prep-bar-fill" style={`width: ${Math.min(100, Math.max(0, (generationSeconds / 20) * 100))}%`}></div></div><span class="prep-countdown-text">{Math.max(0, 20 - generationSeconds)}s</span>{#if error || generationSeconds > 20}<div class="prep-actions"><button class="primary small" on:click={prepareRoomBoard}>↻ {t("retryBoard")}</button><button class="small" on:click={returnToLobby}>← {t("backToLobby")}</button></div>{/if}{:else if room.status === "lobby"}<strong>{t("readyLobby")}</strong><span>{boardLoaded ? t("boardHidden") : `${t("loadingBoard")}…`}</span>{#if isHost}<button class="primary start-in-grid" disabled={busy || !boardLoaded || (room.ranked && players.length !== 2)} on:click={startBattle}>▶ {t("startBattle")}</button>{#if !room.ranked && !botTokens.length}<div class="bot-buttons-row"><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(1)}>🤖 1</button><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(2)}>🤖 2</button><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(3)}>🤖 3</button></div>{:else if room.ranked && players.length !== 2}<small>{t("waitingRankedOpponent")}</small>{/if}{/if}{:else if countdown > 0}<strong class="countdown">{countdown}</strong><span>{t("getReady")}</span>{:else if room.status === "finished"}<strong>{room.finish_reason === "time_limit" ? t("timeLimit") : t("battleComplete")}</strong><span>{winners.length ? `${winners.map((player) => player.name).join(" & ")} ${t(winners.length > 1 ? "tieWith" : "winsWith")} ${winners[0].score} ${t("points")}.` : t("finalScores")}</span>{#if answerCheckUrl}<a class="button-link answer-link" href={answerCheckUrl} target="_blank" rel="noreferrer">↗ {t("openPuzzleCheck")}</a>{/if}{#if isHost && !room.ranked && !tournamentCode}<button class="primary" disabled={busy} on:click={rematch}>{t("rematch")}</button>{/if}{:else}<strong>{t("loadingBoard")}</strong>{/if}</div>{/if}
           </div>
           {#if !spectatorMode}
             <div class="right-controls">
-              <div class="sidebar-section personal-settings"><div class="identity compact">{#if editingName}<input maxlength="24" bind:value={draftName} /><button class="small" on:click={saveName}>Save</button>{:else}<strong>{playerName}</strong><button class="icon-button" aria-label="Edit name" title="Edit name" on:click={editName}>✎</button>{/if}</div></div>
-              <div class="sidebar-section theme-section"><small>Appearance</small><button class="theme-toggle" on:click={toggleTheme}>{darkMode ? "☀ Light" : "☾ Dark"}</button></div>
+              <div class="sidebar-section personal-settings"><button class="wide settings-entry" on:click={() => settingsOpen = true}><strong>{playerName}</strong><span>⚙</span></button></div>
               <div class="sidebar-section timer-section"><b class="desktop-timer">{elapsedLabel}</b></div>
-              <div class="battle-input-panel" aria-label="Battle number input">
-                <button class:active={noteMode === "normal"} class="mode-normal" disabled={room?.status === "finished" || !boardVisible} aria-label="Normal digits" title="Normal digits (Z)" on:click={() => chooseBattleNoteMode("normal")}><span class="note-icon"><b>1</b></span><kbd>z</kbd></button>
-                <button class:active={noteMode === "center"} class="mode-center" disabled={room?.status === "finished" || !boardVisible} aria-label="Center notes" title="Center notes (X)" on:click={() => chooseBattleNoteMode("center")}><span class="note-icon"><small>23</small></span><kbd>x</kbd></button>
-                <button class:active={noteMode === "corner"} class="mode-corner" disabled={room?.status === "finished" || !boardVisible} aria-label="Corner notes" title="Corner notes (C)" on:click={() => chooseBattleNoteMode("corner")}><span class="note-icon corner-numbers"><small>4</small><small>5</small><small>6</small><small>7</small></span><kbd>c</kbd></button>
-                {#each [1,2,3,4,5,6,7,8,9] as digit}{#if digit <= room.grid_size}<button class={`digit digit-${digit}`} disabled={room?.status === "finished" || !boardVisible} on:click={() => enterBattleDigit(digit)}>{digit}</button>{/if}{/each}
-              </div>
+              <div class="battle-input-panel" aria-label={t("battleInput")}><SudokuKeypad size={room.grid_size} mode={noteMode} disabled={room?.status === "finished" || !boardVisible} onMode={chooseBattleNoteMode} onDigit={enterBattleDigit} /></div>
             </div>
           {/if}
         </div>
@@ -806,24 +980,26 @@
   {/if}
   {#if battleToast}<div class="battle-toast" role="status">{battleToast}</div>{/if}
   {#if error}<p class="error">{error}</p>{/if}
+  <BattleSettingsModal open={settingsOpen} displayName={playerName} user={authUser} {darkMode} locale={language} showIdentity={!room} showAccount={!room} onClose={() => settingsOpen = false} onSaveName={saveName} onToggleTheme={toggleTheme} onLocaleChange={changeLocale} onSignOut={signOut} />
 </main>
 
 <style>
   :global(*){box-sizing:border-box} :global(body){margin:0;background:#f3f6f8;color:#1d2a35;font-family:Inter,system-ui,sans-serif}
   :global(button),:global(input){font:inherit} main{min-height:100vh;padding:18px} header{max-width:1120px;margin:0 auto 14px} h1{margin:0;font-size:clamp(25px,4vw,38px)} h2{margin:6px 0 16px;font-size:18px}
-  header{display:flex;align-items:center;justify-content:space-between}.theme-toggle{white-space:nowrap}
-  button{border:1px solid #c8d1d8;border-radius:8px;background:white;color:#23313d;padding:9px 12px;cursor:pointer} button:hover{border-color:#2582b8} button:disabled{opacity:.5;cursor:not-allowed}.primary{border-color:#1679b4;background:#1688ca;color:white}.wide{width:100%;margin-top:14px}.small{padding:5px 9px;font-size:12px}.icon-button{border:0;padding:3px 6px;background:transparent;font-size:18px}.active{border-color:#1688ca!important;background:#e8f5fc!important;color:#096698!important}
-  .lobby-layout{display:grid;grid-template-columns:minmax(300px,560px) minmax(280px,420px);gap:18px;max-width:1000px;margin:auto}.card{border:1px solid #d6dee4;border-radius:14px;background:white;padding:18px;box-shadow:0 5px 24px #1b344511}.identity{display:flex;align-items:center;gap:8px;min-height:34px;margin-bottom:12px}.identity.compact{border:1px solid #cbd6de;border-radius:8px;padding:3px 5px;background:#f6f9fa}.identity span{color:#677580;font-size:13px}.identity input{min-width:0;padding:7px;border:1px solid #bdc9d2;border-radius:7px}.choice-row{display:flex;align-items:center;gap:7px;margin:10px 0}.choice-row>span{width:80px;color:#586875;font-size:13px}.choice-row button{text-transform:capitalize}.variants{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}.variants>span{grid-column:1/-1;color:#586875;font-size:13px}.variants label{display:flex;gap:7px;font-size:13px}.join-code{display:flex;gap:7px;margin-top:11px}.join-code input{min-width:0;flex:1;padding:9px;border:1px solid #bdc9d2;border-radius:8px;text-transform:uppercase}.section-title{display:flex;align-items:center;justify-content:space-between}.section-title h2{margin:0}.room-row{display:flex;width:100%;justify-content:space-between;align-items:center;margin-top:9px;text-align:left}.room-row span:first-child{display:flex;flex-direction:column;gap:2px}.room-row small,.muted{color:#71808c}.skeleton{height:54px;margin-top:9px;border-radius:8px;background:linear-gradient(90deg,#edf1f4 25%,#f8fafb 50%,#edf1f4 75%);background-size:200% 100%;animation:shimmer 1s infinite}@keyframes shimmer{to{background-position:-200% 0}}
-  .room-shell{display:flex;flex-direction:column;gap:10px;max-width:1400px;height:calc(100vh - 82px);margin:auto}.room-bar{display:flex;align-items:center;gap:15px;border:1px solid #d6dee4;border-radius:12px;background:white;padding:9px 12px}.room-bar>div:first-child{display:flex;gap:7px;align-items:baseline}.room-bar small{color:#74828d}.room-meta{flex:1;color:#61717d;font-size:13px}.room-bar .identity{margin:0}.timer{min-width:55px;font-variant-numeric:tabular-nums;font-weight:800}.players{display:flex;gap:7px;overflow-x:auto}.mobile-score-strip{display:none}.player{display:flex;align-items:center;gap:7px;min-width:145px;border:1px solid #d6dee4;border-left:5px solid var(--player-color);border-radius:8px;background:white;padding:7px 9px}.player i{width:9px;height:9px;border-radius:50%;background:var(--player-color)}.player span{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.player.me{box-shadow:inset 0 0 0 1px var(--player-color)}.battle-actions{display:flex;gap:7px}.play-layout{display:grid;grid-template-columns:minmax(120px,180px) minmax(0,1fr) minmax(120px,180px);gap:10px;flex:1;min-height:0}.board-stage{position:relative;min-height:0;border:1px solid #cbd5dc;border-radius:12px;overflow:hidden;background:#e8edf1}.board{width:100%;height:100%;border:0;visibility:hidden}.board-stage.revealed .board{visibility:visible}.hidden-board{position:absolute;inset:0;opacity:0;pointer-events:none}.board-cover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#edf4f7,#dfe9ee);text-align:center;color:#475a68}.board-cover strong{font-size:22px;color:#20323f}.board-cover .countdown{font-size:clamp(72px,18vw,180px);line-height:1;color:#1688ca}.prep-bar-container{width:80%;max-width:280px;height:10px;background:rgba(0,0,0,0.12);border-radius:5px;overflow:hidden;margin:6px 0 2px}.prep-bar-fill{height:100%;background:linear-gradient(90deg,#1688ca,#38bdf8);transition:width .3s linear;border-radius:4px}.prep-countdown-text{font-size:14px;font-weight:700;color:#20323f;opacity:.9}.error{position:fixed;right:18px;bottom:10px;max-width:min(520px,calc(100vw - 36px));border-radius:9px;background:#b42318;color:white;padding:10px 14px;z-index:10}
-  main.dark{background:#17212a;color:#e1e8ed}main.dark .card,main.dark .room-bar,main.dark .room-sidebar,main.dark .player,main.dark button,main.dark input{border-color:#435360;background:#24313c;color:#e1e8ed}main.dark .identity.compact{background:#1c2832;border-color:#435360}main.dark .room-meta,main.dark .muted,main.dark .room-row small,main.dark .sidebar-title span,main.dark .variant-rule-item p{color:#a9b7c2}main.dark .sidebar-title strong,main.dark .variant-rule-item strong{color:#e2e8f0}main.dark .board-cover{background:linear-gradient(135deg,#26343f,#1d2932);color:#b9c5ce}main.dark .board-cover strong{color:#eef3f6}
-  @media(max-width:700px){main{padding:8px}header{margin-bottom:7px}h1{font-size:23px}.lobby-layout{grid-template-columns:1fr}.room-shell{height:auto;min-height:calc(100dvh - 48px);gap:6px}.room-bar{padding:6px 8px;gap:7px}.room-meta{display:none}.room-bar .identity strong{max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mobile-score-strip{display:flex;align-items:center;gap:8px;min-height:30px}.mobile-score-strip span{display:flex;align-items:center;gap:3px}.mobile-score-strip i{width:8px;height:8px;border-radius:50%;background:var(--player-color)}.mobile-score-strip button{margin-left:auto}.players{display:none;gap:4px}.players.mobile-expanded{display:flex}.player{min-width:0;flex:1 0 78px;max-width:120px;padding:4px 5px;border-left-width:4px;font-size:11px}.player i{display:none}.player span{max-width:70px}.battle-actions{display:grid;grid-template-columns:repeat(2,1fr)}.battle-actions button{padding:7px 5px;font-size:12px}.play-layout{display:flex;flex-direction:column;flex:1}.layout-balance{display:none}.board-stage{height:min(58dvh,620px);flex:1 1 390px;border-radius:8px}.variants{grid-template-columns:1fr}.difficulty button{padding-inline:8px}}
+  header{display:flex;align-items:center;justify-content:space-between}.header-actions{display:flex;align-items:center;gap:7px}.user-menu>span{display:flex;align-items:flex-end;flex-direction:column}.user-menu strong{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.user-menu small{color:#71808c;font-size:11px}.settings-entry{display:flex;align-items:center;justify-content:space-between;margin:0;text-align:left}
+  .landing-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px}.landing-choices .button-link{grid-column:1/-1}.button-link{display:inline-flex;align-items:center;justify-content:center;min-height:38px;border:1px solid #bdc9d2;border-radius:8px;background:#f6f9fa;color:inherit;text-decoration:none}.ranked-button{border-color:#b37a08;background:#fff7d6;color:#704b00}.ranked-badge{display:inline-flex;align-items:center;padding:2px 6px;border:1px solid #c58b16;border-radius:999px;background:#fff1b8;color:#724d00;font-size:10px;font-weight:800;text-transform:uppercase;vertical-align:middle}
+  button{border:1px solid #c8d1d8;border-radius:8px;background:white;color:#23313d;padding:9px 12px;cursor:pointer} button:hover{border-color:#2582b8} button:disabled{opacity:.5;cursor:not-allowed}.primary{border-color:#1679b4;background:#1688ca;color:white}.wide{width:100%;margin-top:14px}.small{padding:5px 9px;font-size:12px}.active{border-color:#1688ca!important;background:#e8f5fc!important;color:#096698!important}
+  .lobby-layout{display:grid;grid-template-columns:minmax(300px,560px) minmax(280px,420px);gap:18px;max-width:1000px;margin:auto}.card{border:1px solid #d6dee4;border-radius:14px;background:white;padding:18px;box-shadow:0 5px 24px #1b344511}.choice-row{display:flex;align-items:center;gap:7px;margin:10px 0}.choice-row>span{width:80px;color:#586875;font-size:13px}.choice-row button{text-transform:capitalize}.section-title{display:flex;align-items:center;justify-content:space-between}.section-title h2{margin:0}.room-row{display:flex;width:100%;justify-content:space-between;align-items:center;margin-top:9px;text-align:left}.room-row span:first-child{display:flex;flex-direction:column;gap:2px}.room-row small,.muted{color:#71808c}.skeleton{height:54px;margin-top:9px;border-radius:8px;background:linear-gradient(90deg,#edf1f4 25%,#f8fafb 50%,#edf1f4 75%);background-size:200% 100%;animation:shimmer 1s infinite}@keyframes shimmer{to{background-position:-200% 0}}
+  .room-shell{display:flex;flex-direction:column;gap:10px;max-width:1400px;height:calc(100vh - 82px);margin:auto}.timer{min-width:55px;font-variant-numeric:tabular-nums;font-weight:800}.players{display:flex;gap:7px;overflow-x:auto}.battle-actions{display:flex;gap:7px}.board-stage{position:relative;min-height:0;border:1px solid #cbd5dc;border-radius:12px;overflow:hidden;background:#e8edf1}.board{width:100%;height:100%;border:0;visibility:hidden}.board-stage.revealed .board{visibility:visible}.hidden-board{position:absolute;inset:0;opacity:0;pointer-events:none}.board-cover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#edf4f7,#dfe9ee);text-align:center;color:#475a68}.board-cover strong{font-size:22px;color:#20323f}.board-cover .countdown{font-size:clamp(72px,18vw,180px);line-height:1;color:#1688ca}.prep-bar-container{width:80%;max-width:280px;height:10px;background:rgba(0,0,0,0.12);border-radius:5px;overflow:hidden;margin:6px 0 2px}.prep-bar-fill{height:100%;background:linear-gradient(90deg,#1688ca,#38bdf8);transition:width .3s linear;border-radius:4px}.prep-countdown-text{font-size:14px;font-weight:700;color:#20323f;opacity:.9}.error{position:fixed;right:18px;bottom:10px;max-width:min(520px,calc(100vw - 36px));border-radius:9px;background:#b42318;color:white;padding:10px 14px;z-index:10}
+  main.dark{background:#17212a;color:#e1e8ed}main.dark .card,main.dark .room-sidebar,main.dark button,main.dark input,main.dark .button-link{border-color:#435360;background:#24313c;color:#e1e8ed}main.dark .button-link:hover{border-color:#4fb8f5;background:#304b5c}main.dark .muted,main.dark .room-row small,main.dark .sidebar-title span,main.dark .variant-rule-item p{color:#a9b7c2}main.dark .sidebar-title strong,main.dark .variant-rule-item strong{color:#e2e8f0}main.dark .board-cover{background:linear-gradient(135deg,#26343f,#1d2932);color:#b9c5ce}main.dark .board-cover strong{color:#eef3f6}
+  @media(max-width:700px){main{padding:8px}header{margin-bottom:7px}h1{font-size:23px}.lobby-layout{grid-template-columns:1fr}.room-shell{height:auto;min-height:calc(100dvh - 48px);gap:6px}.players{display:none;gap:4px}.battle-actions{display:grid;grid-template-columns:repeat(2,1fr)}.battle-actions button{padding:7px 5px;font-size:12px}.board-stage{height:min(58dvh,620px);flex:1 1 390px;border-radius:8px}.difficulty button{padding-inline:8px}}
 
-  .landing-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.landing-choices button{min-height:54px}.variant-select{display:grid;grid-template-columns:80px 1fr;align-items:center;gap:7px;margin-top:14px;color:#586875;font-size:13px}.variant-select select{min-width:0;padding:9px 12px;border:1px solid #bdc9d2;border-radius:8px;background:#fff;color:#23313d;font-size:13px;cursor:pointer}.variant-select select:hover{border-color:#2582b8}main.dark .variant-select select{border-color:#435360;background:#1c2832;color:#e1e8ed}
-  .advanced-toggle{display:grid;grid-template-columns:80px 1fr;align-items:center;gap:7px;margin-top:10px;color:#586875;font-size:13px}.advanced-toggle input{justify-self:start;margin:0;accent-color:#1688ca}
-  main.in-room{height:100dvh;min-height:0;padding:10px;overflow:hidden}.room-shell{width:100%;max-width:1500px;height:100%;min-height:0}.mobile-room-summary{display:none}.room-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:10px;height:100%;min-height:0}.room-sidebar{display:flex;flex-direction:column;gap:6px;min-height:0;padding:10px;border:1px solid #d6dee4;border-radius:12px;background:#fff;overflow:hidden}.sidebar-title,.room-code{display:flex;flex-direction:column;gap:2px}.sidebar-title small,.room-code small{color:#71808c}.room-code strong{font-size:20px;letter-spacing:.08em}.room-sidebar .identity{margin:0}.variant-rules-section{max-height:120px;overflow-y:auto;flex-shrink:1}.player-section{flex-shrink:0}.room-sidebar .players{display:flex;flex-direction:column;gap:6px;overflow-y:auto}.room-sidebar .player{width:100%;min-width:0}.desktop-timer{font-size:32px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;display:block}.battle-actions{display:flex;flex-direction:column;margin-top:auto;flex-shrink:0}.danger{border-color:#d13b32!important;background:#b42318!important;color:#fff!important}
+  .landing-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.landing-choices button{min-height:54px}
+  .variant-builder{display:grid;grid-template-columns:80px minmax(0,1fr);align-items:start;gap:8px 7px;margin-top:14px;color:#586875;font-size:13px}.variant-builder>span{padding-top:10px}.variant-group-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.variant-group-buttons button{padding-inline:7px}.variant-dropdown-row{grid-column:2;display:grid;grid-template-columns:minmax(0,1fr) 42px;gap:6px}.variant-dropdown-row select{min-width:0;padding:9px 12px;border:1px solid #bdc9d2;border-radius:8px;background:#fff;color:#23313d;font-size:13px;cursor:pointer}.variant-dropdown-row button{font-size:24px;line-height:1;padding:4px}.variant-dropdown-row select:hover{border-color:#2582b8}.rule-toggle{grid-column:2;display:flex;align-items:center;gap:6px}.rule-toggle input{margin:0;accent-color:#1688ca}.selected-rule{grid-column:2;margin:0;padding:8px 10px;border-radius:7px;background:#f2f6f8;color:#475569;line-height:1.4}main.dark .variant-dropdown-row select{border-color:#435360;background:#1c2832;color:#e1e8ed}main.dark .selected-rule{background:#1c2832;color:#cbd5e1}
+  main.in-room{height:100dvh;min-height:0;padding:10px;overflow:hidden}.room-shell{width:100%;max-width:1500px;height:100%;min-height:0}.mobile-room-summary{display:none}.room-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:10px;height:100%;min-height:0}.room-sidebar{display:flex;flex-direction:column;gap:6px;min-height:0;padding:10px;border:1px solid #d6dee4;border-radius:12px;background:#fff;overflow:hidden}.sidebar-title{display:flex;flex-direction:column;gap:2px}.variant-rules-section{max-height:120px;overflow-y:auto;flex-shrink:1}.player-section{flex-shrink:0}.room-sidebar .players{display:flex;flex-direction:column;gap:6px;overflow-y:auto}.desktop-timer{font-size:32px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;display:block}.battle-actions{display:flex;flex-direction:column;margin-top:auto;flex-shrink:0}.danger{border-color:#d13b32!important;background:#b42318!important;color:#fff!important}
   .sidebar-divider{border:0;border-top:1px solid #e2e8f0;margin:2px 0}main.dark .sidebar-divider{border-top-color:#334155}
   .play-area{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:10px;min-width:0;min-height:0}.board-stage{height:100%;min-width:0}.right-controls{display:flex;flex-direction:column;gap:8px;width:190px;height:100%;min-height:0}.right-controls .battle-input-panel{margin-top:auto}
-  .battle-input-panel{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);gap:6px;width:100%}.battle-input-panel button{position:relative;width:100%;aspect-ratio:1;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:750;overflow:hidden;border-radius:8px}.battle-input-panel .digit{font-size:26px}.note-icon{position:relative;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1.5px solid currentColor;border-radius:3px}.note-icon b{font-size:18px}.note-icon small{font-size:10px}.corner-numbers{display:grid;grid-template-columns:1fr 1fr;line-height:1}.corner-numbers small{font-size:8px}.battle-input-panel kbd{position:absolute;right:4px;bottom:3px;font-size:9px;line-height:1;opacity:.65}.battle-toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);padding:10px 15px;border-radius:9px;background:#20323f;color:#fff;box-shadow:0 8px 24px #0003;z-index:1000}  .start-in-grid{margin-top:8px;width:190px;height:44px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;box-sizing:border-box}
+  .battle-input-panel{display:block;width:100%}.battle-toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);padding:10px 15px;border-radius:9px;background:#20323f;color:#fff;box-shadow:0 8px 24px #0003;z-index:1000}  .start-in-grid{margin-top:8px;width:190px;height:44px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;box-sizing:border-box}
   .player-card{display:flex;flex-direction:column;gap:2px;padding:5px 8px;border:1.5px solid var(--player-color);border-radius:8px;background:#f8fafc;color:#1e293b;font-size:11px;line-height:1.25;min-width:110px}
   .player-card.me{box-shadow:0 0 0 1px var(--player-color)}
   .player-top-row{display:flex;align-items:center;gap:5px;font-weight:700;white-space:nowrap;overflow:hidden}
@@ -839,28 +1015,23 @@
   main.dark .player-card{background:#1e293b;color:#f1f5f9}
   main.dark .player-bottom-row{color:#94a3b8}
   main.dark .player-score{color:#38bdf8}
-  .bot-buttons-row{display:flex;gap:6px;margin-top:6px}
+  .bot-buttons-row{display:flex;gap:6px;width:190px;margin-top:6px}
   .bot-buttons-row button{flex:1;padding:6px 4px;font-size:12px}
   .board-stage.board-complete .board{filter:blur(3px);pointer-events:none;transition:filter .3s ease}
+  .board-cover.finished-cover{background:rgba(237,244,247,.72);backdrop-filter:blur(1px)}main.dark .board-cover.finished-cover{background:rgba(29,41,50,.72)}
 
-  @media(max-width:700px){:global(body){overflow:hidden}main.in-room{height:100dvh;padding:5px}.room-shell{height:100%;min-height:0;gap:5px}.mobile-room-summary{display:flex;flex-direction:column;gap:5px;padding:6px;border:1px solid #d6dee4;border-radius:8px;background:#fff;font-size:11px}.mobile-top-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%}.mobile-actions{display:flex;align-items:center;gap:4px}.mobile-bottom-bar{display:flex;align-items:center;gap:8px;width:100%;overflow-x:auto}.mobile-variant-label{font-size:11px;white-space:nowrap;color:#475569;flex-shrink:0}main.dark .mobile-variant-label{color:#94a3b8}.summary-players{display:flex;gap:6px;min-width:0;overflow-x:auto}.info-button{width:30px;height:30px;padding:0;border-radius:50%;font-size:17px}.room-layout{display:block;position:relative;height:calc(100% - 75px)}.room-sidebar{display:none;position:fixed;inset:48px 6px 6px;z-index:900;overflow-y:auto}.room-sidebar.open{display:flex}.play-area{display:flex;flex-direction:column;height:100%;gap:5px}.right-controls{width:100%;height:auto;gap:5px;display:flex;flex-direction:column;align-items:center}.right-controls .sidebar-section{display:none}.right-controls .battle-input-panel{margin-top:0}.board-stage{flex:1 1 auto;height:auto;min-height:0}.battle-input-panel{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,52px);grid-template-rows:repeat(3,52px);gap:5px;width:max-content}.battle-input-panel button{width:52px;height:52px;min-height:0;aspect-ratio:1}.battle-input-panel .digit{font-size:29px}.battle-input-panel kbd{display:none}.mode-normal{grid-column:4;grid-row:1}.mode-center{grid-column:4;grid-row:2}.mode-corner{grid-column:4;grid-row:3}.digit-1{grid-column:1;grid-row:1}.digit-2{grid-column:2;grid-row:1}.digit-3{grid-column:3;grid-row:1}.digit-4{grid-column:1;grid-row:2}.digit-5{grid-column:2;grid-row:2}.digit-6{grid-column:3;grid-row:2}.digit-7{grid-column:1;grid-row:3}.digit-8{grid-column:2;grid-row:3}.digit-9{grid-column:3;grid-row:3}main.dark .mobile-room-summary{border-color:#435360;background:#24313c}.battle-toast{top:48px;max-width:calc(100vw - 24px);white-space:nowrap}}
+  @media(max-width:700px){:global(body){overflow:hidden}main.in-room{height:100dvh;padding:5px}.room-shell{height:100%;min-height:0;gap:5px}.mobile-room-summary{display:flex;flex-direction:column;gap:5px;padding:6px;border:1px solid #d6dee4;border-radius:8px;background:#fff;font-size:11px}.mobile-top-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%}.mobile-actions{display:flex;align-items:center;gap:4px}.mobile-bottom-bar{display:flex;align-items:center;gap:8px;width:100%;overflow-x:auto}.mobile-variant-label{font-size:11px;white-space:nowrap;color:#475569;flex-shrink:0}main.dark .mobile-variant-label{color:#94a3b8}.summary-players{display:flex;gap:6px;min-width:0;overflow-x:auto}.info-button{width:30px;height:30px;padding:0;border-radius:50%;font-size:17px}.room-layout{display:block;position:relative;height:calc(100% - 75px)}.room-sidebar{display:none;position:fixed;inset:48px 6px 6px;z-index:900;overflow-y:auto}.room-sidebar.open{display:flex}.play-area{display:flex;flex-direction:column;height:100%;gap:5px}.right-controls{width:100%;height:auto;gap:5px;display:flex;flex-direction:column;align-items:center}.right-controls .sidebar-section{display:none}.right-controls .battle-input-panel{margin-top:0}.board-stage{flex:1 1 auto;height:auto;min-height:0}.battle-input-panel{flex:0 0 auto;width:max-content}main.dark .mobile-room-summary{border-color:#435360;background:#24313c}.battle-toast{top:48px;max-width:calc(100vw - 24px);white-space:nowrap}}
   .landing-choices{grid-template-columns:1fr}
-  .room-sidebar .player{background:transparent}
-  .lobby-profile{max-width:1000px;margin:0 auto 12px;padding:10px 18px}.lobby-profile .identity{margin:0}.lobby-profile .identity strong{flex:1}.lobby-profile .identity input{flex:1}
   .room-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px}.room-count{font-weight:700}.room-row-actions{display:flex;gap:5px}.room-row-actions button{padding:6px 9px}
-  .personal-settings{display:block}.personal-settings .identity{width:100%;min-height:36px}.personal-settings .identity strong{flex:1}.theme-section{display:flex;align-items:center;justify-content:space-between;gap:8px}.theme-section .theme-toggle{min-height:36px;padding-block:6px}
+  .personal-settings{display:block}
   .play-area.spectator{grid-template-columns:minmax(0,1fr)}.play-area.spectator .board{pointer-events:none}
   @media(max-width:700px){
-    .room-sidebar.open{display:flex;inset:48px 6px auto;max-height:calc(100dvh - 54px);gap:6px;padding:6px;border-color:transparent;background:rgba(20,35,45,.12);box-shadow:none}
-    .room-sidebar .sidebar-section,.room-sidebar .battle-actions{flex:none;padding:7px;background:rgba(255,255,255,.88);backdrop-filter:blur(6px)}
-    .room-sidebar .player{padding:4px 6px;background:transparent}
+    .room-sidebar.open{display:flex;inset:48px 6px auto;max-height:calc(100dvh - 54px);gap:6px;padding:6px;border-color:#cbd5df;background:#fff;box-shadow:0 12px 34px #13253640}
+    .room-sidebar .sidebar-section{flex:none;padding:7px;background:transparent}
     .room-sidebar .players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
-    .room-sidebar .player-section{flex:none}
-    .room-sidebar .player-section,.room-sidebar .timer-section{display:none}
-    .personal-settings .identity{align-items:center;margin:0}.personal-settings .identity strong{line-height:34px}.personal-settings .identity .icon-button{height:34px;width:34px;padding:0}.theme-section .theme-toggle{height:34px;min-height:34px}
-    .room-sidebar .desktop-timer{font-size:20px}
-    .room-sidebar .battle-actions{display:grid;margin-top:0}
-    main.dark .room-sidebar.open{background:rgba(10,18,24,.16)}
-    main.dark .room-sidebar .sidebar-section,main.dark .room-sidebar .battle-actions{background:rgba(28,40,50,.9)}
+    .room-sidebar .player-section{display:none;flex:none}
+    .room-sidebar .battle-actions{display:none!important}
+    main.dark .room-sidebar.open{border-color:#435360;background:#24313c}
+    main.dark .room-sidebar .sidebar-section{background:transparent}
   }
 </style>

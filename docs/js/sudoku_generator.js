@@ -59,6 +59,71 @@ var SudokuGenerator = (function() {
         ];
     }
 
+    // Derive complete outside-clue sets from an already solved classic grid.
+    // Each side is read inward so the same mark representation can be restored
+    // into Penpa after digit pruning.
+    function outsideCluesForSolution(solution, variants) {
+        var size = solution.length;
+        var constraints = { outsideRelations: [], skyscrapers: [], sandwiches: [], rossiniLines: [] };
+        var marks = [];
+        var sides = ["top", "bottom", "left", "right"];
+        function sightline(side, index) {
+            if (side === "top") return Array.from({ length: size }, function(_, row) { return { row: row, col: index }; });
+            if (side === "bottom") return Array.from({ length: size }, function(_, row) { return { row: size - 1 - row, col: index }; });
+            if (side === "left") return Array.from({ length: size }, function(_, col) { return { row: index, col: col }; });
+            return Array.from({ length: size }, function(_, col) { return { row: index, col: size - 1 - col }; });
+        }
+        function valuesFor(cells) {
+            return cells.map(function(cell) { return solution[cell.row][cell.col]; });
+        }
+        function visibility(values) {
+            var tallest = 0;
+            return values.reduce(function(total, value) {
+                if (value <= tallest) return total;
+                tallest = value;
+                return total + 1;
+            }, 0);
+        }
+        variants.forEach(function(variant) {
+            if (["xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"].indexOf(variant) === -1) return;
+            sides.forEach(function(side) {
+                for (var index = 0; index < size; index++) {
+                    var cells = sightline(side, index);
+                    var values = valuesFor(cells);
+                    var value;
+                    var direction;
+                    if (variant === "xsums") {
+                        value = values.slice(0, values[0]).reduce(function(total, digit) { return total + digit; }, 0);
+                        constraints.outsideRelations.push({ relation: variant, value: value, cells: cells });
+                    } else if (variant === "numberedrooms") {
+                        value = values[values[0] - 1];
+                        constraints.outsideRelations.push({ relation: variant, value: value, cells: cells });
+                    } else if (variant === "sumframe") {
+                        var frameLength = side === "top" || side === "bottom" ? (size === 6 ? 2 : 3) : (size === 6 ? 3 : 3);
+                        value = values.slice(0, frameLength).reduce(function(total, digit) { return total + digit; }, 0);
+                        constraints.outsideRelations.push({ relation: variant, value: value, cells: cells.slice(0, frameLength) });
+                    } else if (variant === "skyscraper") {
+                        value = visibility(values);
+                        constraints.skyscrapers.push({ clue: value, cells: cells });
+                    } else if (variant === "sandwich") {
+                        var low = values.indexOf(1);
+                        var high = values.indexOf(size);
+                        value = values.slice(Math.min(low, high) + 1, Math.max(low, high))
+                            .reduce(function(total, digit) { return total + digit; }, 0);
+                        constraints.sandwiches.push({ clue: value, cells: cells });
+                    } else {
+                        var first = values.slice(0, 3);
+                        direction = first[0] < first[1] && first[1] < first[2] ? "ascending" :
+                            first[0] > first[1] && first[1] > first[2] ? "descending" : "none";
+                        constraints.rossiniLines.push({ direction: direction, cells: cells.slice(0, 3) });
+                    }
+                    marks.push({ variant: variant, side: side, index: index, value: value, direction: direction });
+                }
+            });
+        });
+        return { constraints: constraints, marks: marks };
+    }
+
     function cellKey(cell) {
         return cell.row + ":" + cell.col;
     }
@@ -401,7 +466,7 @@ var SudokuGenerator = (function() {
 
     function generate(options) {
         options = options || {};
-        var size = options.size === 6 ? 6 : 9;
+        var size = Number(options.size) === 6 ? 6 : 9;
         var variants = Array.isArray(options.variants) ? options.variants.slice() : [options.variant || "classic"];
         if (variants.indexOf("classic") === -1) variants.unshift("classic");
         variants = variants.filter(function(value, index) { return variants.indexOf(value) === index; });
@@ -409,7 +474,8 @@ var SudokuGenerator = (function() {
             "non consecutive", "consecutive", "consecutivepairs", "odd even",
             "kropki", "kropkipairs", "xv", "xvpairs", "battenburg", "windoku",
             "disjoint", "touchy", "mirror", "symmetric unequal", "symmetricunequal",
-            "sequence top-bottom", "sequencetopbottom"];
+            "sequence top-bottom", "sequencetopbottom", "xsums", "skyscraper",
+            "numberedrooms", "rossini", "sandwich", "sumframe"];
         var unsupported = variants.filter(function(variant) { return supported.indexOf(variant) === -1; });
         if (!options.preserveExisting && unsupported.length) {
             throw new Error("Generation is not implemented for: " + unsupported.join(", ") + ".");
@@ -434,6 +500,12 @@ var SudokuGenerator = (function() {
         } else {
             solution = makeSolution(size, variants, constraints, random);
         }
+        var generatedOutside = options.preserveExisting ? { constraints: {}, marks: [] } :
+            outsideCluesForSolution(solution, variants);
+        Object.keys(generatedOutside.constraints).forEach(function(name) {
+            if (!generatedOutside.constraints[name].length) return;
+            constraints[name] = (constraints[name] || []).concat(generatedOutside.constraints[name]);
+        });
         var marks = options.preserveExisting ?
             { oddEven: [], kropki: [], xv: [], battenburg: [] } :
             addGeneratedMarks(constraints, solution, variants, random);
@@ -492,8 +564,17 @@ var SudokuGenerator = (function() {
         var startTime = Date.now();
         var maxTimeMs = 20000;
         var attempt = 0;
-        var batchSize = 4;
+        var outsideScratchVariants = ["xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"];
+        var hasOutsideScratchVariant = variants.some(function(variant) {
+            return outsideScratchVariants.indexOf(variant) !== -1;
+        });
+        // Outside-clue constraints become disproportionately expensive to enumerate on
+        // nearly empty boards. They still get a fully pruned Sudoku, but retain enough
+        // givens for generation and the final uniqueness check to stay interactive.
+        var minimumOutsideGivens = 28;
+        var batchSize = hasOutsideScratchVariant ? 1 : 4;
         while (attempt < units.length) {
+            if (hasOutsideScratchVariant && givens <= minimumOutsideGivens) break;
             if (Date.now() - startTime >= maxTimeMs) {
                 if (typeof options.onProgress === "function") {
                     options.onProgress({
@@ -671,13 +752,14 @@ var SudokuGenerator = (function() {
             xvMarks: marks.xv,
             consecutiveMarks: marks.consecutive,
             battenburgMarks: marks.battenburg,
+            outsideMarks: generatedOutside.marks,
             preserveExisting: options.preserveExisting === true,
             givens: givens,
             unique: true
         };
     }
 
-    return { generate: generate, seededRandom: seededRandom };
+    return { generate: generate, seededRandom: seededRandom, outsideCluesForSolution: outsideCluesForSolution };
 })();
 
 if (typeof module !== "undefined" && module.exports) module.exports = SudokuGenerator;

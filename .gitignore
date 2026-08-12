@@ -26,6 +26,12 @@ jsconfig.json
 node_modules/
 dist/
 /supabase/
+!/supabase/
+/supabase/*
+!/supabase/migrations/
+/supabase/migrations/*
+!/supabase/migrations/20260812000000_ranked_leaderboard_and_tournaments.sql
+!/supabase/migrations/20260812010000_initialize_profile_on_login.sql
 
 # AI
 agents.md

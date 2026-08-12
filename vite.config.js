@@ -255,6 +255,14 @@ function directoryTrailingSlashPlugin() {
         const url = new URL(req.url || "/", "http://localhost");
         if (url.pathname === "/battle") {
           req.url = "/battle/" + url.search;
+        } else if (url.pathname === "/battle/tournament") {
+          req.url = "/battle/tournament/" + url.search;
+        } else if (url.pathname === "/battle/tournament/host") {
+          req.url = "/battle/tournament/host/" + url.search;
+        } else if (url.pathname === "/battle/leaderboard") {
+          req.url = "/battle/leaderboard/" + url.search;
+        } else if (["/login", "/register", "/reset-password"].includes(url.pathname)) {
+          req.url = url.pathname + "/" + url.search;
         } else if (url.pathname === "/list") {
           req.url = "/list/" + url.search;
         }
@@ -275,7 +283,13 @@ export default defineConfig({
       input: {
         main: resolve(process.cwd(), "docs/index.html"),
         list: resolve(process.cwd(), "docs/list/index.html"),
-        battle: resolve(process.cwd(), "docs/battle/index.html")
+        battle: resolve(process.cwd(), "docs/battle/index.html"),
+        battleLeaderboard: resolve(process.cwd(), "docs/battle/leaderboard/index.html"),
+        tournament: resolve(process.cwd(), "docs/battle/tournament/index.html"),
+        tournamentHost: resolve(process.cwd(), "docs/battle/tournament/host/index.html"),
+        login: resolve(process.cwd(), "docs/login/index.html"),
+        register: resolve(process.cwd(), "docs/register/index.html"),
+        resetPassword: resolve(process.cwd(), "docs/reset-password/index.html")
       }
     }
   }

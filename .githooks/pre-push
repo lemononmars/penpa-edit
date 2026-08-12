@@ -1,0 +1,15 @@
+#!/bin/sh
+
+remote_url="$2"
+
+# Never push from this checkout to the original Swaroop repository. Match the
+# destination URL rather than the remote name so renaming "upstream" cannot
+# accidentally bypass the protection. The lemononmars origin is unrestricted.
+case "$remote_url" in
+    https://github.com/swaroopg92/penpa-edit|https://github.com/swaroopg92/penpa-edit.git|git@github.com:swaroopg92/penpa-edit|git@github.com:swaroopg92/penpa-edit.git|ssh://git@github.com/swaroopg92/penpa-edit|ssh://git@github.com/swaroopg92/penpa-edit.git)
+        echo "Push rejected: swaroopg92/penpa-edit is configured as read-only upstream." >&2
+        exit 1
+        ;;
+esac
+
+exit 0

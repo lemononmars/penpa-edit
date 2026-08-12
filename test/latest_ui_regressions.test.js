@@ -57,7 +57,7 @@ test("active variants remain visible without a legacy Penpa setting", function()
     const renderer = solver.match(/function renderVariantTools\(\) \{([\s\S]*?)\n    function addVariantModeButton/)?.[1] || "";
     assert.doesNotMatch(renderer, /if \(!setting[^)]*\)[\s\S]*?return/,
         "metadata-only and no-input variants must still render their title and remove button");
-    assert.match(renderer, /group\.appendChild\(title\)[\s\S]*?group\.appendChild\(close\)[\s\S]*?toolbar\.appendChild\(group\)/);
+    assert.match(renderer, /header\.appendChild\(title\)[\s\S]*?header\.appendChild\(close\)[\s\S]*?group\.appendChild\(header\)[\s\S]*?toolbar\.appendChild\(group\)/);
 });
 
 test("variant input types separate cages from surface shading", function() {
@@ -66,14 +66,14 @@ test("variant input types separate cages from surface shading", function() {
     const app = fs.readFileSync(path.join(root, "docs/src/App.svelte"), "utf8");
 
     assert.equal(Object.hasOwn(metadata, "icons"), false);
-    assert.equal(metadata.variants.some((variant) => variant.inputType.categories.includes("region")), false);
+    assert.equal(metadata.variants.some((variant) => variant.inputType?.categories?.includes("region")), false);
     assert.deepEqual(byId.get("killer").inputType.categories, ["cage"]);
     assert.deepEqual(byId.get("difference2neighbours").inputType.categories, ["shading"]);
     assert.deepEqual(byId.get("samesum").inputType.categories, ["shading"]);
-    assert.deepEqual(byId.get("renbankiller").inputType.categories, ["cage", "shading"]);
+    assert.deepEqual(byId.get("plusminuskiller").inputType.categories, ["cage", "shading"]);
     assert.match(app, /value: "cage", label: "Cage"/);
     assert.match(app, /value: "shading", label: "Shading"/);
-    assert.match(app, /inputTypeIcons\[primaryVariantTab\(variant\)\]/);
+    assert.match(app, /function variantIcon\(variant: string\)[\s\S]*?return inputTypeIcons\[primaryVariantTab\(variant\)\]/);
     assert.doesNotMatch(app, /variantMetadata\.icons/);
 });
 
@@ -106,28 +106,29 @@ test("variant modes expose both Dead or Alive arrows and the diagonal cursor", f
 test("intersection clue modes use their required Penpa primitives", function() {
     assert.match(catalog, /\["quadmax", "quadmin"\][\s\S]*?add\("symbol", "arrow_B_B"/);
     assert.match(catalog, /\["equalsums", "equalproducts", "equaldifferences", "equalratios"\][\s\S]*?add\("symbol", "ox_B", 4/);
-    assert.match(catalog, /variation\.value === "quadruple"[\s\S]*?add\("number", "4", 6/);
-    assert.match(app, /\["equalsums", "equalproducts", "equaldifferences", "equalratios"\][\s\S]*?value: "4", label: "×"/);
+    assert.match(catalog, /variation\.value === "quadruple" \|\| variation\.value === "exclusion"[\s\S]*?add\("number", "5", 6/);
+    assert.match(app, /\["equalsums", "equalproducts", "equaldifferences", "equalratios"\]\.includes\([\s\S]*?value: "4", label: "×"/);
 });
 
-test("mode controls expose the active style and sub variable names", function() {
+test("mode controls expose active style and sub-mode names through the Svelte picker", function() {
     const index = fs.readFileSync(path.join(root, "docs/index.html"), "utf8");
     const puzzle = fs.readFileSync(path.join(root, "docs/js/class_p.js"), "utf8");
     assert.match(index, /id="style_txt">Style: <span id="style_variable"/);
     assert.match(index, /id="sub_txt">Sub: <span id="sub_variable"/);
-    assert.match(puzzle, /styleVariable[\s\S]*?textContent\s*=\s*styleLabel/);
-    assert.match(puzzle, /subVariable[\s\S]*?textContent\s*=\s*subLabel/);
+    assert.match(puzzle, /styleVariable[\s\S]*?textContent\s*=\s*\(name \+ '_lb'\)/);
+    assert.match(puzzle, /subVariable[\s\S]*?textContent\s*=\s*\(name \+ '_lb'\)/);
+    assert.match(app, /pickerSelection = \[modeLabel, treeItem\?\.label \|\| subLabel, property, styleLabel\]/);
 });
 
 test("wiki exposes stored solving examples without legacy screenshots", function() {
     const wiki = fs.readFileSync(path.join(root, "docs/src/VariantCatalogApp.svelte"), "utf8");
     const vite = fs.readFileSync(path.join(root, "vite.config.js"), "utf8");
-    assert.match(wiki, /<th>Has example<\/th>/);
-    assert.match(wiki, /m=solve&p=/);
+    assert.match(wiki, /<th[\s\S]*?Has example[\s\S]*?<\/th>/);
+    assert.match(wiki, /m=solve&tab=solve&v=0&p=/);
     assert.doesNotMatch(wiki, /problemImage|solutionImage/);
     assert.match(vite, /variant\.example\s*=\s*data\.example/);
-    assert.match(wiki, /variants=.*classic/);
-    assert.match(app, /example \+=\s*[\s\S]*?&variants=/);
+    assert.match(wiki, /&variants=\$\{encodeURIComponent\(`classic,\$\{variant\}`\)\}/);
+    assert.match(app, /example \+=[\s\S]*?"&variants="/);
 });
 
 test("stored solve links tolerate the removed replay-expansion control", function() {
@@ -135,11 +136,11 @@ test("stored solve links tolerate the removed replay-expansion control", functio
         /var replayExpansion = document\.getElementById\(['"]expansion_replay['"]\);[\s\S]*?if \(replayExpansion\) replayExpansion\.style\.display/);
 });
 
-test("translation initializer and language setting are no longer loaded", function() {
+test("translation initializer and its removed legacy language setting are no longer loaded", function() {
     const index = fs.readFileSync(path.join(root, "docs/index.html"), "utf8");
     const main = fs.readFileSync(path.join(root, "docs/js/main.js"), "utf8");
 
     assert.doesNotMatch(index, /\.\/js\/translate\.js/);
     assert.match(index, /\.\/js\/penpa_text\.js/);
-    assert.match(index, /<tr class="permanently-hidden-control">[\s\S]*?id="language_opt"/);
+    assert.doesNotMatch(index, /id="language_opt"/);
 });

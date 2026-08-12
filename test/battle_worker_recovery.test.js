@@ -175,6 +175,117 @@ test("battle generation does not depend on runtime importScripts variant request
       return null;
     });
     assert.deepEqual(mark, { color: "#ff0000", shade: "rgba(255,0,0,.14)", customColors: true });
+    const battleHelpers = await page.evaluate(() => {
+      const focused = window.SudokuTools.focusBattleCell(0, 0);
+      window.SudokuTools.setBattleInputMode("center");
+      return {
+        focused,
+        layer: window.pu.mode.qa,
+        editMode: window.pu.mode.pu_a.edit_mode,
+        noteMode: window.pu.mode.pu_a.sudoku[0],
+        answerLink: window.SudokuTools.battleAnswerCheckLink(),
+      };
+    });
+    assert.equal(battleHelpers.focused, true);
+    assert.deepEqual({ layer: battleHelpers.layer, editMode: battleHelpers.editMode, noteMode: battleHelpers.noteMode }, { layer: "pu_a", editMode: "sudoku", noteMode: 3 });
+    assert.match(battleHelpers.answerLink, /#m=solve&p=/);
+    assert.match(battleHelpers.answerLink, /&variants=classic/);
+  } finally {
+    await browser.close();
+    await server.close();
+  }
+});
+
+test("generated visual clues survive a native Penpa URL round trip", { timeout: 90000 }, async () => {
+  const { createServer } = await import("vite");
+  const server = await createServer({ configFile: path.resolve(__dirname, "../vite.config.js"), logLevel: "silent", server: { host: "127.0.0.1", port: 0 } });
+  await server.listen();
+  const address = server.httpServer.address();
+  const origin = `http://127.0.0.1:${address.port}`;
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const generator = await browser.newPage();
+    await generator.goto(`${origin}/index.html?embed=1&hideSidebar=1&battle=1`, { waitUntil: "domcontentloaded" });
+    await generator.waitForFunction(() => window.pu && window.SudokuTools?.generatePuzzleFromScratch);
+    const generated = await generator.evaluate(() => new Promise((resolve) => {
+      const timeout = setTimeout(() => resolve({ type: "timeout" }), 65000);
+      document.addEventListener("sudoku-generated", (event) => {
+        clearTimeout(timeout);
+        const detail = event.detail;
+        window.SudokuTools.restoreGeneratedMarks(detail);
+        const nativeUrl = window.pu.maketext_duplicate();
+        detail.outsideMarks = [{ variant: "xsums", side: "top", index: 0, value: 12 }];
+        window.SudokuTools.restoreGeneratedMarks(detail);
+        const snapshot = (layer) => Object.fromEntries(Object.entries(layer || {}).filter(([key]) => !key.startsWith("command_")));
+        const payload = {
+          kropkiMarks: (detail.kropkiMarks || detail.marks?.kropki || []).filter((mark) => mark.kind !== "none"),
+          outsideMarks: detail.outsideMarks,
+          questionLayers: { pu_q: snapshot(window.pu.pu_q), pu_q_col: snapshot(window.pu.pu_q_col) },
+        };
+        resolve({
+          type: "result",
+          url: `${nativeUrl}&generatedMarks=${encodeURIComponent(JSON.stringify(payload))}`,
+          symbols: Object.keys(window.pu.pu_q.symbol || {}).length,
+        });
+      }, { once: true });
+      document.addEventListener("sudoku-generation-error", (event) => {
+        clearTimeout(timeout);
+        resolve({ type: "error", message: event.detail });
+      }, { once: true });
+      window.SudokuTools.prepareBattleGrid(9, ["classic", "kropki"]);
+      window.SudokuTools.generatePuzzleFromScratch(9, ["classic", "kropki"], null, 98765, "easy");
+    }));
+    assert.equal(generated.type, "result", generated.message || "generation timed out");
+    assert.ok(generated.symbols > 0, "generator should place Kropki dots");
+
+    const loaded = await browser.newPage();
+    await loaded.addInitScript(() => {
+      window.__penpaReadyEvents = 0;
+      document.addEventListener("penpa-board-ready", () => { window.__penpaReadyEvents += 1; });
+    });
+    const generatedHash = new URL(generated.url).hash;
+    await loaded.goto(`${origin}/index.html?embed=1&hideSidebar=1&battle=1${generatedHash}`, { waitUntil: "load" });
+    await loaded.waitForFunction(() => window.penpaBoardReady === true, null, { timeout: 3000 });
+    await loaded.waitForTimeout(250);
+    const loadedState = await loaded.evaluate(() => {
+      const canvas = document.getElementById("canvas");
+      const context = canvas.getContext("2d");
+      const pixels = () => context.getImageData(0, 0, canvas.width, canvas.height).data;
+      const changedPixels = (before, after) => {
+        let changed = 0;
+        for (let index = 0; index < before.length; index += 4) {
+          if (before[index] !== after[index] || before[index + 1] !== after[index + 1] || before[index + 2] !== after[index + 2] || before[index + 3] !== after[index + 3]) changed += 1;
+        }
+        return changed;
+      };
+      const withAllMarks = pixels();
+      const symbols = window.pu.pu_q.symbol;
+      window.pu.pu_q.symbol = {};
+      window.pu.redraw();
+      const withoutInternalMarks = pixels();
+      const internalPaintedPixels = changedPixels(withAllMarks, withoutInternalMarks);
+      window.pu.pu_q.symbol = symbols;
+      const centers = new Set((window.pu.centerlist || []).map(String));
+      const outsideNumbers = Object.fromEntries(Object.entries(window.pu.pu_q.number || {}).filter(([key]) => !centers.has(String(key))));
+      for (const key of Object.keys(outsideNumbers)) delete window.pu.pu_q.number[key];
+      window.pu.redraw();
+      const withoutOutsideMarks = pixels();
+      const outsidePaintedPixels = changedPixels(withAllMarks, withoutOutsideMarks);
+      Object.assign(window.pu.pu_q.number, outsideNumbers);
+      window.pu.redraw();
+      return {
+        symbols: Object.keys(symbols || {}).length,
+        outsideNumbers: Object.keys(outsideNumbers).length,
+        internalPaintedPixels,
+        outsidePaintedPixels,
+        readyEvents: window.__penpaReadyEvents,
+      };
+    });
+    assert.equal(loadedState.readyEvents, 1, "the board should publish one hydration-ready event");
+    assert.equal(loadedState.symbols, generated.symbols, "serialized Kropki dots should be visible after reload");
+    assert.ok(loadedState.outsideNumbers > 0, "the battle handoff should restore outside clues");
+    assert.ok(loadedState.internalPaintedPixels > 0, `internal marks should be painted on the battle canvas: ${JSON.stringify(loadedState)}`);
+    assert.ok(loadedState.outsidePaintedPixels > 0, `outside marks should be painted on the battle canvas: ${JSON.stringify(loadedState)}`);
   } finally {
     await browser.close();
     await server.close();

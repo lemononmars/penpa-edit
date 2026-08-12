@@ -1,3 +1,8 @@
+window.penpaBoardReady = false;
+window.penpaBoardReadyPromise = new Promise(function(resolve) {
+    window.resolvePenpaBoardReady = resolve;
+});
+
 function errorMsg(html) {
     Swal.fire({
         title: Identity.errorTitle,
@@ -17,6 +22,8 @@ function infoMsg(html) {
 }
 
 async function boot() {
+    window.penpaBoardReady = false;
+    var generatedMarks = null;
     var obj = document.getElementById("dvique");
     var canvas = document.createElement("canvas");
     canvas.id = "canvas";
@@ -41,6 +48,14 @@ async function boot() {
             paramArray[paramItem[0]] = paramItem[1];
         }
 
+        if (paramArray.generatedMarks) {
+            try {
+                generatedMarks = JSON.parse(decodeURIComponent(paramArray.generatedMarks));
+            } catch (error) {
+                console.warn("Could not read generated battle marks.", error);
+            }
+        }
+
 
         if (paramArray.p) {
             // Decrypt puzzle data
@@ -55,9 +70,9 @@ async function boot() {
                 } else {
                     url = local_data.split('?')[1];
                 }
-                load(url, type = 'localstorage', origurl = paramArray.p);
+                await load(url, type = 'localstorage', origurl = paramArray.p);
             } else {
-                load(urlParam);
+                await load(urlParam);
             }
         } else {
             create();
@@ -65,6 +80,16 @@ async function boot() {
     } else {
         create();
     }
+    if (typeof pu !== "undefined") window.pu = pu;
+    // Battle marks are restored inside the board before publishing readiness. This
+    // keeps clue hydration tied to Penpa's load lifecycle instead of iframe timing.
+    if (generatedMarks && window.SudokuTools && typeof window.SudokuTools.restoreGeneratedMarks === "function") {
+        window.SudokuTools.restoreGeneratedMarks(generatedMarks);
+    }
+    window.penpaBoardReady = typeof window.pu !== "undefined" && !!window.pu;
+    window.resolvePenpaBoardReady?.(window.pu);
+    delete window.resolvePenpaBoardReady;
+    document.dispatchEvent(new CustomEvent("penpa-board-ready"));
 }
 
 function boot_parameters() {

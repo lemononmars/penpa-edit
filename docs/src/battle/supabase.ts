@@ -12,7 +12,9 @@ export type BattleRoom = {
   created_at: string;
   started_at: string | null;
   finished_at: string | null;
-  finish_reason: "solved" | "time_limit" | null;
+  finish_reason: "solved" | "time_limit" | "forfeit" | "aborted" | null;
+  ranked: boolean;
+  tournament_match_id?: string | null;
 };
 
 export type BattlePlayer = {
@@ -22,6 +24,18 @@ export type BattlePlayer = {
   score: number;
   color: "red" | "blue" | "green" | "orange";
   joined_at: string;
+  user_id?: string | null;
+};
+
+export type BattleProfile = {
+  id: string;
+  display_name: string;
+  rating: number;
+  rating_deviation: number;
+  rated_games: number;
+  wins: number;
+  losses: number;
+  draws: number;
 };
 
 export type ConfirmedMove = {

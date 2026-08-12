@@ -126,7 +126,7 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "rossini") {
-        add("symbol", "arrow_N_G", 2, ["mo_symbol_lb", "ms3", "li_arrow_N"]);
+        add("symbol", "arrow_N_B", 2, ["mo_symbol_lb", "ms3", "li_arrow_N"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
     if (variation.value === "braille") {
@@ -346,7 +346,7 @@ function genericSetting(variation: Variation) {
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "rossini") {
-        add("symbol", "arrow_N_G", 2, ["mo_symbol_lb", "ms3", "li_arrow_N"]);
+        add("symbol", "arrow_N_B", 2, ["mo_symbol_lb", "ms3", "li_arrow_N"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: true };
     }
     if (variation.value === "average") {

@@ -3591,6 +3591,7 @@
         "outside",
         "placement"
       ],
+      "scratchGeneratable": true,
       "status": "available",
       "inputType": {
         "categories": [
@@ -4965,6 +4966,7 @@
         "neighbour",
         "outside"
       ],
+      "scratchGeneratable": true,
       "status": "available",
       "inputType": {
         "categories": [
@@ -5024,6 +5026,7 @@
         "math",
         "outside"
       ],
+      "scratchGeneratable": true,
       "status": "available",
       "inputType": {
         "categories": [
@@ -5223,6 +5226,7 @@
         "outside",
         "hybrid"
       ],
+      "scratchGeneratable": true,
       "status": "available",
       "inputType": {
         "categories": [
@@ -5697,6 +5701,7 @@
         "math",
         "outside"
       ],
+      "scratchGeneratable": true,
       "status": "available",
       "inputType": {
         "categories": [
@@ -6537,6 +6542,7 @@
         "math",
         "outside"
       ],
+      "scratchGeneratable": true,
       "status": "available",
       "inputType": {
         "categories": [
