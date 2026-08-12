@@ -25,6 +25,7 @@ export type BattlePlayer = {
   color: "red" | "blue" | "green" | "orange";
   joined_at: string;
   user_id?: string | null;
+  is_bot?: boolean;
 };
 
 export type BattleProfile = {

@@ -24,6 +24,7 @@ const finishAbortMigration = fs.readFileSync(path.join(root, "supabase/migration
 const preparingJoinMigration = fs.readFileSync(path.join(root, "supabase/migrations/20260809040000_allow_preparing_room_join.sql"), "utf8");
 const rankedMigration = fs.readFileSync(path.join(root, "supabase/migrations/20260812000000_ranked_leaderboard_and_tournaments.sql"), "utf8");
 const profileMigration = fs.readFileSync(path.join(root, "supabase/migrations/20260812010000_initialize_profile_on_login.sql"), "utf8");
+const botLifecycleMigration = fs.readFileSync(path.join(root, "supabase/migrations/20260813000000_fix_battle_bot_lifecycle.sql"), "utf8");
 const names = fs.readFileSync(path.join(root, "docs/src/battle/names.ts"), "utf8");
 const vite = fs.readFileSync(path.join(root, "vite.config.js"), "utf8");
 const generator = fs.readFileSync(path.join(root, "docs/js/sudoku_generator.js"), "utf8");
@@ -262,7 +263,7 @@ test("battle identity, settings, bots, and leaderboard use the compact lobby and
   assert.match(settings, /showAccount/);
   assert.match(battle, /showIdentity=\{!room\}/);
   assert.match(battle, /showAccount=\{!room\}/);
-  assert.match(battle, /!botTokens\.length[\s\S]*class="bot-buttons-row"/);
+  assert.match(battle, /!hasBots[\s\S]*class="bot-buttons-row"/);
   assert.match(vite, /docs\/battle\/leaderboard\/index\.html/);
   assert.match(auth, /fa fa-google/);
   assert.match(auth, /fa fa-facebook/);
@@ -271,6 +272,17 @@ test("battle identity, settings, bots, and leaderboard use the compact lobby and
   assert.match(settings, />ไทย<\/button>/);
   assert.match(keypad, /\.dark\) button:hover:not\(:disabled\)/);
   assert.match(battle, /title=\{t\("sharedBoard"\)\}/);
+});
+
+test("bots use anonymous identities and cannot keep abandoned rooms alive", () => {
+  assert.match(battle, /supabase\.rpc\("join_battle_bot"/);
+  assert.doesNotMatch(battle, /async function addBots[\s\S]*?supabase\.rpc\("join_battle_room"/);
+  assert.match(battle, /players\.some\(\(player\) => player\.is_bot\)/);
+  assert.match(botLifecycleMigration, /add column if not exists is_bot boolean not null default false/);
+  assert.match(botLifecycleMigration, /set is_bot=true,user_id=null[\s\S]*Bot Alpha/);
+  assert.match(botLifecycleMigration, /create or replace function public\.join_battle_bot/);
+  assert.match(botLifecycleMigration, /user_id,is_bot\)[\s\S]*null,true/);
+  assert.match(botLifecycleMigration, /expire_battle_rooms[\s\S]*not coalesce\(p\.is_bot,false\)/);
 });
 
 test("ranked battles use Supabase auth, server-side Glicko-2, and an account leaderboard", () => {

@@ -99,6 +99,17 @@
   let authUser: User | null = null;
   let answerCheckUrl = "";
 
+  function botTokenStorageKey(roomId: string) { return `sudotoku-battle-bots:${roomId}`; }
+  function loadBotTokens(roomId: string) {
+    try {
+      const stored = JSON.parse(sessionStorage.getItem(botTokenStorageKey(roomId)) || "[]");
+      return Array.isArray(stored) ? stored.filter((token) => typeof token === "string") : [];
+    } catch { return []; }
+  }
+  function saveBotTokens(roomId: string) {
+    sessionStorage.setItem(botTokenStorageKey(roomId), JSON.stringify(botTokens));
+  }
+
   function snapshotPenpaLayer(layer: any) {
     if (!layer || typeof layer !== "object") return {};
     const snapshot: Record<string, any> = {};
@@ -159,6 +170,7 @@
   $: syncBattleReveal(boardVisible);
   $: elapsedLabel = formatTime(elapsedSeconds);
   $: myColor = players.find((player) => player.id === myPlayerId)?.color || "blue";
+  $: hasBots = players.some((player) => player.is_bot);
   $: winners = room?.status === "finished" && players.length
     ? players.filter((player) => player.score === Math.max(...players.map((entry) => entry.score)))
     : [];
@@ -382,7 +394,7 @@
     selectedVariants = room.variants.filter((item) => item !== "classic");
     selectedVariant = selectedVariants[0] || "classic";
     selectedVariantGroup = selectedVariant === "classic" ? "classic" : basicBattleVariantIds.has(selectedVariant) ? "basic" : "advanced";
-    boardLoaded = false; knownBoard = []; answerCheckUrl = "";
+    boardLoaded = false; knownBoard = []; answerCheckUrl = ""; botTokens = loadBotTokens(room.id);
     history.replaceState(null, "", `${location.pathname}?room=${room.code}${watching ? "&watch=1" : ""}${tournamentCode ? `&tournament=${tournamentCode}` : ""}`);
   }
 
@@ -485,7 +497,7 @@
 
   async function refreshPlayers() {
     if (!supabase || !room) return;
-    const { data } = await supabase.from("battle_players").select("id,room_id,name,score,color,joined_at")
+    const { data } = await supabase.from("battle_players").select("id,room_id,name,score,color,joined_at,user_id,is_bot")
       .eq("room_id", room.id).is("left_at", null).order("joined_at", { ascending: true });
     if (data) {
       players = data as BattlePlayer[];
@@ -509,7 +521,7 @@
 
   function checkHumanPlayerCount() {
     if (!room || !players.length || room.status === "finished") return;
-    const humanCount = players.filter((p) => !p.name.startsWith("🤖")).length;
+    const humanCount = players.filter((p) => !p.is_bot).length;
     if (humanCount === 0) {
       showBattleToast("No human players left in room. Closing room.");
       if (isHost) abortBattle();
@@ -625,9 +637,11 @@
 
   async function returnToLobby() {
     stopBotLoop(); resetSessionTimers();
+    const leavingRoomId = room?.id;
     if (supabase && room && !spectatorMode) await supabase.rpc("leave_battle_room", { p_room_id: room.id, p_player_token: playerToken() });
     await leaveBattleChannel(channel); channel = null; room = null; players = []; myPlayerId = "";
     botTokens = []; boardLoaded = false; spectatorMode = false;
+    if (leavingRoomId) sessionStorage.removeItem(botTokenStorageKey(leavingRoomId));
     if (tournamentCode) { location.href = `./tournament/?tournament=${tournamentCode}`; return; }
     history.replaceState(null, "", location.pathname); await refreshLobby();
   }
@@ -641,11 +655,12 @@
       for (let i = 0; i < count; i++) {
         const token = crypto.randomUUID();
         const botName = names[botTokens.length % names.length];
-        const { error: rpcError } = await supabase.rpc("join_battle_room", {
-          p_room_code: room.code, p_player_name: botName, p_player_token: token,
+        const { error: rpcError } = await supabase.rpc("join_battle_bot", {
+          p_room_id: room.id, p_host_token: playerToken(), p_bot_name: botName, p_bot_token: token,
         });
         if (rpcError) throw rpcError;
         botTokens.push(token);
+        saveBotTokens(room.id);
       }
       await refreshPlayers();
       showBattleToast(`Added ${count} bot player${count > 1 ? "s" : ""}!`);
@@ -965,7 +980,7 @@
         <div class="play-area" class:spectator={spectatorMode}>
           <div class="board-stage" class:revealed={boardRevealed} class:board-complete={room?.status === "finished"}>
             {#if room.status === "preparing"}<iframe class="board hidden-board" title={t("sudokuGenerator")} bind:this={boardFrame} src={boardFrameSource()} on:load={boardReady}></iframe>{:else if room.puzzle_hash}<iframe class="board" title={t("sharedBoard")} bind:this={boardFrame} src={boardSrc} on:load={boardReady}></iframe>{/if}
-            {#if !boardVisible}<div class="board-cover" class:finished-cover={room.status === "finished"}>{#if room.status === "preparing"}<strong>{t("preparing")}</strong><div class="prep-bar-container"><div class="prep-bar-fill" style={`width: ${Math.min(100, Math.max(0, (generationSeconds / 20) * 100))}%`}></div></div><span class="prep-countdown-text">{Math.max(0, 20 - generationSeconds)}s</span>{#if error || generationSeconds > 20}<div class="prep-actions"><button class="primary small" on:click={prepareRoomBoard}>↻ {t("retryBoard")}</button><button class="small" on:click={returnToLobby}>← {t("backToLobby")}</button></div>{/if}{:else if room.status === "lobby"}<strong>{t("readyLobby")}</strong><span>{boardLoaded ? t("boardHidden") : `${t("loadingBoard")}…`}</span>{#if isHost}<button class="primary start-in-grid" disabled={busy || !boardLoaded || (room.ranked && players.length !== 2)} on:click={startBattle}>▶ {t("startBattle")}</button>{#if !room.ranked && !botTokens.length}<div class="bot-buttons-row"><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(1)}>🤖 1</button><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(2)}>🤖 2</button><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(3)}>🤖 3</button></div>{:else if room.ranked && players.length !== 2}<small>{t("waitingRankedOpponent")}</small>{/if}{/if}{:else if countdown > 0}<strong class="countdown">{countdown}</strong><span>{t("getReady")}</span>{:else if room.status === "finished"}<strong>{room.finish_reason === "time_limit" ? t("timeLimit") : t("battleComplete")}</strong><span>{winners.length ? `${winners.map((player) => player.name).join(" & ")} ${t(winners.length > 1 ? "tieWith" : "winsWith")} ${winners[0].score} ${t("points")}.` : t("finalScores")}</span>{#if answerCheckUrl}<a class="button-link answer-link" href={answerCheckUrl} target="_blank" rel="noreferrer">↗ {t("openPuzzleCheck")}</a>{/if}{#if isHost && !room.ranked && !tournamentCode}<button class="primary" disabled={busy} on:click={rematch}>{t("rematch")}</button>{/if}{:else}<strong>{t("loadingBoard")}</strong>{/if}</div>{/if}
+            {#if !boardVisible}<div class="board-cover" class:finished-cover={room.status === "finished"}>{#if room.status === "preparing"}<strong>{t("preparing")}</strong><div class="prep-bar-container"><div class="prep-bar-fill" style={`width: ${Math.min(100, Math.max(0, (generationSeconds / 20) * 100))}%`}></div></div><span class="prep-countdown-text">{Math.max(0, 20 - generationSeconds)}s</span>{#if error || generationSeconds > 20}<div class="prep-actions"><button class="primary small" on:click={prepareRoomBoard}>↻ {t("retryBoard")}</button><button class="small" on:click={returnToLobby}>← {t("backToLobby")}</button></div>{/if}{:else if room.status === "lobby"}<strong>{t("readyLobby")}</strong><span>{boardLoaded ? t("boardHidden") : `${t("loadingBoard")}…`}</span>{#if isHost}<button class="primary start-in-grid" disabled={busy || !boardLoaded || (room.ranked && players.length !== 2)} on:click={startBattle}>▶ {t("startBattle")}</button>{#if !room.ranked && !hasBots}<div class="bot-buttons-row"><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(1)}>🤖 1</button><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(2)}>🤖 2</button><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(3)}>🤖 3</button></div>{:else if room.ranked && players.length !== 2}<small>{t("waitingRankedOpponent")}</small>{/if}{/if}{:else if countdown > 0}<strong class="countdown">{countdown}</strong><span>{t("getReady")}</span>{:else if room.status === "finished"}<strong>{room.finish_reason === "time_limit" ? t("timeLimit") : t("battleComplete")}</strong><span>{winners.length ? `${winners.map((player) => player.name).join(" & ")} ${t(winners.length > 1 ? "tieWith" : "winsWith")} ${winners[0].score} ${t("points")}.` : t("finalScores")}</span>{#if answerCheckUrl}<a class="button-link answer-link" href={answerCheckUrl} target="_blank" rel="noreferrer">↗ {t("openPuzzleCheck")}</a>{/if}{#if isHost && !room.ranked && !tournamentCode}<button class="primary" disabled={busy} on:click={rematch}>{t("rematch")}</button>{/if}{:else}<strong>{t("loadingBoard")}</strong>{/if}</div>{/if}
           </div>
           {#if !spectatorMode}
             <div class="right-controls">

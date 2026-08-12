@@ -176,10 +176,27 @@ test("battle generation does not depend on runtime importScripts variant request
     });
     assert.deepEqual(mark, { color: "#ff0000", shade: "rgba(255,0,0,.14)", customColors: true });
     const battleHelpers = await page.evaluate(() => {
-      const focused = window.SudokuTools.focusBattleCell(0, 0);
+      let editableCell = null;
+      for (let row = 0; row < 6 && !editableCell; row += 1) {
+        for (let col = 0; col < 6; col += 1) {
+          const key = window.SudokuSolver.cellKey(window.pu, row, col);
+          if (!window.pu.pu_q.number[key] && !window.pu.pu_a.number[key]) {
+            editableCell = { row, col, key };
+            break;
+          }
+        }
+      }
+      if (!editableCell) throw new Error("Generated board has no editable cell");
+      const focused = window.SudokuTools.focusBattleCell(editableCell.row, editableCell.col);
+      const entered = window.SudokuTools.enterBattleDigit(2, "normal");
+      const placedDigit = window.pu.pu_a.number[editableCell.key]?.[0] ?? null;
+      const normalMode = window.pu.mode.pu_a.sudoku[0];
       window.SudokuTools.setBattleInputMode("center");
       return {
         focused,
+        entered,
+        placedDigit,
+        normalMode,
         layer: window.pu.mode.qa,
         editMode: window.pu.mode.pu_a.edit_mode,
         noteMode: window.pu.mode.pu_a.sudoku[0],
@@ -187,7 +204,12 @@ test("battle generation does not depend on runtime importScripts variant request
       };
     });
     assert.equal(battleHelpers.focused, true);
-    assert.deepEqual({ layer: battleHelpers.layer, editMode: battleHelpers.editMode, noteMode: battleHelpers.noteMode }, { layer: "pu_a", editMode: "sudoku", noteMode: 3 });
+    assert.equal(battleHelpers.entered, true);
+    assert.equal(battleHelpers.placedDigit, "2");
+    assert.deepEqual(
+      { layer: battleHelpers.layer, editMode: battleHelpers.editMode, normalMode: battleHelpers.normalMode, noteMode: battleHelpers.noteMode },
+      { layer: "pu_a", editMode: "sudoku", normalMode: "1", noteMode: "3" },
+    );
     assert.match(battleHelpers.answerLink, /#m=solve&p=/);
     assert.match(battleHelpers.answerLink, /&variants=classic/);
   } finally {

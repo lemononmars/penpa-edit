@@ -4321,7 +4321,10 @@ var SudokuTools = (function() {
         if (typeof board.mode_qa === "function") board.mode_qa("pu_a");
         board.mode.pu_a.edit_mode = "sudoku";
         if (!Array.isArray(board.mode.pu_a.sudoku)) board.mode.pu_a.sudoku = [1, 1];
-        board.mode.pu_a.sudoku[0] = mode === "center" ? 3 : mode === "corner" ? 2 : 1;
+        // Penpa's Sudoku input dispatcher switches on the string submode IDs.
+        // Numeric IDs silently fall through every case, making both keyboard
+        // and keypad digit entry appear successful without changing the board.
+        board.mode.pu_a.sudoku[0] = mode === "center" ? "3" : mode === "corner" ? "2" : "1";
         return true;
     }
 
