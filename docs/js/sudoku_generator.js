@@ -86,7 +86,8 @@ var SudokuGenerator = (function() {
         }
         variants.forEach(function(variant) {
             if (["xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"].indexOf(variant) === -1) return;
-            sides.forEach(function(side) {
+            var targetSides = variant === "xsums" ? ["top", "left"] : sides;
+            targetSides.forEach(function(side) {
                 for (var index = 0; index < size; index++) {
                     var cells = sightline(side, index);
                     var values = valuesFor(cells);
@@ -206,6 +207,15 @@ var SudokuGenerator = (function() {
                 });
                 if (validWindoku) return windokuBase;
             }
+        }
+        var hasLineConstraints = (constraints.arrows && constraints.arrows.length) || (constraints.thermos && constraints.thermos.length);
+        if (hasLineConstraints) {
+            if (!constraints.supported) constraints.supported = [];
+            if (constraints.arrows && constraints.arrows.length && constraints.supported.indexOf("arrow") === -1) constraints.supported.push("arrow");
+            if (constraints.thermos && constraints.thermos.length && constraints.supported.indexOf("thermo") === -1) constraints.supported.push("thermo");
+            var solved = CSP.solve(emptyBoard(size), constraints);
+            if (solved && solved.solved) return solved.board;
+            return null;
         }
         var needsSearch = variants.some(function(variant) {
             return ["diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "windoku", "symmetric unequal", "symmetricunequal", "disjoint"].indexOf(variant) !== -1;
@@ -464,6 +474,230 @@ var SudokuGenerator = (function() {
         return units;
     }
 
+    function generateRandomSymmetricLineMarks(size, variant, random) {
+        var occupied = {};
+        function cellKeyStr(r, c) { return r * size + c; }
+        var targetPairs = Math.floor(random() * 2) === 0 ? 2 : 3;
+        var minLen = 3;
+        var maxLen = variant === "arrow" ? 3 : Math.min(6, size);
+
+        function getNeighbors(r, c) {
+            var res = [];
+            for (var dr = -1; dr <= 1; dr++) {
+                for (var dc = -1; dc <= 1; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    var nr = r + dr, nc = c + dc;
+                    if (nr >= 0 && nr < size && nc >= 0 && nc < size) res.push({ r: nr, c: nc });
+                }
+            }
+            return res;
+        }
+
+        var allCells = [];
+        for (var cr = 0; cr < size; cr++) {
+            for (var cc = 0; cc < size; cc++) {
+                allCells.push({ r: cr, c: cc });
+            }
+        }
+        allCells = shuffle(allCells, random);
+        var resultLines = [];
+
+        for (var idx = 0; idx < allCells.length && resultLines.length / 2 < targetPairs; idx++) {
+            var cell = allCells[idx];
+            var r0 = cell.r, c0 = cell.c;
+            var r0_sym = (size - 1) - r0;
+            var c0_sym = (size - 1) - c0;
+            var k0 = cellKeyStr(r0, c0);
+            var k0_sym = cellKeyStr(r0_sym, c0_sym);
+            if (occupied[k0] || occupied[k0_sym] || k0 === k0_sym) continue;
+
+            var targetLen = Math.floor(random() * (maxLen - minLen + 1)) + minLen;
+
+            var path1 = [{ row: r0, col: c0 }];
+            var path1Keys = {};
+            path1Keys[k0] = true;
+            var currR = r0, currC = c0;
+            var failed = false;
+
+            for (var step = 1; step < targetLen; step++) {
+                var neighbors = getNeighbors(currR, currC).filter(function(n) {
+                    var nk = cellKeyStr(n.r, n.c);
+                    var nk_sym = cellKeyStr((size - 1) - n.r, (size - 1) - n.c);
+                    return !path1Keys[nk] && !occupied[nk] && !occupied[nk_sym];
+                });
+                if (!neighbors.length) { failed = true; break; }
+                var pick = neighbors[Math.floor(random() * neighbors.length)];
+                path1.push({ row: pick.r, col: pick.c });
+                path1Keys[cellKeyStr(pick.r, pick.c)] = true;
+                currR = pick.r;
+                currC = pick.c;
+            }
+
+            if (failed || path1.length < minLen) continue;
+
+            var path2 = path1.map(function(c) {
+                return { row: (size - 1) - c.row, col: (size - 1) - c.col };
+            });
+
+            var overlaps = false;
+            var p1Keys = {};
+            for (var i = 0; i < path1.length; i++) p1Keys[cellKeyStr(path1[i].row, path1[i].col)] = true;
+            for (var j = 0; j < path2.length; j++) {
+                if (p1Keys[cellKeyStr(path2[j].row, path2[j].col)]) { overlaps = true; break; }
+            }
+            if (overlaps) continue;
+
+            path1.forEach(function(c) { occupied[cellKeyStr(c.row, c.col)] = true; });
+            path2.forEach(function(c) { occupied[cellKeyStr(c.row, c.col)] = true; });
+            resultLines.push(path1);
+            resultLines.push(path2);
+        }
+
+        return resultLines;
+    }
+
+    function generateLineMarksForSolution(size, solution, variant, random) {
+        var occupied = {};
+        function cellKeyStr(r, c) { return r * size + c; }
+        var resultLines = [];
+        var targetPairs = Math.floor(random() * 2) === 0 ? 2 : 3;
+        var minLen = 3;
+        var maxLen = variant === "arrow" ? 3 : Math.min(6, size);
+        var attempts = 0;
+
+        function getNeighbors(r, c, orthogonalOnly) {
+            var res = [];
+            for (var dr = -1; dr <= 1; dr++) {
+                for (var dc = -1; dc <= 1; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    if (orthogonalOnly && dr !== 0 && dc !== 0) continue;
+                    var nr = r + dr, nc = c + dc;
+                    if (nr >= 0 && nr < size && nc >= 0 && nc < size) res.push({ r: nr, c: nc });
+                }
+            }
+            return res;
+        }
+
+        function pathsOverlap(p1, p2, occ) {
+            var keys = {};
+            for (var i = 0; i < p1.length; i++) {
+                var k = cellKeyStr(p1[i].row, p1[i].col);
+                if (occ[k]) return true;
+                keys[k] = true;
+            }
+            for (var j = 0; j < p2.length; j++) {
+                var k2 = cellKeyStr(p2[j].row, p2[j].col);
+                if (occ[k2] || keys[k2]) return true;
+            }
+            return false;
+        }
+
+        function markOccupied(p1, p2, occ) {
+            p1.forEach(function(c) { occ[cellKeyStr(c.row, c.col)] = true; });
+            p2.forEach(function(c) { occ[cellKeyStr(c.row, c.col)] = true; });
+        }
+
+        function buildArrowPathFrom(r, c) {
+            var headVal = solution[r][c];
+            var path = [{ row: r, col: c }];
+            // Try length 3 first (circle + 2 shaft cells: val1 + val2 = headVal)
+            if (headVal >= 3) {
+                var n1s = getNeighbors(r, c, false);
+                var validPairs = [];
+                n1s.forEach(function(n1) {
+                    var val1 = solution[n1.r][n1.c];
+                    if (val1 >= headVal) return;
+                    var rem = headVal - val1;
+                    var n2s = getNeighbors(n1.r, n1.c, false);
+                    n2s.forEach(function(n2) {
+                        if ((n2.r === r && n2.c === c) || (n2.r === n1.r && n2.c === n1.c)) return;
+                        if (solution[n2.r][n2.c] === rem) {
+                            validPairs.push([n1, n2]);
+                        }
+                    });
+                });
+                if (validPairs.length) {
+                    var pairPick = validPairs[Math.floor(random() * validPairs.length)];
+                    path.push({ row: pairPick[0].r, col: pairPick[0].c });
+                    path.push({ row: pairPick[1].r, col: pairPick[1].c });
+                    return path;
+                }
+            }
+            // Try length 2 (circle + 1 shaft cell: val1 = headVal, across box boundary)
+            var neighbors = getNeighbors(r, c, false);
+            var valid1 = neighbors.filter(function(n) { return solution[n.r][n.c] === headVal; });
+            if (valid1.length) {
+                var pick = valid1[Math.floor(random() * valid1.length)];
+                path.push({ row: pick.r, col: pick.c });
+                return path;
+            }
+            return null;
+        }
+
+        function buildThermoPathFrom(r, c, len) {
+            var path = [{ row: r, col: c }];
+            var pathKeys = {};
+            pathKeys[cellKeyStr(r, c)] = true;
+            var currR = r, currC = c;
+            for (var step = 1; step < len; step++) {
+                var currVal = solution[currR][currC];
+                var neighbors = getNeighbors(currR, currC, false).filter(function(n) {
+                    var nk = cellKeyStr(n.r, n.c);
+                    return !pathKeys[nk] && solution[n.r][n.c] > currVal;
+                });
+                if (!neighbors.length) return null;
+                var pick = neighbors[Math.floor(random() * neighbors.length)];
+                path.push({ row: pick.r, col: pick.c });
+                pathKeys[cellKeyStr(pick.r, pick.c)] = true;
+                currR = pick.r;
+                currC = pick.c;
+            }
+            return path;
+        }
+
+        var allCells = [];
+        for (var cr = 0; cr < size; cr++) {
+            for (var cc = 0; cc < size; cc++) {
+                allCells.push({ r: cr, c: cc });
+            }
+        }
+        allCells = shuffle(allCells, random);
+
+        for (var idx = 0; idx < allCells.length && resultLines.length / 2 < targetPairs; idx++) {
+            var cell = allCells[idx];
+            var r0 = cell.r, c0 = cell.c;
+            var r0_sym = (size - 1) - r0;
+            var c0_sym = (size - 1) - c0;
+            var k0 = cellKeyStr(r0, c0);
+            var k0_sym = cellKeyStr(r0_sym, c0_sym);
+            if (occupied[k0] || occupied[k0_sym] || k0 === k0_sym) continue;
+
+            var path1 = null, path2 = null;
+            if (variant === "arrow") {
+                path1 = buildArrowPathFrom(r0, c0);
+                path2 = buildArrowPathFrom(r0_sym, c0_sym);
+            } else {
+                var targetLen = Math.floor(random() * (maxLen - minLen + 1)) + minLen;
+                for (var l = targetLen; l >= minLen; l--) {
+                    var p1 = buildThermoPathFrom(r0, c0, l);
+                    var p2 = buildThermoPathFrom(r0_sym, c0_sym, l);
+                    if (p1 && p2 && !pathsOverlap(p1, p2, occupied)) {
+                        path1 = p1;
+                        path2 = p2;
+                        break;
+                    }
+                }
+            }
+
+            if (path1 && path2 && !pathsOverlap(path1, path2, occupied)) {
+                markOccupied(path1, path2, occupied);
+                resultLines.push(path1);
+                resultLines.push(path2);
+            }
+        }
+        return resultLines;
+    }
+
     function generate(options) {
         options = options || {};
         var size = Number(options.size) === 6 ? 6 : 9;
@@ -475,7 +709,7 @@ var SudokuGenerator = (function() {
             "kropki", "kropkipairs", "xv", "xvpairs", "battenburg", "windoku",
             "disjoint", "touchy", "mirror", "symmetric unequal", "symmetricunequal",
             "sequence top-bottom", "sequencetopbottom", "xsums", "skyscraper",
-            "numberedrooms", "rossini", "sandwich", "sumframe"];
+            "numberedrooms", "rossini", "sandwich", "sumframe", "arrow", "thermo"];
         var unsupported = variants.filter(function(variant) { return supported.indexOf(variant) === -1; });
         if (!options.preserveExisting && unsupported.length) {
             throw new Error("Generation is not implemented for: " + unsupported.join(", ") + ".");
@@ -492,13 +726,61 @@ var SudokuGenerator = (function() {
                 constraints[name] = existing.concat(options.sourceConstraints[name]);
             });
         }
+        var generatedLineMarks = [];
+        var lineVariant = variants.indexOf("arrow") !== -1 ? "arrow" : (variants.indexOf("thermo") !== -1 ? "thermo" : null);
         var solution;
         if (Array.isArray(options.sourceBoard) && options.sourceBoard.length === size) {
             var completion = CSP.solve(options.sourceBoard, constraints);
             if (!completion.solved) throw new Error("The existing grid cannot be completed under its active clues.");
             solution = completion.board;
+        } else if (!options.preserveExisting && lineVariant) {
+            var lineSolved = false;
+            for (var lineAttempt = 0; lineAttempt < 200; lineAttempt++) {
+                var candidateLines = generateRandomSymmetricLineMarks(size, lineVariant, random);
+                if (!candidateLines.length) continue;
+                var testConstraints = JSON.parse(JSON.stringify(constraints));
+                if (!testConstraints.supported) testConstraints.supported = [];
+                if (lineVariant === "arrow") {
+                    testConstraints.arrows = candidateLines.map(function(p) { return { circle: p[0], shaft: p.slice(1) }; });
+                    if (testConstraints.supported.indexOf("arrow") === -1) testConstraints.supported.push("arrow");
+                } else if (lineVariant === "thermo") {
+                    testConstraints.thermos = candidateLines;
+                    if (testConstraints.supported.indexOf("thermo") === -1) testConstraints.supported.push("thermo");
+                }
+                var solveRes = CSP.solve(emptyBoard(size), testConstraints);
+                if (solveRes && solveRes.solved) {
+                    solution = solveRes.board;
+                    constraints = testConstraints;
+                    generatedLineMarks = candidateLines;
+                    lineSolved = true;
+                    break;
+                }
+            }
+            if (!lineSolved) {
+                solution = makeSolution(size, variants, constraints, random);
+                generatedLineMarks = generateLineMarksForSolution(size, solution, lineVariant, random);
+                if (!constraints.supported) constraints.supported = [];
+                if (lineVariant === "arrow") {
+                    constraints.arrows = generatedLineMarks.map(function(p) { return { circle: p[0], shaft: p.slice(1) }; });
+                    if (constraints.supported.indexOf("arrow") === -1) constraints.supported.push("arrow");
+                } else if (lineVariant === "thermo") {
+                    constraints.thermos = generatedLineMarks;
+                    if (constraints.supported.indexOf("thermo") === -1) constraints.supported.push("thermo");
+                }
+            }
         } else {
             solution = makeSolution(size, variants, constraints, random);
+        }
+        if (!options.preserveExisting && lineVariant && !generatedLineMarks.length && solution) {
+            generatedLineMarks = generateLineMarksForSolution(size, solution, lineVariant, random);
+            if (!constraints.supported) constraints.supported = [];
+            if (lineVariant === "arrow") {
+                constraints.arrows = generatedLineMarks.map(function(p) { return { circle: p[0], shaft: p.slice(1) }; });
+                if (constraints.supported.indexOf("arrow") === -1) constraints.supported.push("arrow");
+            } else if (lineVariant === "thermo") {
+                constraints.thermos = generatedLineMarks;
+                if (constraints.supported.indexOf("thermo") === -1) constraints.supported.push("thermo");
+            }
         }
         var generatedOutside = options.preserveExisting ? { constraints: {}, marks: [] } :
             outsideCluesForSolution(solution, variants);
@@ -509,7 +791,19 @@ var SudokuGenerator = (function() {
         var marks = options.preserveExisting ?
             { oddEven: [], kropki: [], xv: [], battenburg: [] } :
             addGeneratedMarks(constraints, solution, variants, random);
+        if (generatedLineMarks.length) {
+            marks.lines = generatedLineMarks.map(function(path) {
+                return { variant: lineVariant, path: path };
+            });
+        }
         var board = solution.map(function(row) { return row.slice(); });
+        if (generatedLineMarks.length) {
+            generatedLineMarks.forEach(function(path) {
+                path.forEach(function(cell) {
+                    board[cell.row][cell.col] = 0;
+                });
+            });
+        }
         if (typeof options.onProgress === "function") {
             options.onProgress({
                 step: "3a",
@@ -551,6 +845,7 @@ var SudokuGenerator = (function() {
         var fullClueList = ["kropki", "xv", "consecutive", "battenburg"];
         if (!options.preserveExisting) {
             Object.keys(marks).forEach(function(name) {
+                if (name === "lines") return;
                 if (fullClueList.indexOf(name) !== -1 && variants.indexOf(name + "pairs") === -1) {
                     return;
                 }
@@ -564,7 +859,7 @@ var SudokuGenerator = (function() {
         var startTime = Date.now();
         var maxTimeMs = 20000;
         var attempt = 0;
-        var outsideScratchVariants = ["xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"];
+        var outsideScratchVariants = ["xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe", "arrow", "thermo"];
         var hasOutsideScratchVariant = variants.some(function(variant) {
             return outsideScratchVariants.indexOf(variant) !== -1;
         });
@@ -684,11 +979,22 @@ var SudokuGenerator = (function() {
             }
         });
         if (!options.preserveExisting) {
-            Object.keys(marks).forEach(function(name) { marks[name] = constraints[name] || []; });
+            Object.keys(marks).forEach(function(name) {
+                if (name === "lines") return;
+                marks[name] = constraints[name] || [];
+            });
         }
 
         // Non-minimal modes add back the requested number of stripped clues in symmetric units.
         if (options.minimal === false && !options.preserveExisting) {
+            var markCells = {};
+            if (generatedLineMarks && generatedLineMarks.length) {
+                generatedLineMarks.forEach(function(path) {
+                    path.forEach(function(cell) {
+                        markCells[cell.row * size + cell.col] = true;
+                    });
+                });
+            }
             var removedUnits = [];
             var seenRemoved = {};
             var symmetry = options.symmetry || 'rotational180';
@@ -716,16 +1022,18 @@ var SudokuGenerator = (function() {
                     var allEmpty = symUnit.every(function(idx) {
                         return board[Math.floor(idx / size)][idx % size] === 0;
                     });
-                    if (allEmpty) {
+                    if (allEmpty && !symUnit.some(function(idx) { return markCells[idx]; })) {
                         removedUnits.push(symUnit);
                     }
                 }
             }
             var targetExtra = Number.isInteger(options.extraClues) ? Math.max(0, options.extraClues) : 8;
+            var maxGivens = Number.isInteger(options.maxGivens) ? Math.max(0, options.maxGivens) : (size * size);
             var shuffledUnits = shuffle(removedUnits, random);
             var addedCount = 0;
-            for (var ui = 0; ui < shuffledUnits.length && addedCount < targetExtra; ui++) {
+            for (var ui = 0; ui < shuffledUnits.length && addedCount < targetExtra && givens < maxGivens; ui++) {
                 var unitToRestore = shuffledUnits[ui];
+                if (givens + unitToRestore.length > maxGivens && givens > 0) continue;
                 unitToRestore.forEach(function(idx) {
                     var r = Math.floor(idx / size);
                     var c = idx % size;
@@ -753,6 +1061,7 @@ var SudokuGenerator = (function() {
             consecutiveMarks: marks.consecutive,
             battenburgMarks: marks.battenburg,
             outsideMarks: generatedOutside.marks,
+            marks: marks,
             preserveExisting: options.preserveExisting === true,
             givens: givens,
             unique: true

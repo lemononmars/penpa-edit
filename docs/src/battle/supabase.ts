@@ -7,6 +7,7 @@ export type BattleRoom = {
   host_player_id: string;
   grid_size: 6 | 9;
   variants: string[];
+  /** null during 'preparing' status (v2 schema made this nullable); non-null once the board is ready */
   puzzle_hash: string | null;
   difficulty: "easy" | "normal" | "hard";
   created_at: string;
@@ -73,6 +74,25 @@ export function playerToken() {
     window.localStorage.setItem(key, token);
   }
   return token;
+}
+
+/** Store the token used to join/create a specific room, scoped by room ID. */
+export function saveRoomToken(roomId: string, token: string) {
+  localStorage.setItem(`sudotoku-battle-room-token:${roomId}`, token);
+}
+
+/**
+ * Return the per-room token for in-game RPCs.
+ * Falls back to the persistent identity token if the room token hasn't been
+ * set yet (e.g. auto-rejoin from URL param after a page refresh).
+ */
+export function getRoomToken(roomId: string): string {
+  return localStorage.getItem(`sudotoku-battle-room-token:${roomId}`) || playerToken();
+}
+
+/** Remove the per-room token when leaving a room. */
+export function clearRoomToken(roomId: string) {
+  localStorage.removeItem(`sudotoku-battle-room-token:${roomId}`);
 }
 
 export function normalizeRoomCode(value: string) {

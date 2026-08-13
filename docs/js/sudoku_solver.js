@@ -3434,7 +3434,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
     function outsideExpansionSides(variant) {
         if (variant === "triplesum") return ["left"];
         var topLeftOnly = [
-            "starproduct", "edgedifference", "evensandwich", "oddsandwich",
+            "xsums", "starproduct", "edgedifference", "evensandwich", "oddsandwich",
             "before9", "before1after9", "nextto9", "outsideconsecutive",
             "outsidekiller", "parityskyscrapers", "positionsums",
             "japanesesums", "oddsums", "bigsmalljapanesesums", "partitionedsums"
@@ -3463,7 +3463,8 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
         "odd even", "oddeven", "odd-even", "kropki", "kropkipairs", "kropki pairs", "xv", "xvpairs", "xv pairs",
         "battenburg", "windoku", "disjoint", "disjoint groups", "disjointgroups", "touchy", "mirror",
         "symmetric unequal", "symmetricunequal", "sequence top-bottom", "sequencetopbottom", "sequence-top-bottom",
-        "xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"
+        "xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe",
+        "arrow", "thermo"
     ];
 
     function canGenerateFromScratch(variants) {
@@ -4060,12 +4061,28 @@ var SudokuTools = (function() {
 
     function restoreGeneratedMarks(result) {
         if (!pu || !pu.pu_q || !result || result.preserveExisting) return false;
+        if (!result.preserveExisting) {
+            pu.pu_q.arrows = [];
+            pu.pu_q.thermo = [];
+            pu.pu_q.nobulbthermo = [];
+            if (pu.pu_a) {
+                pu.pu_a.arrows = [];
+                pu.pu_a.thermo = [];
+                pu.pu_a.nobulbthermo = [];
+            }
+            if (pu.pu_q_col) {
+                pu.pu_q_col.arrows = [];
+                pu.pu_q_col.thermo = [];
+                pu.pu_q_col.nobulbthermo = [];
+            }
+        }
         var oddEvenList = result.oddEvenMarks || (result.marks && result.marks.oddEven) || [];
         var kropkiList = result.kropkiMarks || (result.marks && result.marks.kropki) || [];
         var consecutiveList = result.consecutiveMarks || (result.marks && result.marks.consecutive) || [];
         var xvList = result.xvMarks || (result.marks && result.marks.xv) || [];
         var battenburgList = result.battenburgMarks || (result.marks && result.marks.battenburg) || [];
         var outsideList = result.outsideMarks || [];
+        var lineList = result.lineMarks || (result.marks && result.marks.lines) || [];
 
         function ensureOutsideClueSpace(marks) {
             if (!marks.length || !Array.isArray(pu.space)) return;
@@ -4117,6 +4134,16 @@ var SudokuTools = (function() {
             if (mark.kind === "none") return;
             var key = SudokuSolver.pointForCells(pu, mark.cells, "vertex");
             if (key !== null) pu.pu_q.symbol[key] = [1, "sudokuetc", 2];
+        });
+        lineList.forEach(function(mark) {
+            var pointPath = mark.path.map(function(c) { return SudokuSolver.cellKey(pu, c.row, c.col); });
+            if (mark.variant === "arrow" || mark.variant === "arrows") {
+                if (!pu.pu_q.arrows) pu.pu_q.arrows = [];
+                pu.pu_q.arrows.push(pointPath);
+            } else if (mark.variant === "thermo") {
+                if (!pu.pu_q.thermo) pu.pu_q.thermo = [];
+                pu.pu_q.thermo.push(pointPath);
+            }
         });
         var size = SudokuSolver.puzzleSize(pu);
         var startRow = 2 + Number(pu.space && pu.space[0] || 0);
@@ -4174,14 +4201,23 @@ var SudokuTools = (function() {
         } else {
             pu.pu_q.number = {};
             pu.pu_q.symbol = {};
+            pu.pu_q.arrows = [];
+            pu.pu_q.thermo = [];
+            pu.pu_q.nobulbthermo = [];
         }
         if (pu.pu_a) {
             pu.pu_a.number = {};
             pu.pu_a.symbol = {};
+            pu.pu_a.arrows = [];
+            pu.pu_a.thermo = [];
+            pu.pu_a.nobulbthermo = [];
         }
         if (pu.pu_q_col) {
             pu.pu_q_col.number = {};
             pu.pu_q_col.symbol = {};
+            pu.pu_q_col.arrows = [];
+            pu.pu_q_col.thermo = [];
+            pu.pu_q_col.nobulbthermo = [];
         }
         if (boardMode === "replace") {
             result.board.forEach(function(row, rowIndex) {
@@ -4240,8 +4276,12 @@ var SudokuTools = (function() {
     function prepareBattleGrid(size, variants) {
         size = Number(size) === 6 ? 6 : 9;
         variants = Array.isArray(variants) ? variants : ["classic"];
-        var outsideScratchVariants = ["xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"];
-        var needsOutside = variants.some(function(variant) { return outsideScratchVariants.indexOf(variant) !== -1; });
+        var fourSidesVariants = ["skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"];
+        var needsFourSides = variants.some(function(variant) { return fourSidesVariants.indexOf(variant) !== -1; });
+        var needsTopLeft = variants.some(function(variant) {
+            var sides = SudokuSolver.outsideExpansionSides(variant);
+            return sides.indexOf("top") !== -1 || sides.indexOf("left") !== -1;
+        });
         var rows = byId("nb_size1");
         var columns = byId("nb_size2");
         if (rows) rows.value = String(size);
@@ -4253,8 +4293,8 @@ var SudokuTools = (function() {
         });
         var outsideOption = byId("nb_sudoku2");
         var topLeftOption = byId("nb_sudoku3");
-        if (outsideOption) outsideOption.checked = needsOutside;
-        if (topLeftOption) topLeftOption.checked = false;
+        if (outsideOption) outsideOption.checked = needsFourSides;
+        if (topLeftOption) topLeftOption.checked = !needsFourSides && needsTopLeft;
         resetForNewGrid();
         if (typeof create_newboard === "function") create_newboard();
         if (typeof pu !== "undefined" && pu) {
@@ -4362,7 +4402,8 @@ var SudokuTools = (function() {
         // Read generator settings
         var genSymmetry = (window.UserSettings && window.UserSettings.generator_symmetry) || 'rotational180';
         var genMinimal = difficulty ? difficulty === "hard" : (window.UserSettings ? (window.UserSettings.generator_difficulty_minimal !== false) : true);
-        var genExtraClues = difficulty === "easy" ? (size === 6 ? 8 : 12) : difficulty === "normal" ? (size === 6 ? 4 : 8) : 0;
+        var genExtraClues = difficulty === "easy" ? (size === 6 ? 4 : 8) : difficulty === "normal" ? (size === 6 ? 2 : 4) : 0;
+        var genMaxGivens = difficulty === "easy" ? (size === 6 ? 18 : 36) : difficulty === "normal" ? (size === 6 ? 15 : 30) : (size * size);
         var genCluesOnMarks = window.UserSettings ? (window.UserSettings.generator_clues_on_marks !== false) : true;
         var animatePreference = !window.SudokuSolverPreferences || window.SudokuSolverPreferences.animateDigits !== false;
         var animateGeneration = animatePreference && SudokuSolver.shouldAnimateGeneration(pu, window);
@@ -4447,6 +4488,7 @@ var SudokuTools = (function() {
                     symmetry: genSymmetry,
                     minimal: genMinimal,
                     extraClues: genExtraClues,
+                    maxGivens: genMaxGivens,
                     seed: seed,
                     onProgress: function(p) {
                         generatorLog("Generating", p && p.message ? p.message : null, p);
@@ -4501,6 +4543,7 @@ var SudokuTools = (function() {
             symmetry: genSymmetry,
             minimal: genMinimal,
             extraClues: genExtraClues,
+            maxGivens: genMaxGivens,
             seed: seed
         });
         generatorTimeout = setTimeout(function() {

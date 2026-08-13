@@ -13,6 +13,7 @@ self.onmessage = function(event) {
             symmetry: event.data.symmetry,
             minimal: event.data.minimal,
             extraClues: event.data.extraClues,
+            maxGivens: event.data.maxGivens,
             seed: event.data.seed,
             onProgress: function(progress) {
                 self.postMessage({ type: "progress", progress: progress });

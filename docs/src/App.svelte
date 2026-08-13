@@ -1317,6 +1317,38 @@
       });
   })();
 
+  let variantHighlightIndex = 0;
+  $: if (visibleVariantOptions) variantHighlightIndex = 0;
+
+  function handleVariantKeydown(event: KeyboardEvent) {
+    if (!variantMenuOpen || !visibleVariantOptions.length) return;
+    const enabledOptions = visibleVariantOptions.filter(
+      (v) => !conflictingVariant(v.value) && !unavailableVariant(v.value),
+    );
+    if (!enabledOptions.length) return;
+
+    if (event.key === "ArrowDown") {
+      variantHighlightIndex = (variantHighlightIndex + 1) % enabledOptions.length;
+      const target = enabledOptions[variantHighlightIndex];
+      if (target) previewRule(target.value);
+      event.preventDefault();
+    } else if (event.key === "ArrowUp") {
+      variantHighlightIndex = (variantHighlightIndex - 1 + enabledOptions.length) % enabledOptions.length;
+      const target = enabledOptions[variantHighlightIndex];
+      if (target) previewRule(target.value);
+      event.preventDefault();
+    } else if (event.key === "Enter") {
+      const target = enabledOptions[variantHighlightIndex] || enabledOptions[0];
+      if (target) {
+        chooseVariant(target.value);
+        variantMenuOpen = false;
+        event.preventDefault();
+      }
+    } else if (event.key === "Escape") {
+      variantMenuOpen = false;
+    }
+  }
+
   function ensureOutsideSpace(target = 1, sides = [0, 1, 2, 3]) {
     const pu = (window as any).pu;
     if (!pu?.space || !pu.grid_is_square?.()) return;
@@ -2763,6 +2795,7 @@
               bind:value={variantSearch}
               on:focus={() => (variantMenuOpen = true)}
               on:input={() => (variantMenuOpen = true)}
+              on:keydown={handleVariantKeydown}
               placeholder="Add variant"
             />
             <span class="variant-chevron">+</span>
@@ -2797,9 +2830,11 @@
                 {#each visibleVariantOptions.filter((variant) => variant.group === group) as variant}
                   {@const conflict = conflictingVariant(variant.value)}
                   {@const unavailable = unavailableVariant(variant.value)}
+                  {@const enabledOpts = visibleVariantOptions.filter((v) => !conflictingVariant(v.value) && !unavailableVariant(v.value))}
                   <button
                     role="menuitem"
                     class:current={variant.value === selectedVariant}
+                    class:highlighted={enabledOpts[variantHighlightIndex]?.value === variant.value}
                     disabled={Boolean(conflict || unavailable)}
                     title={unavailable ||
                       (conflict
@@ -4164,7 +4199,8 @@
     text-align: left;
   }
   .variant-menu button:hover,
-  .variant-menu button.current {
+  .variant-menu button.current,
+  .variant-menu button.highlighted {
     background: var(--primary-color-light);
     color: var(--primary-color-dark);
   }

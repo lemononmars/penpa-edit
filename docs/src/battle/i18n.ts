@@ -46,6 +46,10 @@ const messages = {
     continueBattle: "Continue to Battle", or: "OR", googleLogin: "Continue with Google",
     facebookLogin: "Continue with Facebook", sudokuKeypad: "Sudoku keypad", normalDigits: "Normal digits",
     centerNotes: "Center notes", cornerNotes: "Corner notes", clearSelectedCell: "Clear selected cell", clear: "Clear", openPuzzleCheck: "Open puzzle with answer check",
+    notifyMeWhenJoins: "Notify me when someone joins",
+    notificationPermissionDenied: "Notification permission denied.",
+    playerJoinedNotification: "A player joined your room!",
+    notifyActive: "Watching for new players…",
   },
   th: {
     settings: "การตั้งค่า", displayName: "ชื่อที่แสดง", save: "บันทึก", cancel: "ยกเลิก",
@@ -89,6 +93,10 @@ const messages = {
     continueBattle: "ไปยัง Battle", or: "หรือ", googleLogin: "ดำเนินการต่อด้วย Google",
     facebookLogin: "ดำเนินการต่อด้วย Facebook", sudokuKeypad: "แป้นตัวเลขซูโดกุ", normalDigits: "ตัวเลขปกติ",
     centerNotes: "โน้ตตรงกลาง", cornerNotes: "โน้ตมุม", clearSelectedCell: "ล้างช่องที่เลือก", clear: "ล้าง", openPuzzleCheck: "เปิดปริศนาพร้อมตรวจคำตอบ",
+    notifyMeWhenJoins: "แจ้งเตือนเมื่อมีผู้เล่นเข้าร่วม",
+    notificationPermissionDenied: "ถูกปฏิเสธการแจ้งเตือนจากเบราว์เซอร์",
+    playerJoinedNotification: "มีผู้เล่นเข้าร่วมห้องของคุณ!",
+    notifyActive: "กำลังรอผู้เล่นใหม่…",
   },
 };
 

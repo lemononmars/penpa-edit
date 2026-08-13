@@ -159,8 +159,9 @@ test("update_textarea functionality", async () => {
         global.UserSettings = originalUserSettings;
         global.document = originalDocument;
         global.pu = originalPu;
-        global.$ = originalDollar;
     }
+});
+
 test("errorMsg and infoMsg functionality", () => {
     // Save original globals
     const originalSwal = global.Swal;

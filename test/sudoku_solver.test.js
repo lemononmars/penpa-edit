@@ -5143,12 +5143,14 @@ test("outside scratch generation derives a full clue from every side of a solved
         Array.from({ length: 9 }, (_, col) => ((row * 3 + Math.floor(row / 3) + col) % 9) + 1));
     ["xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"].forEach(function(variant) {
         const generated = SudokuGenerator.outsideCluesForSolution(solution, [variant]);
-        assert.equal(generated.marks.length, 36, variant + " should cover four sides");
-        assert.deepEqual(new Set(generated.marks.map((mark) => mark.side)), new Set(["top", "bottom", "left", "right"]));
+        const expectedCount = variant === "xsums" ? 18 : 36;
+        const expectedSides = variant === "xsums" ? new Set(["top", "left"]) : new Set(["top", "bottom", "left", "right"]);
+        assert.equal(generated.marks.length, expectedCount, variant + " clue count");
+        assert.deepEqual(new Set(generated.marks.map((mark) => mark.side)), expectedSides);
         if (variant === "rossini") assert.equal(generated.constraints.rossiniLines.length, 36);
         else if (variant === "skyscraper") assert.equal(generated.constraints.skyscrapers.length, 36);
         else if (variant === "sandwich") assert.equal(generated.constraints.sandwiches.length, 36);
-        else assert.equal(generated.constraints.outsideRelations.length, 36);
+        else assert.equal(generated.constraints.outsideRelations.length, expectedCount);
     });
 });
 
@@ -5163,9 +5165,51 @@ test("outside scratch variants prune digits and remain uniquely solvable", funct
         });
         const answers = SudokuCSP.createProblem(generated.board, generated.constraints).enumerateAnswers(2);
         assert.ok(generated.givens < 81, variant + " should prune solved-grid digits");
-        assert.equal(generated.outsideMarks.length, 36, variant + " should retain every outside position");
+        const expectedMarksCount = variant === "xsums" ? 18 : 36;
+        assert.equal(generated.outsideMarks.length, expectedMarksCount, variant + " should retain every outside position");
         assert.equal(answers.length, 1, variant);
         assert.deepEqual(answers[0], generated.solution, variant);
     });
 });
+
+test("line variants (arrow & thermo) generate marks first, clear mark cells, and remain uniquely solvable", function() {
+    ["arrow", "thermo"].forEach(function(variant, index) {
+        const generated = SudokuGenerator.generate({
+            size: 9,
+            variants: ["classic", variant],
+            seed: 88120 + index,
+            minimal: false,
+            extraClues: 4
+        });
+        assert.ok(generated.marks.lines.length >= 4, variant + " line count");
+        generated.marks.lines.forEach(function(line) {
+            assert.equal(line.variant, variant);
+            line.path.forEach(function(cell) {
+                assert.equal(generated.board[cell.row][cell.col], 0, variant + " cell on mark path should be empty (0)");
+            });
+        });
+        const answers = SudokuCSP.createProblem(generated.board, generated.constraints).enumerateAnswers(2);
+        assert.equal(answers.length, 1, variant + " unique solution");
+        assert.deepEqual(answers[0], generated.solution, variant + " solution match");
+    });
+});
+
+test("maxGivens upper bound caps total given count", function() {
+    const generated = SudokuGenerator.generate({
+        size: 6,
+        variants: ["classic"],
+        seed: 12345,
+        minimal: false,
+        extraClues: 20,
+        maxGivens: 15
+    });
+    let givens = 0;
+    for (let r = 0; r < 6; r++) {
+        for (let c = 0; c < 6; c++) {
+            if (generated.board[r][c] !== 0) givens++;
+        }
+    }
+    assert.ok(givens <= 15, "givens count " + givens + " <= maxGivens 15");
+});
+
 

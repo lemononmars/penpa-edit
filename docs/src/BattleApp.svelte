@@ -9,7 +9,8 @@
   import { ensureBattleProfile } from "./battle/profile";
   import {
     battleConfigurationError, boardFrameSource, leaveBattleChannel, normalizeRoomCode,
-    playerToken, supabase, type BattlePlayer, type BattleRoom, type ConfirmedMove,
+    playerToken, saveRoomToken, getRoomToken, clearRoomToken,
+    supabase, type BattlePlayer, type BattleRoom, type ConfirmedMove,
   } from "./battle/supabase";
 
   type Difficulty = "easy" | "normal" | "hard";
@@ -17,10 +18,10 @@
 
   // Keep these lists explicit so supported battle variants are easy to edit.
   const battleVariantIdsBySize: Record<6 | 9, string[]> = {
-    6: ["classic", "diagonal", "anti king", "anti knight", "non consecutive", "kropki", "xv", "consecutive", "battenburg", "disjoint", "mirror", "symmetric unequal"],
-    9: ["classic", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "kropki", "xv", "consecutive", "battenburg", "disjoint", "windoku", "mirror", "symmetric unequal", "xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"],
+    6: ["classic", "diagonal", "anti king", "anti knight", "non consecutive", "kropki", "xv", "consecutive", "battenburg", "disjoint", "mirror", "symmetric unequal", "arrow", "thermo"],
+    9: ["classic", "diagonal", "anti diagonal", "anti king", "anti knight", "non consecutive", "kropki", "xv", "consecutive", "battenburg", "disjoint", "windoku", "mirror", "symmetric unequal", "xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe", "arrow", "thermo"],
   };
-  const basicBattleVariantIds = new Set(["classic", "diagonal", "xv", "kropki", "consecutive", "anti knight", "anti king", "windoku"]);
+  const basicBattleVariantIds = new Set(["classic", "diagonal", "xv", "kropki", "consecutive", "anti knight", "anti king", "windoku", "arrow", "thermo"]);
   const thaiVariantRules: Record<string, string> = {
     diagonal: "ตัวเลข 1–9 ต้องไม่ซ้ำกันบนเส้นทแยงที่กำหนด", "anti diagonal": "ตัวเลขบนเส้นทแยงหลักต้องไม่ซ้ำกัน",
     "anti king": "ช่องที่ห่างกันหนึ่งก้าวแบบคิงหมากรุกต้องมีตัวเลขต่างกัน", "anti knight": "ช่องที่ห่างกันหนึ่งก้าวแบบไนต์หมากรุกต้องมีตัวเลขต่างกัน",
@@ -31,7 +32,9 @@
     "symmetric unequal": "ช่องที่สมมาตรกันต้องมีค่าไม่เท่ากัน", xsums: "คำใบ้นอกตารางคือผลรวมของ X ช่องแรก โดย X คือเลขช่องแรก",
     skyscraper: "คำใบ้นอกตารางบอกจำนวนตึกที่มองเห็นจากด้านนั้น", numberedrooms: "เลขช่องแรกบอกตำแหน่งของค่าที่ต้องเท่ากับคำใบ้นอกตาราง",
     rossini: "ลูกศรบอกว่าสามช่องแรกเพิ่มขึ้นหรือลดลงตามทิศลูกศร", sandwich: "คำใบ้คือผลรวมของเลขที่อยู่ระหว่าง 1 และ 9",
-    sumframe: "คำใบ้คือผลรวมของช่องในกรอบจากด้านนั้น"
+    sumframe: "คำใบ้คือผลรวมของช่องในกรอบจากด้านนั้น",
+    arrow: "ตัวเลขในวงกลมเท่ากับผลรวมของตัวเลขตามเส้นลูกศร",
+    thermo: "ตัวเลขบนเส้นเทอร์โมมิเตอร์ต้องมีค่าเพิ่มขึ้นเรื่อยๆ จากหัวจุก"
   };
   $: variantOptions = battleVariantIdsBySize[gridSize]
     .map((value) => ({
@@ -98,6 +101,7 @@
   let botClocks: number[] = [];
   let authUser: User | null = null;
   let answerCheckUrl = "";
+  let notifyOnJoin = false;
 
   function botTokenStorageKey(roomId: string) { return `sudotoku-battle-bots:${roomId}`; }
   function loadBotTokens(roomId: string) {
@@ -148,7 +152,11 @@
   let heartbeatClock: number | undefined;
   let toastClock: number | undefined;
 
-  $: boardSrc = boardFrameSource(room?.puzzle_hash || "");
+  $: boardSrc = boardFrameSource(
+    (!spectatorMode || room?.status === "playing" || room?.status === "finished")
+      ? (room?.puzzle_hash || "")
+      : ""
+  );
   $: isHost = Boolean(room && myPlayerId === room.host_player_id);
   $: boardVisible = Boolean(room?.status === "playing" && countdown === 0 && boardLoaded);
   $: boardRevealed = Boolean((room?.status === "playing" || room?.status === "finished") && countdown === 0 && boardLoaded);
@@ -172,7 +180,7 @@
   $: myColor = players.find((player) => player.id === myPlayerId)?.color || "blue";
   $: hasBots = players.some((player) => player.is_bot);
   $: winners = room?.status === "finished" && players.length
-    ? players.filter((player) => player.score === Math.max(...players.map((entry) => entry.score)))
+    ? (() => { const max = players.reduce((m, p) => Math.max(m, p.score), -Infinity); return players.filter((p) => p.score === max); })()
     : [];
   $: variantLabel = room?.variants?.filter((item) => item !== "classic").map((value) => variantOptions.find((item) => item.value === value)?.label || value).join(" + ") || "Classic";
   $: activeVariantRules = (room?.variants || [])
@@ -194,29 +202,6 @@
     await supabase.auth.signOut(); authUser = null; roomKind = "casual";
   }
 
-  const translations: Record<string, [string, string]> = {
-    createRoom: ["Create room", "สร้างห้อง"], createARoom: ["Create a room", "สร้างห้องใหม่"],
-    back: ["Back", "กลับ"], grid: ["Grid", "ตาราง"], difficulty: ["Difficulty", "ความยาก"],
-    easy: ["Easy", "ง่าย"], normal: ["Normal", "ปกติ"], hard: ["Hard", "ยาก"],
-    variants: ["Variants", "รูปแบบ"], classic: ["Classic", "คลาสสิก"], basicVariant: ["Basic variant", "รูปแบบพื้นฐาน"],
-    advancedVariant: ["Advanced variant", "รูปแบบขั้นสูง"], random: ["Random", "สุ่ม"], showRule: ["Show rule", "แสดงกติกา"],
-    activeRooms: ["Active rooms", "ห้องที่เปิดอยู่"], refresh: ["Refresh", "รีเฟรช"], join: ["Join", "เข้าร่วม"], watch: ["Watch", "ชม"],
-    noRooms: ["No rooms are active yet.", "ยังไม่มีห้องที่เปิดอยู่"], youAre: ["You are", "คุณคือ"], save: ["Save", "บันทึก"],
-    light: ["Light", "สว่าง"], dark: ["Dark", "มืด"], rules: ["Rules", "กติกา"], players: ["Players", "ผู้เล่น"],
-    startBattle: ["Start battle", "เริ่มแข่งขัน"], retryBoard: ["Retry board", "สร้างกระดานใหม่"], lobby: ["Lobby", "ล็อบบี้"],
-    invite: ["Invite", "เชิญ"], copied: ["Copied", "คัดลอกแล้ว"], preparing: ["Preparing a unique puzzle", "กำลังสร้างปริศนาเฉพาะ"],
-    backToLobby: ["Back to lobby", "กลับล็อบบี้"], readyLobby: ["Ready in the lobby", "พร้อมในล็อบบี้"],
-    boardHidden: ["The board is loaded and hidden until battle starts.", "โหลดกระดานแล้วและจะซ่อนไว้จนเริ่มแข่งขัน"],
-    loadingBoard: ["Loading the board", "กำลังโหลดกระดาน"], getReady: ["Get ready!", "เตรียมตัว!"],
-    appearance: ["Appearance", "การแสดงผล"], copyInvite: ["Copy invite", "คัดลอกคำเชิญ"],
-    classicSudoku: ["Classic Sudoku", "ซูโดกุคลาสสิก"], classicRule: ["Place each digit once in every row, column, and box.", "ใส่ตัวเลขแต่ละตัวหนึ่งครั้งในทุกแถว ทุกคอลัมน์ และทุกกล่อง"],
-    preparingStatus: ["Preparing", "กำลังเตรียม"], playing: ["Playing", "กำลังแข่งขัน"], finished: ["Finished", "จบแล้ว"],
-    abort: ["Abort", "ยุติ"], abortBattle: ["Abort battle", "ยุติการแข่งขัน"], rematch: ["Rematch", "แข่งอีกครั้ง"],
-    roomInfo: ["Room information", "ข้อมูลห้อง"], removePlayer: ["Remove player", "นำผู้เล่นออก"], points: ["pts", "คะแนน"],
-    timeLimit: ["Time limit reached", "หมดเวลา"], battleComplete: ["Battle complete", "การแข่งขันจบแล้ว"],
-    finalScores: ["Final scores recorded.", "บันทึกคะแนนสุดท้ายแล้ว"], winsWith: ["wins with", "ชนะด้วย"], tieWith: ["tie with", "เสมอกันด้วย"],
-    tournament: ["Back to tournament", "กลับการแข่งขัน"],
-  };
   $: t = (key: string) => (language, i18nT(key));
   $: localizedVariantRule = (value: string, fallback: string) =>
     language === "th" ? thaiVariantRules[value] || fallback : fallback;
@@ -297,19 +282,22 @@
     const init = { key, code, bubbles: true, cancelable: true };
     frame.document.dispatchEvent(new frame.KeyboardEvent("keydown", init));
     frame.document.dispatchEvent(new frame.KeyboardEvent("keyup", init));
-    setTimeout(inspectBoardInput, 0);
+    scheduleInspect();
   }
 
   function chooseBattleNoteMode(mode: "normal" | "center" | "corner") {
     noteMode = mode;
-    frameWindow()?.SudokuTools?.setBattleInputMode?.(mode);
+    const frame = frameWindow();
+    frame?.SudokuTools?.setBattleInputMode?.(mode);
+    frame?.focus?.();
   }
 
   function enterBattleDigit(digit: number) {
     const frame = frameWindow();
     if (!boardVisible || !frame?.SudokuTools?.enterBattleDigit) return;
-    frame.SudokuTools.enterBattleDigit(digit, noteMode);
-    setTimeout(inspectBoardInput, 0);
+    frame.SudokuTools.enterBattleDigit(digit, noteMode, penpaColors[myColor], penpaShades[myColor]);
+    frame?.focus?.();
+    scheduleInspect();
   }
 
   async function waitForBoard() {
@@ -404,11 +392,13 @@
     try {
       playerName = saveBattleName(playerName);
       if (roomKind === "ranked" && !authUser) throw new Error("Sign in to create a ranked room.");
+      const _tok = playerToken();
       const { data, error: rpcError } = await supabase.rpc("create_battle_room_v3", {
-        p_player_name: playerName, p_player_token: playerToken(), p_grid_size: gridSize,
+        p_player_name: playerName, p_player_token: _tok, p_grid_size: gridSize,
         p_variants: ["classic", ...selectedVariants], p_difficulty: difficulty, p_ranked: roomKind === "ranked",
       });
       if (rpcError) throw rpcError;
+      if (data?.room?.id) saveRoomToken(data.room.id, _tok);
       acceptRoom(data, false); await subscribeToRoom();
     } catch (cause: any) { error = cause?.message || "Could not create the room."; }
     finally { busy = false; }
@@ -422,7 +412,7 @@
       const { result, puzzleHash } = await generatePuzzle();
       if (result?.solution) knownSolution = result.solution;
       const { error: rpcError } = await supabase.rpc("prepare_battle_room", {
-        p_room_id: room.id, p_player_token: playerToken(), p_puzzle_hash: puzzleHash,
+        p_room_id: room.id, p_player_token: getRoomToken(room.id), p_puzzle_hash: puzzleHash,
         p_givens: result.board, p_solution: result.solution,
       });
       if (rpcError) throw rpcError;
@@ -444,10 +434,12 @@
     try {
       playerName = saveBattleName(playerName); roomCode = normalizeRoomCode(code);
       if (roomCode.length !== 6) throw new Error("Enter the 6-character room code.");
+      const _tok = playerToken();
       const { data, error: rpcError } = await supabase.rpc("join_battle_room", {
-        p_room_code: roomCode, p_player_name: playerName, p_player_token: playerToken(),
+        p_room_code: roomCode, p_player_name: playerName, p_player_token: _tok,
       });
       if (rpcError) throw rpcError;
+      if (data?.room?.id) saveRoomToken(data.room.id, _tok);
       acceptRoom(data, false); await subscribeToRoom();
     } catch (cause: any) { error = cause?.message || "Could not join the room."; }
     finally { busy = false; }
@@ -509,10 +501,10 @@
     if (!supabase || !room || !isHost || targetPlayer.id === myPlayerId) return;
     busy = true; error = "";
     try {
-      const { error: rpcError } = await supabase.from("battle_players").update({ left_at: new Date().toISOString() }).eq("id", targetPlayer.id);
-      if (rpcError) {
-        await supabase.from("battle_players").delete().eq("id", targetPlayer.id);
-      }
+      const { error: rpcError } = await supabase.rpc("kick_battle_player", {
+        p_room_id: room.id, p_host_token: getRoomToken(room.id), p_target_player_id: targetPlayer.id,
+      });
+      if (rpcError) throw rpcError;
       showBattleToast(`Removed ${targetPlayer.name}`);
       await refreshPlayers();
     } catch (cause: any) { error = cause?.message || "Could not remove player."; }
@@ -535,14 +527,19 @@
     const after = new Map(players.map((player) => [player.id, player.name]));
     const joined = players.find((player) => !before.has(player.id));
     const left = [...before].find(([id]) => !after.has(id));
-    if (joined && before.size) showBattleToast(`${joined.name} joined the room.`);
-    else if (left) showBattleToast(`${left[1]} left the room.`);
+    if (joined && before.size) {
+      showBattleToast(`${joined.name} joined the room.`);
+      if (notifyOnJoin && document.hidden && typeof Notification !== "undefined" && Notification.permission === "granted") {
+        new Notification(t("playerJoinedNotification"), { body: joined.name, icon: "/favicon.svg" });
+        notifyOnJoin = false;
+      }
+    } else if (left) showBattleToast(`${left[1]} left the room.`);
   }
 
   async function loadConfirmedMoves() {
     if (!supabase || !room) return;
     const { data } = await supabase.from("battle_moves").select("room_id,player_id,row_index,col_index,digit,correct,score_delta")
-      .eq("room_id", room.id);
+      .eq("room_id", room.id).eq("correct", true);
     const stats: Record<string, { correct: number; incorrect: number }> = {};
     for (const move of (data || []) as any[]) {
       if (!stats[move.player_id]) stats[move.player_id] = { correct: 0, incorrect: 0 };
@@ -580,7 +577,7 @@
   async function startBattle() {
     if (!supabase || !room) return;
     busy = true; error = "";
-    const { error: rpcError } = await supabase.rpc("start_battle_room", { p_room_id: room.id, p_player_token: playerToken() });
+    const { error: rpcError } = await supabase.rpc("start_battle_room", { p_room_id: room.id, p_player_token: getRoomToken(room.id) });
     if (rpcError) error = rpcError.message;
     await refreshRoom(); busy = false;
   }
@@ -589,7 +586,7 @@
     if (!supabase || !room || !isHost) return;
     busy = true; error = ""; resetSessionTimers(); playerMoveStats = {};
     try {
-      const { error: rpcError } = await supabase.rpc("begin_battle_rematch", { p_room_id: room.id, p_player_token: playerToken() });
+      const { error: rpcError } = await supabase.rpc("begin_battle_rematch", { p_room_id: room.id, p_player_token: getRoomToken(room.id) });
       if (rpcError) throw rpcError;
       boardLoaded = false; knownBoard = []; knownSolution = []; answerCheckUrl = "";
       await refreshRoom(); await refreshPlayers();
@@ -601,12 +598,8 @@
     if (!supabase || !room || !isHost) return;
     busy = true; error = "";
     try {
-      const { error: rpcError } = await supabase.rpc("abort_battle_room", { p_room_id: room.id, p_player_token: playerToken() });
-      if (rpcError) {
-        await supabase.from("battle_rooms").update({
-          status: "finished", finished_at: new Date().toISOString(), finish_reason: "aborted"
-        }).eq("id", room.id);
-      }
+      const { error: rpcError } = await supabase.rpc("abort_battle_room", { p_room_id: room.id, p_player_token: getRoomToken(room.id) });
+      if (rpcError) throw rpcError;
       await refreshRoom(); await refreshPlayers();
       showBattleToast("Battle aborted.");
     } catch (cause: any) { error = cause?.message || "Could not abort battle."; }
@@ -622,7 +615,7 @@
         if (profileError) throw profileError;
       }
       if (supabase && room) {
-        const { error: rpcError } = await supabase.rpc("update_battle_player_name", { p_room_id: room.id, p_player_token: playerToken(), p_name: playerName });
+        const { error: rpcError } = await supabase.rpc("update_battle_player_name", { p_room_id: room.id, p_player_token: getRoomToken(room.id), p_name: playerName });
         if (rpcError) throw rpcError; await refreshPlayers();
       }
       settingsOpen = false;
@@ -635,13 +628,20 @@
     copied = true; setTimeout(() => copied = false, 1400);
   }
 
+  async function requestNotifyOnJoin() {
+    if (!("Notification" in window)) return;
+    const perm = await Notification.requestPermission();
+    if (perm === "granted") notifyOnJoin = true;
+    else error = t("notificationPermissionDenied");
+  }
+
   async function returnToLobby() {
     stopBotLoop(); resetSessionTimers();
     const leavingRoomId = room?.id;
-    if (supabase && room && !spectatorMode) await supabase.rpc("leave_battle_room", { p_room_id: room.id, p_player_token: playerToken() });
+    if (supabase && room && !spectatorMode) await supabase.rpc("leave_battle_room", { p_room_id: room.id, p_player_token: getRoomToken(room.id) });
     await leaveBattleChannel(channel); channel = null; room = null; players = []; myPlayerId = "";
-    botTokens = []; boardLoaded = false; spectatorMode = false;
-    if (leavingRoomId) sessionStorage.removeItem(botTokenStorageKey(leavingRoomId));
+    botTokens = []; boardLoaded = false; spectatorMode = false; notifyOnJoin = false;
+    if (leavingRoomId) { sessionStorage.removeItem(botTokenStorageKey(leavingRoomId)); clearRoomToken(leavingRoomId); }
     if (tournamentCode) { location.href = `./tournament/?tournament=${tournamentCode}`; return; }
     history.replaceState(null, "", location.pathname); await refreshLobby();
   }
@@ -656,10 +656,10 @@
         const token = crypto.randomUUID();
         const botName = names[botTokens.length % names.length];
         const { error: rpcError } = await supabase.rpc("join_battle_bot", {
-          p_room_id: room.id, p_host_token: playerToken(), p_bot_name: botName, p_bot_token: token,
+          p_room_id: room.id, p_host_token: getRoomToken(room.id), p_bot_name: botName, p_bot_token: token,
         });
         if (rpcError) throw rpcError;
-        botTokens.push(token);
+        botTokens = [...botTokens, token];
         saveBotTokens(room.id);
       }
       await refreshPlayers();
@@ -725,6 +725,12 @@
     knownBoard = frame.SudokuSolver.readBoard(frame.pu, true); applyingRemote = false;
   }
 
+  let _inspectTimer: number | undefined;
+  function scheduleInspect() {
+    clearTimeout(_inspectTimer);
+    _inspectTimer = window.setTimeout(inspectBoardInput, 0);
+  }
+
   async function inspectBoardInput() {
     if (spectatorMode || inputBusy || applyingRemote || room?.status !== "playing" || countdown > 0 || !supabase || !room) return;
     const frame = frameWindow(); if (!frame?.pu) return;
@@ -741,40 +747,58 @@
         // Instantly format with player's color before submitting RPC to eliminate blue text flash
         frame.SudokuTools.setBattleDigit(change.row, change.col, change.digit, penpaColors[myColor], penpaShades[myColor]);
         const { data, error: rpcError } = await supabase.rpc("submit_battle_move", {
-          p_room_id: room.id, p_player_token: playerToken(), p_row_index: change.row, p_col_index: change.col, p_digit: change.digit,
+          p_room_id: room.id, p_player_token: getRoomToken(room.id), p_row_index: change.row, p_col_index: change.col, p_digit: change.digit,
         });
         if (rpcError) throw rpcError;
-        if (!data.correct) frame.SudokuTools.setBattleDigit(change.row, change.col, null);
+        if (!playerMoveStats[myPlayerId]) playerMoveStats[myPlayerId] = { correct: 0, incorrect: 0 };
+        if (data.correct) {
+          playerMoveStats[myPlayerId].correct += 1;
+        } else {
+          playerMoveStats[myPlayerId].incorrect += 1;
+          frame.SudokuTools.setBattleDigit(change.row, change.col, null);
+        }
+        playerMoveStats = { ...playerMoveStats };
       }
       knownBoard = frame.SudokuSolver.readBoard(frame.pu, true);
     } catch (cause: any) {
       error = cause?.message || "Move could not be submitted.";
-      for (const change of changes) frame.SudokuTools.setBattleDigit(change.row, change.col, knownBoard[change.row]?.[change.col] || null);
+      for (const change of changes) frame.SudokuTools.setBattleDigit(change.row, change.col, knownBoard[change.row]?.[change.col] || null, penpaColors[myColor], penpaShades[myColor]);
     }
     finally { inputBusy = false; }
+  }
+
+  function parseDigit(event: KeyboardEvent): number | null {
+    if (/^[1-9]$/.test(event.key)) return Number(event.key);
+    const codeMatch = /^Digit([1-9])$/.exec(event.code) || /^Numpad([1-9])$/.exec(event.code);
+    if (codeMatch) return Number(codeMatch[1]);
+    const shiftSymbols: Record<string, number> = {
+      "!": 1, "@": 2, "#": 3, "$": 4, "%": 5, "^": 6, "&": 7, "*": 8, "(": 9
+    };
+    return shiftSymbols[event.key] || null;
   }
 
   function forwardBattleKeyboard(event: KeyboardEvent) {
     if (spectatorMode || !boardVisible || !boardFrame || event.defaultPrevented) return;
     const target = event.target as HTMLElement;
-    if (target?.matches("input, textarea, select, button, [contenteditable=true]")) return;
+    if (target?.matches("input, textarea, select, [contenteditable=true]")) return;
     if (["z", "x", "c"].includes(event.key.toLowerCase())) {
       chooseBattleNoteMode(event.key.toLowerCase() === "z" ? "normal" : event.key.toLowerCase() === "x" ? "center" : "corner");
       event.preventDefault();
       return;
     }
     const accepted = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Backspace", "Delete"];
-    if (!accepted.includes(event.key) && !/^[0-9]$/.test(event.key)) return;
+    const parsedDigit = parseDigit(event);
+    if (!accepted.includes(event.key) && parsedDigit === null) return;
     const frame = frameWindow(); if (!frame?.document) return;
-    if (/^[1-9]$/.test(event.key) && frame.SudokuTools?.enterBattleDigit) {
+    if (parsedDigit !== null && frame.SudokuTools?.enterBattleDigit) {
       const mode = event.shiftKey ? "corner" : (event.ctrlKey || event.metaKey) ? "center" : noteMode;
-      frame.SudokuTools.enterBattleDigit(Number(event.key), mode);
-      event.preventDefault(); setTimeout(inspectBoardInput, 0); return;
+      frame.SudokuTools.enterBattleDigit(parsedDigit, mode, penpaColors[myColor], penpaShades[myColor]);
+      event.preventDefault(); scheduleInspect(); return;
     }
     const init = { key: event.key, code: event.code, location: event.location, shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, altKey: event.altKey, metaKey: event.metaKey, bubbles: true, cancelable: true };
     frame.document.dispatchEvent(new frame.KeyboardEvent("keydown", init));
     frame.document.dispatchEvent(new frame.KeyboardEvent("keyup", init));
-    event.preventDefault(); setTimeout(inspectBoardInput, 0);
+    event.preventDefault(); scheduleInspect();
   }
 
   async function boardReady() {
@@ -783,19 +807,18 @@
     boardLoaded = false;
     try {
       const frame = await waitForBoard();
+      frame.SudokuTools.enableBattleMode?.();
+      if (frame.pu) frame.pu.battleMode = true;
+      if (frame) frame.isBattleMode = true;
       frame.SudokuTools.setBattleInputMode?.(noteMode);
       const generatedMarks = generatedMarksFromHash(room.puzzle_hash);
       if (generatedMarks) frame.SudokuTools.restoreGeneratedMarks?.(generatedMarks);
       knownBoard = frame.SudokuSolver.readBoard(frame.pu, true);
       applyThemeToBoard();
-      if (frame?.pu?.mode?.pu_a) {
-        if (frame.pu.mode.pu_a.sudoku) frame.pu.mode.pu_a.sudoku[1] = 1;
-        if (frame.pu.mode.pu_a.number) frame.pu.mode.pu_a.number[1] = 1;
-      }
       if (!spectatorMode) {
         frame.document.addEventListener("keydown", handleFrameBattleKeydown, true);
-        frame.document.addEventListener("keyup", inspectBoardInput);
-        frame.document.addEventListener("pointerup", inspectBoardInput);
+        frame.document.addEventListener("keyup", scheduleInspect);
+        frame.document.addEventListener("pointerup", scheduleInspect);
       }
       await loadConfirmedMoves();
       if (generatedMarks) frame.SudokuTools.restoreGeneratedMarks?.(generatedMarks);
@@ -814,10 +837,11 @@
       chooseBattleNoteMode(key === "z" ? "normal" : key === "x" ? "center" : "corner");
       event.preventDefault(); event.stopImmediatePropagation(); return;
     }
-    if (/^[1-9]$/.test(event.key)) {
+    const parsedDigit = parseDigit(event);
+    if (parsedDigit !== null) {
       const mode = event.shiftKey ? "corner" : (event.ctrlKey || event.metaKey) ? "center" : noteMode;
-      frameWindow()?.SudokuTools?.enterBattleDigit?.(Number(event.key), mode);
-      event.preventDefault(); event.stopImmediatePropagation(); setTimeout(inspectBoardInput, 0);
+      frameWindow()?.SudokuTools?.enterBattleDigit?.(parsedDigit, mode, penpaColors[myColor], penpaShades[myColor]);
+      event.preventDefault(); event.stopImmediatePropagation(); scheduleInspect();
     }
   }
 
@@ -831,8 +855,7 @@
     window.addEventListener("beforeunload", protectReload);
     heartbeatClock = window.setInterval(async () => {
       if (!supabase || !room || spectatorMode) return;
-      await supabase.rpc("touch_battle_player", { p_room_id: room.id, p_player_token: playerToken() });
-      await refreshRoom();
+      await supabase.rpc("touch_battle_player", { p_room_id: room.id, p_player_token: getRoomToken(room.id) });
     }, 10000);
     let authSubscription: { unsubscribe: () => void } | undefined;
     if (supabase) {
@@ -846,7 +869,7 @@
       refreshLobby(); if (roomCode) spectatorMode ? watchRoom(roomCode) : joinRoom(roomCode);
     }
     return () => {
-      clearInterval(clock); clearInterval(generationClock); clearInterval(heartbeatClock); clearTimeout(toastClock); window.removeEventListener("keydown", forwardBattleKeyboard);
+      clearInterval(clock); clearInterval(generationClock); clearInterval(heartbeatClock); clearTimeout(toastClock); clearTimeout(_inspectTimer); window.removeEventListener("keydown", forwardBattleKeyboard);
       window.removeEventListener("beforeunload", protectReload);
       leaveBattleChannel(channel); leaveBattleChannel(lobbyChannel);
       authSubscription?.unsubscribe();
@@ -854,10 +877,10 @@
   });
 </script>
 
-<svelte:head><title>Sudoku Battle 2</title><meta name="description" content="A realtime multiplayer Sudoku battle." /></svelte:head>
+<svelte:head><title>Sudoku Battle</title><meta name="description" content="A realtime multiplayer Sudoku battle." /></svelte:head>
 
 <main class:in-room={Boolean(room)} class:dark={darkMode} lang={language}>
-  {#if !room}<header><h1>Sudoku Battle 2</h1><div class="header-actions user-menu"><span><strong>{playerName}</strong><small>{authUser ? t("loggedIn") : t("guest")}</small></span><button aria-label={t("settings")} title={t("settings")} on:click={() => settingsOpen = true}>⚙</button></div></header>{/if}
+  {#if !room}<header><h1>Sudoku Battle</h1><div class="header-actions user-menu"><span><strong>{playerName}</strong><small>{authUser ? t("loggedIn") : t("guest")}</small></span><button aria-label={t("settings")} title={t("settings")} on:click={() => settingsOpen = true}>⚙</button></div></header>{/if}
   {#if !room}
     <section class="lobby-layout">
       <div class="card create-card">
@@ -931,6 +954,12 @@
                     <small class="stat-incorrect">✗{playerMoveStats[player.id]?.incorrect || 0}</small>
                   </span>
                 </div>
+                {#each [(playerMoveStats[player.id]?.correct || 0) + (playerMoveStats[player.id]?.incorrect || 0)] as _mt}
+                  {#if _mt > 0}
+                    {@const _ac = Math.round((playerMoveStats[player.id]?.correct || 0) / _mt * 100)}
+                    <div class="acc-bar-track"><div class="acc-bar-fill" style="width:{_ac}%;background:hsl({Math.round(_ac * 1.2)},60%,42%)"></div></div>
+                  {/if}
+                {/each}
               </div>
             {/each}
           </div>
@@ -970,6 +999,12 @@
                       <small class="stat-incorrect">✗{playerMoveStats[player.id]?.incorrect || 0}</small>
                     </span>
                   </div>
+                  {#each [(playerMoveStats[player.id]?.correct || 0) + (playerMoveStats[player.id]?.incorrect || 0)] as _mt}
+                    {#if _mt > 0}
+                      {@const _ac = Math.round((playerMoveStats[player.id]?.correct || 0) / _mt * 100)}
+                      <div class="acc-bar-track"><div class="acc-bar-fill" style="width:{_ac}%;background:hsl({Math.round(_ac * 1.2)},60%,42%)"></div></div>
+                    {/if}
+                  {/each}
                 </div>
               {/each}
             </div>
@@ -980,7 +1015,7 @@
         <div class="play-area" class:spectator={spectatorMode}>
           <div class="board-stage" class:revealed={boardRevealed} class:board-complete={room?.status === "finished"}>
             {#if room.status === "preparing"}<iframe class="board hidden-board" title={t("sudokuGenerator")} bind:this={boardFrame} src={boardFrameSource()} on:load={boardReady}></iframe>{:else if room.puzzle_hash}<iframe class="board" title={t("sharedBoard")} bind:this={boardFrame} src={boardSrc} on:load={boardReady}></iframe>{/if}
-            {#if !boardVisible}<div class="board-cover" class:finished-cover={room.status === "finished"}>{#if room.status === "preparing"}<strong>{t("preparing")}</strong><div class="prep-bar-container"><div class="prep-bar-fill" style={`width: ${Math.min(100, Math.max(0, (generationSeconds / 20) * 100))}%`}></div></div><span class="prep-countdown-text">{Math.max(0, 20 - generationSeconds)}s</span>{#if error || generationSeconds > 20}<div class="prep-actions"><button class="primary small" on:click={prepareRoomBoard}>↻ {t("retryBoard")}</button><button class="small" on:click={returnToLobby}>← {t("backToLobby")}</button></div>{/if}{:else if room.status === "lobby"}<strong>{t("readyLobby")}</strong><span>{boardLoaded ? t("boardHidden") : `${t("loadingBoard")}…`}</span>{#if isHost}<button class="primary start-in-grid" disabled={busy || !boardLoaded || (room.ranked && players.length !== 2)} on:click={startBattle}>▶ {t("startBattle")}</button>{#if !room.ranked && !hasBots}<div class="bot-buttons-row"><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(1)}>🤖 1</button><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(2)}>🤖 2</button><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(3)}>🤖 3</button></div>{:else if room.ranked && players.length !== 2}<small>{t("waitingRankedOpponent")}</small>{/if}{/if}{:else if countdown > 0}<strong class="countdown">{countdown}</strong><span>{t("getReady")}</span>{:else if room.status === "finished"}<strong>{room.finish_reason === "time_limit" ? t("timeLimit") : t("battleComplete")}</strong><span>{winners.length ? `${winners.map((player) => player.name).join(" & ")} ${t(winners.length > 1 ? "tieWith" : "winsWith")} ${winners[0].score} ${t("points")}.` : t("finalScores")}</span>{#if answerCheckUrl}<a class="button-link answer-link" href={answerCheckUrl} target="_blank" rel="noreferrer">↗ {t("openPuzzleCheck")}</a>{/if}{#if isHost && !room.ranked && !tournamentCode}<button class="primary" disabled={busy} on:click={rematch}>{t("rematch")}</button>{/if}{:else}<strong>{t("loadingBoard")}</strong>{/if}</div>{/if}
+            {#if !boardVisible}<div class="board-cover" class:finished-cover={room.status === "finished"}>{#if room.status === "preparing"}<strong>{t("preparing")}</strong><div class="prep-bar-container"><div class="prep-bar-fill" style={`width: ${Math.min(100, Math.max(0, (generationSeconds / 20) * 100))}%`}></div></div><span class="prep-countdown-text">{Math.max(0, 20 - generationSeconds)}s</span>{#if error || generationSeconds > 20}<div class="prep-actions"><button class="primary small" on:click={prepareRoomBoard}>↻ {t("retryBoard")}</button><button class="small" on:click={returnToLobby}>← {t("backToLobby")}</button></div>{/if}{:else if room.status === "lobby"}<strong>{t("readyLobby")}</strong><span>{boardLoaded ? t("boardHidden") : `${t("loadingBoard")}…`}</span>{#if isHost}<button class="primary start-in-grid" disabled={busy || !boardLoaded || (room.ranked && players.length !== 2)} on:click={startBattle}>▶ {t("startBattle")}</button>{#if !room.ranked && !hasBots}<div class="bot-buttons-row"><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(1)}>🤖 1</button><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(2)}>🤖 2</button><button class="secondary bot-btn" disabled={busy || !boardLoaded} on:click={() => addBots(3)}>🤖 3</button></div>{:else if room.ranked && players.length !== 2}<small>{t("waitingRankedOpponent")}</small>{/if}{/if}{#if !notifyOnJoin && players.length < 2 && room?.status === "lobby" && !spectatorMode && typeof Notification !== "undefined"}<button class="small notify-btn" on:click={requestNotifyOnJoin}>🔔 {t("notifyMeWhenJoins")}</button>{:else if notifyOnJoin && room?.status === "lobby"}<small class="notify-active">🔔 {t("notifyActive")}</small>{/if}{:else if countdown > 0}<strong class="countdown">{countdown}</strong><span>{t("getReady")}</span>{:else if room.status === "finished"}<strong>{room.finish_reason === "time_limit" ? t("timeLimit") : t("battleComplete")}</strong><span>{winners.length ? `${winners.map((player) => player.name).join(" & ")} ${t(winners.length > 1 ? "tieWith" : "winsWith")} ${winners[0].score} ${t("points")}.` : t("finalScores")}</span>{#if answerCheckUrl}<a class="button-link answer-link" href={answerCheckUrl} target="_blank" rel="noreferrer">↗ {t("openPuzzleCheck")}</a>{/if}{#if isHost && !room.ranked && !tournamentCode}<button class="primary" disabled={busy} on:click={rematch}>{t("rematch")}</button>{/if}{:else}<strong>{t("loadingBoard")}</strong>{/if}</div>{/if}
           </div>
           {#if !spectatorMode}
             <div class="right-controls">
@@ -1049,4 +1084,11 @@
     main.dark .room-sidebar.open{border-color:#435360;background:#24313c}
     main.dark .room-sidebar .sidebar-section{background:transparent}
   }
+  .acc-bar-track{height:3px;background:rgba(0,0,0,.1);border-radius:2px;margin-top:3px;overflow:hidden}
+  .acc-bar-fill{height:100%;border-radius:2px;transition:width .4s ease}
+  main.dark .acc-bar-track{background:rgba(255,255,255,.12)}
+  .notify-btn{border-style:dashed;color:#586875;margin-top:6px}
+  .notify-active{font-size:11px;color:#16a34a;font-weight:600;margin-top:4px}
+  main.dark .notify-btn{color:#94a3b8}
+  main.dark .notify-active{color:#4ade80}
 </style>

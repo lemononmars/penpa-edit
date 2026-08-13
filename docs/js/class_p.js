@@ -9677,6 +9677,9 @@ class Puzzle {
     }
 
     mouse_numberS(x, y, num, submode) {
+        if (this.battleMode || window.isBattleMode) {
+            return;
+        }
         if (this.mouse_mode === "down_left") {
             this.cursolS = num;
 
@@ -9707,6 +9710,9 @@ class Puzzle {
                     } else {
                         return;
                     }
+                }
+                if (!Array.isArray(this.centerlist) || !this.centerlist.includes(num)) {
+                    return;
                 }
             } else {
                 num = this.coord_p_edgex(x, y, 0.15); // reducing the bounding box for edge cells to be less aggressive

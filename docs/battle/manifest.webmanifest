@@ -1,0 +1,12 @@
+{
+  "name": "Sudoku Battle",
+  "short_name": "Battle",
+  "description": "Race friends on a synchronized Sudoku board.",
+  "start_url": "/battle/",
+  "display": "standalone",
+  "background_color": "#f3f6f8",
+  "theme_color": "#1688ca",
+  "icons": [
+    { "src": "../favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
