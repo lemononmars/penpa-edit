@@ -5,14 +5,54 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/:path((?!assets/|js/|css/|fonts/|.*\\.[a-zA-Z0-9]+$).*)",
+      "source": "/",
       "has": [
         {
           "type": "host",
           "value": "(.*sudokubattle.*|.*sudoku-battle.*)"
         }
       ],
-      "destination": "/battle/:path"
+      "destination": "/battle/index.html"
+    },
+    {
+      "source": "/index.html",
+      "has": [
+        {
+          "type": "host",
+          "value": "(.*sudokubattle.*|.*sudoku-battle.*)"
+        }
+      ],
+      "destination": "/battle/index.html"
+    },
+    {
+      "source": "/leaderboard",
+      "has": [
+        {
+          "type": "host",
+          "value": "(.*sudokubattle.*|.*sudoku-battle.*)"
+        }
+      ],
+      "destination": "/battle/leaderboard/index.html"
+    },
+    {
+      "source": "/tournament",
+      "has": [
+        {
+          "type": "host",
+          "value": "(.*sudokubattle.*|.*sudoku-battle.*)"
+        }
+      ],
+      "destination": "/battle/tournament/index.html"
+    },
+    {
+      "source": "/tournament/host",
+      "has": [
+        {
+          "type": "host",
+          "value": "(.*sudokubattle.*|.*sudoku-battle.*)"
+        }
+      ],
+      "destination": "/battle/tournament/host/index.html"
     }
   ]
 }
