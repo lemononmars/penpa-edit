@@ -338,9 +338,9 @@ test("dedicated auth routes, shared settings, and login-time profile recovery ar
 });
 
 test("tournament hosting has its own route and Battle no longer links to tournaments", () => {
-  assert.match(vite, /docs\/battle\/tournament\/host\/index\.html/);
+  assert.match(vite, /docs\/tournament\/host\/index\.html/);
   assert.match(tournament, /export let hostMode = false/);
-  assert.match(tournament, /href="\.\/host\/"/);
+  assert.match(tournament, /href="\/tournament\/host\/"/);
   assert.doesNotMatch(battle, /href="\.\/tournament\/"/);
 });
 
@@ -352,7 +352,7 @@ test("battle keyboard input ignores longpress repeat on digits and prevents eras
 });
 
 test("tournament host page hides back link, provides reset/abort settings with confirmation, and shows detailed results modal", () => {
-  assert.match(tournament, /\{#if !hostMode\}<a href="\/battle\/">/);
+  assert.match(tournament, /\{#if !hostMode\}<a href=\{isBattleDomain \? "\/" : "\/battle\/"\}>/);
   assert.match(tournament, /\{#if settingsOpen && hostMode\}/);
   assert.match(tournament, /window\.confirm\(t\("resetTournamentConfirm"\)\)/);
   assert.match(tournament, /window\.confirm\(t\("abortTournamentConfirm"\)\)/);

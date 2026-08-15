@@ -3,7 +3,12 @@
 
 <head>
     <script>
-        document.documentElement.classList.add("svelte-home");
+        if (window.self === window.top && (location.hostname.includes("sudokubattle") || location.hostname.includes("sudoku-battle")) && !location.search.includes("embed=1")) {
+            window.isBattleDomain = true;
+        }
+        if (!window.isBattleDomain) {
+            document.documentElement.classList.add("svelte-home");
+        }
     </script>
     <style>
         html.svelte-home:not(.svelte-mounted) {
@@ -64,98 +69,104 @@
     <!-- STYLES -->
     <!-- Local styles -->
     <script>
-        var ver = "3.3.42";
-        let style_sources = [
-            "./css/font-awesome.min.css",
-            "./css/light_theme.css",
-            "./css/base-structure.css",
-            "./css/vanillaSelectBox.css",
-            "./css/spectrum.css",
-            "./css/select2.css"
-        ];
-        let style_sources_ids = [
-            "font_awesome_css",
-            "color_theme",
-            "base_structure",
-            "tab_setting_css",
-            "custom_color_css",
-            "constraints_settings_css"
-        ];
-        const style_tag_cache = [];
-        for (let i = 0; i < style_sources.length; i++) {
-            let style = document.createElement('link');
-            style.rel = "stylesheet";
-            style.type = "text/css";
-            style.id = style_sources_ids[i];
-            style.href = style_sources[i] + "?v=" + ver;
-            style.async = false;
-            document.head.appendChild(style);
-            style_tag_cache[style_sources_ids[i]] = style;
+        if (!window.isBattleDomain) {
+            var ver = "3.3.42";
+            let style_sources = [
+                "./css/font-awesome.min.css",
+                "./css/light_theme.css",
+                "./css/base-structure.css",
+                "./css/vanillaSelectBox.css",
+                "./css/spectrum.css",
+                "./css/select2.css"
+            ];
+            let style_sources_ids = [
+                "font_awesome_css",
+                "color_theme",
+                "base_structure",
+                "tab_setting_css",
+                "custom_color_css",
+                "constraints_settings_css"
+            ];
+            const style_tag_cache = [];
+            for (let i = 0; i < style_sources.length; i++) {
+                let style = document.createElement('link');
+                style.rel = "stylesheet";
+                style.type = "text/css";
+                style.id = style_sources_ids[i];
+                style.href = style_sources[i] + "?v=" + ver;
+                style.async = false;
+                document.head.appendChild(style);
+                style_tag_cache[style_sources_ids[i]] = style;
+            }
         }
     </script>
     <!-- SCRIPTS -->
     <!-- local libs -->
     <script type="text/javascript">
-        let library_sources = [
-            "./js/libs/localforage.min.js",
-            "./js/libs/md5.min.js",
-            "./js/libs/sweetalert2@11.js",
-            "./js/libs/jquery-3.7.0.min.js",
-            "./js/libs/purify.min.js",
-            "./js/libs/CanvasRenderingContext2D.ext.js",
-            "./js/libs/encoding.js",
-            "./js/libs/vanillaSelectBox.js",
-            "./js/libs/zlib.js",
-            "./js/libs/spectrum.js",
-            "./js/libs/canvas2svg.js",
-            "./js/libs/select2.full.js",
-            "./js/libs/gif.js"
-        ];
-        for (let i = 0; i < library_sources.length; i++) {
-            let script = document.createElement("script");
-            script.type = "text/javascript";
-            script.src = library_sources[i] + "?v=" + ver;
-            script.async = false;
-            document.head.appendChild(script);
+        if (!window.isBattleDomain) {
+            let library_sources = [
+                "./js/libs/localforage.min.js",
+                "./js/libs/md5.min.js",
+                "./js/libs/sweetalert2@11.js",
+                "./js/libs/jquery-3.7.0.min.js",
+                "./js/libs/purify.min.js",
+                "./js/libs/CanvasRenderingContext2D.ext.js",
+                "./js/libs/encoding.js",
+                "./js/libs/vanillaSelectBox.js",
+                "./js/libs/zlib.js",
+                "./js/libs/spectrum.js",
+                "./js/libs/canvas2svg.js",
+                "./js/libs/select2.full.js",
+                "./js/libs/gif.js"
+            ];
+            for (let i = 0; i < library_sources.length; i++) {
+                let script = document.createElement("script");
+                script.type = "text/javascript";
+                script.src = library_sources[i] + "?v=" + ver;
+                script.async = false;
+                document.head.appendChild(script);
+            }
         }
     </script>
     <!--  rest -->
     <script type="text/javascript">
-        let script_sources = [
-            "./identity.js",
-            "./js/settings.js",
-            "./js/progress.js",
-            "./js/interface.js",
-            "./js/conflicts.js",
-            "./js/puzzlink.js",
-            "./js/modes.js",
-            "./js/genre_tags.js",
-            "./js/constraints.js",
-            "./js/main.js",
-            "./js/class_p.js",
-            "./js/class_square.js",
-            "./js/class_hex.js",
-            "./js/class_tri.js",
-            "./js/class_pyramid.js",
-            "./js/class_uniform.js",
-            "./js/class_panel.js",
-            "./js/style.js",
-            "./js/sudoku_csp.js",
-            "./js/sudoku_csp_variants/browser.js",
-            "./js/sudoku_variants/browser.js",
-            "./js/sudoku_generator.js",
-            "./js/sudoku_solver.js",
-            "./js/url_security.js",
-            "./js/general.js",
-            "./js/customcolor.js",
-            "./js/penpa_text.js"
-        ];
-        for (let i = 0; i < script_sources.length; i++) {
-            let script = document.createElement("script");
-            script.type = "text/javascript";
-            script.src = script_sources[i] + "?v=" + ver;
-            script.async = false;
-            document.head.appendChild(script);
+        if (!window.isBattleDomain) {
+            let script_sources = [
+                "./identity.js",
+                "./js/settings.js",
+                "./js/progress.js",
+                "./js/interface.js",
+                "./js/conflicts.js",
+                "./js/puzzlink.js",
+                "./js/modes.js",
+                "./js/genre_tags.js",
+                "./js/constraints.js",
+                "./js/main.js",
+                "./js/class_p.js",
+                "./js/class_square.js",
+                "./js/class_hex.js",
+                "./js/class_tri.js",
+                "./js/class_pyramid.js",
+                "./js/class_uniform.js",
+                "./js/class_panel.js",
+                "./js/style.js",
+                "./js/sudoku_csp.js",
+                "./js/sudoku_csp_variants/browser.js",
+                "./js/sudoku_variants/browser.js",
+                "./js/sudoku_generator.js",
+                "./js/sudoku_solver.js",
+                "./js/url_security.js",
+                "./js/general.js",
+                "./js/customcolor.js",
+                "./js/penpa_text.js"
+            ];
+            for (let i = 0; i < script_sources.length; i++) {
+                let script = document.createElement("script");
+                script.type = "text/javascript";
+                script.src = script_sources[i] + "?v=" + ver;
+                script.async = false;
+                document.head.appendChild(script);
+            }
         }
     </script>
 </head>
@@ -1654,18 +1665,20 @@
     </div>
 </div>
 <script type="text/javascript">
-    script_sources = ["./js/libs/easytimer.min.js",
-        "./js/timer.js",
-        "./js/conversion.js"
-    ];
-    for (let i = 0; i < script_sources.length; i++) {
-        let script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = script_sources[i] + "?v=" + ver;
-        script.async = false;
-        document.head.appendChild(script);
+    if (!window.isBattleDomain) {
+        script_sources = ["./js/libs/easytimer.min.js",
+            "./js/timer.js",
+            "./js/conversion.js"
+        ];
+        for (let i = 0; i < script_sources.length; i++) {
+            let script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = script_sources[i] + "?v=" + ver;
+            script.async = false;
+            document.head.appendChild(script);
+        }
+        document.getElementById('version-number').innerHTML = ver;
     }
-    document.getElementById('version-number').innerHTML = ver;
 </script>
 </body>
 

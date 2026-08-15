@@ -253,7 +253,11 @@ function directoryTrailingSlashPlugin() {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = new URL(req.url || "/", "http://localhost");
-        if (url.pathname === "/battle") {
+        if (url.pathname === "/tournament") {
+          req.url = "/tournament/" + url.search;
+        } else if (url.pathname === "/tournament/host") {
+          req.url = "/tournament/host/" + url.search;
+        } else if (url.pathname === "/battle") {
           req.url = "/battle/" + url.search;
         } else if (url.pathname === "/battle/tournament") {
           req.url = "/battle/tournament/" + url.search;
@@ -285,8 +289,10 @@ export default defineConfig({
         list: resolve(process.cwd(), "docs/list/index.html"),
         battle: resolve(process.cwd(), "docs/battle/index.html"),
         battleLeaderboard: resolve(process.cwd(), "docs/battle/leaderboard/index.html"),
-        tournament: resolve(process.cwd(), "docs/battle/tournament/index.html"),
-        tournamentHost: resolve(process.cwd(), "docs/battle/tournament/host/index.html"),
+        tournament: resolve(process.cwd(), "docs/tournament/index.html"),
+        tournamentHost: resolve(process.cwd(), "docs/tournament/host/index.html"),
+        battleTournament: resolve(process.cwd(), "docs/battle/tournament/index.html"),
+        battleTournamentHost: resolve(process.cwd(), "docs/battle/tournament/host/index.html"),
         login: resolve(process.cwd(), "docs/login/index.html"),
         register: resolve(process.cwd(), "docs/register/index.html"),
         resetPassword: resolve(process.cwd(), "docs/reset-password/index.html")
