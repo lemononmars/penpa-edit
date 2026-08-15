@@ -3,6 +3,9 @@
 
 <head>
     <script>
+        if (window.self === window.top && (location.hostname.includes("sudokubattle") || location.hostname.includes("sudoku-battle")) && !location.search.includes("embed=1")) {
+            location.replace("/battle/" + location.search + location.hash);
+        }
         document.documentElement.classList.add("svelte-home");
     </script>
     <style>
