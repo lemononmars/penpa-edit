@@ -18,6 +18,7 @@
   let mockPlayerCount = 8;
   let displayName = "Player";
   let settingsOpen = false;
+  let detailedResultsOpen = false;
   let darkMode = window.localStorage.getItem("sudotoku-battle-theme") === "dark";
   let code = normalizeRoomCode(new URLSearchParams(location.search).get("tournament") || "");
   let joinCode = ""; let rounds = 5; let tournament:Tournament|null=null; let standings:Standing[]=[]; let matches:Match[]=[];
@@ -27,6 +28,22 @@
   $: isHost=mockMode||Boolean(user&&tournament?.host_user_id===user.id);
   $: currentRoundDone=Boolean(tournament&&matches.filter(m=>m.round_number===tournament.current_round).every(m=>m.status==="finished"));
   $: canStart=Boolean(isHost&&tournament?.status!=="finished"&&tournament&&tournament.current_round<tournament.rounds&&(tournament.current_round===0||currentRoundDone));
+  $: allRounds = Array.from({ length: Math.max(tournament?.current_round || 0, ...matches.map(m => m.round_number), 1) }, (_, i) => i + 1);
+
+  function getPlayerMatch(userId: string, roundNumber: number) {
+    return matches.find(m => m.round_number === roundNumber && (m.player_one === userId || m.player_two === userId));
+  }
+
+  function matchSummary(userId: string, match: Match | undefined) {
+    if (!match) return "-";
+    if (match.result === "bye") return `+1.0 (${t("bye")})`;
+    if (!match.result || match.status === "running") return "...";
+    const opponentId = match.player_one === userId ? match.player_two : match.player_one;
+    const opponentName = opponentId ? playerName(opponentId) : t("bye");
+    if (match.result === "draw") return `+0.5 (${opponentName})`;
+    const winnerId = match.result === "player_one" ? match.player_one : match.player_two;
+    return winnerId === userId ? `+1.0 (${opponentName})` : `0.0 (${opponentName})`;
+  }
 
   async function acceptUser(next: User | null) {
     user = next;
@@ -57,6 +74,50 @@
     standings=completed.standings as Standing[];matches=completed.matches as Match[];
     if(tournament.current_round>=tournament.rounds)tournament={...tournament,status:"finished"};
   }
+  async function resetTournament() {
+    if (mockMode) {
+      matches = [];
+      standings = createMockStandings(mockPlayerCount) as Standing[];
+      tournament = { ...tournament!, status: "lobby", current_round: 0 };
+      settingsOpen = false;
+      return;
+    }
+    if (!supabase || !tournament) return;
+    busy = true; error = "";
+    try {
+      const { error: matchErr } = await supabase.from("battle_tournament_matches").delete().eq("tournament_id", tournament.id);
+      if (matchErr) throw matchErr;
+      const { error: playerErr } = await supabase.from("battle_tournament_players").update({ match_points: 0, buchholz: 0 }).eq("tournament_id", tournament.id);
+      if (playerErr) throw playerErr;
+      const { error: tournErr } = await supabase.from("battle_tournaments").update({ status: "lobby", current_round: 0 }).eq("id", tournament.id);
+      if (tournErr) throw tournErr;
+      settingsOpen = false;
+      await refresh();
+    } catch (c: any) {
+      error = c?.message || "Could not reset tournament.";
+    } finally {
+      busy = false;
+    }
+  }
+  async function abortTournament() {
+    if (mockMode) {
+      tournament = { ...tournament!, status: "finished" };
+      settingsOpen = false;
+      return;
+    }
+    if (!supabase || !tournament) return;
+    busy = true; error = "";
+    try {
+      const { error: tournErr } = await supabase.from("battle_tournaments").update({ status: "finished" }).eq("id", tournament.id);
+      if (tournErr) throw tournErr;
+      settingsOpen = false;
+      await refresh();
+    } catch (c: any) {
+      error = c?.message || "Could not abort tournament.";
+    } finally {
+      busy = false;
+    }
+  }
   function playerName(id:string|null){return standings.find(p=>p.user_id===id)?.display_name||t("bye")}
   function resultText(match:Match){if(match.result==="bye")return t("receivesBye",{player:playerName(match.player_one)});if(!match.result)return t("inProgress");if(match.result==="draw")return t("draw");return t("won",{player:playerName(match.result==="player_one"?match.player_one:match.player_two)})}
   onMount(()=>{if(mockMode){activateMockTournament();return}if(!supabase)return;supabase.auth.getSession().then(({data})=>acceptUser(data.session?.user||null));const{data:listener}=supabase.auth.onAuthStateChange((_event,session)=>{acceptUser(session?.user||null);maybeEnterMatch()});if(code)loadTournament();return()=>{listener.subscription.unsubscribe();if(channel)supabase.removeChannel(channel)}});
@@ -64,19 +125,71 @@
 
 <svelte:head><title>{t("tournamentTitle")} · Sudotoku</title><meta name="description" content="Classic Sudoku Swiss tournament." /></svelte:head>
 <main class:dark={darkMode} lang={locale}>
-  <header><a href={hostMode ? "../" : "/battle/"}>← {hostMode ? t("tournamentTitle") : t("battleTitle")}</a><h1>{hostMode ? t("hostPage") : t("tournamentTitle")}</h1><div class="user-menu"><span><strong>{displayName}</strong><small>{user ? t("loggedIn") : t("guest")}</small></span><button aria-label={t("settings")} title={t("settings")} on:click={()=>settingsOpen=true}>⚙</button></div></header>
+  <header>{#if !hostMode}<a href="/battle/">← {t("battleTitle")}</a>{/if}<h1>{hostMode ? t("hostPage") : t("tournamentTitle")}</h1><div class="user-menu"><span><strong>{displayName}</strong><small>{user ? t("loggedIn") : t("guest")}</small></span><button aria-label={t("settings")} title={t("settings")} on:click={()=>settingsOpen=true}>⚙</button></div></header>
   {#if !user && !mockMode}<p class="card login-notice">{t("loginToPlay")} <a href={`/login/?next=${encodeURIComponent(location.pathname+location.search)}`}>{t("login")}</a></p>{/if}
   {#if !tournament}
     {#if hostMode}<section class="setup single"><div class="card"><h2>{t("hostTournament")}</h2><p>{t("tournamentIntro")}</p><label>{t("rounds")} <input type="number" min="1" max="10" bind:value={rounds}/></label><button class="primary" disabled={!user||busy} on:click={createTournament}>{t("createTournament")}</button></div></section>
     {:else}<section class="setup single"><div class="card"><div class="section-title"><h2>{t("joinTournament")}</h2><a class="button-link" href="./host/">{t("hostTournament")}</a></div><input class="code" aria-label={t("tournamentCode")} maxlength="6" placeholder="CODE" bind:value={joinCode}/><button disabled={!user||busy} on:click={joinTournament}>{t("join")}</button>{#if mockAvailable}<hr/><h3>{t("mockTournament")}</h3><div class="mock-setup"><label>{t("dummyPlayers")} <select bind:value={mockPlayerCount}><option value={8}>8</option><option value={16}>16</option><option value={32}>32</option><option value={64}>64</option></select></label><label>{t("rounds")} <input type="number" min="1" max="10" bind:value={rounds}/></label></div><button class="mock-button" on:click={activateMockTournament}>{t("tryMockTournament")}</button>{/if}</div></section>{/if}
   {:else}<section class="tournament"><div class="card summary"><div><small>{t("tournamentTitle")}</small><strong>{tournament.code}{#if mockMode} <em>DEV MOCK</em>{/if}</strong></div><div><small>{t("format")}</small><strong>{t("classic")} · {tournament.rounds} {t("rounds")}</strong></div><div><small>{t("status")}</small><strong>{t(tournament.status)} · {t("round")} {tournament.current_round}/{tournament.rounds}</strong></div>{#if canStart}<button class="primary" disabled={busy} on:click={startRound}>▶ {t("startRound",{round:tournament.current_round+1})}</button>{/if}{#if mockMode && tournament.current_round>0 && !currentRoundDone}<div class="mock-actions"><button on:click={()=>finishMockRound("random")}>{t("randomResults")}</button><button on:click={()=>finishMockRound("draw")}>{t("drawAll")}</button></div>{/if}</div>
-    <div class="columns"><section class="card"><h2>{t("standings")}</h2><div class="standings"><b>#</b><b>{t("player")}</b><b>{t("pointsShort")}</b><b>{t("buchholzShort")}</b>{#each standings as player,index}<span>{index+1}</span><strong>{player.display_name}{player.user_id===tournament.host_user_id?" ★":""}</strong><span>{player.match_points}</span><span>{player.buchholz}</span>{/each}</div></section><section class="card"><h2>{t("results")}</h2>{#each [...new Set(matches.map(m=>m.round_number))] as round}<h3>{t("round")} {round}</h3>{#each matches.filter(m=>m.round_number===round) as match}<div class="match"><span>{t("table")} {match.table_number}</span><strong>{playerName(match.player_one)} vs {playerName(match.player_two)}</strong><small>{resultText(match)}</small></div>{/each}{:else}<p>{t("noRounds")}</p>{/each}</section></div>
+    <div class="columns"><section class="card"><h2>{t("standings")}</h2><div class="standings"><b>#</b><b>{t("player")}</b><b>{t("pointsShort")}</b><b>{t("buchholzShort")}</b>{#each standings as player,index}<span>{index+1}</span><strong>{player.display_name}{player.user_id===tournament.host_user_id?" ★":""}</strong><span>{player.match_points}</span><span>{player.buchholz}</span>{/each}</div></section><section class="card"><div class="section-title"><h2>{t("results")}</h2><button class="detailed-btn" on:click={() => detailedResultsOpen = true}>📊 {t("detailedResults")}</button></div>{#each [...new Set(matches.map(m=>m.round_number))] as round}<h3>{t("round")} {round}</h3>{#each matches.filter(m=>m.round_number===round) as match}<div class="match"><span>{t("table")} {match.table_number}</span><strong>{playerName(match.player_one)} vs {playerName(match.player_two)}</strong><small>{resultText(match)}</small></div>{/each}{:else}<p>{t("noRounds")}</p>{/each}</section></div>
   </section>{/if}
   {#if error}<p class="error">{error}</p>{/if}
-  <BattleSettingsModal open={settingsOpen} {displayName} {user} {darkMode} locale={locale} onClose={()=>settingsOpen=false} onSaveName={saveDisplayName} onToggleTheme={toggleTheme} onLocaleChange={changeLocale} onSignOut={signOut}/>
+  {#if settingsOpen && hostMode}
+    <div class="backdrop">
+      <button class="dismiss" aria-label={t("close")} on:click={() => settingsOpen = false}></button>
+      <div class:dark={darkMode} class="modal" role="dialog" aria-modal="true">
+        <header><h2>{t("settings")}</h2><button class="icon" aria-label={t("close")} on:click={() => settingsOpen = false}>×</button></header>
+        <div class="host-actions-modal">
+          <button class="warning" disabled={busy || !tournament} on:click={() => { if (window.confirm(t("resetTournamentConfirm"))) resetTournament(); }}>🔄 {t("resetTournament")}</button>
+          <button class="danger" disabled={busy || !tournament} on:click={() => { if (window.confirm(t("abortTournamentConfirm"))) abortTournament(); }}>🛑 {t("abortTournament")}</button>
+        </div>
+      </div>
+    </div>
+  {:else}
+    <BattleSettingsModal open={settingsOpen} {displayName} {user} {darkMode} locale={locale} onClose={()=>settingsOpen=false} onSaveName={saveDisplayName} onToggleTheme={toggleTheme} onLocaleChange={changeLocale} onSignOut={signOut}/>
+  {/if}
+  {#if detailedResultsOpen}
+    <div class="backdrop">
+      <button class="dismiss" aria-label={t("close")} on:click={() => detailedResultsOpen = false}></button>
+      <div class:dark={darkMode} class="modal wide-modal" role="dialog" aria-modal="true">
+        <header><h2>{t("detailedResults")}</h2><button class="icon" aria-label={t("close")} on:click={() => detailedResultsOpen = false}>×</button></header>
+        <div class="table-scroll">
+          <table class="detailed-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>{t("player")}</th>
+                {#each allRounds as r}
+                  <th>{t("round")} {r}</th>
+                {/each}
+                <th>{t("pointsShort")}</th>
+                <th>{t("buchholzShort")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each standings as player, idx}
+                <tr>
+                  <td>{idx + 1}</td>
+                  <td><strong>{player.display_name}{player.user_id === tournament?.host_user_id ? " ★" : ""}</strong></td>
+                  {#each allRounds as r}
+                    {@const match = getPlayerMatch(player.user_id, r)}
+                    <td>{matchSummary(player.user_id, match)}</td>
+                  {/each}
+                  <td><b>{player.match_points}</b></td>
+                  <td>{player.buchholz}</td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {/if}
 </main>
 
 <style>
   :global(*){box-sizing:border-box}:global(body){margin:0;background:#edf2f5;color:#243642;font-family:Inter,system-ui,sans-serif}main{min-height:100vh;padding:18px;background:#edf2f5;color:#243642}main.dark{background:#17212a;color:#e1e8ed}header{display:flex;align-items:center;gap:15px;max-width:1100px;margin:0 auto 16px}header h1{flex:1;margin:0}.user-menu{display:flex;align-items:center;gap:8px}.user-menu strong{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}a{color:#1178b5;text-decoration:none}.card{border:1px solid #d4dde4;border-radius:14px;background:#fff;padding:18px;box-shadow:0 5px 24px #1b344511}main.dark .card,main.dark button,main.dark input{border-color:#435360;background:#24313c;color:#e1e8ed}.login-notice{max-width:700px;margin:0 auto 16px}.setup,.columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1100px;margin:auto}.setup.single{grid-template-columns:minmax(300px,620px);justify-content:center}.setup .card{display:flex;flex-direction:column;gap:10px}.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px}.section-title h2{margin:0}.button-link{display:inline-flex;align-items:center;justify-content:center;min-height:38px;border:1px solid #bdc9d2;border-radius:8px;padding:7px 11px;background:#f6f9fa}.summary{display:flex;align-items:center;gap:26px;max-width:1100px;margin:0 auto 16px}.summary>div{display:flex;flex-direction:column}.summary button{margin-left:auto}input,button{min-height:38px;border:1px solid #bac7d0;border-radius:8px;padding:7px 10px;background:#f9fbfc;color:inherit;font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.primary{border-color:#1688ca;background:#1688ca;color:#fff}.code{text-transform:uppercase;font-size:22px;letter-spacing:.12em}.standings{display:grid;grid-template-columns:35px minmax(120px,1fr) 50px 50px;gap:8px;align-items:center}.match{display:grid;grid-template-columns:70px 1fr auto;gap:8px;padding:8px 0;border-bottom:1px solid #e0e6eb}.match small{color:#697987}.error{position:fixed;right:15px;bottom:15px;max-width:480px;border-radius:9px;background:#b42318;color:#fff;padding:11px 14px}@media(max-width:700px){main{padding:8px}header{gap:8px}header h1{font-size:20px}.user-menu strong{max-width:90px}.setup,.columns{grid-template-columns:1fr}.summary{align-items:stretch;flex-direction:column;gap:8px}.summary button{margin:0}.match{grid-template-columns:60px 1fr}.match small{grid-column:2}}
   .user-menu>span{display:flex;align-items:flex-end;flex-direction:column}.user-menu small{color:#71808c;font-size:11px}.mock-setup{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mock-setup label{display:flex;flex-direction:column;gap:5px}.mock-setup select{min-height:38px;border:1px solid #bac7d0;border-radius:8px;background:#f9fbfc;color:inherit;padding:7px}.mock-button{border-color:#805ad5;background:#f3efff;color:#553c9a}.summary em{font-size:10px;color:#805ad5}.mock-actions{display:flex;gap:6px;margin-left:auto}main.dark .mock-button,main.dark .mock-setup select{border-color:#7251b5;background:#34294a;color:#eee7ff}main.dark .summary em{color:#c4a7ff}@media(max-width:700px){.mock-setup{grid-template-columns:1fr}.mock-actions{margin:0}}
+  .backdrop{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;padding:16px;background:#13253699}.dismiss{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}.modal{position:relative;width:min(430px,100%);border:1px solid #cad5dd;border-radius:14px;background:#fff;color:#23313d;padding:18px;box-shadow:0 20px 60px #0005}.modal.wide-modal{width:min(900px,100%);max-height:85vh;display:flex;flex-direction:column}.modal.dark{border-color:#435360;background:#24313c;color:#e1e8ed}.modal header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.modal h2{margin:0}.icon{border:0;background:transparent;font-size:24px;padding:2px 8px;cursor:pointer}.host-actions-modal{display:flex;flex-direction:column;gap:12px;margin-top:10px}.host-actions-modal button{width:100%;font-weight:600}.warning{border-color:#d97706;background:#fef3c7;color:#92400e}.danger{border-color:#dc2626;background:#fee2e2;color:#991b1b}main.dark .warning{border-color:#b45309;background:#451a03;color:#fde68a}main.dark .danger{border-color:#b91c1c;background:#450a0a;color:#fca5a5}.detailed-btn{font-size:13px;padding:5px 10px;min-height:32px}.table-scroll{overflow:auto;max-height:65vh;border-radius:8px;border:1px solid #e2e8f0}main.dark .table-scroll{border-color:#334155}.detailed-table{width:100%;border-collapse:collapse;font-size:13px;text-align:left}.detailed-table th,.detailed-table td{padding:8px 10px;border-bottom:1px solid #e2e8f0;white-space:nowrap}main.dark .detailed-table th,main.dark .detailed-table td{border-bottom-color:#334155}.detailed-table th{background:#f8fafc;position:sticky;top:0;font-weight:600}main.dark .detailed-table th{background:#1e293b}
 </style>
+

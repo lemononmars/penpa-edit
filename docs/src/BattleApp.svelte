@@ -786,9 +786,17 @@
       event.preventDefault();
       return;
     }
-    const accepted = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Backspace", "Delete"];
+    if (["backspace", "delete", " "].includes(event.key.toLowerCase())) {
+      event.preventDefault();
+      return;
+    }
+    const accepted = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
     const parsedDigit = parseDigit(event);
     if (!accepted.includes(event.key) && parsedDigit === null) return;
+    if (event.repeat && parsedDigit !== null) {
+      event.preventDefault();
+      return;
+    }
     const frame = frameWindow(); if (!frame?.document) return;
     if (parsedDigit !== null && frame.SudokuTools?.enterBattleDigit) {
       const mode = event.shiftKey ? "corner" : (event.ctrlKey || event.metaKey) ? "center" : noteMode;
@@ -837,8 +845,14 @@
       chooseBattleNoteMode(key === "z" ? "normal" : key === "x" ? "center" : "corner");
       event.preventDefault(); event.stopImmediatePropagation(); return;
     }
+    if (["backspace", "delete", " "].includes(key)) {
+      event.preventDefault(); event.stopImmediatePropagation(); return;
+    }
     const parsedDigit = parseDigit(event);
     if (parsedDigit !== null) {
+      if (event.repeat) {
+        event.preventDefault(); event.stopImmediatePropagation(); return;
+      }
       const mode = event.shiftKey ? "corner" : (event.ctrlKey || event.metaKey) ? "center" : noteMode;
       frameWindow()?.SudokuTools?.enterBattleDigit?.(parsedDigit, mode, penpaColors[myColor], penpaShades[myColor]);
       event.preventDefault(); event.stopImmediatePropagation(); scheduleInspect();

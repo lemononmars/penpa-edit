@@ -2401,6 +2401,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                 var clue = outsideClueFromEntry(numbers[key]);
                 if (clue !== null) constraints.sandwiches.push({ clue: clue, cells: cells });
             }
+            var sandwichSides = outsideExpansionSides("sandwich");
             for (var sandwichIndex = 0; sandwichIndex < SIZE; sandwichIndex++) {
                 var sandwichColumn = Array.from({ length: SIZE }, function(_, row) {
                     return { row: row, col: sandwichIndex };
@@ -2410,12 +2411,15 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                 });
                 addSandwich((sandwichStartCol + sandwichIndex) +
                     (sandwichStartRow - 1) * puzzle.nx0, sandwichColumn);
-                addSandwich((sandwichStartCol + sandwichIndex) +
-                    (sandwichStartRow + SIZE) * puzzle.nx0, sandwichColumn.slice().reverse());
                 addSandwich((sandwichStartCol - 1) +
                     (sandwichStartRow + sandwichIndex) * puzzle.nx0, sandwichRow);
-                addSandwich((sandwichStartCol + SIZE) +
-                    (sandwichStartRow + sandwichIndex) * puzzle.nx0, sandwichRow.slice().reverse());
+                if (sandwichSides.indexOf("bottom") !== -1 &&
+                    sandwichSides.indexOf("right") !== -1) {
+                    addSandwich((sandwichStartCol + sandwichIndex) +
+                        (sandwichStartRow + SIZE) * puzzle.nx0, sandwichColumn.slice().reverse());
+                    addSandwich((sandwichStartCol + SIZE) +
+                        (sandwichStartRow + sandwichIndex) * puzzle.nx0, sandwichRow.slice().reverse());
+                }
             }
             constraints.supported.push("sandwich");
         }
@@ -3434,7 +3438,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
     function outsideExpansionSides(variant) {
         if (variant === "triplesum") return ["left"];
         var topLeftOnly = [
-            "xsums", "starproduct", "edgedifference", "evensandwich", "oddsandwich",
+            "sandwich", "starproduct", "edgedifference", "evensandwich", "oddsandwich",
             "before9", "before1after9", "nextto9", "outsideconsecutive",
             "outsidekiller", "parityskyscrapers", "positionsums",
             "japanesesums", "oddsums", "bigsmalljapanesesums", "partitionedsums"
@@ -3751,9 +3755,10 @@ var SudokuTools = (function() {
         if (solveOnceTimer !== null) clearTimeout(solveOnceTimer);
         solveOnceTimer = null;
         if (solveOnceWorker) solveOnceWorker.terminate();
-        solveOnceWorker = null;
         solveOnceGeneration++;
-        document.body.classList.remove("sudoku-solve-check-running");
+        if (typeof document !== "undefined" && document.body && document.body.classList) {
+            document.body.classList.remove("sudoku-solve-check-running");
+        }
     }
 
     function scheduleSolveOnceCheck(puzzle, immediate) {
@@ -4085,13 +4090,17 @@ var SudokuTools = (function() {
         var lineList = result.lineMarks || (result.marks && result.marks.lines) || [];
 
         function ensureOutsideClueSpace(marks) {
-            if (!marks.length || !Array.isArray(pu.space)) return;
+            if (!pu || !Array.isArray(pu.space)) return;
             var sides = ["top", "bottom", "left", "right"];
             var operations = ["resize_top", "resize_bottom", "resize_left", "resize_right"];
             sides.forEach(function(side, index) {
-                if (!marks.some(function(mark) { return mark.side === side; })) return;
-                if (Number(pu.space[index] || 0) > 0 || typeof pu[operations[index]] !== "function") return;
-                pu[operations[index]](1, "white");
+                var needed = (marks || []).some(function(mark) { return mark.side === side; });
+                var current = Number(pu.space[index] || 0);
+                if (needed && current === 0 && typeof pu[operations[index]] === "function") {
+                    pu[operations[index]](1, "white");
+                } else if (!needed && current > 0 && typeof pu[operations[index]] === "function") {
+                    while (current-- > 0) pu[operations[index]](-1, "white");
+                }
             });
         }
         ensureOutsideClueSpace(outsideList);
@@ -4276,30 +4285,41 @@ var SudokuTools = (function() {
     function prepareBattleGrid(size, variants) {
         size = Number(size) === 6 ? 6 : 9;
         variants = Array.isArray(variants) ? variants : ["classic"];
-        var fourSidesVariants = ["skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"];
+        var fourSidesVariants = ["skyscraper", "numberedrooms", "rossini", "xsums", "x-sums", "sumframe"];
+        var topLeftVariants = [
+            "sandwich", "starproduct", "edgedifference", "evensandwich", "oddsandwich",
+            "before9", "before1after9", "nextto9", "outsideconsecutive",
+            "outsidekiller", "parityskyscrapers", "positionsums",
+            "japanesesums", "oddsums", "bigsmalljapanesesums", "partitionedsums", "triplesum"
+        ];
         var needsFourSides = variants.some(function(variant) { return fourSidesVariants.indexOf(variant) !== -1; });
-        var needsTopLeft = variants.some(function(variant) {
-            var sides = SudokuSolver.outsideExpansionSides(variant);
-            return sides.indexOf("top") !== -1 || sides.indexOf("left") !== -1;
-        });
+        var needsTopLeft = variants.some(function(variant) { return topLeftVariants.indexOf(variant) !== -1; });
         var rows = byId("nb_size1");
         var columns = byId("nb_size2");
         if (rows) rows.value = String(size);
         if (columns) columns.value = String(size);
-        window.sudotokuNewGridSize = size;
-        ["nb_sudoku5", "nb_sudoku6", "nb_sudoku8"].forEach(function(id) {
+        if (typeof window !== "undefined") window.sudotokuNewGridSize = size;
+        ["nb_sudoku1", "nb_sudoku4", "nb_sudoku5", "nb_sudoku6", "nb_sudoku8"].forEach(function(id) {
             var option = byId(id);
-            if (option) option.checked = id === "nb_sudoku5" && size === 6;
+            if (option) {
+                if (id === "nb_sudoku1") option.checked = variants.indexOf("diagonal") !== -1;
+                else if (id === "nb_sudoku4") option.checked = variants.indexOf("antidiagonal") !== -1 || variants.indexOf("anti diagonal") !== -1;
+                else option.checked = id === "nb_sudoku5" && size === 6;
+            }
         });
         var outsideOption = byId("nb_sudoku2");
         var topLeftOption = byId("nb_sudoku3");
         if (outsideOption) outsideOption.checked = needsFourSides;
         if (topLeftOption) topLeftOption.checked = !needsFourSides && needsTopLeft;
+        ["nb_space1", "nb_space2", "nb_space3", "nb_space4"].forEach(function(id) {
+            var field = byId(id);
+            if (field) field.value = "0";
+        });
         resetForNewGrid();
         if (typeof create_newboard === "function") create_newboard();
         if (typeof pu !== "undefined" && pu) {
             pu.battleMode = true;
-            window.isBattleMode = true;
+            if (typeof window !== "undefined") window.isBattleMode = true;
             if (pu.mode && pu.mode.pu_a) {
                 if (pu.mode.pu_a.sudoku) pu.mode.pu_a.sudoku[1] = 1;
                 if (pu.mode.pu_a.number) pu.mode.pu_a.number[1] = 1;
@@ -6024,5 +6044,7 @@ if (typeof window !== "undefined") {
 }
 
 if (typeof module !== "undefined" && module.exports) {
+    SudokuSolver.prepareBattleGrid = SudokuTools.prepareBattleGrid;
+    SudokuSolver.SudokuTools = SudokuTools;
     module.exports = SudokuSolver;
 }

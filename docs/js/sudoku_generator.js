@@ -86,7 +86,7 @@ var SudokuGenerator = (function() {
         }
         variants.forEach(function(variant) {
             if (["xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"].indexOf(variant) === -1) return;
-            var targetSides = variant === "xsums" ? ["top", "left"] : sides;
+            var targetSides = variant === "sandwich" ? ["top", "left"] : sides;
             targetSides.forEach(function(side) {
                 for (var index = 0; index < size; index++) {
                     var cells = sightline(side, index);

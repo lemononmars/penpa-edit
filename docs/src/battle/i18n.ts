@@ -50,6 +50,11 @@ const messages = {
     notificationPermissionDenied: "Notification permission denied.",
     playerJoinedNotification: "A player joined your room!",
     notifyActive: "Watching for new players…",
+    resetTournament: "Reset tournament",
+    resetTournamentConfirm: "Are you sure you want to reset the tournament? All rounds and match progress will be cleared.",
+    abortTournament: "Abort tournament",
+    abortTournamentConfirm: "Are you sure you want to abort this tournament?",
+    detailedResults: "Detailed results",
   },
   th: {
     settings: "การตั้งค่า", displayName: "ชื่อที่แสดง", save: "บันทึก", cancel: "ยกเลิก",
@@ -97,6 +102,11 @@ const messages = {
     notificationPermissionDenied: "ถูกปฏิเสธการแจ้งเตือนจากเบราว์เซอร์",
     playerJoinedNotification: "มีผู้เล่นเข้าร่วมห้องของคุณ!",
     notifyActive: "กำลังรอผู้เล่นใหม่…",
+    resetTournament: "รีเซ็ตการแข่งขัน",
+    resetTournamentConfirm: "คุณแน่ใจหรือไม่ที่จะรีเซ็ตการแข่งขัน? รอบและผลการแข่งขันทั้งหมดจะถูกล้าง",
+    abortTournament: "ยุติการแข่งขัน",
+    abortTournamentConfirm: "คุณแน่ใจหรือไม่ที่จะยุติการแข่งขันนี้?",
+    detailedResults: "ผลการแข่งขันแบบละเอียด",
   },
 };
 

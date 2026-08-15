@@ -5143,13 +5143,13 @@ test("outside scratch generation derives a full clue from every side of a solved
         Array.from({ length: 9 }, (_, col) => ((row * 3 + Math.floor(row / 3) + col) % 9) + 1));
     ["xsums", "skyscraper", "numberedrooms", "rossini", "sandwich", "sumframe"].forEach(function(variant) {
         const generated = SudokuGenerator.outsideCluesForSolution(solution, [variant]);
-        const expectedCount = variant === "xsums" ? 18 : 36;
-        const expectedSides = variant === "xsums" ? new Set(["top", "left"]) : new Set(["top", "bottom", "left", "right"]);
+        const expectedCount = variant === "sandwich" ? 18 : 36;
+        const expectedSides = variant === "sandwich" ? new Set(["top", "left"]) : new Set(["top", "bottom", "left", "right"]);
         assert.equal(generated.marks.length, expectedCount, variant + " clue count");
         assert.deepEqual(new Set(generated.marks.map((mark) => mark.side)), expectedSides);
         if (variant === "rossini") assert.equal(generated.constraints.rossiniLines.length, 36);
         else if (variant === "skyscraper") assert.equal(generated.constraints.skyscrapers.length, 36);
-        else if (variant === "sandwich") assert.equal(generated.constraints.sandwiches.length, 36);
+        else if (variant === "sandwich") assert.equal(generated.constraints.sandwiches.length, 18);
         else assert.equal(generated.constraints.outsideRelations.length, expectedCount);
     });
 });
@@ -5165,7 +5165,7 @@ test("outside scratch variants prune digits and remain uniquely solvable", funct
         });
         const answers = SudokuCSP.createProblem(generated.board, generated.constraints).enumerateAnswers(2);
         assert.ok(generated.givens < 81, variant + " should prune solved-grid digits");
-        const expectedMarksCount = variant === "xsums" ? 18 : 36;
+        const expectedMarksCount = variant === "sandwich" ? 18 : 36;
         assert.equal(generated.outsideMarks.length, expectedMarksCount, variant + " should retain every outside position");
         assert.equal(answers.length, 1, variant);
         assert.deepEqual(answers[0], generated.solution, variant);

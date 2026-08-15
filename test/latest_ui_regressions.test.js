@@ -144,3 +144,69 @@ test("translation initializer and its removed legacy language setting are no lon
     assert.match(index, /\.\/js\/penpa_text\.js/);
     assert.doesNotMatch(index, /id="language_opt"/);
 });
+
+test("x-sums expands to 4 directions while sandwich expands only to top and left", function() {
+    assert.deepEqual(solverModule.outsideExpansionSides("xsums"), ["top", "bottom", "left", "right"]);
+    assert.deepEqual(solverModule.outsideExpansionSides("sandwich"), ["top", "left"]);
+});
+
+test("battle prepare grid sets outside options only for outside variants and keeps classic clean", function() {
+    const fakeElements = {};
+    global.document = {
+        body: { classList: { add() {}, remove() {}, contains() { return false; }, toggle() {} } },
+        getElementById(id) {
+            if (!fakeElements[id]) fakeElements[id] = {
+                value: "", checked: false,
+                setAttribute() {}, removeAttribute() {},
+                style: {}, classList: { add() {}, remove() {}, toggle() {} },
+                querySelector() { return null; }, querySelectorAll() { return []; }
+            };
+            return fakeElements[id];
+        }
+    };
+    global.create_newboard = () => {};
+    global.resetForNewGrid = () => {};
+    global.pu = { pu_q: { number: {}, symbol: {} }, pu_a: { number: {}, symbol: {} }, redraw() {} };
+
+    solverModule.prepareBattleGrid(9, ["classic"]);
+    assert.equal(fakeElements["nb_sudoku2"].checked, false, "classic should not have 4-sided outside space");
+    assert.equal(fakeElements["nb_sudoku3"].checked, false, "classic should not have top/left outside space");
+
+    solverModule.prepareBattleGrid(9, ["classic", "xsums"]);
+    assert.equal(fakeElements["nb_sudoku2"].checked, true, "x-sums should have 4-sided outside space");
+    assert.equal(fakeElements["nb_sudoku3"].checked, false);
+
+    solverModule.prepareBattleGrid(9, ["classic", "sandwich"]);
+    assert.equal(fakeElements["nb_sudoku2"].checked, false);
+    assert.equal(fakeElements["nb_sudoku3"].checked, true, "sandwich should have top/left outside space");
+});
+
+test("restoreGeneratedMarks shrinks unneeded margins and keeps only required outside space", function() {
+    let spaces = [1, 1, 1, 1];
+    global.pu = {
+        space: spaces,
+        pu_q: { number: {}, symbol: {} },
+        pu_a: { number: {}, symbol: {} },
+        resize_top(delta) { spaces[0] += delta; },
+        resize_bottom(delta) { spaces[1] += delta; },
+        resize_left(delta) { spaces[2] += delta; },
+        resize_right(delta) { spaces[3] += delta; },
+        redraw() {}
+    };
+
+    // For Sandwich, only top and left are needed, bottom and right shrink to 0
+    solverModule.SudokuTools.restoreGeneratedMarks({
+        outsideMarks: [
+            { side: "top", index: 0, value: 10 },
+            { side: "left", index: 0, value: 15 }
+        ]
+    });
+    assert.deepEqual(spaces, [1, 0, 1, 0], "Sandwich should only have top and left space");
+
+    // For Classic, no outside marks are needed, all shrink to 0
+    solverModule.SudokuTools.restoreGeneratedMarks({
+        outsideMarks: []
+    });
+    assert.deepEqual(spaces, [0, 0, 0, 0], "Classic should have 0 outside space");
+});
+

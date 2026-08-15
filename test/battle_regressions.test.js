@@ -28,6 +28,7 @@ const botLifecycleMigration = fs.readFileSync(path.join(root, "supabase/migratio
 const names = fs.readFileSync(path.join(root, "docs/src/battle/names.ts"), "utf8");
 const vite = fs.readFileSync(path.join(root, "vite.config.js"), "utf8");
 const generator = fs.readFileSync(path.join(root, "docs/js/sudoku_generator.js"), "utf8");
+const classP = fs.readFileSync(path.join(root, "docs/js/class_p.js"), "utf8");
 
 test("battle is a production page backed by the existing Penpa board", () => {
   assert.match(vite, /envDir:\s*resolve\(process\.cwd\(\)\)/);
@@ -342,3 +343,23 @@ test("tournament hosting has its own route and Battle no longer links to tournam
   assert.match(tournament, /href="\.\/host\/"/);
   assert.doesNotMatch(battle, /href="\.\/tournament\/"/);
 });
+
+test("battle keyboard input ignores longpress repeat on digits and prevents erasing digits with keyboard", () => {
+  assert.match(battle, /if\s*\(event\.repeat\s*&&\s*parsedDigit\s*!==\s*null\)\s*\{\s*event\.preventDefault\(\)/);
+  assert.match(battle, /if\s*\(\["backspace",\s*"delete",\s*" "\s*\]\.includes\(event\.key\.toLowerCase\(\)\)\)\s*\{\s*event\.preventDefault\(\);\s*return;\s*\}/);
+  assert.match(battle, /if\s*\(\["backspace",\s*"delete",\s*" "\s*\]\.includes\(key\)\)\s*\{\s*event\.preventDefault\(\);\s*event\.stopImmediatePropagation\(\);\s*return;\s*\}/);
+  assert.match(classP, /if\s*\(!\(this\.battleMode\s*\|\|\s*window\.isBattleMode\)\)\s*\{\s*delete this\[this\.mode\.qa\]\.number\[k\];\s*\}/);
+});
+
+test("tournament host page hides back link, provides reset/abort settings with confirmation, and shows detailed results modal", () => {
+  assert.match(tournament, /\{#if !hostMode\}<a href="\/battle\/">/);
+  assert.match(tournament, /\{#if settingsOpen && hostMode\}/);
+  assert.match(tournament, /window\.confirm\(t\("resetTournamentConfirm"\)\)/);
+  assert.match(tournament, /window\.confirm\(t\("abortTournamentConfirm"\)\)/);
+  assert.match(tournament, /detailedResultsOpen/);
+  assert.match(tournament, /class="detailed-table"/);
+  assert.match(battleI18n, /resetTournamentConfirm/);
+  assert.match(battleI18n, /abortTournamentConfirm/);
+  assert.match(battleI18n, /detailedResults/);
+});
+

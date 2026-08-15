@@ -1504,13 +1504,17 @@
     (window as any).sudotokuNewGridSize = newGridSize;
     // Native Penpa selects the Sudoku box layout through these hidden size
     // switches. The numeric fields alone are ignored for a new Sudoku grid.
-    ["nb_sudoku5", "nb_sudoku6", "nb_sudoku8"].forEach((id) => {
+    ["nb_sudoku1", "nb_sudoku2", "nb_sudoku3", "nb_sudoku4", "nb_sudoku5", "nb_sudoku6", "nb_sudoku8"].forEach((id) => {
       const option = document.getElementById(id) as HTMLInputElement | null;
       if (option) {
         option.checked =
           (id === "nb_sudoku5" && newGridSize === 6) ||
           (id === "nb_sudoku6" && newGridSize === 8);
       }
+    });
+    ["nb_space1", "nb_space2", "nb_space3", "nb_space4"].forEach((id) => {
+      const field = document.getElementById(id) as HTMLInputElement | null;
+      if (field) field.value = "0";
     });
     if (!keepVariants) {
       (window as any).SudokuTools?.resetForNewGrid?.();

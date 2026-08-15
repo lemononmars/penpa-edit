@@ -7810,8 +7810,10 @@ class Puzzle {
         let submode = this.mode[this.mode.qa][edit_mode];
         let orientation = submode[2] && submode[2] !== 'R' ? [submode[2]] : [];
 
-        if ((key === "0" || key === 0) && (edit_mode === "sudoku" || this.gridtype === "sudoku")) {
-            return;
+        if ((key === "0" || key === 0) && edit_mode === "sudoku") {
+            if (!this.activeSudokuVariants || (!this.activeSudokuVariants.includes("0to8") && !this.activeSudokuVariants.includes("08arrow") && !this.activeSudokuVariants.includes("08skyscrapers"))) {
+                return;
+            }
         }
 
         // If ZXCV is disabled
@@ -8128,7 +8130,9 @@ class Puzzle {
 
                                 this.record("number", k, this.undoredo_counter);
                                 if (this[this.mode.qa].number[k] && this[this.mode.qa].number[k][2] === 1 && this[this.mode.qa].number[k][0] === key) {
-                                    delete this[this.mode.qa].number[k];
+                                    if (!(this.battleMode || window.isBattleMode)) {
+                                        delete this[this.mode.qa].number[k];
+                                    }
                                 } else {
                                     this[this.mode.qa].number[k] = [key, submode[1], "1"]; // Normal submode is 1
                                 }
@@ -8540,9 +8544,11 @@ class Puzzle {
                     if (!ctrl_key && !shift_key) {
                         for (var k of this.selection) {
                             if (this[this.mode.qa].number[k]) {
-                                this.record("number", k, this.undoredo_counter);
-                                delete this[this.mode.qa].number[k];
-                                this.record_replay("number", k, this.undoredo_counter);
+                                if (!(this.battleMode || window.isBattleMode)) {
+                                    this.record("number", k, this.undoredo_counter);
+                                    delete this[this.mode.qa].number[k];
+                                    this.record_replay("number", k, this.undoredo_counter);
+                                }
                             }
 
                             var corner_cursor = 4 * (k + this.nx0 * this.ny0);
