@@ -1,0 +1,1155 @@
+const fs = require('fs');
+const path = require('path');
+
+const targetFile = 'C:/Users/sakul_bp6myy0/OneDrive/Downloads/Puzzles/CB Puzzle Contest/2026/pb/logic_showcase.tex';
+
+const tex = `% =========================================================================
+% LOGIC SHOWCASE COMPENDIUM SECTION (LS 49 to LS 75)
+% Code Breaker Logic Puzzle Contest II
+% Mathematically verified, consistent cell sizes:
+% \\cellsizeS = 4.5mm (small / > 12 cols)
+% \\cellsizeM = 6.0mm (medium / <= 12 cols)
+% \\cellsizeL = 7.0mm (large)
+% =========================================================================
+
+\\ifdefined\\cellsizeS\\else
+  \\newlength{\\cellsizeS}\\setlength{\\cellsizeS}{4.5mm}
+\\fi
+\\ifdefined\\cellsizeM\\else
+  \\newlength{\\cellsizeM}\\setlength{\\cellsizeM}{6.0mm}
+\\fi
+\\ifdefined\\cellsizeL\\else
+  \\newlength{\\cellsizeL}\\setlength{\\cellsizeL}{7.0mm}
+\\fi
+\\ifdefined\\cellsize\\else
+  \\newlength{\\cellsize}\\setlength{\\cellsize}{\\cellsizeS}
+\\fi
+
+% Helper for Noticeable Section Headers (Theme: blue7)
+\\newcommand{\\showcaseheader}[2]{%
+  \\begin{tcolorbox}[
+    colback=white,
+    colframe=blue7,
+    boxrule=1.0pt,
+    arc=1.5mm,
+    left=3.5mm, right=3.5mm, top=2mm, bottom=2.5mm,
+    before=\\vspace{0.5mm}, after=\\vspace{2.5mm},
+    title={\\textbf{\\large\\color{white} #1}},
+    colbacktitle=blue7,
+    titlerule=0pt
+  ]
+    \\raggedright
+    {\\footnotesize\\color{black!90} #2}
+  \\end{tcolorbox}%
+}
+
+\\newcommand{\\showcaseheadermini}[2]{%
+  \\begin{tcolorbox}[
+    colback=white,
+    colframe=blue7,
+    boxrule=0.8pt,
+    arc=1.2mm,
+    left=2.5mm, right=2.5mm, top=1.2mm, bottom=1.5mm,
+    before=\\vspace{0.3mm}, after=\\vspace{1.5mm},
+    title={\\textbf{\\normalsize\\color{white} #1}},
+    colbacktitle=blue7,
+    titlerule=0pt
+  ]
+    \\raggedright
+    {\\scriptsize\\color{black!90} #2}
+  \\end{tcolorbox}%
+}
+
+% Standardized Table Header for Individual Puzzles (Theme: blue7, 2 columns, no LS XX)
+\\newcommand{\\lshead}[2]{%
+  \\noindent
+  \\begin{tblr}{
+    colspec={|X[1.2,c,m,blue7]|X[6,c,m]|}, 
+    hline{1} = {1}{-}{solid}, 
+    hline{2} = {2}{-}{solid},
+    rows = {valign = m, abovesep=1.5pt, belowsep=1.5pt},
+    width = \\linewidth
+  }
+  \\SetCell{fg=white, font=\\bfseries} #1 & \\SetCell{font=\\bfseries} #2
+  \\end{tblr}%
+  \\par\\vspace{1.2mm}%
+}
+\\newcommand{\\lsheads}[2]{\\lshead{#1}{#2}}
+\\newcommand{\\lsheadmini}[2]{\\lshead{#1}{#2}}
+
+% Online Interactive Callout Box for 6.5, 6.6, 6.7
+\\newcommand{\\onlinecallout}[1]{%
+  \\begin{tcolorbox}[
+    colback=blue7!8,
+    colframe=blue7,
+    boxrule=0.6pt,
+    arc=1.0mm,
+    left=2.5mm, right=2.5mm, top=1.5mm, bottom=1.5mm,
+    before=\\vspace{1mm}, after=\\vspace{1.5mm}
+  ]
+    \\scriptsize\\raggedright
+    \\textbf{Online Interactive Puzzle:} This grid contains dynamic/interactive mechanics and is designed to be solved digitally via Penpa+:\\\\
+    \\url{#1}
+  \\end{tcolorbox}%
+}
+
+\\fancyfoot[r]{\\footnotesize Section 6: Logic Showcase}
+\\thispagestyle{empty}
+
+\\phantomsection
+\\addcontentsline{toc}{section}{Section 6: Logic Showcase}
+
+% =========================================================================
+% PAGE 1: TITLE & COMPENDIUM OVERVIEW
+% =========================================================================
+\\begin{center}
+\\begin{tblr}{
+colspec={X[1,blue4]X[1,blue6]X[1,blue8]X[24,c]X[1,blue8]X[1,blue6]X[1,blue4]}, 
+hline{1} = {1}{-}{solid},
+hline{2} = {2}{-}{solid},
+rows = {m,14mm}
+}
+&&& \\SetCell{font=\\Large\\bfseries} Section 6: Logic Showcase &&&
+\\end{tblr}
+\\end{center}
+
+\\vspace{4mm}
+
+\\begin{tcolorbox}[
+  colback=blue7!6,
+  colframe=blue7,
+  boxrule=1.2pt,
+  arc=2mm,
+  left=5mm, right=5mm, top=4mm, bottom=4mm,
+  title={\\textbf{\\large\\color{white} The Logic Showcase Archive: Innovative Horizons in Grid Deduction}},
+  colbacktitle=blue7,
+  titlerule=0pt
+]
+\\normalsize
+The \\textbf{Logic Showcase} series represents a dedicated exploration of boundary-pushing puzzle design. Originating as a sequence of experimental contest exhibition pieces, these puzzles depart from standard orthodox Nikoli constraints to introduce novel topological interactions, directional sightlines, dynamic clues, and inverted deductive mechanics.
+
+\\medskip
+From \\textbf{LS 49} to \\textbf{LS 75}, each installment challenges experienced solvers to reconceptualize familiar genres:
+\\begin{itemize}
+  \\setlength{\\itemsep}{2pt}
+  \\item \\textbf{Inverted \\& Dual Perspectives}: Explore twilight shading where black and white cells swap classical roles, and polygraph puzzles where truth and deception govern line logic.
+  \\item \\textbf{Geometric Topology \\& Interconnection}: Master rigid L-tromino packings, continuous line-crossing foreshadows, and multi-grid connected loop networks.
+  \\item \\textbf{Dynamic \\& Cipher Deduction}: Solve coordinate treasure hunts, directional myopia vectors, thermal gradient blocks, and the mysterious \\textit{Irrwisch} cipher finale.
+\\end{itemize}
+
+\\medskip
+Every grid in this compendium has been rigorously constructed with computer verification to guarantee unique solvability and an aesthetically pristine deductive progression.
+\\end{tcolorbox}
+
+\\vfill
+
+\\begin{center}
+\\begin{tblr}{
+  colspec = {Q[c,m,45mm]Q[c,m,45mm]Q[c,m,45mm]},
+  hlines = {1pt, blue7},
+  vlines = {1pt, blue7},
+  row{1} = {bg=blue7, font=\\bfseries\\color{white}},
+  rows = {abovesep=3pt, belowsep=3pt}
+}
+Curated Exhibits & Tournament Puzzles & Primary Grid Formats \\\\
+\\textbf{27 Showcases} & \\textbf{47 Challenges} & \\textbf{Hybrid \\& Inversion} \\\\
+\\end{tblr}
+\\end{center}
+
+\\vspace{8mm}
+
+\\newpage
+
+% =========================================================================
+% PAGE 2: CATALOG & MASTER INDEX (LS 49 - LS 75)
+% =========================================================================
+\\begin{center}
+{\\Large \\textbf{\\color{blue7}Logic Showcase Catalog \\& Index (LS 49 -- LS 75)}}\\\\[2mm]
+{\\color{blue7}\\rule{0.5\\textwidth}{0.8pt}}
+\\end{center}
+\\vspace{1mm}
+
+\\begin{center}
+\\small
+\\begin{tblr}{
+  colspec = {Q[c,m,12mm]X[l,m]Q[c,m,12mm]X[l,m]},
+  width = 0.96\\textwidth,
+  hlines = {0.5pt, gray!50},
+  vlines = {0.5pt, gray!50},
+  row{1} = {bg=blue7, font=\\bfseries\\color{white}},
+  column{1} = {font=\\bfseries\\color{blue7}},
+  column{3} = {font=\\bfseries\\color{blue7}},
+  rows = {abovesep=2.2pt, belowsep=2.2pt}
+}
+ & Showcase Title & & Showcase Title \\\\
+LS 49 & Twilight Canal View, Twilight Kurodoko & LS 63 & Slitherlink (Full) + Turnaround (Full) \\\\
+LS 50 & L-Voxas, L-Dots & LS 64 & Mirror Loop (Reflective Geometry) \\\\
+LS 51 & Skyscrapers, Slitherlink, Treasure Hunt & LS 65 & Reprising LS39: Tapa Rope \\\\
+LS 52 & Foreshadow Crossing, Remembered Choco & LS 66 & Canal View (Disco) \\\\
+LS 53 & Pentominous (Outside Clues) & LS 67 & Pentominous (Partial), CB Inequality \\\\
+LS 54 & Guide Exit, Ice Walk (Delayed) & LS 68 & Pattern Square (Size, CTS) \\\\
+LS 55 & Kurotto Banana, Disorderly Tapa Loop & LS 69 & Yajiring-ring \\\\
+LS 57 & Instructionless Deduction & LS 70 & Alphabet Asp \\\\
+LS 58 & Statue Park Triad (I, II, III) & LS 71 & Choco Banana Tower (50 Stories) \\\\
+LS 59 & Territory, Choco Banana, Balance Loop & LS 72 & Pencils (Look-Air Sightlines) \\\\
+LS 60 & Canal View (Connected), Masyu (Connected) & LS 73 & Pentominous (Myopia) \\\\
+LS 61 & Contact Polyominoes (3 Grids) & LS 74 & Choco Banana (Thermo) \\\\
+LS 61 & Rampage Loop Series (3 Grids) & LS 75 & Pentominous Irrwisch (Cipher Finale) \\\\
+LS 61 & Turnaround Series (Spiral, 9x9, 12x12) & & \\\\
+\\end{tblr}
+\\end{center}
+
+\\newpage
+
+% =========================================================================
+% PAGE 3: LS 49
+% =========================================================================
+\\showcaseheader{LS 49: Twilight Inversions}{Inverted perspective deductions where shaded and unshaded cells swap classical roles in Canal View and diagonal-sightline Kurodoko.}
+
+\\lshead{6.1}{Twilight Canal View}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:}
+\\begin{itemize}
+  \\setlength{\\itemsep}{1pt}
+  \\item Shade some cells so all shaded cells form one connected area without 2$\\times$2 shaded squares.
+  \\item An unshaded clue indicates the number of shaded cells in a contiguous line starting from that cell in the four cardinal directions.
+  \\item A shaded clue indicates the number of unshaded cells in a contiguous line starting from that cell in the four cardinal directions.
+\\end{itemize}
+\\vspace{1.5mm}
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example (6$\\times$6)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls49_twilight_canal_view_example.pdf}
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example Solution}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls49_twilight_canal_view_example_solution.pdf}
+\\end{minipage}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls49_twilight_canal_view_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{2.5mm}
+\\hrule
+\\vspace{2.5mm}
+
+\\lshead{6.2}{Twilight Kurodoko / Kurodoko (Diagonal)}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:}
+\\begin{itemize}
+  \\setlength{\\itemsep}{1pt}
+  \\item Shade some cells so all unshaded cells form one connected area. Shaded cells cannot be orthogonally adjacent.
+  \\item An unshaded clue indicates the number of unshaded cells seen horizontally or vertically, including itself.
+  \\item A shaded clue indicates the number of shaded cells seen diagonally, including itself.
+\\end{itemize}
+\\vspace{1.5mm}
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example (6$\\times$6)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls49_twilight_kurodoko_example.pdf}
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example Solution}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls49_twilight_kurodoko_example_solution.pdf}
+\\end{minipage}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls49_twilight_kurodoko_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 4: LS 50
+% =========================================================================
+\\showcaseheader{LS 50: L-Shape Geometric Constraints}{Rigid polyomino and sightline interactions featuring non-overlapping L-trominoes and orthogonal dot-distance parity.}
+
+\\lshead{6.3}{L-Voxas}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:}
+\\begin{itemize}
+  \\setlength{\\itemsep}{1pt}
+  \\item Place non-overlapping L-trominoes (3 cells in an L-shape) onto the grid.
+  \\item Clues indicate the number of L-tromino cells in the corresponding row or column.
+  \\item L-trominoes may touch at edges or corners.
+\\end{itemize}
+\\vspace{1.5mm}
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example (6$\\times$6)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls50_l_voxas_example.pdf}
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example Solution}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls50_l_voxas_example_solution.pdf}
+\\end{minipage}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls50_l_voxas_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{2.5mm}
+\\hrule
+\\vspace{2.5mm}
+
+\\lshead{6.4}{L-Dots}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:}
+\\begin{itemize}
+  \\setlength{\\itemsep}{1pt}
+  \\item Place non-overlapping L-trominoes (3 cells in an L-shape) onto the grid.
+  \\item Black dots lie on the boundary between two adjacent cells belonging to the same L-tromino.
+  \\item White dots lie on the boundary between two cells belonging to different L-trominoes.
+\\end{itemize}
+\\vspace{1.5mm}
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example (6$\\times$6)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls50_l_dots_example.pdf}
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example Solution}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls50_l_dots_example_solution.pdf}
+\\end{minipage}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls50_l_dots_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 5: LS 51 (Interactive Candidate Arrows & Polygraph)
+% =========================================================================
+\\enlargethispage{1.2cm}
+\\showcaseheader{LS 51: Logic Games from Swaroop Guggilam (Part I)}{Interactive pencil-marking paradigms and truth-table loops in Skyscrapers and Slitherlink Polygraph.}
+
+\\lshead{6.5}{Skyscrapers (Candidate Arrows)}
+
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Standard Skyscrapers rules. Clues outside the grid indicate the number of visible buildings along that row or column. Arrows show relative height comparisons between adjacent cells.
+\\onlinecallout{https://tinyurl.com/264p8kdf}
+\\vspace{1mm}
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 5\\cellsizeS\\relax]{ls51_skyscrapers_example.pdf}
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example Solution}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 5\\cellsizeS\\relax]{ls51_skyscrapers_example_solution.pdf}
+\\end{minipage}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.50\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (18$\\times$18)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 18\\cellsizeS\\relax]{ls51_skyscrapers_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{1.5mm}
+\\hrule
+\\vspace{1.5mm}
+
+\\lshead{6.6}{Slitherlink (Polygraph)}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Draw a single closed non-intersecting loop along grid lines. Numbers indicate how many of the 4 surrounding edges are part of the loop. Clues labeled T (True) are accurate; clues labeled F (False) are strictly inaccurate.
+\\onlinecallout{https://tinyurl.com/2d8t9776}
+\\vspace{1mm}
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls51_slitherlink_polygraph_example.pdf}
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example Solution}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls51_slitherlink_polygraph_example_solution.pdf}
+\\end{minipage}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls51_slitherlink_polygraph_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 6: LS 51 & LS 52
+% =========================================================================
+\\enlargethispage{1.2cm}
+\\showcaseheadermini{LS 51: Choco Banana Treasure Hunt}{Dynamic coordinate matching between shaded letter pairs and peripheral targets.}
+\\lshead{6.7}{Choco Banana Treasure Hunt}
+
+\\begin{minipage}[t]{0.54\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Standard Choco Banana rules apply (shaded areas rectangular, unshaded non-rectangular). Letter clues must be shaded into corresponding coordinate pairs matching peripheral targets around the grid.
+\\onlinecallout{https://tinyurl.com/264p8kdf}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.44\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (15$\\times$15)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 15\\cellsizeS\\relax]{ls51_choco_banana_treasure_hunt_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{1.5mm}
+\\hrule
+\\vspace{1.5mm}
+
+\\showcaseheadermini{LS 52: Foreshadow Crossing \\& Remembered Choco}{Anticipatory line-crossing intersections and memory-dependent island boundaries.}
+\\lshead{6.8}{Foreshadow Crossing}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Draw a single continuous loop along grid edges. Whenever two line segments cross orthogonally at a grid intersection, the clue foreshadows the exact distance to the next orthogonal crossing point.
+\\vspace{1.5mm}
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls52_foreshadow_crossing_example.pdf}
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example Solution}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls52_foreshadow_crossing_example_solution.pdf}
+\\end{minipage}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls52_foreshadow_crossing_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 7: LS 52 & LS 53
+% =========================================================================
+\\enlargethispage{1.2cm}
+\\lshead{6.9}{Remembered Choco Frozen Banana}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Shade some cells so that all shaded cells form rectangular chocolate blocks, and all unshaded cells form non-rectangular banana regions. Circled clues freeze surrounding cells into uniform shading parity, remembering their initial state across deductions.
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls52_remembered_choco_frozen_banana_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{1.5mm}
+\\hrule
+\\vspace{1.5mm}
+
+\\showcaseheadermini{LS 53: Pentominous (Outside Clues)}{Border clue sequences specifying the precise order of pentomino regions encountered in that row or column.}
+\\lshead{6.10}{Pentominous (Outside Clues)}
+
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Divide the grid into pentominoes (5 cells each). Matching pentominoes cannot touch orthogonally. Clues outside indicate the sequence of pentomino letters appearing in that row or column from that direction.
+\\vspace{1.5mm}
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 9\\cellsizeS\\relax]{ls53_pentominous_outside_example.pdf}
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example Solution}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 9\\cellsizeS\\relax]{ls53_pentominous_outside_example_solution.pdf}
+\\end{minipage}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.50\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (18$\\times$18)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 18\\cellsizeS\\relax]{ls53_pentominous_outside_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 8: LS 54
+% =========================================================================
+\\enlargethispage{1.2cm}
+\\showcaseheader{LS 54: Directional Escape \\& Inertial Movement}{Guided escape pathways and momentum-based directional turning across iced terrain.}
+
+\\lshead{6.11}{Guide Exit}
+
+\\begin{minipage}[t]{0.52\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Find an escape path from the starting cell to the exit. Arrows direct movement: upon entering an arrow cell, the solver must proceed in the indicated direction. The path may not revisit visited cells.
+\\vspace{1.5mm}
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 7\\cellsizeS\\relax]{ls54_guide_exit_example.pdf}
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example Solution}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 7\\cellsizeS\\relax]{ls54_guide_exit_example_solution.pdf}
+\\end{minipage}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.46\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (12$\\times$12)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 12\\cellsizeM\\relax]{ls54_guide_exit_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{1.5mm}
+\\hrule
+\\vspace{1.5mm}
+
+\\lshead{6.12}{Ice Walk (Delayed)}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Draw a path from start to finish visiting all open squares. Shaded cells represent ice: upon stepping onto ice, movement continues in the same direction until hitting an unshaded cell or obstacle.
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls54_ice_walk_delayed_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 9: LS 55, LS 56, LS 57
+% =========================================================================
+\\enlargethispage{1.5cm}
+\\showcaseheadermini{LS 55 \\& LS 57: Hybrid Rules \\& Deduction Experiments}{A versatile pair of hybrid shading mechanics followed by instructionless puzzle discovery.}
+
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.13}{Kurotto Banana}
+\\vspace{0.5mm}
+\\scriptsize\\raggedright
+\\textbf{Rules:} Standard Kurotto and Choco Banana hybrid. Shaded cells form rectangular chocolate blocks; unshaded cells form non-rectangular regions. Circled clues indicate the total count of orthogonally connected shaded cells surrounding that circle.
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls55_kurotto_banana_puzzle.pdf}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.14}{Disorderly Tapa-like}
+\\vspace{0.5mm}
+\\scriptsize\\raggedright
+\\textbf{Rules:} Shade cells to form a continuous Tapa wall without 2$\\times$2 shaded squares. Numbers represent the lengths of consecutive shaded blocks in the 8 surrounding cells, given in no particular order.
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls55_disorderly_tapa_like_loop_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{1.5mm}
+\\hrule
+\\vspace{1.5mm}
+
+\\showcaseheadermini{LS 57: Instructionless Deduction}{No written rules. Deduce the complete puzzle genre, mechanics, and constraints solely from grid clues and symmetry.}
+\\lshead{6.15}{Instructionless Deduction}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Challenge:} The rules of this puzzle have been intentionally withheld. Examine the clue symbols, numerical distributions, and geometric clues to deduce the underlying rule system.
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls57_instructionless_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 10: LS 58 (Statue Park Triad)
+% =========================================================================
+\\enlargethispage{1.5cm}
+\\showcaseheader{LS 58: Statue Park Triad}{Shade the specified pentomino shapes in the grid subject to classical non-touching constraints.}
+
+\\noindent
+\\begin{tcolorbox}[colback=blue7!6, colframe=blue7, boxrule=0.8pt, arc=1.2mm, left=3mm, right=3mm, top=2mm, bottom=2mm]
+\\small\\raggedright
+\\textbf{Rules (Statue Park):}
+Shade some cells to form the bank of 12 pentomino shapes (each pentomino used at most once). Pentominoes may be rotated and/or reflected, but cannot touch each other orthogonally (diagonal touching is allowed). Cells with black circles must be shaded (part of a pentomino); cells with white circles must remain unshaded (banked space). All unshaded cells must be connected orthogonally.
+\\end{tcolorbox}
+
+\\vspace{3mm}
+
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.16}{Statue Park I}
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls58_puzzle_1_puzzle.pdf}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.17}{Statue Park II}
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls58_puzzle_2_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{4mm}
+
+\\begin{center}
+\\begin{minipage}{0.48\\textwidth}
+\\lshead{6.18}{Statue Park III}
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls58_puzzle_3_puzzle.pdf}
+\\end{minipage}
+\\end{center}
+
+\\newpage
+
+% =========================================================================
+% PAGE 11: LS 59 (One Square Series)
+% =========================================================================
+\\enlargethispage{1.5cm}
+\\showcaseheadermini{LS 59: The One Square Series}{Each grid conceals exactly one unshaded square among rectangular fields and balance loops.}
+
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.19}{Territory (One Square)}
+\\vspace{0.4mm}
+\\scriptsize\\raggedright
+\\textbf{Rules:} Shade cells such that no shaded cells touch orthogonally. All unshaded cells form one connected area. Numbered clues indicate the size of the largest unshaded rectangle containing that clue. Exactly ONE clue in the grid represents the size of the largest unshaded \\textbf{square}.
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls59_territory_one_square_puzzle.pdf}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.20}{Choco Banana (One Square)}
+\\vspace{0.4mm}
+\\scriptsize\\raggedright
+\\textbf{Rules:} Shaded areas are rectangular, unshaded areas are non-rectangular. Clues indicate region size. Exactly ONE clue represents the size of an unshaded \\textbf{square} region.
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls59_choco_banana_one_square_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{2.5mm}
+\\hrule
+\\vspace{2mm}
+
+\\begin{center}
+\\begin{minipage}{0.65\\textwidth}
+\\lshead{6.21}{Balance Loop (One Hidden White)}
+\\vspace{0.4mm}
+\\scriptsize\\raggedright
+\\textbf{Rules:} Draw a single closed loop through cell centers. White circles have equal straight line segments on both sides; black circles have unequal line segments. Exactly one clue circle has had its color inverted.
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls59_balance_loop_hidden_white_puzzle.pdf}
+\\end{minipage}
+\\end{center}
+
+\\newpage
+
+% =========================================================================
+% PAGE 12: LS 60 & LS 61 (Connected & Contact)
+% =========================================================================
+\\enlargethispage{1.5cm}
+\\showcaseheadermini{LS 60: Connected Shading \\& Loops}{Shaded canal views and Masyu pearls constrained by global connectivity.}
+
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.22}{Canal View (Connected)}
+\\vspace{0.4mm}
+\\scriptsize\\raggedright
+\\textbf{Rules:} Standard Canal View rules apply. Numbers indicate the total number of connected shaded cells seen horizontally and vertically.
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls60_canal_view_connected_puzzle.pdf}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.23}{Masyu (Connected)}
+\\vspace{0.4mm}
+\\scriptsize\\raggedright
+\\textbf{Rules:} Draw a single continuous loop through white/black pearls. Loop segments must remain connected without isolated dead ends.
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls60_masyu_connected_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{2.5mm}
+\\hrule
+\\vspace{2mm}
+
+\\showcaseheadermini{LS 61: Contact Polyominoes}{Dominos placed subject to orthogonal domino adjacency counts.}
+
+\\noindent
+\\begin{tcolorbox}[colback=blue7!6, colframe=blue7, boxrule=0.8pt, arc=1.2mm, left=3mm, right=3mm, top=1.8mm, bottom=1.8mm]
+\\small\\raggedright
+\\textbf{Rules (Contact Polyominoes):}
+Divide the grid into dominoes (1$\\times$2 rectangles). Each number indicates how many dominoes are orthogonally adjacent to the domino containing that number. Dominoes may contain any number of given numbers.
+\\end{tcolorbox}
+
+\\vspace{2mm}
+
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.24}{Contact ``Equal Sign''}
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeM\\relax]{ls61_contact_equal_sign_puzzle.pdf}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.25}{Contact ``Plus''}
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 8\\cellsizeM\\relax]{ls61_contact_plus_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 13: LS 61 (Contact & Rampage)
+% =========================================================================
+\\enlargethispage{1.5cm}
+\\lshead{6.26}{Contact ``Lenses''}
+\\begin{center}
+\\includegraphics[valign=t, width=\\dimexpr 8\\cellsizeM\\relax]{ls61_contact_lenses_puzzle.pdf}
+\\end{center}
+
+\\vspace{2mm}
+\\hrule
+\\vspace{2mm}
+
+\\showcaseheadermini{LS 61: Rampage Loop Series}{Bulls bursting through domino boundaries along linear trajectories.}
+
+\\noindent
+\\begin{tcolorbox}[colback=blue7!6, colframe=blue7, boxrule=0.8pt, arc=1.2mm, left=3mm, right=3mm, top=1.8mm, bottom=1.8mm]
+\\small\\raggedright
+\\textbf{Rules (Rampage Loop):}
+Divide the grid into dominoes. Each number represents a rampaging bull: the bull starts in its domino, moves to the other cell of the domino, then breaks through the opposite short edge into a new domino, and repeats. The number indicates how many dominoes the bull passes through. If the bull never leaves the grid, the number is infinity ($\\infty$).
+\\end{tcolorbox}
+
+\\vspace{2mm}
+
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.27}{Rampage ``Tilted Square''}
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 8\\cellsizeM\\relax]{ls61_rampage_tilted_square_puzzle.pdf}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.28}{Rampage ``Ox Loops''}
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 8\\cellsizeM\\relax]{ls61_rampage_ox_loops_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{3mm}
+
+\\begin{center}
+\\begin{minipage}{0.48\\textwidth}
+\\lshead{6.29}{Rampage ``Roadblocks''}
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 8\\cellsizeM\\relax]{ls61_rampage_roadblocks_puzzle.pdf}
+\\end{minipage}
+\\end{center}
+
+\\newpage
+
+% =========================================================================
+% PAGE 14: LS 61 (Turnaround) & LS 63 (Dual Full)
+% =========================================================================
+\\enlargethispage{1.5cm}
+\\showcaseheadermini{LS 61: Turnaround Loop Series}{Loop momentum tracking corner turns at numbered milestone cells.}
+
+\\noindent
+\\begin{tcolorbox}[colback=blue7!6, colframe=blue7, boxrule=0.8pt, arc=1.2mm, left=3mm, right=3mm, top=1.8mm, bottom=1.8mm]
+\\small\\raggedright
+\\textbf{Rules (Turnaround):}
+Draw a single closed loop traveling orthogonally through cell centers. The loop must visit all numbers. Each number indicates how many turns the loop makes among the three cells: the number itself, and the cells immediately before and after it along the loop.
+\\end{tcolorbox}
+
+\\vspace{2mm}
+
+\\begin{minipage}[t]{0.31\\textwidth}\\vspace{0pt}
+\\lshead{6.30}{Spiral (7$\\times$7)}
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 7\\cellsizeM\\relax]{ls61_turnaround_spiral_puzzle.pdf}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.31\\textwidth}\\vspace{0pt}
+\\lshead{6.31}{9$\\times$9 Grid}
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 9\\cellsizeM\\relax]{ls61_turnaround_9x9_puzzle.pdf}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.33\\textwidth}\\vspace{0pt}
+\\lshead{6.32}{12$\\times$12 Grid}
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 12\\cellsizeM\\relax]{ls61_turnaround_12x12_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{3mm}
+\\hrule
+\\vspace{3mm}
+
+\\showcaseheadermini{LS 63: Slitherlink \\& Turnaround Full Integration}{Two iconic genres merged into a synchronized single-loop master challenge.}
+\\lshead{6.33}{Slitherlink (Full) + Turnaround (Full)}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Draw a single closed loop along grid lines. Numbers on cell vertices satisfy Slitherlink edge constraints. Numbers inside cells satisfy Turnaround turn-count conditions simultaneously.
+\\vspace{1.5mm}
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example (6$\\times$6)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls63_slitherlink_turnaround_full_example.pdf}
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example Solution}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 6\\cellsizeS\\relax]{ls63_slitherlink_turnaround_full_example_solution.pdf}
+\\end{minipage}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls63_slitherlink_turnaround_full_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 15: LS 64, LS 65, LS 66
+% =========================================================================
+\\enlargethispage{1.5cm}
+\\showcaseheadermini{LS 64: Mirror Loop}{Reflective line tracing through angled planar mirrors.}
+\\lshead{6.34}{Mirror Loop}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Draw a single closed loop traveling orthogonally through cell centers. Slanted mirrors reflect the loop at right angles. Numbers indicate the total length of the straight loop segments passing through that cell.
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls64_mirror_loop_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{2.5mm}
+\\hrule
+\\vspace{2mm}
+
+\\showcaseheadermini{LS 65: Reprising LS39: Tapa Rope}{Flexible rope-loop topologies interwoven with classic Tapa wall logic.}
+\\lshead{6.35}{Reprising LS39: Tapa Rope}
+
+\\begin{minipage}[t]{0.52\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Shade cells to form a continuous Tapa wall without 2$\\times$2 squares. Clues indicate consecutive shaded blocks in adjacent cells. A rope loop must trace through unshaded regions without self-intersection.
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.46\\textwidth}\\vspace{0pt}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 12\\cellsizeM\\relax]{ls65_tapa_rope_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{2.5mm}
+\\hrule
+\\vspace{2mm}
+
+\\showcaseheadermini{LS 66: Canal View (Disco)}{Rhythmic pulse constraints modulating canal sightline distributions.}
+\\lshead{6.36}{Canal View (Disco)}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Standard Canal View rules apply. Clues in shaded cells alternate rhythmically with unshaded canal corridors, creating alternating bands of water and bank.
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls66_canal_view_disco_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 16: LS 67 & LS 68
+% =========================================================================
+\\enlargethispage{1.5cm}
+\\showcaseheadermini{LS 67: Pentominous (Partial) \\& Choco Banana Inequality}{Incomplete shape banks and relative magnitude inequalities.}
+
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.37}{Pentominous (Partial)}
+\\vspace{0.4mm}
+\\scriptsize\\raggedright
+\\textbf{Rules:} Divide the grid into pentominoes (5 cells). Matching shapes cannot touch orthogonally. Only a subset of standard pentominoes are permitted.
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls67_pentominous_partial_puzzle.pdf}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.38}{Choco Banana (Inequality)}
+\\vspace{0.4mm}
+\\scriptsize\\raggedright
+\\textbf{Rules:} Standard Choco Banana rules apply. Inequality signs between adjacent cells specify relative size comparisons between their respective regions.
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls67_choco_banana_inequality_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{2.5mm}
+\\hrule
+\\vspace{2mm}
+
+\\showcaseheadermini{LS 68: Pattern Square (Size \\& CTS)}{Geometric square reconstruction guided by boundary size markers and cross-the-streams clues.}
+
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.39}{Pattern Square (Size)}
+\\vspace{0.4mm}
+\\scriptsize\\raggedright
+\\textbf{Rules:} Shade squares of various dimensions. Numbers indicate the side length or area of squares covering that clue cell.
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls68_pattern_square_size_puzzle.pdf}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\lshead{6.40}{Pattern Square (CTS)}
+\\vspace{0.4mm}
+\\scriptsize\\raggedright
+\\textbf{Rules:} Reconstruct shaded pattern squares using Cross-the-Streams outside clues indicating runs of shaded blocks.
+\\vspace{1mm}
+\\centering
+\\includegraphics[valign=t, width=\\dimexpr 14\\cellsizeS\\relax]{ls68_pattern_square_cts_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 17: LS 69 & LS 70
+% =========================================================================
+\\enlargethispage{1.5cm}
+\\showcaseheadermini{LS 69: Yajiring-ring}{Dual loop rings encircling shaded blockers.}
+\\lshead{6.41}{Yajiring-ring}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Shade some cells so no two shaded cells touch orthogonally. Draw rectangular loops through centers of empty cells such that every empty cell is visited. Clues cannot be shaded and indicate the count of shaded cells in that direction.
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (10$\\times$10)}\\\\[1mm]
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls69_yajiring_ring_puzzle.pdf}
+\\end{minipage}
+
+\\vspace{2.5mm}
+\\hrule
+\\vspace{2mm}
+
+\\showcaseheadermini{LS 70: Alphabet Asp}{Orthogonal letter-snake slithering through alphabetical progression.}
+\\lshead{6.42}{Alphabet Asp}
+
+\\begin{minipage}[t]{0.56\\textwidth}\\vspace{0pt}
+\\raggedright\\footnotesize
+\\textbf{Rules:} Draw a 1-cell wide non-intersecting snake that visits the letters of the alphabet in strict sequential order (A, B, C, \\dots). The snake cannot touch itself orthogonally.
+\\vspace{1.5mm}
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example}\\\\[1mm]
+\\includegraphics[height=\\dimexpr 4\\cellsizeS\\relax, keepaspectratio]{ls70_alphabet_asp_example.pdf}
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.48\\linewidth}\\centering
+\\textbf{Example Solution}\\\\[1mm]
+\\includegraphics[height=\\dimexpr 4\\cellsizeS\\relax, keepaspectratio]{ls70_alphabet_asp_example_solution.pdf}
+\\end{minipage}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.42\\textwidth}\\vspace{0pt}
+\\centering
+\\textbf{Puzzle (9 rows)}\\\\[1mm]
+\\includegraphics[height=\\dimexpr 9\\cellsizeM\\relax, keepaspectratio]{ls70_alphabet_asp_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 18: LS 71 (Choco Banana Tower)
+% =========================================================================
+\\enlargethispage{1.5cm}
+
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\showcaseheader{LS 71: Choco Banana Tower}{50-story vertical expressway combining classic Nikoli chocolate blocks with elongated tower geometry.}
+
+\\lshead{6.43}{Choco Banana Tower}
+
+\\vspace{2mm}
+\\begin{tcolorbox}[colback=blue7!6, colframe=blue7, boxrule=0.8pt, arc=1.2mm, left=3.5mm, right=3.5mm, top=3mm, bottom=3mm]
+\\small\\raggedright
+\\textbf{Rules (Choco Banana):}
+\\begin{itemize}
+  \\setlength{\\itemsep}{3pt}
+  \\item Shade some cells so that all shaded areas are orthogonally connected rectangular blocks (chocolate).
+  \\item All unshaded areas must be orthogonally connected non-rectangular blocks (banana).
+  \\item Numbers in cells indicate the exact area (cell count) of that shaded or unshaded block.
+  \\item Blocks may contain zero, one, or multiple numbers.
+\\end{itemize}
+\\end{tcolorbox}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.48\\textwidth}\\vspace{0pt}
+\\centering
+\\includegraphics[height=20.75cm, keepaspectratio]{ls71_choco_banana_tower_puzzle.pdf}
+\\end{minipage}
+
+\\newpage
+
+% =========================================================================
+% PAGE 19: LS 72 & LS 73 (FULL WIDTH PER SHOWCASE)
+% =========================================================================
+\\enlargethispage{1.5cm}
+
+\\showcaseheader{LS 72: Pencils (Look-Air Sightlines)}{Sightline restriction: matching-size pencils cannot see each other along lines of body cells.}
+
+\\noindent
+\\begin{minipage}{\\textwidth}
+\\small\\raggedright
+\\textbf{Rules:} Normal Pencils rules apply. Draw pencils consisting of a lead (triangle/arrow) and a rectangular body. Pencils cannot overlap. Two pencils of the same size cannot see each other along straight lines of non-pencil body cells.
+\\end{minipage}
+
+\\vspace{2.5mm}
+
+\\begin{center}
+\\begin{minipage}{0.96\\linewidth}
+\\fbox{\\parbox[c][2.0cm]{0.47\\linewidth}{\\centering\\footnotesize\\color{gray} Example Space}}
+\\hfill
+\\fbox{\\parbox[c][2.0cm]{0.47\\linewidth}{\\centering\\footnotesize\\color{gray} Example Solution Space}}
+\\end{minipage}
+\\end{center}
+
+\\vspace{1.5mm}
+
+\\lshead{6.44}{Pencils (Look-Air)}
+
+\\begin{center}
+\\includegraphics[valign=t, width=\\dimexpr 8\\cellsizeM\\relax]{ls72_pencils_look_air_puzzle.pdf}
+\\end{center}
+
+\\vspace{2.5mm}
+\\hrule
+\\vspace{2.5mm}
+
+\\showcaseheader{LS 73: Pentominous (Myopia)}{Closest-shape directional clues: arrows point toward nearest pentominoes of that shape.}
+
+\\noindent
+\\begin{minipage}{\\textwidth}
+\\small\\raggedright
+\\textbf{Rules:} Divide the grid into pentominoes (5 cells each). Matching pentominoes cannot touch orthogonally. Arrow clues point in all directions that tie for containing the closest pentomino of the indicated shape.
+\\end{minipage}
+
+\\vspace{2.5mm}
+
+\\begin{center}
+\\begin{minipage}{0.96\\linewidth}
+\\fbox{\\parbox[c][2.0cm]{0.47\\linewidth}{\\centering\\footnotesize\\color{gray} Example Space}}
+\\hfill
+\\fbox{\\parbox[c][2.0cm]{0.47\\linewidth}{\\centering\\footnotesize\\color{gray} Example Solution Space}}
+\\end{minipage}
+\\end{center}
+
+\\vspace{1.5mm}
+
+\\lshead{6.45}{Pentominous (Myopia)}
+
+\\begin{center}
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls73_pentominous_myopia_puzzle.pdf}
+\\end{center}
+
+\\newpage
+
+% =========================================================================
+% PAGE 20: LS 74 & LS 75 (FULL WIDTH PER SHOWCASE)
+% =========================================================================
+\\enlargethispage{1.5cm}
+
+\\showcaseheader{LS 74: Choco Banana (Thermo)}{Thermal gradient: region sizes strictly increase from bulb to tip.}
+
+\\noindent
+\\begin{minipage}{\\textwidth}
+\\small\\raggedright
+\\textbf{Rules:} Standard Choco Banana rules apply (shaded areas rectangular, unshaded non-rectangular). Thermometer clues indicate monotonic progression: region sizes along each thermometer must strictly increase from the round bulb to the flat tip.
+\\end{minipage}
+
+\\vspace{2.5mm}
+
+\\begin{center}
+\\begin{minipage}{0.96\\linewidth}
+\\fbox{\\parbox[c][2.0cm]{0.47\\linewidth}{\\centering\\footnotesize\\color{gray} Example Space}}
+\\hfill
+\\fbox{\\parbox[c][2.0cm]{0.47\\linewidth}{\\centering\\footnotesize\\color{gray} Example Solution Space}}
+\\end{minipage}
+\\end{center}
+
+\\vspace{1.5mm}
+
+\\lshead{6.46}{Choco Banana (Thermo)}
+
+\\begin{center}
+\\includegraphics[valign=t, width=\\dimexpr 8\\cellsizeM\\relax]{ls74_choco_banana_thermo_puzzle.pdf}
+\\end{center}
+
+\\vspace{2.5mm}
+\\hrule
+\\vspace{2.5mm}
+
+\\showcaseheader{LS 75: Pentominous Irrwisch (Cipher Finale)}{Cipher variant: each instance of letter A represents a different pentomino shape!}
+
+\\noindent
+\\begin{minipage}{\\textwidth}
+\\small\\raggedright
+\\textbf{Rules:} Standard Pentominous rules apply: divide the grid into pentominoes of 5 cells each such that matching pentominoes do not touch orthogonally. Irrwisch cipher variant: each instance of the letter A represents a different, unknown pentomino shape across the grid!
+\\end{minipage}
+
+\\vspace{2.5mm}
+
+\\begin{center}
+\\begin{minipage}{0.96\\linewidth}
+\\fbox{\\parbox[c][2.0cm]{0.47\\linewidth}{\\centering\\footnotesize\\color{gray} Example Space}}
+\\hfill
+\\fbox{\\parbox[c][2.0cm]{0.47\\linewidth}{\\centering\\footnotesize\\color{gray} Example Solution Space}}
+\\end{minipage}
+\\end{center}
+
+\\vspace{1.5mm}
+
+\\lshead{6.47}{Pentominous Irrwisch}
+
+\\begin{center}
+\\includegraphics[valign=t, width=\\dimexpr 10\\cellsizeM\\relax]{ls75_pentominous_irrwisch_puzzle.pdf}
+\\end{center}
+`;
+
+fs.writeFileSync(targetFile, tex, 'utf8');
+console.log('Successfully written updated logic_showcase.tex!');

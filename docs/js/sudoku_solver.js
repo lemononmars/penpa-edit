@@ -5449,7 +5449,7 @@ var SudokuTools = (function() {
                 if (variant === "scattered") {
                     addVariantModeButton(row, variant, "surface", "", 1);
                 }
-            } else if (setting) {
+            } else if (setting && Array.isArray(setting.modeset)) {
                 for (var i = 0; i < setting.modeset.length; i++) {
                     if (setting.modeset[i] === "sudoku") {
                         continue;

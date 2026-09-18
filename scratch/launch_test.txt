@@ -1,0 +1,10 @@
+Starting launch test...
+Testing Chrome x86 (C:\Program Files (x86)\Google\Chrome\Application\chrome.exe)...
+Chrome x86 launched successfully!
+Chrome x86 opened page successfully!
+Chrome x86 closed successfully!
+Testing Edge x86 (C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe)...
+Edge x86 launched successfully!
+Edge x86 opened page successfully!
+Edge x86 closed successfully!
+Done

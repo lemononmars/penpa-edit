@@ -1,0 +1,408 @@
+[
+  {
+    "baseName": "ls49_twilight_canal_view_puzzle",
+    "width": 383.59999999999997,
+    "height": 383.2,
+    "cols": 10,
+    "rows": 10
+  },
+  {
+    "baseName": "ls49_twilight_canal_view_example",
+    "width": 231.6,
+    "height": 231.2,
+    "cols": 6,
+    "rows": 6
+  },
+  {
+    "baseName": "ls49_twilight_kurodoko_puzzle",
+    "width": 383.59999999999997,
+    "height": 383.2,
+    "cols": 10,
+    "rows": 10
+  },
+  {
+    "baseName": "ls49_twilight_kurodoko_example",
+    "width": 231.6,
+    "height": 231.2,
+    "cols": 6,
+    "rows": 6
+  },
+  {
+    "baseName": "ls50_l_voxas_example",
+    "width": 231.6,
+    "height": 231.2,
+    "cols": 6,
+    "rows": 6
+  },
+  {
+    "baseName": "ls50_l_voxas_puzzle",
+    "width": 383.59999999999997,
+    "height": 383.2,
+    "cols": 10,
+    "rows": 10
+  },
+  {
+    "baseName": "ls50_l_dots_example",
+    "width": 231.6,
+    "height": 231.2,
+    "cols": 6,
+    "rows": 6
+  },
+  {
+    "baseName": "ls50_l_dots_puzzle",
+    "width": 383.59999999999997,
+    "height": 383.2,
+    "cols": 10,
+    "rows": 10
+  },
+  {
+    "baseName": "ls51_skyscrapers_example",
+    "width": 459.59999999999997,
+    "height": 459.2,
+    "cols": 12,
+    "rows": 12
+  },
+  {
+    "baseName": "ls51_skyscrapers_puzzle",
+    "width": 687.6,
+    "height": 687.2,
+    "cols": 18,
+    "rows": 18
+  },
+  {
+    "baseName": "ls51_slitherlink_polygraph_example",
+    "width": 232.4,
+    "height": 232.4,
+    "cols": 6,
+    "rows": 6
+  },
+  {
+    "baseName": "ls51_slitherlink_polygraph_puzzle",
+    "width": 384.40000000000003,
+    "height": 384.40000000000003,
+    "cols": 10,
+    "rows": 10
+  },
+  {
+    "baseName": "ls51_choco_banana_treasure_hunt_puzzle",
+    "width": 627.6,
+    "height": 628.0,
+    "cols": 17,
+    "rows": 17
+  },
+  {
+    "baseName": "ls52_foreshadow_crossing_example",
+    "width": 193.6,
+    "height": 193.2,
+    "cols": 5,
+    "rows": 5
+  },
+  {
+    "baseName": "ls52_foreshadow_crossing_puzzle",
+    "width": 383.59999999999997,
+    "height": 383.2,
+    "cols": 10,
+    "rows": 10
+  },
+  {
+    "baseName": "ls52_remembered_choco_frozen_banana_puzzle",
+    "width": 307.59999999999997,
+    "height": 307.2,
+    "cols": 8,
+    "rows": 8
+  },
+  {
+    "baseName": "ls53_pentominous_outside_example",
+    "width": 268.4,
+    "height": 268.4,
+    "cols": 7,
+    "rows": 7
+  },
+  {
+    "baseName": "ls53_pentominous_outside_puzzle",
+    "width": 572.4000000000001,
+    "height": 572.4000000000001,
+    "cols": 15,
+    "rows": 15
+  },
+  {
+    "baseName": "ls54_guide_exit_example",
+    "width": 269.59999999999997,
+    "height": 269.2,
+    "cols": 7,
+    "rows": 7
+  },
+  {
+    "baseName": "ls54_guide_exit_puzzle",
+    "width": 459.59999999999997,
+    "height": 459.2,
+    "cols": 12,
+    "rows": 12
+  },
+  {
+    "baseName": "ls54_ice_walk_delayed_puzzle",
+    "width": 459.6,
+    "height": 459.6,
+    "cols": 12,
+    "rows": 12
+  },
+  {
+    "baseName": "ls55_kurotto_banana_puzzle",
+    "width": 497.6,
+    "height": 497.20000000000005,
+    "cols": 13,
+    "rows": 13
+  },
+  {
+    "baseName": "ls55_disorderly_tapa_like_loop_puzzle",
+    "width": 421.6,
+    "height": 421.6,
+    "cols": 11,
+    "rows": 11
+  },
+  {
+    "baseName": "ls57_instructionless_puzzle",
+    "width": 653.6,
+    "height": 578.4000000000001,
+    "cols": 17,
+    "rows": 15
+  },
+  {
+    "baseName": "ls58_puzzle_1_puzzle",
+    "width": 459.59999999999997,
+    "height": 637.6,
+    "cols": 12,
+    "rows": 17
+  },
+  {
+    "baseName": "ls58_puzzle_2_puzzle",
+    "width": 459.59999999999997,
+    "height": 637.6,
+    "cols": 12,
+    "rows": 17
+  },
+  {
+    "baseName": "ls58_puzzle_3_puzzle",
+    "width": 383.6,
+    "height": 524.0,
+    "cols": 10,
+    "rows": 14
+  },
+  {
+    "baseName": "ls59_territory_one_square_puzzle",
+    "width": 421.59999999999997,
+    "height": 421.2,
+    "cols": 11,
+    "rows": 11
+  },
+  {
+    "baseName": "ls59_choco_banana_one_square_puzzle",
+    "width": 421.59999999999997,
+    "height": 421.2,
+    "cols": 11,
+    "rows": 11
+  },
+  {
+    "baseName": "ls59_balance_loop_hidden_white_puzzle",
+    "width": 497.6,
+    "height": 497.20000000000005,
+    "cols": 13,
+    "rows": 13
+  },
+  {
+    "baseName": "ls60_canal_view_connected_puzzle",
+    "width": 497.59999999999997,
+    "height": 497.59999999999997,
+    "cols": 13,
+    "rows": 13
+  },
+  {
+    "baseName": "ls60_masyu_connected_puzzle",
+    "width": 497.59999999999997,
+    "height": 497.59999999999997,
+    "cols": 13,
+    "rows": 13
+  },
+  {
+    "baseName": "ls61_contact_equal_sign_puzzle",
+    "width": 291.59999999999997,
+    "height": 291.2,
+    "cols": 8,
+    "rows": 8
+  },
+  {
+    "baseName": "ls61_contact_plus_puzzle",
+    "width": 363.59999999999997,
+    "height": 363.2,
+    "cols": 10,
+    "rows": 10
+  },
+  {
+    "baseName": "ls61_contact_lenses_puzzle",
+    "width": 435.59999999999997,
+    "height": 435.2,
+    "cols": 11,
+    "rows": 11
+  },
+  {
+    "baseName": "ls61_rampage_tilted_square_puzzle",
+    "width": 291.59999999999997,
+    "height": 291.2,
+    "cols": 8,
+    "rows": 8
+  },
+  {
+    "baseName": "ls61_rampage_ox_loops_puzzle",
+    "width": 403.59999999999997,
+    "height": 363.2,
+    "cols": 11,
+    "rows": 10
+  },
+  {
+    "baseName": "ls61_rampage_roadblocks_puzzle",
+    "width": 435.59999999999997,
+    "height": 435.2,
+    "cols": 11,
+    "rows": 11
+  },
+  {
+    "baseName": "ls61_turnaround_spiral_puzzle",
+    "width": 291.59999999999997,
+    "height": 291.2,
+    "cols": 8,
+    "rows": 8
+  },
+  {
+    "baseName": "ls61_turnaround_9x9_puzzle",
+    "width": 363.59999999999997,
+    "height": 363.2,
+    "cols": 10,
+    "rows": 10
+  },
+  {
+    "baseName": "ls61_turnaround_12x12_puzzle",
+    "width": 435.59999999999997,
+    "height": 435.2,
+    "cols": 11,
+    "rows": 11
+  },
+  {
+    "baseName": "ls63_slitherlink_turnaround_full_example",
+    "width": 232.4,
+    "height": 232.4,
+    "cols": 6,
+    "rows": 6
+  },
+  {
+    "baseName": "ls63_slitherlink_turnaround_full_puzzle",
+    "width": 346.40000000000003,
+    "height": 346.40000000000003,
+    "cols": 9,
+    "rows": 9
+  },
+  {
+    "baseName": "ls64_mirror_loop_puzzle",
+    "width": 383.59999999999997,
+    "height": 383.2,
+    "cols": 10,
+    "rows": 10
+  },
+  {
+    "baseName": "ls65_tapa_rope_puzzle",
+    "width": 459.59999999999997,
+    "height": 459.2,
+    "cols": 12,
+    "rows": 12
+  },
+  {
+    "baseName": "ls66_canal_view_disco_puzzle",
+    "width": 459.59999999999997,
+    "height": 459.2,
+    "cols": 12,
+    "rows": 12
+  },
+  {
+    "baseName": "ls67_pentominous_partial_puzzle",
+    "width": 383.59999999999997,
+    "height": 383.2,
+    "cols": 10,
+    "rows": 10
+  },
+  {
+    "baseName": "ls67_choco_banana_inequality_puzzle",
+    "width": 421.6,
+    "height": 421.6,
+    "cols": 11,
+    "rows": 11
+  },
+  {
+    "baseName": "ls68_pattern_square_size_puzzle",
+    "width": 459.59999999999997,
+    "height": 504.4,
+    "cols": 12,
+    "rows": 13
+  },
+  {
+    "baseName": "ls68_pattern_square_cts_puzzle",
+    "width": 635.2,
+    "height": 607.6,
+    "cols": 17,
+    "rows": 16
+  },
+  {
+    "baseName": "ls69_yajiring_ring_puzzle",
+    "width": 421.59999999999997,
+    "height": 421.2,
+    "cols": 11,
+    "rows": 11
+  },
+  {
+    "baseName": "ls70_alphabet_asp_example",
+    "width": 267.2,
+    "height": 193.2,
+    "cols": 7,
+    "rows": 5
+  },
+  {
+    "baseName": "ls70_alphabet_asp_puzzle",
+    "width": 440.4,
+    "height": 345.2,
+    "cols": 12,
+    "rows": 9
+  },
+  {
+    "baseName": "ls71_choco_banana_tower_puzzle",
+    "width": 383.59999999999997,
+    "height": 1903.2,
+    "cols": 10,
+    "rows": 50
+  },
+  {
+    "baseName": "ls72_pencils_look_air_puzzle",
+    "width": 383.59999999999997,
+    "height": 383.2,
+    "cols": 10,
+    "rows": 10
+  },
+  {
+    "baseName": "ls73_pentominous_myopia_puzzle",
+    "width": 383.59999999999997,
+    "height": 447.6,
+    "cols": 10,
+    "rows": 12
+  },
+  {
+    "baseName": "ls74_choco_banana_thermo_puzzle",
+    "width": 345.59999999999997,
+    "height": 269.2,
+    "cols": 9,
+    "rows": 7
+  },
+  {
+    "baseName": "ls75_pentominous_irrwisch_puzzle",
+    "width": 448.0,
+    "height": 396.4,
+    "cols": 12,
+    "rows": 10
+  }
+]
