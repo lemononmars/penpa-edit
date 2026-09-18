@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
-<rect width="100%" height="100%" fill="white"/>
-<text x="50" y="50" font-family="Cambria Math" font-size="30">Cambria Math: &#x1D678; &#x1D4C1; &#x0398; &#x272A;</text>
-<text x="50" y="100" font-family="Segoe UI Symbol" font-size="30">Segoe UI Symbol: &#x1D678; &#x1D4C1; &#x0398; &#x272A;</text>
-<text x="50" y="150" font-family="MS Gothic" font-size="30">MS Gothic: &#xFF5C; &#x2223; &#x007C; I</text>
-<text x="50" y="200" font-family="Consolas" font-size="30">Consolas: &#x1D678; &#x1D4C1; &#xFF5C; &#x2223; &#x007C; I</text>
-<text x="50" y="250" font-family="Arial, 'Segoe UI Symbol', 'Cambria Math'" font-size="30">Fallback: &#x1D678; &#x1D4C1; &#xFF5C; &#x2223; &#x007C; I</text>
-</svg>

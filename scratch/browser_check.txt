@@ -1,5 +1,0 @@
-C:\Program Files\Google\Chrome\Application\chrome.exe: false
-C:\Program Files (x86)\Google\Chrome\Application\chrome.exe: true
-C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe: true
-C:\Program Files\Microsoft\Edge\Application\msedge.exe: false
-C:\Users\sakul_bp6myy0\AppData\Local\ms-playwright: error EPERM: operation not permitted, scandir 'C:\Users\sakul_bp6myy0\AppData\Local\ms-playwright'
