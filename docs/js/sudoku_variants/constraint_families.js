@@ -1,8 +1,8 @@
 (function(root, factory) {
-    var families = factory();
+    var families = factory(typeof module !== "undefined" && module.exports ? require('./wsc_rules.js') : root.Wsc2026Rules);
     if (typeof module !== "undefined" && module.exports) module.exports = families;
     else root.SudokuConstraintFamilySources = families;
-})(typeof globalThis !== "undefined" ? globalThis : this, function() {
+})(typeof globalThis !== "undefined" ? globalThis : this, function(wsc) {
     "use strict";
 
     function isCell(value) {
@@ -141,6 +141,9 @@
                     ((isCell(payload.origin) && cells(payload.targets)) ||
                         (isCell(payload.target) && cells(payload.cells) && payload.cells.length === 4));
             }
+        },
+        {
+            type: "wscRules", version: 1, validatePayload: wsc.valid
         },
         {
             type: "sumDetectorGroups", version: 1,

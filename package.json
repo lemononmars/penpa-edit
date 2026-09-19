@@ -10,9 +10,11 @@
     "test:solver": "node --test test/sudoku_solver.test.js",
     "test": "nodemon --watch test/test_server.js test/test_server.js",
     "prelocal": "npm run build:csp-variants",
-    "local": "vite --host 127.0.0.1"
+    "local": "vite --host 127.0.0.1",
+    "test:wsc2026": "node --test test/wsc2026.test.js test/wsc2026_database.test.mjs test/wsc2026_single_team.test.mjs test/wsc2026_access.test.mjs"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@sveltejs/vite-plugin-svelte": "^7.2.0",
     "chai": "^4.5.0",
     "express": "^4.21.2",
@@ -24,6 +26,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
+    "@vercel/functions": "^3.9.8",
     "i18n-js": "^4.5.3",
     "jules": "^1.0.0"
   }

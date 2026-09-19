@@ -266,7 +266,14 @@
                 }).filter(Boolean));
                 return wallSegments;
             },
-            option: function(name) { return puzzle[name]; },
+            option: function(name) { return name === 'wsc2026Clues' ? puzzle.pu_q && puzzle.pu_q.wsc2026Clues : puzzle[name]; },
+            outsideText: function(side,index) {
+                var top=Number(puzzle.space && puzzle.space[0] || 0)+2,left=Number(puzzle.space && puzzle.space[2] || 0)+2;
+                var r=side==='top'?top-1:side==='bottom'?top+size:top+index;
+                var c=side==='left'?left-1:side==='right'?left+size:left+index;
+                var entry=puzzle.pu_q && puzzle.pu_q.number && puzzle.pu_q.number[c+r*puzzle.nx0];
+                return entry ? String(entry[0]).trim() : null;
+            },
             cells: function() {
                 if (!cells) {
                     cells = Object.freeze(Array.from({ length: size * size }, function(_, index) {

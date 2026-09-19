@@ -1,3 +1,4 @@
+import { wscAccessPlugin } from './scripts/vite-wsc-access.mjs';
 import { defineConfig } from "vite";
 import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -253,7 +254,7 @@ function directoryTrailingSlashPlugin() {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = new URL(req.url || "/", "http://localhost");
-        if (url.pathname === "/tournament") {
+        if (url.pathname === "/wsc2026") { req.url = "/wsc2026/" + url.search; } else if (url.pathname === "/tournament") {
           req.url = "/tournament/" + url.search;
         } else if (url.pathname === "/tournament/host") {
           req.url = "/tournament/host/" + url.search;
@@ -279,13 +280,14 @@ function directoryTrailingSlashPlugin() {
 export default defineConfig({
   root: "docs",
   envDir: resolve(process.cwd()),
-  plugins: [generatedWorkersPlugin(), directoryTrailingSlashPlugin(), variantDetailPages(), devApiPlugin(), svelte({ preprocess: vitePreprocess() })],
+  plugins: [wscAccessPlugin(), generatedWorkersPlugin(), directoryTrailingSlashPlugin(), variantDetailPages(), devApiPlugin(), svelte({ preprocess: vitePreprocess() })],
   build: {
     outDir: "../dist",
     emptyOutDir: true,
     rollupOptions: {
       input: {
         main: resolve(process.cwd(), "docs/index.html"),
+        wsc2026: resolve(process.cwd(), "docs/wsc2026/index.html"),
         list: resolve(process.cwd(), "docs/list/index.html"),
         battle: resolve(process.cwd(), "docs/battle/index.html"),
         battleLeaderboard: resolve(process.cwd(), "docs/battle/leaderboard/index.html"),

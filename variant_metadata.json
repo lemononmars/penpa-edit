@@ -1,6 +1,15 @@
 {
   "version": 3,
-  "markOverrides": {},
+  "markOverrides": {
+    "divisorsumpairs": {
+      "position": "edge",
+      "mark": "text"
+    },
+    "transparentkropkipairs": {
+      "position": "edge",
+      "mark": "circle"
+    }
+  },
   "scrapedAliases": {
     "symmetricunequal": "symmetric unequal"
   },
@@ -153,7 +162,8 @@
         "9x9": "Along each line, digits alternate between being larger and smaller than their immediate neighbours. Digits do not repeat on a line."
       },
       "tags": [
-        "line"
+        "line",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -173,7 +183,8 @@
         "9x9": "Each main diagonal contains exactly three digits."
       },
       "tags": [
-        "diagonal"
+        "diagonal",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -192,7 +203,8 @@
         "9x9": "No cell that is a knight-step away can contain the same digit. A knight's move is 2 in a line and 1 to the side, as in chess."
       },
       "tags": [
-        "math"
+        "math",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -266,7 +278,8 @@
       },
       "tags": [
         "line",
-        "math"
+        "math",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -661,7 +674,8 @@
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined region."
       },
       "tags": [
-        "classic"
+        "classic",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -722,7 +736,8 @@
         "9x9": "Digits in the same corresponding cell in each shaded figure must be identical."
       },
       "tags": [
-        "region"
+        "region",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -779,7 +794,8 @@
         "9x9": "Some digits have been substituted by letters. All instances of the same letter must be substituted by the same digit and different letters must be substituted by different digits."
       },
       "tags": [
-        "alphabet"
+        "alphabet",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -1038,7 +1054,8 @@
       },
       "tags": [
         "line",
-        "neighbour"
+        "neighbour",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -1236,7 +1253,8 @@
         "9x9": "Each main diagonal contains each digit from 1 to 9."
       },
       "tags": [
-        "diagonal"
+        "diagonal",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -1520,7 +1538,8 @@
       },
       "tags": [
         "outside",
-        "math"
+        "math",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -1952,7 +1971,8 @@
         "9x9": "Each digit at the intersection of cells must not be present in any of those cells."
       },
       "tags": [
-        "placement"
+        "placement",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -1969,14 +1989,19 @@
       "rules": {
         "9x9": "The rows and columns continue over an empty space."
       },
-      "status": "infeasible",
+      "status": "available",
       "inputType": {
         "categories": [
-          "cell"
+          "no-input"
         ],
-        "instructions": []
+        "instructions": [
+          "Use the dedicated WSC Layout solver. Enter explicit givens, rows, columns and regions for this nonstandard geometry."
+        ]
       },
-      "tags": []
+      "tags": [
+        "wsc2026"
+      ],
+      "solverRoute": "/wsc2026/?tab=solver&variant=expanded"
     },
     {
       "otherNames": "",
@@ -2043,7 +2068,8 @@
         "9x9": "Each marked region contains each digit from 1 to 9."
       },
       "tags": [
-        "region"
+        "region",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -2639,7 +2665,8 @@
         "9x9": "Each inequality sign (‘<’ or ‘>’) between adjacent cells indicates the larger of the two digits is on the open side of the sign."
       },
       "tags": [
-        "neighbour"
+        "neighbour",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -2708,7 +2735,8 @@
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and outlined region."
       },
       "tags": [
-        "irregular"
+        "irregular",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -2814,7 +2842,8 @@
         "9x9": "The number at the top-left corner of each cage is the sum of digits inside the cage. Digits do not repeat within a cage."
       },
       "tags": [
-        "math"
+        "math",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -2911,7 +2940,8 @@
         "consecutive",
         "neighbour",
         "hybrid",
-        "math"
+        "math",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -3204,7 +3234,8 @@
       },
       "tags": [
         "math",
-        "outside"
+        "outside",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -3275,7 +3306,8 @@
       },
       "tags": [
         "math",
-        "outside"
+        "outside",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -3346,17 +3378,21 @@
       "id": "multidiagonal",
       "name": "Multi Diagonal",
       "rules": {
-        "9x9": "No digit can repeat in any of the marked diagonals."
+        "9x9": "Standard Classic Sudoku rules apply. No digit can repeat in any of the marked diagonals."
       },
       "tags": [
-        "diagonal"
+        "diagonal",
+        "wsc2026"
       ],
-      "status": "planned",
+      "status": "available",
       "inputType": {
         "categories": [
-          "cell"
+          "line"
         ],
-        "instructions": []
+        "instructions": [
+          "Draw a simple line using line style 3 or 5, or enter structured clues in the WSC clue editor.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
       }
     },
     {
@@ -3432,7 +3468,9 @@
           "Place number clues outside the grid."
         ]
       },
-      "tags": []
+      "tags": [
+        "wsc2026"
+      ]
     },
     {
       "id": "ninedragons",
@@ -3533,7 +3571,8 @@
       "tags": [
         "consecutive",
         "neighbour",
-        "math"
+        "math",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -3611,7 +3650,8 @@
         "9x9": "Cells with shaded squares contain even digits. Cells with shaded circles contain odd digits."
       },
       "tags": [
-        "parity"
+        "parity",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -3952,7 +3992,8 @@
       },
       "tags": [
         "outside",
-        "placement"
+        "placement",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -4051,7 +4092,8 @@
       },
       "tags": [
         "outside",
-        "placement"
+        "placement",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -4319,7 +4361,9 @@
       "rules": {
         "9x9": "Exactly one of the highlighted digits is a pinnochio and is incorrect."
       },
-      "tags": [],
+      "tags": [
+        "wsc2026"
+      ],
       "status": "available",
       "inputType": {
         "categories": [
@@ -4763,7 +4807,8 @@
         "9x9": "The four digits at the intersection of four cells must be present in those four cells."
       },
       "tags": [
-        "placement"
+        "placement",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -4783,7 +4828,8 @@
         "9x9": "The digit 9 must not be repeated in the same diagonal of any length."
       },
       "tags": [
-        "diagonal"
+        "diagonal",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -5991,7 +6037,8 @@
       },
       "tags": [
         "line",
-        "neighbour"
+        "neighbour",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -6138,7 +6185,8 @@
         "9x9": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and outlined region. Some outlined regions wrap around the grid."
       },
       "tags": [
-        "irregular"
+        "irregular",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -6175,7 +6223,8 @@
       "tags": [
         "consecutive",
         "neighbour",
-        "math"
+        "math",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -6454,7 +6503,8 @@
         "9x9": "Each marked 3x3 region contains each digit from 1 to 9."
       },
       "tags": [
-        "region"
+        "region",
+        "wsc2026"
       ],
       "status": "available",
       "inputType": {
@@ -6863,7 +6913,6 @@
         ]
       }
     },
-
     {
       "id": "citywalk",
       "name": "Citywalk",
@@ -6997,6 +7046,788 @@
           "edge"
         ],
         "instructions": []
+      }
+    },
+    {
+      "id": "hundred",
+      "name": "Hundred",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "shading"
+        ],
+        "instructions": [
+          "Shade the digit groups in each affected row. Each consecutive shaded run forms a multi-digit number, read left to right.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "flamepath",
+      "name": "Flame Path",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. There must be at least one path from the top left cell to the bottom right cell with cells connected orthogonally, called the flame path. The digits 1, 5 and 9 cannot be placed on the flame path."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": [
+          "Global rule: no marks required.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "fractal",
+      "name": "Fractal",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Each 3x3 outlined box also represents a sudoku. Every row & column within each box should contain exactly one digit from the three sets: (1,2,3), (4,5,6) and (7,8,9)."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": [
+          "Global rule: no marks required.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "disguisedqueen",
+      "name": "Disguised Queen",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. The digit 'x' in the grid is a chess Queen. Two Queens cannot be placed along the same row, column or diagonal of any length. Determining the 'x' is a part of solving."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": [
+          "Global rule: no marks required.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "antiwindoku",
+      "name": "Anti Windoku",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Each marked 3x3 region contains exactly four different digits."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": [
+          "Global rule: no marks required.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "nothreeinaline",
+      "name": "No Three in A Line",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. There must not exist a run of three or more cells along a marked line that all contain numbers of the same parity (i.e., even or odd)."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "line"
+        ],
+        "instructions": [
+          "Draw a simple line using line style 3 or 5, or enter structured clues in the WSC clue editor.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "clonealongline",
+      "name": "Clone Along Line",
+      "rules": {
+        "9x9": "The marked lines contain identical digits in the same order, allowing either direction."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "line"
+        ],
+        "instructions": [
+          "Draw a simple line using line style 3 or 5, or enter structured clues in the WSC clue editor.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "tunnel",
+      "name": "Tunnel",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. The numbers along the tunnel (line) are all less than the numbers in the endpoints of the tunnel (circles). Additionally, adjacent numbers along the tunnel (including endpoints) cannot have a difference greater than 3."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "line"
+        ],
+        "instructions": [
+          "Draw a simple line using line style 3 or 5, or enter structured clues in the WSC clue editor.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "number5stillalive",
+      "name": "Number 5 Still Alive",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Within each cage the sum of the digits is either 5, 15, 25, 35 or 45. Digits do not repeat within a cage."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cage"
+        ],
+        "instructions": [
+          "Draw cages without totals.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "missingarrow",
+      "name": "Missing Arrow",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. The digit in each circled cell is the sum of digits along the path of its arrow. Digits can repeat within an arrow shape. The circles are missing from the arrows and are positioned at one of the ends of the arrows."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "line"
+        ],
+        "instructions": [
+          "Draw a simple line using line style 3 or 5, or enter structured clues in the WSC clue editor.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "missingthermo",
+      "name": "Missing Thermo",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Digits along each thermometer are strictly increasing from its bulb to each of its ends. The bulbs are missing from the thermometer shapes and are positioned at one of the open ends of the thermometers."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "line"
+        ],
+        "instructions": [
+          "Draw a simple line using line style 3 or 5, or enter structured clues in the WSC clue editor.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "transparentkropkipairs",
+      "name": "Transparent Kropki Pairs",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Adjacent cells marked with a white circle either contain consecutive digits or one digit is double of the other digit. All possible circles are not marked."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "edge"
+        ],
+        "instructions": [
+          "Place white circles on cell edges. Unmarked edges have no restriction.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "unordereddistances",
+      "name": "Unordered Distances",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. The clues outside the grid give the distance between two digits in that row or column. The digits are not necessarily given in order from the clue's direction."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": [
+          "Use the WSC clue editor; see the example payload for this variant.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "nexttox",
+      "name": "Next to x",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. The clues outside the grid indicate the digits to be placed in the cells before and after the cell containing the digit 'x' (in any order) in the corresponding row/column. Determining the \"x\" is a part of solving."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": [
+          "Use the WSC clue editor; see the example payload for this variant.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "anticlone",
+      "name": "Anti Clone",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. The digits at the same locations on each shaded area must sum to 10. Shaded areas cannot be rotated or reflected."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "shading"
+        ],
+        "instructions": [
+          "Use the WSC clue editor; see the example payload for this variant.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "friends",
+      "name": "Friends",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Cells with shaded circles across the grid contain identical digits."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cell"
+        ],
+        "instructions": [
+          "Mark the equal cells with circle symbols.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "enemies",
+      "name": "Enemies",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Cells with shaded circles across the grid contain different digits."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cell"
+        ],
+        "instructions": [
+          "Mark the different cells with circle symbols.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "antioutside",
+      "name": "Anti Outside",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Each digit outside the grid must not appear within the first box in the corresponding row/column."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": [
+          "Use the WSC clue editor; see the example payload for this variant.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "sudokuwithnames",
+      "name": "Sudoku with Names",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Digits/Alphabet given outside will appear in the same order in that row/column. ARTYOM ARTYOM"
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": [
+          "Use the WSC clue editor; see the example payload for this variant.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "sforsudoku",
+      "name": "S for",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. A cell with an alphabet contains a digit whose mapped word contains the corresponding alphabet."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cell"
+        ],
+        "instructions": [
+          "Use the WSC clue editor; see the example payload for this variant.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "attacktheleader",
+      "name": "Attack the Leader",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. The arrow clues indicate all the directions (up, down, left, and right) where the nearest cell with digit higher than the digit in the cell with the arrow are located when looking from that cell."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cell"
+        ],
+        "instructions": [
+          "Use the WSC clue editor; see the example payload for this variant.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "trishula",
+      "name": "Trishula",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. For each Trishula, the three cells at the tips of the prongs contain the minimum, average, and maximum digits appearing in the shaded handle region. The correspondence between the digits in the tip cells and the three properties is not given."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "shading"
+        ],
+        "instructions": [
+          "Use the WSC clue editor; see the example payload for this variant.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "divisorsumpairs",
+      "name": "Divisor Sum Pairs",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Clues marked at the intersection of two cells implies that the sum of the two cells is divisible by the clue."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "edge"
+        ],
+        "instructions": [
+          "Place a positive divisor on each cell edge.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "magicsword",
+      "name": "Magic Sword",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Each arrow given outside the grid has the same unknown strength (Y) and attacks in the indicated direction. The number X above it means the first X cells in that direction contain numbers weaker (i.e. lower in value) than the strength of the arrow, while the (X+1)-th cell (if any) contains a number stronger (i.e. equal or higher in value) than it. Determining the arrow's strength is a part of solving."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": [
+          "Use the WSC clue editor; see the example payload for this variant.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "neighbouringdisparity",
+      "name": "Neighbouring Disparity",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Cells with symbols will have digits of parity opposite to the cells pointed by the corners of the symbols."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cell"
+        ],
+        "instructions": [
+          "Use the WSC clue editor; see the example payload for this variant.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "indextoone",
+      "name": "Index to One",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. For each outside clue (X), let the X-th cell from that side contain the digit N. Then the N-th cell from the same side must contain the digit 1."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": [
+          "Use the WSC clue editor; see the example payload for this variant.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "primerunsum",
+      "name": "Prime Run Sum",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. A clue outside the grid represents the sum of the first set of continuous prime digits seen from that direction."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "outside"
+        ],
+        "instructions": [
+          "Use the WSC clue editor; see the example payload for this variant.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "even",
+      "name": "Even",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Cells with shaded squares contain even digits."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cell"
+        ],
+        "instructions": [
+          "Mark even cells with square symbols.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "odd",
+      "name": "Odd",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. Cells with shaded circles contain odd digits."
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cell"
+        ],
+        "instructions": [
+          "Mark odd cells with circle symbols.",
+          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+        ]
+      }
+    },
+    {
+      "id": "samurai",
+      "name": "Samurai",
+      "rules": {
+        "9x9": "There are 5 overlapping 9x9 sudoku grids. In each grid, standard Classic Sudoku rules apply. Additionally, the following rules apply for the individual sudokus: No Three in a Line Sudoku (Top Left): There must not exist a run of three or more cells along a marked line that all contain numbers of the same parity (i.e., even or odd). Creasing Sudoku (Top Right): Digits along each line are monotonically increasing or decreasing. Palindrome Sudoku (Centre): Digits along each line are a palindrome, they read the same from both directions. Clone Along Line Sudoku (Bottom Left & Right): These two sudokus are Clone Along Line Sudoku. In these sudokus, digits along the marked lines should be exactly same and in the same order but in any direction. Scoring Points will be awarded per fully solved 9x9 grid, provided each grid's solution is consistent with the overall solution. The five grids are worth 90, 80, 70, 60, and 50 points in the order solved: 90 for the first grid completed, 80 for the second, 70 for the third, 60 for the fourth, and 50 for the fifth."
+      },
+      "status": "available",
+      "tags": [
+        "wsc2026"
+      ],
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": [
+          "Use the dedicated WSC Layout solver. Enter explicit givens, rows, columns and regions for this nonstandard geometry."
+        ]
+      },
+      "solverRoute": "/wsc2026/?tab=solver&variant=samurai"
+    },
+    {
+      "id": "star",
+      "name": "Star",
+      "rules": {
+        "9x9": "Place a digit from 1 to 9 into each cell so that no digit repeats in any bold region or row (including the two directions of diagonal rows). Some rows and columns continue over shaded cells."
+      },
+      "status": "available",
+      "tags": [
+        "wsc2026"
+      ],
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": [
+          "Use the dedicated WSC Layout solver. Enter explicit givens, rows, columns and regions for this nonstandard geometry."
+        ]
+      },
+      "solverRoute": "/wsc2026/?tab=solver&variant=star"
+    },
+    {
+      "id": "disjointhundred",
+      "name": "Disjoint Hundred",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. No digit can appear in the same cell position in different 3x3 outlined boxes."
+      },
+      "status": "available",
+      "tags": [
+        "wsc2026"
+      ],
+      "inputType": {
+        "categories": [
+          "shading",
+          "no-input"
+        ],
+        "instructions": [
+          "Shade the Hundred groups, then add the secondary variant marks."
+        ]
+      }
+    },
+    {
+      "id": "edgedifferencehundred",
+      "name": "Edge Difference Hundred",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. Each number outside the grid is the absolute difference of digits in the first and the last cell in the corresponding row/column."
+      },
+      "status": "available",
+      "tags": [
+        "wsc2026"
+      ],
+      "inputType": {
+        "categories": [
+          "shading",
+          "outside"
+        ],
+        "instructions": [
+          "Shade the Hundred groups, then add the secondary variant marks."
+        ]
+      }
+    },
+    {
+      "id": "antidiagonalhundred",
+      "name": "Anti Diagonal Hundred",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. Each main diagonal contains exactly three different digits."
+      },
+      "status": "available",
+      "tags": [
+        "wsc2026"
+      ],
+      "inputType": {
+        "categories": [
+          "shading",
+          "no-input"
+        ],
+        "instructions": [
+          "Shade the Hundred groups, then add the secondary variant marks."
+        ]
+      }
+    },
+    {
+      "id": "outside234hundred",
+      "name": "Outside 234 Hundred",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. Each digit outside the grid appears in one of 2nd, 3rd or 4th cells in the corresponding row/column."
+      },
+      "status": "available",
+      "tags": [
+        "wsc2026"
+      ],
+      "inputType": {
+        "categories": [
+          "shading",
+          "outside",
+          "cell"
+        ],
+        "instructions": [
+          "Shade the Hundred groups, then add the secondary variant marks."
+        ]
+      }
+    },
+    {
+      "id": "inequalityhundred",
+      "name": "Inequality Hundred",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. Each inequality sign (‘<’ or ‘>’) between cells indicates the larger of the two digits is on the open side of the sign."
+      },
+      "status": "available",
+      "tags": [
+        "wsc2026"
+      ],
+      "inputType": {
+        "categories": [
+          "shading",
+          "edge"
+        ],
+        "instructions": [
+          "Shade the Hundred groups, then add the secondary variant marks."
+        ]
+      }
+    },
+    {
+      "id": "sequencehundred",
+      "name": "Sequence Hundred",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. Digits along each line are in arithmetic progression."
+      },
+      "status": "available",
+      "tags": [
+        "wsc2026"
+      ],
+      "inputType": {
+        "categories": [
+          "shading",
+          "line"
+        ],
+        "instructions": [
+          "Shade the Hundred groups, then add the secondary variant marks."
+        ]
+      }
+    },
+    {
+      "id": "skyscraperhundred",
+      "name": "Skyscraper Hundred",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. Each digit inside the grid represents the height of a skyscraper in that cell. Each number outside the grid indicates the number of skyscrapers that can be seen in the corresponding row or column. Taller skyscrapers hide shorter ones."
+      },
+      "status": "available",
+      "tags": [
+        "wsc2026"
+      ],
+      "inputType": {
+        "categories": [
+          "shading",
+          "outside"
+        ],
+        "instructions": [
+          "Shade the Hundred groups, then add the secondary variant marks."
+        ]
+      }
+    },
+    {
+      "id": "wscescape",
+      "name": "Escape (WSC 2026)",
+      "otherNames": "Escape Sudoku",
+      "rules": {
+        "9x9": "Standard Classic Sudoku rules apply. There must be at least one path of adjacent cells from the centre cell to each of the four edges consisting of odd digits. A path ending at a corner can be considered as a valid path for both the edges."
+      },
+      "status": "available",
+      "tags": [
+        "wsc2026",
+        "global"
+      ],
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": [
+          "Global rule: the centre must connect to all four edges through odd cells. No marks are required."
+        ]
       }
     }
   ]

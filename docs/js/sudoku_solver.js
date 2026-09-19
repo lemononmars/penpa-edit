@@ -2964,7 +2964,16 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
         return constraints;
     }
 
+    var wscCompositions = {"disjointhundred":["hundred","disjoint"],"edgedifferencehundred":["hundred","edgedifference"],"antidiagonalhundred":["hundred","anti diagonal"],"outside234hundred":["hundred","outside234"],"inequalityhundred":["hundred","inequality"],"sequencehundred":["hundred","sequence"],"skyscraperhundred":["hundred","skyscraper"]};
+    function expandWscPuzzle(puzzle) {
+        var original = puzzle && (puzzle.activeSudokuVariants || [puzzle.activeSudokuVariant || 'classic']) || ['classic'];
+        if (!original.some(function(id) { return wscCompositions[canonicalVariantName(id)]; })) return puzzle;
+        var expanded = Object.create(puzzle);
+        expanded.activeSudokuVariants = original.reduce(function(all,id) { return all.concat(wscCompositions[canonicalVariantName(id)] || [id]); },[]);
+        return expanded;
+    }
     function interpretationState(puzzle) {
+        puzzle = expandWscPuzzle(puzzle);
         var directConstraints = readDirectConstraints(puzzle);
         var requested = Array.isArray(puzzle && puzzle.activeSudokuVariants) ?
             puzzle.activeSudokuVariants : [puzzle && puzzle.activeSudokuVariant || "classic"];
@@ -3068,6 +3077,11 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                 return canonicalVariantName(value) === id;
             })) constraints.supported.push(id);
         });
+        if (!state.interpretation.diagnostics.length) {
+            (puzzle.activeSudokuVariants || [puzzle.activeSudokuVariant]).forEach(function(id) {
+                if (wscCompositions[canonicalVariantName(id)]) constraints.supported.push(id);
+            });
+        }
         constraints.diagnostics = state.interpretation.diagnostics;
         return constraints;
     }
@@ -5033,7 +5047,7 @@ var SudokuTools = (function() {
         pu.battenburg_mode = pu.activeSudokuVariant === "battenburg";
         pu.sudoku_midpoint_clue_mode = pu.activeSudokuVariant === "midpoint" &&
             (mode === "number" || mode === "symbol");
-        pu.sudoku_edge_clue_mode = ["difference", "sum", "product", "arithmetic", "greater", "lesser",
+        pu.sudoku_edge_clue_mode = ["divisorsumpairs", "transparentkropkipairs", "inequalityhundred", "difference", "sum", "product", "arithmetic", "greater", "lesser",
             "consecutive", "consecutivepairs", "kropki", "kropkipairs", "xv", "xvpairs", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares", "multiplication", "xivi", "lc",
             "primesums", "twodigitprimenumbers", "blocksumrelations", "divisor", "eitheror", "anticonsecutive", "fives", "sumnine", "fadedkropki", "doublekropki",
             "oneortwodifferencepairs", "teneleven", "tenspositionproducts"].indexOf(pu.activeSudokuVariant) !== -1 &&

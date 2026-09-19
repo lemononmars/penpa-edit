@@ -1,4 +1,5 @@
 <script lang="ts">
+  import WscClueEditor from "./WscClueEditor.svelte";
   import { onMount } from "svelte";
   import { guideFor, variantRules } from "./variantRules";
   import {
@@ -1367,6 +1368,8 @@
   }
 
   function chooseVariant(value: string) {
+    const solverRoute = variationByValue.get(value)?.solverRoute;
+    if (solverRoute) { window.open(solverRoute, "_blank", "noopener,noreferrer"); return; }
     if (conflictingVariant(value) || unavailableVariant(value)) return;
     if (!["irregular", "scattered", "deficit", "surplus", "toroidal"].includes(value)) {
       (window as any).SudokuTools?.finishIrregularEditor?.();
@@ -1389,6 +1392,7 @@
       let layers = [
         "outside",
         "outside234",
+        "outside234hundred",
         "evensandwich",
         "oddsandwich",
         "mastermind",
@@ -3087,6 +3091,7 @@
         </section>
       </div>
 
+      <WscClueEditor />
       <div bind:this={desktopInputModesAnchor} class="desktop-input-modes-anchor"></div>
       <section
         bind:this={inputModesSection}
@@ -3491,6 +3496,7 @@
             >
           </div>
           <div class="action-group bottom-actions">
+            <button on:click={() => (window.location.href = "./wsc2026/")}>WSC 2026</button>
             <button
               class="battle-action"
               title="Open realtime Sudoku Battle"
@@ -3926,6 +3932,7 @@
             The solver runs on your device, and it does not collect nor send any
             of your data.
           </p>
+          <a href="./wsc2026/" target="_blank" rel="noreferrer">WSC 2026</a>
           <a href="./list/" target="_blank" rel="noreferrer"
             >See list of variants ↗</a
           >

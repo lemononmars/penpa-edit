@@ -1,0 +1,1 @@
+(function(root,factory){if(typeof module!=='undefined'&&module.exports)module.exports=factory(require('../../sudoku_variants/wsc_rules.js'));else factory(root.Wsc2026Rules)(root.SudokuCSP);})(typeof globalThis!=='undefined'?globalThis:this,function(rules){return function(csp){csp.registerConstraint('wscRules',{validatePartial:rules.validate,validateComplete:rules.validate});};});

@@ -1,6 +1,7 @@
 "use strict";
 
 var installers = [
+    require("./wsc_rules.js"),
     require("./shaded_parity_groups.js"),
     require("./region_all_different.js"),
     require("./scattered_all_different.js"),

@@ -14,6 +14,7 @@ type RawVariation = {
     reviewed?: boolean;
     otherNames?: string;
     wikiOnly?: boolean;
+    solverRoute?: string;
     gridSizeReplacesNine?: boolean;
 };
 
@@ -165,6 +166,37 @@ function genericSetting(variation: Variation) {
     if (variation.value === "partitionedsums") {
         add("number", "1", 1, ["mo_number_lb", "sub_number1_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value.endsWith('hundred') && variation.value !== 'hundred') {
+        add('surface', '', 1, ['mo_surface_lb']);
+        if (variation.value === 'sequencehundred') add('line', '2', 5, ['mo_line_lb','sub_line2_lb']);
+        if (variation.value === 'inequalityhundred') add('number','5',6,['mo_number_lb','sub_number5_lb']);
+        if (['edgedifferencehundred','outside234hundred','skyscraperhundred'].includes(variation.value)) add('number','1',1,['mo_number_lb','sub_number1_lb']);
+        return {show:Array.from(new Set(show)),modeset:modes,submodeset:submodes,styleset:styles,outside:outsideVariationValues.has(variation.value)};
+    }
+    if (variation.value === 'divisorsumpairs') {
+        add('number','5',6,['mo_number_lb','sub_number5_lb']);
+        return {show,modeset:modes,submodeset:submodes,styleset:styles,outside:false};
+    }
+    if (variation.value === 'transparentkropkipairs') {
+        add('symbol','circle_SS',2,['mo_symbol_lb','ms1','ms1_circle','li_circle_SS']);
+        return {show,modeset:modes,submodeset:submodes,styleset:styles,outside:false};
+    }
+    if (['nothreeinaline','tunnel','missingarrow','missingthermo','multidiagonal','clonealongline'].includes(variation.value)) {
+        add('line','2',5,['mo_line_lb','sub_line2_lb']);
+        return {show,modeset:modes,submodeset:submodes,styleset:styles,outside:false};
+    }
+    if (['indextoone','primerunsum','antioutside','sudokuwithnames','magicsword','nexttox','unordereddistances'].includes(variation.value)) {
+        add('number','1',1,['mo_number_lb','sub_number1_lb']);
+        return {show,modeset:modes,submodeset:submodes,styleset:styles,outside:true};
+    }
+    if (['even','odd','friends','enemies'].includes(variation.value)) {
+        add('symbol',variation.value==='even'?'square_L':'circle_L',2,['mo_symbol_lb','ms1','ms1_circle','ms1_square','li_circle_L','li_square_L']);
+        return {show,modeset:modes,submodeset:submodes,styleset:styles,outside:false};
+    }
+    if (variation.value === 'number5stillalive') {
+        add('cage','1',10,['mo_cage_lb','sub_cage1_lb','sub_cage2_lb']);
+        return {show,modeset:modes,submodeset:submodes,styleset:styles,outside:false};
     }
     if (variation.inputType.categories.includes("no-input")) {
         return { show, modeset: modes, submodeset: submodes, styleset: styles, outside: false };

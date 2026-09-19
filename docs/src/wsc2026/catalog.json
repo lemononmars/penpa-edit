@@ -1,0 +1,1759 @@
+{
+  "version": 1,
+  "source": "WSC2026IB.pdf",
+  "published": "2026-09-16",
+  "rounds": [
+    {
+      "id": 1,
+      "name": "Kuru Clan",
+      "minutes": 55,
+      "points": 600,
+      "page": 6,
+      "available": true
+    },
+    {
+      "id": 2,
+      "name": "Pandu Putra",
+      "minutes": 35,
+      "points": 350,
+      "page": 9,
+      "available": true
+    },
+    {
+      "id": 3,
+      "name": "Kauravas",
+      "minutes": 50,
+      "points": 650,
+      "page": 11,
+      "available": true
+    },
+    {
+      "id": 4,
+      "name": "Acharya Drona",
+      "minutes": 35,
+      "points": 350,
+      "page": 14,
+      "available": true
+    },
+    {
+      "id": 5,
+      "name": "Escape from Lakshagriha",
+      "minutes": 40,
+      "points": 450,
+      "page": 15,
+      "available": true
+    },
+    {
+      "id": 6,
+      "name": "Quest for Celestial Weapons",
+      "minutes": 45,
+      "points": 500,
+      "page": 18,
+      "available": true
+    },
+    {
+      "id": 7,
+      "name": "Pandavas in Disguise",
+      "minutes": 50,
+      "points": 700,
+      "page": 21,
+      "available": true
+    },
+    {
+      "id": 8,
+      "name": "Team Round",
+      "minutes": null,
+      "points": null,
+      "page": null,
+      "available": false
+    },
+    {
+      "id": 9,
+      "name": "Team Round",
+      "minutes": null,
+      "points": null,
+      "page": null,
+      "available": false
+    },
+    {
+      "id": 10,
+      "name": "Dharma Yuddha",
+      "minutes": 75,
+      "points": 900,
+      "page": 26,
+      "available": true
+    },
+    {
+      "id": 11,
+      "name": "Arjuna's Revenge",
+      "minutes": 35,
+      "points": 350,
+      "page": 33,
+      "available": true
+    },
+    {
+      "id": 12,
+      "name": "Ashwatthama is Dead?",
+      "minutes": 40,
+      "points": 400,
+      "page": 34,
+      "available": true
+    },
+    {
+      "id": 13,
+      "name": "Team Round",
+      "minutes": null,
+      "points": null,
+      "page": null,
+      "available": false
+    },
+    {
+      "id": 14,
+      "name": "Team Round",
+      "minutes": null,
+      "points": null,
+      "page": null,
+      "available": false
+    },
+    {
+      "id": 15,
+      "name": "Team Round",
+      "minutes": null,
+      "points": null,
+      "page": null,
+      "available": false
+    },
+    {
+      "id": 16,
+      "name": "The Final Duel",
+      "minutes": 60,
+      "points": 450,
+      "page": 37,
+      "available": true
+    }
+  ],
+  "puzzles": [
+    {
+      "id": "r01-01",
+      "round": 1,
+      "number": 1,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 25,
+      "rules": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and 3x3 outlined box.",
+      "page": 6,
+      "image": "/wsc2026/r01-01.png",
+      "example": "/wsc2026/r01-01-example.png",
+      "solution": "/wsc2026/r01-01-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r01-02",
+      "round": 1,
+      "number": 2,
+      "stage": "",
+      "name": "Killer Sudoku",
+      "points": 90,
+      "rules": "Standard Classic Sudoku rules apply. The number at the top-left corner of each cage is the sum of digits inside the cage. Digits do not repeat within a cage.",
+      "page": 6,
+      "image": "/wsc2026/r01-02.png",
+      "example": "/wsc2026/r01-02-example.png",
+      "solution": "/wsc2026/r01-02-solution.png",
+      "variantId": "killer",
+      "variants": [
+        "killer"
+      ]
+    },
+    {
+      "id": "r01-03",
+      "round": 1,
+      "number": 3,
+      "stage": "",
+      "name": "Irregular Sudoku",
+      "points": 30,
+      "rules": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and outlined region.",
+      "page": 6,
+      "image": "/wsc2026/r01-03.png",
+      "example": "/wsc2026/r01-03-example.png",
+      "solution": "/wsc2026/r01-03-solution.png",
+      "variantId": "irregular",
+      "variants": [
+        "irregular"
+      ]
+    },
+    {
+      "id": "r01-04",
+      "round": 1,
+      "number": 4,
+      "stage": "",
+      "name": "Toroidal Sudoku",
+      "points": 120,
+      "rules": "Place a digit from 1 to 9 into each empty cell in the grid so that each digit appears exactly once in each row, column and outlined region. Some outlined regions wrap around the grid.",
+      "page": 7,
+      "image": "/wsc2026/r01-04.png",
+      "example": "/wsc2026/r01-04-example.png",
+      "solution": "/wsc2026/r01-04-solution.png",
+      "variantId": "toroidal",
+      "variants": [
+        "toroidal"
+      ]
+    },
+    {
+      "id": "r01-05",
+      "round": 1,
+      "number": 5,
+      "stage": "",
+      "name": "Diagonal Sudoku",
+      "points": 75,
+      "rules": "Standard Classic Sudoku rules apply. Each main diagonal contains each digit from 1 to 9.",
+      "page": 7,
+      "image": "/wsc2026/r01-05.png",
+      "example": "/wsc2026/r01-05-example.png",
+      "solution": "/wsc2026/r01-05-solution.png",
+      "variantId": "diagonal",
+      "variants": [
+        "diagonal"
+      ]
+    },
+    {
+      "id": "r01-06",
+      "round": 1,
+      "number": 6,
+      "stage": "",
+      "name": "Non Consecutive Sudoku",
+      "points": 45,
+      "rules": "Standard Classic Sudoku rules apply. Digits in adjacent cells must not be consecutive.",
+      "page": 7,
+      "image": "/wsc2026/r01-06.png",
+      "example": "/wsc2026/r01-06-example.png",
+      "solution": "/wsc2026/r01-06-solution.png",
+      "variantId": "non consecutive",
+      "variants": [
+        "non consecutive"
+      ]
+    },
+    {
+      "id": "r01-07",
+      "round": 1,
+      "number": 7,
+      "stage": "",
+      "name": "Extra Region Sudoku",
+      "points": 70,
+      "rules": "Standard Classic Sudoku rules apply. Each marked region contains each digit from 1 to 9.",
+      "page": 8,
+      "image": "/wsc2026/r01-07.png",
+      "example": "/wsc2026/r01-07-example.png",
+      "solution": "/wsc2026/r01-07-solution.png",
+      "variantId": "extraregion",
+      "variants": [
+        "extraregion"
+      ]
+    },
+    {
+      "id": "r01-08",
+      "round": 1,
+      "number": 8,
+      "stage": "",
+      "name": "Odd Even Sudoku",
+      "points": 80,
+      "rules": "Standard Classic Sudoku rules apply. Cells with shaded squares contain even digits. Cells with shaded circles contain odd digits.",
+      "page": 8,
+      "image": "/wsc2026/r01-08.png",
+      "example": "/wsc2026/r01-08-example.png",
+      "solution": "/wsc2026/r01-08-solution.png",
+      "variantId": "odd even",
+      "variants": [
+        "odd even"
+      ]
+    },
+    {
+      "id": "r01-09",
+      "round": 1,
+      "number": 9,
+      "stage": "",
+      "name": "Outside Sudoku",
+      "points": 65,
+      "rules": "Standard Classic Sudoku rules apply. Each digit outside the grid appears within the first box in the corresponding row/column.",
+      "page": 8,
+      "image": "/wsc2026/r01-09.png",
+      "example": "/wsc2026/r01-09-example.png",
+      "solution": "/wsc2026/r01-09-solution.png",
+      "variantId": "outside",
+      "variants": [
+        "outside"
+      ]
+    },
+    {
+      "id": "r02-01",
+      "round": 2,
+      "number": 1,
+      "stage": "",
+      "name": "Samurai Sudoku",
+      "points": 350,
+      "rules": "There are 5 overlapping 9x9 sudoku grids. In each grid, standard Classic Sudoku rules apply. Additionally, the following rules apply for the individual sudokus: No Three in a Line Sudoku (Top Left): There must not exist a run of three or more cells along a marked line that all contain numbers of the same parity (i.e., even or odd). Creasing Sudoku (Top Right): Digits along each line are monotonically increasing or decreasing. Palindrome Sudoku (Centre): Digits along each line are a palindrome, they read the same from both directions. Clone Along Line Sudoku (Bottom Left & Right): These two sudokus are Clone Along Line Sudoku. In these sudokus, digits along the marked lines should be exactly same and in the same order but in any direction. Scoring Points will be awarded per fully solved 9x9 grid, provided each grid's solution is consistent with the overall solution. The five grids are worth 90, 80, 70, 60, and 50 points in the order solved: 90 for the first grid completed, 80 for the second, 70 for the third, 60 for the fourth, and 50 for the fifth.",
+      "page": 9,
+      "image": "/wsc2026/r02-01.png",
+      "example": "/wsc2026/samurai-example.png",
+      "solution": "/wsc2026/samurai-solution.png",
+      "variantId": "samurai",
+      "variants": [
+        "samurai"
+      ]
+    },
+    {
+      "id": "r03-01",
+      "round": 3,
+      "number": 1,
+      "stage": "",
+      "name": "Hundred Sudoku",
+      "points": 55,
+      "rules": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100.",
+      "page": 11,
+      "image": "/wsc2026/r03-01.png",
+      "example": "/wsc2026/r03-01-example.png",
+      "solution": "/wsc2026/r03-01-solution.png",
+      "variantId": "hundred",
+      "variants": [
+        "hundred"
+      ]
+    },
+    {
+      "id": "r03-02",
+      "round": 3,
+      "number": 2,
+      "stage": "",
+      "name": "Disjoint Hundred Sudoku",
+      "points": 80,
+      "rules": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. No digit can appear in the same cell position in different 3x3 outlined boxes.",
+      "page": 11,
+      "image": "/wsc2026/r03-02.png",
+      "example": "/wsc2026/r03-02-example.png",
+      "solution": "/wsc2026/r03-02-solution.png",
+      "variantId": "disjointhundred",
+      "variants": [
+        "hundred",
+        "disjoint"
+      ]
+    },
+    {
+      "id": "r03-03",
+      "round": 3,
+      "number": 3,
+      "stage": "",
+      "name": "Edge Difference Hundred Sudoku",
+      "points": 105,
+      "rules": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. Each number outside the grid is the absolute difference of digits in the first and the last cell in the corresponding row/column.",
+      "page": 11,
+      "image": "/wsc2026/r03-03.png",
+      "example": "/wsc2026/r03-03-example.png",
+      "solution": "/wsc2026/r03-03-solution.png",
+      "variantId": "edgedifferencehundred",
+      "variants": [
+        "hundred",
+        "edgedifference"
+      ]
+    },
+    {
+      "id": "r03-04",
+      "round": 3,
+      "number": 4,
+      "stage": "",
+      "name": "Anti Diagonal Hundred Sudoku",
+      "points": 55,
+      "rules": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. Each main diagonal contains exactly three different digits.",
+      "page": 12,
+      "image": "/wsc2026/r03-04.png",
+      "example": "/wsc2026/r03-04-example.png",
+      "solution": "/wsc2026/r03-04-solution.png",
+      "variantId": "antidiagonalhundred",
+      "variants": [
+        "hundred",
+        "anti diagonal"
+      ]
+    },
+    {
+      "id": "r03-05",
+      "round": 3,
+      "number": 5,
+      "stage": "",
+      "name": "Outside 234 Hundred Sudoku",
+      "points": 100,
+      "rules": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. Each digit outside the grid appears in one of 2nd, 3rd or 4th cells in the corresponding row/column.",
+      "page": 12,
+      "image": "/wsc2026/r03-05.png",
+      "example": "/wsc2026/r03-05-example.png",
+      "solution": "/wsc2026/r03-05-solution.png",
+      "variantId": "outside234hundred",
+      "variants": [
+        "hundred",
+        "outside234"
+      ]
+    },
+    {
+      "id": "r03-06",
+      "round": 3,
+      "number": 6,
+      "stage": "",
+      "name": "Inequality Hundred Sudoku",
+      "points": 110,
+      "rules": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. Each inequality sign (‘<’ or ‘>’) between cells indicates the larger of the two digits is on the open side of the sign.",
+      "page": 12,
+      "image": "/wsc2026/r03-06.png",
+      "example": "/wsc2026/r03-06-example.png",
+      "solution": "/wsc2026/r03-06-solution.png",
+      "variantId": "inequalityhundred",
+      "variants": [
+        "hundred",
+        "inequality"
+      ]
+    },
+    {
+      "id": "r03-07",
+      "round": 3,
+      "number": 7,
+      "stage": "",
+      "name": "Sequence Hundred Sudoku",
+      "points": 60,
+      "rules": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. Digits along each line are in arithmetic progression.",
+      "page": 13,
+      "image": "/wsc2026/r03-07.png",
+      "example": "/wsc2026/r03-07-example.png",
+      "solution": "/wsc2026/r03-07-solution.png",
+      "variantId": "sequencehundred",
+      "variants": [
+        "hundred",
+        "sequence"
+      ]
+    },
+    {
+      "id": "r03-08",
+      "round": 3,
+      "number": 8,
+      "stage": "",
+      "name": "Skyscraper Hundred Sudoku",
+      "points": 85,
+      "rules": "Standard Classic Sudoku rules apply. In rows with shaded cells, the sum of number combinations in the shaded cells is exactly 100. Standard Hundred Sudoku rules apply. Each digit inside the grid represents the height of a skyscraper in that cell. Each number outside the grid indicates the number of skyscrapers that can be seen in the corresponding row or column. Taller skyscrapers hide shorter ones.",
+      "page": 13,
+      "image": "/wsc2026/r03-08.png",
+      "example": "/wsc2026/r03-08-example.png",
+      "solution": "/wsc2026/r03-08-solution.png",
+      "variantId": "skyscraperhundred",
+      "variants": [
+        "hundred",
+        "skyscraper"
+      ]
+    },
+    {
+      "id": "r04-01",
+      "round": 4,
+      "number": 1,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 15,
+      "rules": "Standard Classic Sudoku rules apply.",
+      "page": 14,
+      "image": "/wsc2026/r04-01.png",
+      "example": "/wsc2026/r04-01-example.png",
+      "solution": "/wsc2026/r04-01-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r04-02",
+      "round": 4,
+      "number": 2,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 25,
+      "rules": "Standard Classic Sudoku rules apply.",
+      "page": 14,
+      "image": "/wsc2026/r04-01.png",
+      "example": "/wsc2026/r04-01-example.png",
+      "solution": "/wsc2026/r04-01-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r04-03",
+      "round": 4,
+      "number": 3,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 25,
+      "rules": "Standard Classic Sudoku rules apply.",
+      "page": 14,
+      "image": "/wsc2026/r04-01.png",
+      "example": "/wsc2026/r04-01-example.png",
+      "solution": "/wsc2026/r04-01-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r04-04",
+      "round": 4,
+      "number": 4,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 30,
+      "rules": "Standard Classic Sudoku rules apply.",
+      "page": 14,
+      "image": "/wsc2026/r04-01.png",
+      "example": "/wsc2026/r04-01-example.png",
+      "solution": "/wsc2026/r04-01-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r04-05",
+      "round": 4,
+      "number": 5,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 40,
+      "rules": "Standard Classic Sudoku rules apply.",
+      "page": 14,
+      "image": "/wsc2026/r04-01.png",
+      "example": "/wsc2026/r04-01-example.png",
+      "solution": "/wsc2026/r04-01-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r04-06",
+      "round": 4,
+      "number": 6,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 65,
+      "rules": "Standard Classic Sudoku rules apply.",
+      "page": 14,
+      "image": "/wsc2026/r04-01.png",
+      "example": "/wsc2026/r04-01-example.png",
+      "solution": "/wsc2026/r04-01-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r04-07",
+      "round": 4,
+      "number": 7,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 50,
+      "rules": "Standard Classic Sudoku rules apply.",
+      "page": 14,
+      "image": "/wsc2026/r04-01.png",
+      "example": "/wsc2026/r04-01-example.png",
+      "solution": "/wsc2026/r04-01-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r04-08",
+      "round": 4,
+      "number": 8,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 30,
+      "rules": "Standard Classic Sudoku rules apply.",
+      "page": 14,
+      "image": "/wsc2026/r04-01.png",
+      "example": "/wsc2026/r04-01-example.png",
+      "solution": "/wsc2026/r04-01-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r04-09",
+      "round": 4,
+      "number": 9,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 70,
+      "rules": "Standard Classic Sudoku rules apply.",
+      "page": 14,
+      "image": "/wsc2026/r04-01.png",
+      "example": "/wsc2026/r04-01-example.png",
+      "solution": "/wsc2026/r04-01-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r05-01",
+      "round": 5,
+      "number": 1,
+      "stage": "",
+      "name": "Flame Path Sudoku",
+      "points": 30,
+      "rules": "Standard Classic Sudoku rules apply. There must be at least one path from the top left cell to the bottom right cell with cells connected orthogonally, called the flame path. The digits 1, 5 and 9 cannot be placed on the flame path.",
+      "page": 15,
+      "image": "/wsc2026/r05-01.png",
+      "example": "/wsc2026/r05-01-example.png",
+      "solution": "/wsc2026/r05-01-solution.png",
+      "variantId": "flamepath",
+      "variants": [
+        "flamepath"
+      ]
+    },
+    {
+      "id": "r05-02",
+      "round": 5,
+      "number": 2,
+      "stage": "",
+      "name": "Sudoku with Names",
+      "points": 75,
+      "rules": "Standard Classic Sudoku rules apply. Digits/Alphabet given outside will appear in the same order in that row/column. ARTYOM ARTYOM",
+      "page": 15,
+      "image": "/wsc2026/r05-02.png",
+      "example": "/wsc2026/r05-02-example.png",
+      "solution": "/wsc2026/r05-02-solution.png",
+      "variantId": "sudokuwithnames",
+      "variants": [
+        "sudokuwithnames"
+      ]
+    },
+    {
+      "id": "r05-03",
+      "round": 5,
+      "number": 3,
+      "stage": "",
+      "name": "Coded Sudoku",
+      "points": 60,
+      "rules": "Standard Classic Sudoku rules apply. Some digits have been substituted by letters. All instances of the same letter must be substituted by the same digit and different letters must be substituted by different digits.",
+      "page": 16,
+      "image": "/wsc2026/r05-03.png",
+      "example": "/wsc2026/r05-03-example.png",
+      "solution": "/wsc2026/r05-03-solution.png",
+      "variantId": "coded",
+      "variants": [
+        "coded"
+      ]
+    },
+    {
+      "id": "r05-04",
+      "round": 5,
+      "number": 4,
+      "stage": "",
+      "name": "Tunnel Sudoku",
+      "points": 75,
+      "rules": "Standard Classic Sudoku rules apply. The numbers along the tunnel (line) are all less than the numbers in the endpoints of the tunnel (circles). Additionally, adjacent numbers along the tunnel (including endpoints) cannot have a difference greater than 3.",
+      "page": 16,
+      "image": "/wsc2026/r05-04.png",
+      "example": "/wsc2026/r05-04-example.png",
+      "solution": "/wsc2026/r05-04-solution.png",
+      "variantId": "tunnel",
+      "variants": [
+        "tunnel"
+      ]
+    },
+    {
+      "id": "r05-05",
+      "round": 5,
+      "number": 5,
+      "stage": "",
+      "name": "S for Sudoku",
+      "points": 75,
+      "rules": "Standard Classic Sudoku rules apply. A cell with an alphabet contains a digit whose mapped word contains the corresponding alphabet.",
+      "page": 16,
+      "image": "/wsc2026/r05-05.png",
+      "example": "/wsc2026/r05-05-example.png",
+      "solution": "/wsc2026/r05-05-solution.png",
+      "variantId": "sforsudoku",
+      "variants": [
+        "sforsudoku"
+      ]
+    },
+    {
+      "id": "r05-06",
+      "round": 5,
+      "number": 6,
+      "stage": "",
+      "name": "Number 5 Still Alive Sudoku",
+      "points": 65,
+      "rules": "Standard Classic Sudoku rules apply. Within each cage the sum of the digits is either 5, 15, 25, 35 or 45. Digits do not repeat within a cage.",
+      "page": 17,
+      "image": "/wsc2026/r05-06.png",
+      "example": "/wsc2026/r05-06-example.png",
+      "solution": "/wsc2026/r05-06-solution.png",
+      "variantId": "number5stillalive",
+      "variants": [
+        "number5stillalive"
+      ]
+    },
+    {
+      "id": "r05-07",
+      "round": 5,
+      "number": 7,
+      "stage": "",
+      "name": "Escape Sudoku",
+      "points": 70,
+      "rules": "Standard Classic Sudoku rules apply. There must be at least one path of adjacent cells from the centre cell to each of the four edges consisting of odd digits. A path ending at a corner can be considered as a valid path for both the edges.",
+      "page": 17,
+      "image": "/wsc2026/r05-07.png",
+      "example": "/wsc2026/r05-07-example.png",
+      "solution": "/wsc2026/r05-07-solution.png",
+      "variantId": "wscescape",
+      "variants": [
+        "wscescape"
+      ]
+    },
+    {
+      "id": "r06-01",
+      "round": 6,
+      "number": 1,
+      "stage": "",
+      "name": "Attack the Leader Sudoku",
+      "points": 50,
+      "rules": "Standard Classic Sudoku rules apply. The arrow clues indicate all the directions (up, down, left, and right) where the nearest cell with digit higher than the digit in the cell with the arrow are located when looking from that cell.",
+      "page": 18,
+      "image": "/wsc2026/r06-01.png",
+      "example": "/wsc2026/r06-01-example.png",
+      "solution": "/wsc2026/r06-01-solution.png",
+      "variantId": "attacktheleader",
+      "variants": [
+        "attacktheleader"
+      ]
+    },
+    {
+      "id": "r06-02",
+      "round": 6,
+      "number": 2,
+      "stage": "",
+      "name": "Fractal Sudoku",
+      "points": 40,
+      "rules": "Standard Classic Sudoku rules apply. Each 3x3 outlined box also represents a sudoku. Every row & column within each box should contain exactly one digit from the three sets: (1,2,3), (4,5,6) and (7,8,9).",
+      "page": 18,
+      "image": "/wsc2026/r06-02.png",
+      "example": "/wsc2026/r06-02-example.png",
+      "solution": "/wsc2026/r06-02-solution.png",
+      "variantId": "fractal",
+      "variants": [
+        "fractal"
+      ]
+    },
+    {
+      "id": "r06-03",
+      "round": 6,
+      "number": 3,
+      "stage": "",
+      "name": "Trishula Sudoku",
+      "points": 40,
+      "rules": "Standard Classic Sudoku rules apply. For each Trishula, the three cells at the tips of the prongs contain the minimum, average, and maximum digits appearing in the shaded handle region. The correspondence between the digits in the tip cells and the three properties is not given.",
+      "page": 19,
+      "image": "/wsc2026/r06-03.png",
+      "example": "/wsc2026/r06-03-example.png",
+      "solution": "/wsc2026/r06-03-solution.png",
+      "variantId": "trishula",
+      "variants": [
+        "trishula"
+      ]
+    },
+    {
+      "id": "r06-04",
+      "round": 6,
+      "number": 4,
+      "stage": "",
+      "name": "Divisor Sum Pairs Sudoku",
+      "points": 60,
+      "rules": "Standard Classic Sudoku rules apply. Clues marked at the intersection of two cells implies that the sum of the two cells is divisible by the clue.",
+      "page": 19,
+      "image": "/wsc2026/r06-04.png",
+      "example": "/wsc2026/r06-04-example.png",
+      "solution": "/wsc2026/r06-04-solution.png",
+      "variantId": "divisorsumpairs",
+      "variants": [
+        "divisorsumpairs"
+      ]
+    },
+    {
+      "id": "r06-05",
+      "round": 6,
+      "number": 5,
+      "stage": "",
+      "name": "Magic Sword Sudoku",
+      "points": 75,
+      "rules": "Standard Classic Sudoku rules apply. Each arrow given outside the grid has the same unknown strength (Y) and attacks in the indicated direction. The number X above it means the first X cells in that direction contain numbers weaker (i.e. lower in value) than the strength of the arrow, while the (X+1)-th cell (if any) contains a number stronger (i.e. equal or higher in value) than it. Determining the arrow's strength is a part of solving.",
+      "page": 19,
+      "image": "/wsc2026/r06-05.png",
+      "example": "/wsc2026/r06-05-example.png",
+      "solution": "/wsc2026/r06-05-solution.png",
+      "variantId": "magicsword",
+      "variants": [
+        "magicsword"
+      ]
+    },
+    {
+      "id": "r06-06",
+      "round": 6,
+      "number": 6,
+      "stage": "",
+      "name": "Neighbouring Disparity Sudoku",
+      "points": 95,
+      "rules": "Standard Classic Sudoku rules apply. Cells with symbols will have digits of parity opposite to the cells pointed by the corners of the symbols.",
+      "page": 20,
+      "image": "/wsc2026/r06-06.png",
+      "example": "/wsc2026/r06-06-example.png",
+      "solution": "/wsc2026/r06-06-solution.png",
+      "variantId": "neighbouringdisparity",
+      "variants": [
+        "neighbouringdisparity"
+      ]
+    },
+    {
+      "id": "r06-07",
+      "round": 6,
+      "number": 7,
+      "stage": "",
+      "name": "Index to One Sudoku",
+      "points": 80,
+      "rules": "Standard Classic Sudoku rules apply. For each outside clue (X), let the X-th cell from that side contain the digit N. Then the N-th cell from the same side must contain the digit 1.",
+      "page": 20,
+      "image": "/wsc2026/r06-07.png",
+      "example": "/wsc2026/r06-07-example.png",
+      "solution": "/wsc2026/r06-07-solution.png",
+      "variantId": "indextoone",
+      "variants": [
+        "indextoone"
+      ]
+    },
+    {
+      "id": "r06-08",
+      "round": 6,
+      "number": 8,
+      "stage": "",
+      "name": "Prime Run Sum Sudoku",
+      "points": 60,
+      "rules": "Standard Classic Sudoku rules apply. A clue outside the grid represents the sum of the first set of continuous prime digits seen from that direction.",
+      "page": 20,
+      "image": "/wsc2026/r06-08.png",
+      "example": "/wsc2026/r06-08-example.png",
+      "solution": "/wsc2026/r06-08-solution.png",
+      "variantId": "primerunsum",
+      "variants": [
+        "primerunsum"
+      ]
+    },
+    {
+      "id": "r07-01",
+      "round": 7,
+      "number": 1,
+      "stage": "",
+      "name": "Arrow Sudoku",
+      "points": 45,
+      "rules": "Standard Classic Sudoku rules apply. The digit in each circled cell is the sum of digits along the path of its arrow. Digits can repeat within an arrow shape.",
+      "page": 21,
+      "image": "/wsc2026/r07-01.png",
+      "example": "/wsc2026/r07-01-example.png",
+      "solution": "/wsc2026/r07-01-solution.png",
+      "variantId": "arrow",
+      "variants": [
+        "arrow"
+      ]
+    },
+    {
+      "id": "r07-02",
+      "round": 7,
+      "number": 2,
+      "stage": "",
+      "name": "Missing Arrow Sudoku",
+      "points": 95,
+      "rules": "Standard Classic Sudoku rules apply. The digit in each circled cell is the sum of digits along the path of its arrow. Digits can repeat within an arrow shape. The circles are missing from the arrows and are positioned at one of the ends of the arrows.",
+      "page": 21,
+      "image": "/wsc2026/r07-02.png",
+      "example": "/wsc2026/r07-02-example.png",
+      "solution": "/wsc2026/r07-02-solution.png",
+      "variantId": "missingarrow",
+      "variants": [
+        "missingarrow"
+      ]
+    },
+    {
+      "id": "r07-03",
+      "round": 7,
+      "number": 3,
+      "stage": "",
+      "name": "Thermo Sudoku",
+      "points": 60,
+      "rules": "Standard Classic Sudoku rules apply. Digits along each thermometer are strictly increasing from its bulb to each of its ends.",
+      "page": 22,
+      "image": "/wsc2026/r07-03.png",
+      "example": "/wsc2026/r07-03-example.png",
+      "solution": "/wsc2026/r07-03-solution.png",
+      "variantId": "thermo",
+      "variants": [
+        "thermo"
+      ]
+    },
+    {
+      "id": "r07-04",
+      "round": 7,
+      "number": 4,
+      "stage": "",
+      "name": "Missing Thermo Sudoku",
+      "points": 50,
+      "rules": "Standard Classic Sudoku rules apply. Digits along each thermometer are strictly increasing from its bulb to each of its ends. The bulbs are missing from the thermometer shapes and are positioned at one of the open ends of the thermometers.",
+      "page": 22,
+      "image": "/wsc2026/r07-04.png",
+      "example": "/wsc2026/r07-04-example.png",
+      "solution": "/wsc2026/r07-04-solution.png",
+      "variantId": "missingthermo",
+      "variants": [
+        "missingthermo"
+      ]
+    },
+    {
+      "id": "r07-05",
+      "round": 7,
+      "number": 5,
+      "stage": "",
+      "name": "Kropki Pairs Sudoku",
+      "points": 25,
+      "rules": "Standard Classic Sudoku rules apply. Adjacent cells marked with a white circle contain consecutive digits. Adjacent cells marked with a black circle contains digits where one digit is double of the other digit. The circle between 1 and 2 can be of either colour. All possible circles are not marked.",
+      "page": 22,
+      "image": "/wsc2026/r07-05.png",
+      "example": "/wsc2026/r07-05-example.png",
+      "solution": "/wsc2026/r07-05-solution.png",
+      "variantId": "kropkipairs",
+      "variants": [
+        "kropkipairs"
+      ]
+    },
+    {
+      "id": "r07-06",
+      "round": 7,
+      "number": 6,
+      "stage": "",
+      "name": "Transparent Kropki Pairs Sudoku",
+      "points": 40,
+      "rules": "Standard Classic Sudoku rules apply. Adjacent cells marked with a white circle either contain consecutive digits or one digit is double of the other digit. All possible circles are not marked.",
+      "page": 23,
+      "image": "/wsc2026/r07-06.png",
+      "example": "/wsc2026/r07-06-example.png",
+      "solution": "/wsc2026/r07-06-solution.png",
+      "variantId": "transparentkropkipairs",
+      "variants": [
+        "transparentkropkipairs"
+      ]
+    },
+    {
+      "id": "r07-07",
+      "round": 7,
+      "number": 7,
+      "stage": "",
+      "name": "Distances Sudoku",
+      "points": 80,
+      "rules": "Standard Classic Sudoku rules apply. The clues outside the grid give the distance between two digits in that row or column. The digits are given in order from the clue's direction.",
+      "page": 23,
+      "image": "/wsc2026/r07-07.png",
+      "example": "/wsc2026/r07-07-example.png",
+      "solution": "/wsc2026/r07-07-solution.png",
+      "variantId": "distances",
+      "variants": [
+        "distances"
+      ]
+    },
+    {
+      "id": "r07-08",
+      "round": 7,
+      "number": 8,
+      "stage": "",
+      "name": "Unordered Distances Sudoku",
+      "points": 75,
+      "rules": "Standard Classic Sudoku rules apply. The clues outside the grid give the distance between two digits in that row or column. The digits are not necessarily given in order from the clue's direction.",
+      "page": 23,
+      "image": "/wsc2026/r07-08.png",
+      "example": "/wsc2026/r07-08-example.png",
+      "solution": "/wsc2026/r07-08-solution.png",
+      "variantId": "unordereddistances",
+      "variants": [
+        "unordereddistances"
+      ]
+    },
+    {
+      "id": "r07-09",
+      "round": 7,
+      "number": 9,
+      "stage": "",
+      "name": "Next to 9 Sudoku",
+      "points": 70,
+      "rules": "Standard Classic Sudoku rules apply. The clues outside the grid indicate the digits to be placed in the cells before and after the cell containing 9 (in any order) in the corresponding row/column.",
+      "page": 24,
+      "image": "/wsc2026/r07-09.png",
+      "example": "/wsc2026/r07-09-example.png",
+      "solution": "/wsc2026/r07-09-solution.png",
+      "variantId": "nextto9",
+      "variants": [
+        "nextto9"
+      ]
+    },
+    {
+      "id": "r07-10",
+      "round": 7,
+      "number": 10,
+      "stage": "",
+      "name": "Next to x Sudoku",
+      "points": 70,
+      "rules": "Standard Classic Sudoku rules apply. The clues outside the grid indicate the digits to be placed in the cells before and after the cell containing the digit 'x' (in any order) in the corresponding row/column. Determining the \"x\" is a part of solving.",
+      "page": 24,
+      "image": "/wsc2026/r07-10.png",
+      "example": "/wsc2026/r07-10-example.png",
+      "solution": "/wsc2026/r07-10-solution.png",
+      "variantId": "nexttox",
+      "variants": [
+        "nexttox"
+      ]
+    },
+    {
+      "id": "r07-11",
+      "round": 7,
+      "number": 11,
+      "stage": "",
+      "name": "Queen Sudoku",
+      "points": 45,
+      "rules": "Standard Classic Sudoku rules apply. The digit 9 in the grid is a chess Queen. Two Queens cannot be placed along the same row, column or diagonal of any length.",
+      "page": 25,
+      "image": "/wsc2026/r07-11.png",
+      "example": "/wsc2026/r07-11-example.png",
+      "solution": "/wsc2026/r07-11-solution.png",
+      "variantId": "queen",
+      "variants": [
+        "queen"
+      ]
+    },
+    {
+      "id": "r07-12",
+      "round": 7,
+      "number": 12,
+      "stage": "",
+      "name": "Disguised Queen Sudoku",
+      "points": 45,
+      "rules": "Standard Classic Sudoku rules apply. The digit 'x' in the grid is a chess Queen. Two Queens cannot be placed along the same row, column or diagonal of any length. Determining the 'x' is a part of solving.",
+      "page": 25,
+      "image": "/wsc2026/r07-12.png",
+      "example": "/wsc2026/r07-12-example.png",
+      "solution": "/wsc2026/r07-12-solution.png",
+      "variantId": "disguisedqueen",
+      "variants": [
+        "disguisedqueen"
+      ]
+    },
+    {
+      "id": "r10-01",
+      "round": 10,
+      "number": 1,
+      "stage": "",
+      "name": "Diagonal Sudoku",
+      "points": 40,
+      "rules": "Standard Classic Sudoku rules apply. Each main diagonal contains each digit from 1 to 9.",
+      "page": 26,
+      "image": "/wsc2026/r10-01.png",
+      "example": "/wsc2026/r10-01-example.png",
+      "solution": "/wsc2026/r10-01-solution.png",
+      "variantId": "diagonal",
+      "variants": [
+        "diagonal"
+      ]
+    },
+    {
+      "id": "r10-02",
+      "round": 10,
+      "number": 2,
+      "stage": "",
+      "name": "Anti Diagonal Sudoku",
+      "points": 35,
+      "rules": "Standard Classic Sudoku rules apply. Each main diagonal contains exactly three different digits.",
+      "page": 26,
+      "image": "/wsc2026/r10-02.png",
+      "example": "/wsc2026/r10-02-example.png",
+      "solution": "/wsc2026/r10-02-solution.png",
+      "variantId": "anti diagonal",
+      "variants": [
+        "anti diagonal"
+      ]
+    },
+    {
+      "id": "r10-03",
+      "round": 10,
+      "number": 3,
+      "stage": "",
+      "name": "Windoku",
+      "points": 30,
+      "rules": "Standard Classic Sudoku rules apply. Each marked 3x3 region contains each digit from 1 to 9.",
+      "page": 26,
+      "image": "/wsc2026/r10-03.png",
+      "example": "/wsc2026/r10-03-example.png",
+      "solution": "/wsc2026/r10-03-solution.png",
+      "variantId": "windoku",
+      "variants": [
+        "windoku"
+      ]
+    },
+    {
+      "id": "r10-04",
+      "round": 10,
+      "number": 4,
+      "stage": "",
+      "name": "Anti Windoku",
+      "points": 35,
+      "rules": "Standard Classic Sudoku rules apply. Each marked 3x3 region contains exactly four different digits.",
+      "page": 27,
+      "image": "/wsc2026/r10-04.png",
+      "example": "/wsc2026/r10-04-example.png",
+      "solution": "/wsc2026/r10-04-solution.png",
+      "variantId": "antiwindoku",
+      "variants": [
+        "antiwindoku"
+      ]
+    },
+    {
+      "id": "r10-05",
+      "round": 10,
+      "number": 5,
+      "stage": "",
+      "name": "Creasing Sudoku",
+      "points": 35,
+      "rules": "Standard Classic Sudoku rules apply. Digits along each line are monotonically increasing or decreasing.",
+      "page": 27,
+      "image": "/wsc2026/r10-05.png",
+      "example": "/wsc2026/r10-05-example.png",
+      "solution": "/wsc2026/r10-05-solution.png",
+      "variantId": "creasing",
+      "variants": [
+        "creasing"
+      ]
+    },
+    {
+      "id": "r10-06",
+      "round": 10,
+      "number": 6,
+      "stage": "",
+      "name": "Alternating Stripes Sudoku",
+      "points": 70,
+      "rules": "Standard Classic Sudoku rules apply. Digits along each line must be alternately larger and smaller than their immediate neighbours. Digits may not repeat anywhere on a line.",
+      "page": 27,
+      "image": "/wsc2026/r10-06.png",
+      "example": "/wsc2026/r10-06-example.png",
+      "solution": "/wsc2026/r10-06-solution.png",
+      "variantId": "alternatingstripes",
+      "variants": [
+        "alternatingstripes"
+      ]
+    },
+    {
+      "id": "r10-07",
+      "round": 10,
+      "number": 7,
+      "stage": "",
+      "name": "Clone Sudoku",
+      "points": 65,
+      "rules": "Standard Classic Sudoku rules apply. Digits in the same corresponding cell in each shaded figure must be identical.",
+      "page": 28,
+      "image": "/wsc2026/r10-07.png",
+      "example": "/wsc2026/r10-07-example.png",
+      "solution": "/wsc2026/r10-07-solution.png",
+      "variantId": "clone",
+      "variants": [
+        "clone"
+      ]
+    },
+    {
+      "id": "r10-08",
+      "round": 10,
+      "number": 8,
+      "stage": "",
+      "name": "Anti Clone Sudoku",
+      "points": 40,
+      "rules": "Standard Classic Sudoku rules apply. The digits at the same locations on each shaded area must sum to 10. Shaded areas cannot be rotated or reflected.",
+      "page": 28,
+      "image": "/wsc2026/r10-08.png",
+      "example": "/wsc2026/r10-08-example.png",
+      "solution": "/wsc2026/r10-08-solution.png",
+      "variantId": "anticlone",
+      "variants": [
+        "anticlone"
+      ]
+    },
+    {
+      "id": "r10-09",
+      "round": 10,
+      "number": 9,
+      "stage": "",
+      "name": "Inclusion Sudoku",
+      "points": 55,
+      "rules": "Standard Classic Sudoku rules apply. All digits at the intersection of cells must be present in at least one of those cells.",
+      "page": 28,
+      "image": "/wsc2026/r10-09.png",
+      "example": "/wsc2026/r10-09-example.png",
+      "solution": "/wsc2026/r10-09-solution.png",
+      "variantId": "quadruple",
+      "variants": [
+        "quadruple"
+      ]
+    },
+    {
+      "id": "r10-10",
+      "round": 10,
+      "number": 10,
+      "stage": "",
+      "name": "Exclusion Sudoku",
+      "points": 60,
+      "rules": "Standard Classic Sudoku rules apply. All digits at the intersection of cells must not be present in any of those cells.",
+      "page": 29,
+      "image": "/wsc2026/r10-10.png",
+      "example": "/wsc2026/r10-10-example.png",
+      "solution": "/wsc2026/r10-10-solution.png",
+      "variantId": "exclusion",
+      "variants": [
+        "exclusion"
+      ]
+    },
+    {
+      "id": "r10-11",
+      "round": 10,
+      "number": 11,
+      "stage": "",
+      "name": "Maximin Sudoku",
+      "points": 75,
+      "rules": "Standard Classic Sudoku rules apply. Each number outside the grid is the difference between the highest and the lowest digit in the first three cells in the corresponding direction.",
+      "page": 29,
+      "image": "/wsc2026/r10-11.png",
+      "example": "/wsc2026/r10-11-example.png",
+      "solution": "/wsc2026/r10-11-solution.png",
+      "variantId": "maximin",
+      "variants": [
+        "maximin"
+      ]
+    },
+    {
+      "id": "r10-12",
+      "round": 10,
+      "number": 12,
+      "stage": "",
+      "name": "Minimax Sudoku",
+      "points": 75,
+      "rules": "Standard Classic Sudoku rules apply. Each number outside the grid is the sum of the highest and the lowest digit in the first three cells in the corresponding direction.",
+      "page": 29,
+      "image": "/wsc2026/r10-12.png",
+      "example": "/wsc2026/r10-12-example.png",
+      "solution": "/wsc2026/r10-12-solution.png",
+      "variantId": "minimax",
+      "variants": [
+        "minimax"
+      ]
+    },
+    {
+      "id": "r10-13",
+      "round": 10,
+      "number": 13,
+      "stage": "",
+      "name": "Touchy Sudoku",
+      "points": 70,
+      "rules": "Standard Classic Sudoku rules apply. Each digit has at least one consecutive digit in its adjacent cells.",
+      "page": 30,
+      "image": "/wsc2026/r10-13.png",
+      "example": "/wsc2026/r10-13-example.png",
+      "solution": "/wsc2026/r10-13-solution.png",
+      "variantId": "touchy",
+      "variants": [
+        "touchy"
+      ]
+    },
+    {
+      "id": "r10-14",
+      "round": 10,
+      "number": 14,
+      "stage": "",
+      "name": "Non Consecutive Sudoku",
+      "points": 25,
+      "rules": "Standard Classic Sudoku rules apply. Digits in adjacent cells must not be consecutive.",
+      "page": 30,
+      "image": "/wsc2026/r10-14.png",
+      "example": "/wsc2026/r10-14-example.png",
+      "solution": "/wsc2026/r10-14-solution.png",
+      "variantId": "non consecutive",
+      "variants": [
+        "non consecutive"
+      ]
+    },
+    {
+      "id": "r10-15",
+      "round": 10,
+      "number": 15,
+      "stage": "",
+      "name": "Friends Sudoku",
+      "points": 55,
+      "rules": "Standard Classic Sudoku rules apply. Cells with shaded circles across the grid contain identical digits.",
+      "page": 30,
+      "image": "/wsc2026/r10-15.png",
+      "example": "/wsc2026/r10-15-example.png",
+      "solution": "/wsc2026/r10-15-solution.png",
+      "variantId": "friends",
+      "variants": [
+        "friends"
+      ]
+    },
+    {
+      "id": "r10-16",
+      "round": 10,
+      "number": 16,
+      "stage": "",
+      "name": "Enemies Sudoku",
+      "points": 55,
+      "rules": "Standard Classic Sudoku rules apply. Cells with shaded circles across the grid contain different digits.",
+      "page": 31,
+      "image": "/wsc2026/r10-16.png",
+      "example": "/wsc2026/r10-16-example.png",
+      "solution": "/wsc2026/r10-16-solution.png",
+      "variantId": "enemies",
+      "variants": [
+        "enemies"
+      ]
+    },
+    {
+      "id": "r10-17",
+      "round": 10,
+      "number": 17,
+      "stage": "",
+      "name": "Outside Sudoku",
+      "points": 25,
+      "rules": "Standard Classic Sudoku rules apply. Each digit outside the grid appears within the first box in the corresponding row/column.",
+      "page": 31,
+      "image": "/wsc2026/r10-17.png",
+      "example": "/wsc2026/r10-17-example.png",
+      "solution": "/wsc2026/r10-17-solution.png",
+      "variantId": "outside",
+      "variants": [
+        "outside"
+      ]
+    },
+    {
+      "id": "r10-18",
+      "round": 10,
+      "number": 18,
+      "stage": "",
+      "name": "Anti Outside Sudoku",
+      "points": 55,
+      "rules": "Standard Classic Sudoku rules apply. Each digit outside the grid must not appear within the first box in the corresponding row/column.",
+      "page": 32,
+      "image": "/wsc2026/r10-18.png",
+      "example": "/wsc2026/r10-18-example.png",
+      "solution": "/wsc2026/r10-18-solution.png",
+      "variantId": "antioutside",
+      "variants": [
+        "antioutside"
+      ]
+    },
+    {
+      "id": "r11-01",
+      "round": 11,
+      "number": 1,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 25,
+      "rules": "In each grid, standard Classic Sudoku rules apply. Some cells from the first sudoku transfer to the second some cells from the second to the third and so on. Arrows will be given between sudokus indicating the order of the 9 sudokus. Cells in which digits need to be transferred are marked in circles. The cell in the same position in the previous sudoku needs to be identified, and the digit from that cell needs to be transferred into the circled cell. The example uses 3 Classic Sudokus. The layout of the 9 sudokus in the puzzle booklet is shown below.",
+      "page": 33,
+      "image": "/wsc2026/r11-01.png",
+      "example": "/wsc2026/relay-example.png",
+      "solution": "/wsc2026/relay-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r11-02",
+      "round": 11,
+      "number": 2,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 40,
+      "rules": "In each grid, standard Classic Sudoku rules apply. Some cells from the first sudoku transfer to the second some cells from the second to the third and so on. Arrows will be given between sudokus indicating the order of the 9 sudokus. Cells in which digits need to be transferred are marked in circles. The cell in the same position in the previous sudoku needs to be identified, and the digit from that cell needs to be transferred into the circled cell. The example uses 3 Classic Sudokus. The layout of the 9 sudokus in the puzzle booklet is shown below.",
+      "page": 33,
+      "image": "/wsc2026/r11-01.png",
+      "example": "/wsc2026/relay-example.png",
+      "solution": "/wsc2026/relay-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r11-03",
+      "round": 11,
+      "number": 3,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 30,
+      "rules": "In each grid, standard Classic Sudoku rules apply. Some cells from the first sudoku transfer to the second some cells from the second to the third and so on. Arrows will be given between sudokus indicating the order of the 9 sudokus. Cells in which digits need to be transferred are marked in circles. The cell in the same position in the previous sudoku needs to be identified, and the digit from that cell needs to be transferred into the circled cell. The example uses 3 Classic Sudokus. The layout of the 9 sudokus in the puzzle booklet is shown below.",
+      "page": 33,
+      "image": "/wsc2026/r11-01.png",
+      "example": "/wsc2026/relay-example.png",
+      "solution": "/wsc2026/relay-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r11-04",
+      "round": 11,
+      "number": 4,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 70,
+      "rules": "In each grid, standard Classic Sudoku rules apply. Some cells from the first sudoku transfer to the second some cells from the second to the third and so on. Arrows will be given between sudokus indicating the order of the 9 sudokus. Cells in which digits need to be transferred are marked in circles. The cell in the same position in the previous sudoku needs to be identified, and the digit from that cell needs to be transferred into the circled cell. The example uses 3 Classic Sudokus. The layout of the 9 sudokus in the puzzle booklet is shown below.",
+      "page": 33,
+      "image": "/wsc2026/r11-01.png",
+      "example": "/wsc2026/relay-example.png",
+      "solution": "/wsc2026/relay-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r11-05",
+      "round": 11,
+      "number": 5,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 40,
+      "rules": "In each grid, standard Classic Sudoku rules apply. Some cells from the first sudoku transfer to the second some cells from the second to the third and so on. Arrows will be given between sudokus indicating the order of the 9 sudokus. Cells in which digits need to be transferred are marked in circles. The cell in the same position in the previous sudoku needs to be identified, and the digit from that cell needs to be transferred into the circled cell. The example uses 3 Classic Sudokus. The layout of the 9 sudokus in the puzzle booklet is shown below.",
+      "page": 33,
+      "image": "/wsc2026/r11-01.png",
+      "example": "/wsc2026/relay-example.png",
+      "solution": "/wsc2026/relay-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r11-06",
+      "round": 11,
+      "number": 6,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 50,
+      "rules": "In each grid, standard Classic Sudoku rules apply. Some cells from the first sudoku transfer to the second some cells from the second to the third and so on. Arrows will be given between sudokus indicating the order of the 9 sudokus. Cells in which digits need to be transferred are marked in circles. The cell in the same position in the previous sudoku needs to be identified, and the digit from that cell needs to be transferred into the circled cell. The example uses 3 Classic Sudokus. The layout of the 9 sudokus in the puzzle booklet is shown below.",
+      "page": 33,
+      "image": "/wsc2026/r11-01.png",
+      "example": "/wsc2026/relay-example.png",
+      "solution": "/wsc2026/relay-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r11-07",
+      "round": 11,
+      "number": 7,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 30,
+      "rules": "In each grid, standard Classic Sudoku rules apply. Some cells from the first sudoku transfer to the second some cells from the second to the third and so on. Arrows will be given between sudokus indicating the order of the 9 sudokus. Cells in which digits need to be transferred are marked in circles. The cell in the same position in the previous sudoku needs to be identified, and the digit from that cell needs to be transferred into the circled cell. The example uses 3 Classic Sudokus. The layout of the 9 sudokus in the puzzle booklet is shown below.",
+      "page": 33,
+      "image": "/wsc2026/r11-01.png",
+      "example": "/wsc2026/relay-example.png",
+      "solution": "/wsc2026/relay-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r11-08",
+      "round": 11,
+      "number": 8,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 40,
+      "rules": "In each grid, standard Classic Sudoku rules apply. Some cells from the first sudoku transfer to the second some cells from the second to the third and so on. Arrows will be given between sudokus indicating the order of the 9 sudokus. Cells in which digits need to be transferred are marked in circles. The cell in the same position in the previous sudoku needs to be identified, and the digit from that cell needs to be transferred into the circled cell. The example uses 3 Classic Sudokus. The layout of the 9 sudokus in the puzzle booklet is shown below.",
+      "page": 33,
+      "image": "/wsc2026/r11-01.png",
+      "example": "/wsc2026/relay-example.png",
+      "solution": "/wsc2026/relay-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r11-09",
+      "round": 11,
+      "number": 9,
+      "stage": "",
+      "name": "Classic Sudoku",
+      "points": 25,
+      "rules": "In each grid, standard Classic Sudoku rules apply. Some cells from the first sudoku transfer to the second some cells from the second to the third and so on. Arrows will be given between sudokus indicating the order of the 9 sudokus. Cells in which digits need to be transferred are marked in circles. The cell in the same position in the previous sudoku needs to be identified, and the digit from that cell needs to be transferred into the circled cell. The example uses 3 Classic Sudokus. The layout of the 9 sudokus in the puzzle booklet is shown below.",
+      "page": 33,
+      "image": "/wsc2026/r11-01.png",
+      "example": "/wsc2026/relay-example.png",
+      "solution": "/wsc2026/relay-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    },
+    {
+      "id": "r12-01",
+      "round": 12,
+      "number": 1,
+      "stage": "",
+      "name": "Pinocchio Sudoku",
+      "points": 25,
+      "rules": "Standard Classic Sudoku rules apply. Some digits are written in a different layout. Exactly one of these digits is incorrect.",
+      "page": 34,
+      "image": "/wsc2026/r12-01.png",
+      "example": "/wsc2026/r12-01-example.png",
+      "solution": "/wsc2026/r12-01-solution.png",
+      "variantId": "pinocchio",
+      "variants": [
+        "pinocchio"
+      ]
+    },
+    {
+      "id": "r12-02",
+      "round": 12,
+      "number": 2,
+      "stage": "",
+      "name": "Expanded Sudoku",
+      "points": 65,
+      "rules": "Place a digit from 1 to 9 into each empty cell in the grid so that no digit repeats in each row, column and outlined region. Some rows and columns continue over empty spaces and black cells.",
+      "page": 34,
+      "image": "/wsc2026/r12-02.png",
+      "example": "/wsc2026/r12-02-example.png",
+      "solution": "/wsc2026/r12-02-solution.png",
+      "variantId": "expanded",
+      "variants": [
+        "expanded"
+      ]
+    },
+    {
+      "id": "r12-03",
+      "round": 12,
+      "number": 3,
+      "stage": "",
+      "name": "Inequality Sudoku",
+      "points": 75,
+      "rules": "Standard Classic Sudoku rules apply. Each inequality sign (‘<’ or ‘>’) between cells indicates the larger of the two digits is on the open side of the sign.",
+      "page": 35,
+      "image": "/wsc2026/r12-03.png",
+      "example": "/wsc2026/r12-03-example.png",
+      "solution": "/wsc2026/r12-03-solution.png",
+      "variantId": "inequality",
+      "variants": [
+        "inequality"
+      ]
+    },
+    {
+      "id": "r12-04",
+      "round": 12,
+      "number": 4,
+      "stage": "",
+      "name": "Multi Diagonal Sudoku",
+      "points": 40,
+      "rules": "Standard Classic Sudoku rules apply. No digit can repeat in any of the marked diagonals.",
+      "page": 35,
+      "image": "/wsc2026/r12-04.png",
+      "example": "/wsc2026/r12-04-example.png",
+      "solution": "/wsc2026/r12-04-solution.png",
+      "variantId": "multidiagonal",
+      "variants": [
+        "multidiagonal"
+      ]
+    },
+    {
+      "id": "r12-05",
+      "round": 12,
+      "number": 5,
+      "stage": "",
+      "name": "Anti Knight Sudoku",
+      "points": 45,
+      "rules": "Standard Classic Sudoku rules apply. No two identical digits can be a chess knight's move away from each other.",
+      "page": 35,
+      "image": "/wsc2026/r12-05.png",
+      "example": "/wsc2026/r12-05-example.png",
+      "solution": "/wsc2026/r12-05-solution.png",
+      "variantId": "anti knight",
+      "variants": [
+        "anti knight"
+      ]
+    },
+    {
+      "id": "r12-06",
+      "round": 12,
+      "number": 6,
+      "stage": "",
+      "name": "Extra Region Sudoku",
+      "points": 45,
+      "rules": "Standard Classic Sudoku rules apply. Each marked region contains each digit from 1 to 9.",
+      "page": 36,
+      "image": "/wsc2026/r12-06.png",
+      "example": "/wsc2026/r12-06-example.png",
+      "solution": "/wsc2026/r12-06-solution.png",
+      "variantId": "extraregion",
+      "variants": [
+        "extraregion"
+      ]
+    },
+    {
+      "id": "r12-07",
+      "round": 12,
+      "number": 7,
+      "stage": "",
+      "name": "Star Sudoku",
+      "points": 105,
+      "rules": "Place a digit from 1 to 9 into each cell so that no digit repeats in any bold region or row (including the two directions of diagonal rows). Some rows and columns continue over shaded cells.",
+      "page": 36,
+      "image": "/wsc2026/r12-07.png",
+      "example": "/wsc2026/r12-07-example.png",
+      "solution": "/wsc2026/r12-07-solution.png",
+      "variantId": "star",
+      "variants": [
+        "star"
+      ]
+    },
+    {
+      "id": "r16-qf01",
+      "round": 16,
+      "number": 1,
+      "stage": "QF",
+      "name": "Outside 234 Sudoku",
+      "points": 100,
+      "rules": "Standard Classic Sudoku rules apply. Each digit outside the grid appears in one of 2nd, 3rd or 4th cells in the corresponding row/column.",
+      "page": 38,
+      "image": "/wsc2026/r16-qf01.png",
+      "example": "/wsc2026/r16-qf01-example.png",
+      "solution": "/wsc2026/r16-qf01-solution.png",
+      "variantId": "outside234",
+      "variants": [
+        "outside234"
+      ]
+    },
+    {
+      "id": "r16-qf02",
+      "round": 16,
+      "number": 2,
+      "stage": "QF",
+      "name": "No Three in A Line Sudoku",
+      "points": 100,
+      "rules": "Standard Classic Sudoku rules apply. There must not exist a run of three or more cells along a marked line that all contain numbers of the same parity (i.e., even or odd).",
+      "page": 38,
+      "image": "/wsc2026/r16-qf02.png",
+      "example": "/wsc2026/r16-qf02-example.png",
+      "solution": "/wsc2026/r16-qf02-solution.png",
+      "variantId": "nothreeinaline",
+      "variants": [
+        "nothreeinaline"
+      ]
+    },
+    {
+      "id": "r16-qf03",
+      "round": 16,
+      "number": 3,
+      "stage": "QF",
+      "name": "Disguised Queen Sudoku",
+      "points": 100,
+      "rules": "Standard Classic Sudoku rules apply. The digit 'x' in the grid is a chess Queen. Two Queens cannot be placed along the same row, column or diagonal of any length. Determining the 'x' is a part of solving.",
+      "page": 39,
+      "image": "/wsc2026/r16-qf03.png",
+      "example": "/wsc2026/r16-qf03-example.png",
+      "solution": "/wsc2026/r16-qf03-solution.png",
+      "variantId": "disguisedqueen",
+      "variants": [
+        "disguisedqueen"
+      ]
+    },
+    {
+      "id": "r16-qf04",
+      "round": 16,
+      "number": 4,
+      "stage": "QF",
+      "name": "Killer Sudoku",
+      "points": 100,
+      "rules": "Standard Classic Sudoku rules apply. The number at the top-left corner of each cage is the sum of digits inside the cage. Digits do not repeat within a cage.",
+      "page": 39,
+      "image": "/wsc2026/r16-qf04.png",
+      "example": "/wsc2026/r16-qf04-example.png",
+      "solution": "/wsc2026/r16-qf04-solution.png",
+      "variantId": "killer",
+      "variants": [
+        "killer"
+      ]
+    },
+    {
+      "id": "r16-sf01",
+      "round": 16,
+      "number": 1,
+      "stage": "SF",
+      "name": "Even Sudoku",
+      "points": 150,
+      "rules": "Standard Classic Sudoku rules apply. Cells with shaded squares contain even digits.",
+      "page": 39,
+      "image": "/wsc2026/r16-sf01.png",
+      "example": "/wsc2026/r16-sf01-example.png",
+      "solution": "/wsc2026/r16-sf01-solution.png",
+      "variantId": "even",
+      "variants": [
+        "even"
+      ]
+    },
+    {
+      "id": "r16-sf02",
+      "round": 16,
+      "number": 2,
+      "stage": "SF",
+      "name": "Odd Sudoku",
+      "points": 150,
+      "rules": "Standard Classic Sudoku rules apply. Cells with shaded circles contain odd digits.",
+      "page": 40,
+      "image": "/wsc2026/r16-sf02.png",
+      "example": "/wsc2026/r16-sf02-example.png",
+      "solution": "/wsc2026/r16-sf02-solution.png",
+      "variantId": "odd",
+      "variants": [
+        "odd"
+      ]
+    },
+    {
+      "id": "r16-f01",
+      "round": 16,
+      "number": 1,
+      "stage": "F",
+      "name": "Classic Sudoku",
+      "points": 200,
+      "rules": "Standard Classic Sudoku rules apply.",
+      "page": 40,
+      "image": "/wsc2026/r16-f01.png",
+      "example": "/wsc2026/r16-f01-example.png",
+      "solution": "/wsc2026/r16-f01-solution.png",
+      "variantId": "classic",
+      "variants": [
+        "classic"
+      ]
+    }
+  ]
+}

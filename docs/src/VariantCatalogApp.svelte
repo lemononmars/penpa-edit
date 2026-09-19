@@ -282,6 +282,7 @@
           >Back to list of variants</a
         >
         <h1>{detailVariation.name}</h1>
+        {#if detailVariation.solverRoute}<p><a href={detailVariation.solverRoute}>Open dedicated layout solver ↗</a></p>{/if}
         <div class="detail-status">
           {#if detailVariation.status === "available"}
             <span class="status implemented">available</span>
@@ -494,7 +495,7 @@
                   {/if}
                 </div>
               </th>
-              <td class="rule">{variation.rule}</td>
+              <td class="rule">{variation.rule}{#if variation.solverRoute}<p><a href={variation.solverRoute}>Open layout solver ↗</a></p>{/if}</td>
               <td>
                 {#if variation.status === "available"}
                   <span class="status implemented">Available</span>

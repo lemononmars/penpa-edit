@@ -1,0 +1,9 @@
+import {chromium} from 'playwright';import assert from 'node:assert/strict';
+const browser=await chromium.launch();const context=await browser.newContext({viewport:{width:1280,height:1000}});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+const base='http://127.0.0.1:5174';
+const blocked=await context.request.get(base+'/wsc2026/r01-01.png',{maxRedirects:0});assert.equal(blocked.status(),302);
+await page.goto(base+'/wsc2026/?tab=solver');await page.getByLabel('Password',{exact:true}).fill('กู้ชาติ');await page.getByRole('button',{name:'Enter',exact:true}).click();await page.getByRole('tab',{name:'Rules & examples'}).click();assert.equal((await context.request.get(base+'/wsc2026/r01-01.png')).status(),200);
+await page.screenshot({path:'tmp/wsc2026/revised-desktop.png'});await page.getByLabel('Round',{exact:true}).selectOption('1');assert.equal(await page.locator('.round-section').count(),1);await page.getByPlaceholder('Search names or rules…').fill('Killer');assert.equal(await page.locator('.puzzle-card').count(),1);await page.getByPlaceholder('Search names or rules…').fill('');
+await page.evaluate(()=>{window.print=()=>{window.__printCount=document.querySelectorAll('.print-area article').length;};});await page.getByRole('button',{name:'Print / Save PDF'}).click();await page.waitForFunction(()=>window.__printCount>0);assert.equal(await page.evaluate(()=>window.__printCount),9);
+await context.clearCookies();await page.reload();await page.getByRole('tab',{name:'Rules & examples'}).click();await page.locator('.puzzle-card').first().waitFor();assert.equal((await context.request.get(base+'/wsc2026/WSC2026IB.pdf')).status(),200);assert.deepEqual(errors,[]);
+console.log('PASS direct file guard, direct solver gate, round/search filtering, printing, cookie renewal from localStorage, no browser errors');await browser.close();
