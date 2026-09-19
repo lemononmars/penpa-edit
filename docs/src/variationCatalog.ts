@@ -109,12 +109,26 @@ function genericSetting(variation: Variation) {
         add("special", "arrow", "", ["mo_special_lb", "sub_specialarrow_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["search9", "search6", "smallestneighbours", "biggestneighbours", "pointtonext", "pointtoprevious", "sumdetector", "twindetector"].includes(variation.value)) {
+    if (["search9", "search6", "pointtonext", "pointtoprevious"].includes(variation.value)) {
         add("symbol", "arrow_B_G", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["arrowsum", "countdifferentarrow", "counttheoddonesarrow", "averagearrows", "eliminate", "detection"].includes(variation.value)) {
+    if (["arrowsum", "countdifferentarrow", "counttheoddonesarrow", "averagearrows", "attacktheleader", "biggestneighbours", "smallestneighbours", "eliminate", "detection", "sumdetector", "twindetector"].includes(variation.value)) {
         add("symbol", "arrow_eight", 2, ["mo_symbol_lb", "ms3", "li_arrow_eight"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "neighbouringdisparity") {
+        add("symbol", "square_L", 2, ["mo_symbol_lb", "ms1", "ms1_square", "li_square_L"]);
+        add("symbol", "diamond_L", 2, ["mo_symbol_lb", "ms1", "li_diamond_L"], true);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "trishula") {
+        add("special", "nobulbthermo", "", ["mo_special_lb", "sub_specialnobulbthermo_lb"]);
+        add("special", "direction", "", ["mo_special_lb", "sub_specialdirection_lb"], true);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "upperrightheavykiller") {
+        add("number", "9", 1, ["mo_number_lb", "sub_number9_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (["quadmax", "quadmin"].includes(variation.value)) {

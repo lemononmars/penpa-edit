@@ -98,7 +98,7 @@
         "pointtoprevious", "quadmax", "quadmin", "search9", "sumdetector", "detection",
         "deadoralivearrows", "twindetector"];
     function expectedSymbols(variant) {
-        if (["biggestneighbours", "smallestneighbours", "sumdetector", "detection", "twindetector"].indexOf(variant) !== -1) return ["arrow_eight"];
+        if (["biggestneighbours", "smallestneighbours", "sumdetector", "detection", "twindetector", "eliminate"].indexOf(variant) !== -1) return ["arrow_eight"];
         if (variant === "quadmax" || variant === "quadmin") return ["arrow_B_B"];
         if (variant === "deadoralivearrows") return ["arrow_B_W", "arrow_B_G"];
         return ["arrow_B_G"];

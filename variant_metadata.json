@@ -512,7 +512,10 @@
         "categories": [
           "cell"
         ],
-        "instructions": []
+        "instructions": [
+          "Shape · Arrow · 8-way",
+          "Toggle every direction that applies; one cell may contain several arrows."
+        ]
       }
     },
     {
@@ -1220,7 +1223,7 @@
           "cell"
         ],
         "instructions": [
-          "Shape · eight-direction arrow",
+          "Shape · Arrow · 8-way",
           "Place only the diagonal arrows that detect the origin digit."
         ]
       }
@@ -1752,7 +1755,10 @@
         "categories": [
           "cell"
         ],
-        "instructions": []
+        "instructions": [
+          "Shape · Arrow · 8-way",
+          "Toggle every eliminated sightline; one cell may contain several arrows."
+        ]
       }
     },
     {
@@ -6316,7 +6322,10 @@
         "categories": [
           "cell"
         ],
-        "instructions": []
+        "instructions": [
+          "Shape · Arrow · 8-way",
+          "Toggle every detected direction; one cell may contain several arrows."
+        ]
       },
       "tags": [
         "converse"
@@ -6947,7 +6956,8 @@
           "cell"
         ],
         "instructions": [
-          "Select \"Number\" and enter the sum in the lower-left cell."
+          "Number · corner · black",
+          "Enter the sum in one corner of the cell."
         ]
       }
     },
@@ -7463,8 +7473,8 @@
           "cell"
         ],
         "instructions": [
-          "Use the WSC clue editor; see the example payload for this variant.",
-          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+          "Shape · Arrow · 8-way",
+          "Toggle every tied closest direction; one cell may contain several arrows."
         ]
       }
     },
@@ -7480,11 +7490,11 @@
       "status": "available",
       "inputType": {
         "categories": [
-          "shading"
+          "line"
         ],
         "instructions": [
-          "Use the WSC clue editor; see the example payload for this variant.",
-          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+          "Special · no-bulb thermo",
+          "Special · Arrow"
         ]
       }
     },
@@ -7543,8 +7553,8 @@
           "cell"
         ],
         "instructions": [
-          "Use the WSC clue editor; see the example payload for this variant.",
-          "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
+          "Shape · square_L · input 1 (diagonal neighbours)",
+          "Shape · 45-degree rotated square_L · input 1 (orthogonal neighbours)"
         ]
       }
     },

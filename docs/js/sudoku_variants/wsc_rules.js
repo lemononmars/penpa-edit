@@ -10,7 +10,7 @@
   if(q.kind==='trishula')return cells(q.cells)&&cells(q.tips)&&q.tips.length===3;
   if(['clonealongline','anticlone'].includes(q.kind))return cells(q.cells)&&cells(q.other)&&q.other.length===q.cells.length;
   if(q.kind==='sforsudoku')return cells(q.cells)&&Array.isArray(q.allowed)&&q.allowed.length>0&&q.allowed.every(n=>Number.isInteger(n)&&n>=1&&n<=9);
-  if(q.kind==='attacktheleader')return cells(q.cells)&&cell(q.origin)&&Array.isArray(q.directions)&&q.directions.every(d=>['up','down','left','right'].includes(d));
+  if(q.kind==='attacktheleader')return cells(q.cells)&&cell(q.origin)&&Array.isArray(q.directions)&&q.directions.every(d=>['left','up-left','up','up-right','right','down-right','down','down-left'].includes(d));
   if(q.kind==='neighbouringdisparity')return cells(q.cells)&&cell(q.origin);
   if(['magicsword','nexttox'].includes(q.kind))return Array.isArray(q.clues)&&q.clues.length>0&&q.clues.every(c=>cells(c.cells)&&(q.kind==='magicsword'?Number.isInteger(c.value)&&c.value>=0&&c.value<=9:/^[1-9]{1,2}$/.test(String(c.value))));
   if(q.kind==='divisorsumpairs')return cells(q.cells)&&q.cells.length===2&&Number.isInteger(q.value)&&q.value>0;
@@ -50,7 +50,7 @@
    case 'antioutside':return v.slice(0,3).every(d=>!q.digits.includes(d));
    case 'sudokuwithnames': {let positions=[-1];for(const d of q.digits){const next=[];for(let i=0;i<v.length;i++)if((!v[i]||v[i]===d)&&positions.some(j=>j<i))next.push(i);positions=next;}return positions.length>0;}
    case 'sforsudoku':return v.every(d=>!d||q.allowed.includes(d));
-   case 'attacktheleader':{const n=at(q.origin);if(!n)return true;const distances={};for(const [dir,dr,dc] of [['up',-1,0],['down',1,0],['left',0,-1],['right',0,1]]){let unknown=false;for(let s=1;;s++){const r=q.origin.row+dr*s,c=q.origin.col+dc*s;if(r<0||r>8||c<0||c>8){distances[dir]=unknown?null:Infinity;break;}const d=board[r][c];if(!d)unknown=true;if(d>n){distances[dir]=unknown?null:s;break;}}}if(Object.values(distances).some(d=>d===null))return true;const min=Math.min(...Object.values(distances));return Object.entries(distances).every(([dir,d])=>q.directions.includes(dir)===(d===min&&d!==Infinity));}
+   case 'attacktheleader':{const n=at(q.origin);if(!n)return true;const distances={};for(const [dir,dr,dc] of [['left',0,-1],['up-left',-1,-1],['up',-1,0],['up-right',-1,1],['right',0,1],['down-right',1,1],['down',1,0],['down-left',1,-1]]){let unknown=false;for(let s=1;;s++){const r=q.origin.row+dr*s,c=q.origin.col+dc*s;if(r<0||r>8||c<0||c>8){distances[dir]=unknown?null:Infinity;break;}const d=board[r][c];if(!d)unknown=true;if(d>n){distances[dir]=unknown?null:s;break;}}}if(Object.values(distances).some(d=>d===null))return true;const min=Math.min(...Object.values(distances));return Object.entries(distances).every(([dir,d])=>q.directions.includes(dir)===(d===min&&d!==Infinity));}
    case 'trishula':{const tips=vals(q.tips);if(!full||!tips.every(Boolean))return true;const expected=[Math.min(...v),v.reduce((s,d)=>s+d,0)/v.length,Math.max(...v)].sort((a,b)=>a-b);return tips.slice().sort((a,b)=>a-b).every((d,i)=>d===expected[i]);}
    case 'divisorsumpairs':return !full||(v[0]+v[1])%q.value===0;
    case 'magicsword':return [1,2,3,4,5,6,7,8,9,10].some(y=>q.clues.every(c=>{const a=vals(c.cells);return a.slice(0,c.value).every(d=>!d||d<y)&&(c.value===9||!a[c.value]||a[c.value]>=y);}));

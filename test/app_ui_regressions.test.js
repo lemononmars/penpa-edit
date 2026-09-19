@@ -91,6 +91,19 @@ test("desktop F2-F4 shortcuts switch Set, Solve, and Misc modes", function() {
     });
 });
 
+test("variant references use the clean list route", function() {
+    const catalog = fs.readFileSync(path.join(__dirname, "../docs/src/VariantCatalogApp.svelte"), "utf8");
+    assert.match(catalog, /href=\{`\/list\?id=\$\{encodeURIComponent\(variation\.value\)\}`\}/);
+    assert.doesNotMatch(catalog, /list\/list\.html|\.\/list\.html/);
+});
+
+test("embedded solver keypad keeps the four-row five-column composition", function() {
+    assert.match(app, /\.mobile-keypad\s*\{[\s\S]*?grid-template-columns:\s*repeat\(5/);
+    assert.match(app, /\.studio-shell\.embedded \.solver-shared-keypad\s*\{\s*display:\s*contents/);
+    assert.match(app, /\.digit-9\)\s*\{\s*grid-column:\s*4;\s*grid-row:\s*3/);
+    assert.match(app, /\.mode-corner\)\s*\{\s*grid-column:\s*5;\s*grid-row:\s*3/);
+});
+
 test("Shift-number selects corner entry while Ctrl-number selects center entry", function() {
     assert.match(app, /function toolPanelNumberShortcut[\s\S]*?shiftKey[\s\S]*?chooseNoteMode\("2"\)/);
     assert.match(app, /function toolPanelNumberShortcut[\s\S]*?ctrlKey[\s\S]*?chooseNoteMode\("3"\)/);
@@ -166,6 +179,16 @@ test("Add Variant has one metadata-backed availability source without status lab
     assert.match(variationCatalog, /editorVariations[\s\S]*?variation\.status === "available"/);
     assert.match(variationCatalog, /editorGroup\.label = "Variants"/);
     assert.doesNotMatch(variationCatalog, /label === "Available"|label === "Unsupported CSP"/);
+});
+
+test("WSC developer tab adds solver links to an exact booklet entry grouped by round", function() {
+    const wscApp = fs.readFileSync(path.join(root, "docs/src/Wsc2026App.svelte"), "utf8");
+    assert.match(wscApp, /\['dev','Dev'\]/);
+    assert.match(wscApp, /<label>Link<input bind:value=\{devLink\}/);
+    assert.match(wscApp, /<label>Variant name<select bind:value=\{devPuzzleId\}/);
+    assert.match(wscApp, /<optgroup label=\{`Round /);
+    assert.match(wscApp, /act\('add_link',\{booklet_ref:devPuzzleId,puzzle_url:link\}\)/);
+    assert.match(wscApp, /q\.booklet_ref\?q\.booklet_ref===p\.id/);
 });
 
 test("mobile theme toggle updates the global Penpa theme and persists it", function() {

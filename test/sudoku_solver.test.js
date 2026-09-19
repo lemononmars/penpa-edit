@@ -423,9 +423,9 @@ test("Dutch Flat Mates requires a 1 above or a 9 below every 5", function() {
         "the global rule admits a complete Sudoku solution");
 });
 
-test("Upper Right Heavy Killer reads cell clues and enforces both directions", function() {
+test("Upper Right Heavy Killer reads upper-right corner clues and enforces both directions", function() {
     const constraints = SudokuSolver.readConstraints(variantPuzzle("upperrightheavykiller", {
-        number: { 41: ["10", 1, "1"] }
+        numberS: { 841: ["10", 1, "1"] }
     }));
     assert.equal(constraints.upperrightheavykiller[0]["1,0"], 10);
 
@@ -441,6 +441,13 @@ test("Upper Right Heavy Killer reads cell clues and enforces both directions", f
     wronglyClued[1][0] = 6;
     wronglyClued[0][1] = 4;
     assert.equal(SudokuCSP.findConflict(wronglyClued, constraints)?.constraint, "upperrightheavykiller");
+});
+
+test("Upper Right Heavy Killer accepts a clue from any cell corner", function() {
+    const constraints = SudokuSolver.readConstraints(variantPuzzle("upperrightheavykiller", {
+        numberS: { 843: ["10", 1, "1"] }
+    }));
+    assert.equal(constraints.upperrightheavykiller[0]["1,0"], 10);
 });
 
 test("Multiplication Table rejects incorrect two-digit products", function() {
@@ -2292,7 +2299,7 @@ test("keeps shared arrow marks assigned to every active directional variant", fu
     assert.equal(constraints.supported.includes("eliminate"), true);
     assert.equal(constraints.supported.includes("search9"), true);
     assert.equal(constraints.supported.includes("quadmax"), true);
-    assert.deepEqual(relations.sort(), ["eliminate", "quadmax", "search9"]);
+    assert.deepEqual(relations.sort(), ["quadmax", "search9"]);
 });
 
 test("reports detailed conflict cells for duplicate givens and variant clues", function() {
@@ -2459,9 +2466,16 @@ test("normalizes the newly implemented catalog variants for the solver", functio
     });
     assert.equal(SudokuSolver.readConstraints(smallest).directionalMarks[0].relation, "smallestneighbours");
 
+    const eliminate = puzzleFor("eliminate", {
+        pu_q: { number: {}, numberS: {}, symbol: { 42: [[1, 0, 0, 0, 1, 0, 0, 0], "arrow_eight", 2] },
+            thermo: [], nobulbthermo: [], killercages: [] }
+    });
+    assert.equal(SudokuSolver.readConstraints(eliminate).directionalMarks.length, 1);
+    assert.equal(SudokuSolver.readConstraints(eliminate).directionalMarks[0].targets.length, 8);
+
     const fullCenterList = Array.from({ length: 9 }, (_, row) =>
         Array.from({ length: 9 }, (__, col) => (row + 2) * 13 + col + 2)).flat();
-    ["eliminate", "pointtonext", "pointtoprevious"].forEach(function(variant) {
+    ["pointtonext", "pointtoprevious"].forEach(function(variant) {
         const sightline = puzzleFor(variant, {
             centerlist: fullCenterList,
             pu_q: { number: {}, numberS: {}, symbol: {

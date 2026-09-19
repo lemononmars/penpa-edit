@@ -47,6 +47,7 @@ export const penpaMarks: PenpaMark[] = [
     { id: "thermo", name: "Thermometer", family: "Special", positions: ["center"], penpaMode: "Special · thermo", description: "A bulb and connected center-line stem." },
     { id: "arrow", name: "Arrow", family: "Special", positions: ["center", "outside"], penpaMode: "Special · arrows", description: "An arrow with a circular origin and shaft." },
     { id: "direction", name: "Direction arrow", family: "Special", positions: ["center", "outside"], penpaMode: "Special · direction", description: "A directional arrow without an arithmetic bulb." },
+    { id: "8-way", name: "8-way", family: "Shape", positions: ["center"], penpaMode: "Shape · arrow_eight", description: "One or more of eight independently toggled arrows in a cell." },
     { id: "frame", name: "Square frame", family: "Special", positions: ["center"], penpaMode: "Special · squareframe", description: "A frame enclosing one or more cells." },
     { id: "polygon", name: "Polygon", family: "Special", positions: ["center"], penpaMode: "Special · polygon", description: "A filled or outlined freeform polygon." },
     { id: "cage", name: "Cage", family: "Cage", positions: ["center"], penpaMode: "Cage", description: "An outlined group of cells, optionally with a corner total." }
@@ -70,8 +71,8 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     if (["anti king", "anti knight", "disjoint", "queen", "disparity", "liardiagonal", "magicsquares", "onefivenine", "unicorn", "citywalk", "poleposition", "pole position", "sequence top-bottom", "pirate", "touchy"].includes(variation.value)) {
         return { position: "none", mark: "none" };
     }
-    if (["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "search6", "search9", "sumdetector", "twindetector"].includes(variation.value)) {
-        return { position: "center", mark: "direction" };
+    if (["attacktheleader", "biggestneighbours", "smallestneighbours", "detection", "eliminate", "sumdetector", "twindetector"].includes(variation.value)) {
+        return { position: "center", mark: "8-way" };
     }
     if (["quadmax", "quadmin"].includes(variation.value)) {
         return { position: "corner", mark: "direction" };

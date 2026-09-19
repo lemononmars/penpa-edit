@@ -13,7 +13,7 @@
   if(q.kind==='trishula')return cells(q.cells)&&cells(q.tips)&&q.tips.length===3;
   if(['clonealongline','anticlone'].includes(q.kind))return cells(q.cells)&&cells(q.other)&&q.other.length===q.cells.length;
   if(q.kind==='sforsudoku')return cells(q.cells)&&Array.isArray(q.allowed)&&q.allowed.length>0&&q.allowed.every(n=>Number.isInteger(n)&&n>=1&&n<=9);
-  if(q.kind==='attacktheleader')return cells(q.cells)&&cell(q.origin)&&Array.isArray(q.directions)&&q.directions.every(d=>['up','down','left','right'].includes(d));
+  if(q.kind==='attacktheleader')return cells(q.cells)&&cell(q.origin)&&Array.isArray(q.directions)&&q.directions.every(d=>['left','up-left','up','up-right','right','down-right','down','down-left'].includes(d));
   if(q.kind==='neighbouringdisparity')return cells(q.cells)&&cell(q.origin);
   if(['magicsword','nexttox'].includes(q.kind))return Array.isArray(q.clues)&&q.clues.length>0&&q.clues.every(c=>cells(c.cells)&&(q.kind==='magicsword'?Number.isInteger(c.value)&&c.value>=0&&c.value<=9:/^[1-9]{1,2}$/.test(String(c.value))));
   if(q.kind==='divisorsumpairs')return cells(q.cells)&&q.cells.length===2&&Number.isInteger(q.value)&&q.value>0;
@@ -53,7 +53,7 @@
    case 'antioutside':return v.slice(0,3).every(d=>!q.digits.includes(d));
    case 'sudokuwithnames': {let positions=[-1];for(const d of q.digits){const next=[];for(let i=0;i<v.length;i++)if((!v[i]||v[i]===d)&&positions.some(j=>j<i))next.push(i);positions=next;}return positions.length>0;}
    case 'sforsudoku':return v.every(d=>!d||q.allowed.includes(d));
-   case 'attacktheleader':{const n=at(q.origin);if(!n)return true;const distances={};for(const [dir,dr,dc] of [['up',-1,0],['down',1,0],['left',0,-1],['right',0,1]]){let unknown=false;for(let s=1;;s++){const r=q.origin.row+dr*s,c=q.origin.col+dc*s;if(r<0||r>8||c<0||c>8){distances[dir]=unknown?null:Infinity;break;}const d=board[r][c];if(!d)unknown=true;if(d>n){distances[dir]=unknown?null:s;break;}}}if(Object.values(distances).some(d=>d===null))return true;const min=Math.min(...Object.values(distances));return Object.entries(distances).every(([dir,d])=>q.directions.includes(dir)===(d===min&&d!==Infinity));}
+   case 'attacktheleader':{const n=at(q.origin);if(!n)return true;const distances={};for(const [dir,dr,dc] of [['left',0,-1],['up-left',-1,-1],['up',-1,0],['up-right',-1,1],['right',0,1],['down-right',1,1],['down',1,0],['down-left',1,-1]]){let unknown=false;for(let s=1;;s++){const r=q.origin.row+dr*s,c=q.origin.col+dc*s;if(r<0||r>8||c<0||c>8){distances[dir]=unknown?null:Infinity;break;}const d=board[r][c];if(!d)unknown=true;if(d>n){distances[dir]=unknown?null:s;break;}}}if(Object.values(distances).some(d=>d===null))return true;const min=Math.min(...Object.values(distances));return Object.entries(distances).every(([dir,d])=>q.directions.includes(dir)===(d===min&&d!==Infinity));}
    case 'trishula':{const tips=vals(q.tips);if(!full||!tips.every(Boolean))return true;const expected=[Math.min(...v),v.reduce((s,d)=>s+d,0)/v.length,Math.max(...v)].sort((a,b)=>a-b);return tips.slice().sort((a,b)=>a-b).every((d,i)=>d===expected[i]);}
    case 'divisorsumpairs':return !full||(v[0]+v[1])%q.value===0;
    case 'magicsword':return [1,2,3,4,5,6,7,8,9,10].some(y=>q.clues.every(c=>{const a=vals(c.cells);return a.slice(0,c.value).every(d=>!d||d<y)&&(c.value===9||!a[c.value]||a[c.value]>=y);}));
@@ -1244,7 +1244,7 @@
         "pointtoprevious", "quadmax", "quadmin", "search9", "sumdetector", "detection",
         "deadoralivearrows", "twindetector"];
     function expectedSymbols(variant) {
-        if (["biggestneighbours", "smallestneighbours", "sumdetector", "detection", "twindetector"].indexOf(variant) !== -1) return ["arrow_eight"];
+        if (["biggestneighbours", "smallestneighbours", "sumdetector", "detection", "twindetector", "eliminate"].indexOf(variant) !== -1) return ["arrow_eight"];
         if (variant === "quadmax" || variant === "quadmin") return ["arrow_B_B"];
         if (variant === "deadoralivearrows") return ["arrow_B_W", "arrow_B_G"];
         return ["arrow_B_G"];
@@ -1527,11 +1527,15 @@
 });
 
 (function(root,factory){var make=factory(typeof module!=='undefined'&&module.exports?require('../wsc_rules.js'):root.Wsc2026Rules);if(typeof module!=='undefined'&&module.exports)module.exports=make;else root.createWsc2026Descriptor=make;})(typeof globalThis!=='undefined'?globalThis:this,function(rules){
- return function(id,label,category){return {id,label,supportedSizes:[9],constraintTypes:['wscRules'],inputType:{categories:[category],instructions:['Use the WSC clue editor for structured clues; cell coordinates are zero-based.']},parse:function(e,emit,diagnostic){
-  let clues=e.option('wsc2026Clues')?.[id];
+ return function(id,label,category){return {id,label,supportedSizes:[9],constraintTypes:['wscRules'],inputType:{categories:[category],instructions:['Use the supported Penpa marks or a saved structured clue payload; cell coordinates are zero-based.']},parse:function(e,emit,diagnostic){
+  const saved=e.option('wsc2026Clues'),hasSaved=!!saved&&Object.prototype.hasOwnProperty.call(saved,id);
+  let clues=hasSaved?saved[id]:undefined;
   const global=['wscescape','flamepath','fractal','disguisedqueen','antiwindoku'];
   if(global.includes(id))clues=[{cells:e.cells()}];
   if(!clues){
+   if(id==='trishula'){const puzzle=e.option('pu_q')||{},nx=Number(e.option('nx0'))||13,space=e.option('space')||[0,0,0,0],toCell=key=>{const col=Number(key)%nx-2-Number(space[2]||0),row=Math.floor(Number(key)/nx)-2-Number(space[0]||0);return e.cell(row,col);},handles=(puzzle.nobulbthermo||[]).map(path=>path.map(toCell).filter(Boolean)).filter(path=>path.length),arrows=puzzle.direction||[];clues=handles.map((cells,index)=>{const keys=new Set((puzzle.nobulbthermo[index]||[]).map(Number)),tips=arrows.filter(path=>path.length>1&&path.some(key=>keys.has(Number(key)))).map(path=>toCell(path[path.length-1])).filter(Boolean);return {cells,tips};}).filter(clue=>clue.tips.length===3);}
+   if(id==='attacktheleader')clues=e.symbolMarks().filter(m=>m.cell&&m.entry&&m.entry[1]==='arrow_eight').map(m=>{const names=['left','up-left','up','up-right','right','down-right','down','down-left'];const bits=Array.isArray(m.entry[0])?m.entry[0]:[];return {origin:m.cell,cells:e.cells(),directions:bits.map((on,i)=>on===1?names[i]:null).filter(Boolean)};});
+   if(id==='neighbouringdisparity')clues=e.symbolMarks().filter(m=>m.cell&&m.entry&&['square_L','diamond_L'].includes(m.entry[1])&&Number(m.entry[0])===1).map(m=>{const offsets=m.entry[1]==='square_L'?[[-1,-1],[-1,1],[1,-1],[1,1]]:[[-1,0],[0,1],[1,0],[0,-1]];return {origin:m.cell,cells:offsets.map(([dr,dc])=>e.cell(m.cell.row+dr,m.cell.col+dc)).filter(Boolean),shape:m.entry[1]==='square_L'?'diagonal':'orthogonal'};});
    if(id==='hundred') {clues=[];for(let r=0;r<9;r++){let groups=[],g=[];for(let c=0;c<9;c++){if(e.isShaded(r,c))g.push(e.cell(r,c));else if(g.length){groups.push(g);g=[];}}if(g.length)groups.push(g);if(groups.length)clues.push({groups});}}
    if(id==='number5stillalive')clues=e.cages().map(c=>({cells:c.cells}));
    if(['nothreeinaline','tunnel','missingarrow','missingthermo','multidiagonal'].includes(id))clues=e.connectedLinePaths(3).concat(e.connectedLinePaths(5)).map(cells=>({cells}));
@@ -1543,7 +1547,7 @@
     clues=['magicsword','nexttox'].includes(id)?(outside.length?[{clues:outside}]:[]):outside;
    }
   }
-  if(!Array.isArray(clues)||!clues.length){diagnostic({code:'missing-wsc-clues',message:label+': add the required marks or use the WSC clue editor.'});return;}
+  if(!Array.isArray(clues)||!clues.length){if(id==='trishula'&&!hasSaved)return;diagnostic({code:'missing-wsc-clues',message:label+': add the required marks or a structured clue payload.'});return;}
   for(const raw of clues){const clue=Object.assign({},raw,{kind:id});if(!rules.valid(clue)){diagnostic({code:'invalid-wsc-clues',message:label+': invalid WSC clue payload.'});return;}emit('wscRules',clue);}
  }};};
 });
@@ -2605,7 +2609,7 @@
     "use strict"; return createDescriptor("trio");
 });
 
-(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("trishula","Trishula","shading");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
+(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("trishula","Trishula","line");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
 
 (function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("tunnel","Tunnel","line");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
 

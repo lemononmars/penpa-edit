@@ -1,5 +1,4 @@
 <script lang="ts">
-  import WscClueEditor from "./WscClueEditor.svelte";
   import { onMount } from "svelte";
   import { guideFor, variantRules } from "./variantRules";
   import {
@@ -551,6 +550,8 @@
         "search6",
         "smallestneighbours",
         "biggestneighbours",
+        "attacktheleader",
+        "detection",
         "pointtonext",
         "pointtoprevious",
         "twindetector",
@@ -564,7 +565,6 @@
     ) {
       if (
         [
-          "eliminate",
           "quadmax",
           "quadmin",
           "little killer",
@@ -592,6 +592,15 @@
           num: index + 1,
         }));
       }
+      if (["attacktheleader", "detection", "smallestneighbours", "biggestneighbours", "twindetector", "eliminate"].includes(variant)) {
+        toolPanelMode = "8-way";
+      }
+    } else if (variant === "neighbouringdisparity" && mode === "symbol") {
+      toolPanelMode = "Disparity";
+      toolPanelOptions = [
+        { value: "diagonal", label: "Diagonal neighbours", submode: "square_L", sym: "square_L", num: 1, input: "1" },
+        { value: "orthogonal", label: "Orthogonal neighbours", submode: "diamond_L", sym: "diamond_L", num: 1, input: "1" },
+      ];
     } else if (
       (variant === "kropki" || variant === "clockfaces") &&
       (submode === "circle_SS" || mode === "symbol")
@@ -629,7 +638,7 @@
       toolPanelOptions = Array.from({ length: 10 }, (_, index) => ({
         value: String(index),
         label: String(index),
-        submode: "1",
+        submode: "9",
       }));
     } else if (variant === "anticonsecutive" || variant === "nonconsecutive") {
       toolPanelOptions = [{ value: "X", label: "X", submode: "cross", sym: "cross", num: 1 }];
@@ -772,6 +781,10 @@
   function applyToolPanelOption(option: ToolPanelOption) {
     const pu = (window as any).pu;
     if (!pu) return;
+    if (currentVariant === "neighbouringdisparity") {
+      pu.activeSudokuVariant = "neighbouringdisparity";
+      pu.odd_even_mode = false;
+    }
     if (option.submode && pu.mode?.[pu.mode.qa]?.symbol) {
       pu.subsymbolmode?.(option.submode, true);
     }
@@ -3091,7 +3104,6 @@
         </section>
       </div>
 
-      <WscClueEditor />
       <div bind:this={desktopInputModesAnchor} class="desktop-input-modes-anchor"></div>
       <section
         bind:this={inputModesSection}
@@ -7183,6 +7195,29 @@
     gap: 5px;
   }
   .solver-shared-keypad { grid-column: 1 / -1; width: 100%; }
+  .studio-shell.embedded .solver-shared-keypad {
+    display: contents;
+  }
+  .studio-shell.embedded .solver-shared-keypad :global(.sudoku-keypad) {
+    display: contents;
+  }
+  .studio-shell.embedded .solver-shared-keypad :global(button) {
+    width: auto;
+    min-width: 0;
+    min-height: 38px;
+  }
+  .studio-shell.embedded .solver-shared-keypad :global(.digit-1) { grid-column: 2; grid-row: 1; }
+  .studio-shell.embedded .solver-shared-keypad :global(.digit-2) { grid-column: 3; grid-row: 1; }
+  .studio-shell.embedded .solver-shared-keypad :global(.digit-3) { grid-column: 4; grid-row: 1; }
+  .studio-shell.embedded .solver-shared-keypad :global(.digit-4) { grid-column: 2; grid-row: 2; }
+  .studio-shell.embedded .solver-shared-keypad :global(.digit-5) { grid-column: 3; grid-row: 2; }
+  .studio-shell.embedded .solver-shared-keypad :global(.digit-6) { grid-column: 4; grid-row: 2; }
+  .studio-shell.embedded .solver-shared-keypad :global(.digit-7) { grid-column: 2; grid-row: 3; }
+  .studio-shell.embedded .solver-shared-keypad :global(.digit-8) { grid-column: 3; grid-row: 3; }
+  .studio-shell.embedded .solver-shared-keypad :global(.digit-9) { grid-column: 4; grid-row: 3; }
+  .studio-shell.embedded .solver-shared-keypad :global(.mode-normal) { grid-column: 5; grid-row: 1; }
+  .studio-shell.embedded .solver-shared-keypad :global(.mode-center) { grid-column: 5; grid-row: 2; }
+  .studio-shell.embedded .solver-shared-keypad :global(.mode-corner) { grid-column: 5; grid-row: 3; }
   .mobile-keypad > button {
     font-size: 17px;
   }

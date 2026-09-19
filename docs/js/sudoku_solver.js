@@ -1639,6 +1639,15 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
                 for (var c = 0; c < SIZE; c++) {
                     var cellKeyText = cellKey(puzzle, r, c);
                     var entry = puzzle.pu_q.number && puzzle.pu_q.number[cellKeyText];
+                    var cornerBase = Number(cellKeyText) + puzzle.nx0 * puzzle.ny0;
+                    var cornerEntry = null;
+                    if (puzzle.pu_q.numberS) {
+                        for (var cornerIndex = 0; cornerIndex < 4 && !cornerEntry; cornerIndex++) {
+                            cornerEntry = puzzle.pu_q.numberS[4 * cornerBase + cornerIndex] ||
+                                puzzle.pu_q.numberS[4 * Number(cellKeyText) + cornerIndex];
+                        }
+                    }
+                    if (cornerEntry && cornerEntry[0] !== undefined) entry = cornerEntry;
                     if (entry && entry[0] !== undefined) {
                         var val = parseInt(entry[0], 10);
                         if (!isNaN(val)) {
