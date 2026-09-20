@@ -38,6 +38,13 @@ test("confirmation and About surfaces use explicit readable theme colors", funct
     assert.match(app, /color:\s*var\(--modal-primary-foreground\)/);
 });
 
+test("Penpa actions and About omit WSC and Battle navigation", function() {
+    assert.doesNotMatch(app, /window\.location\.href = "\.\/wsc2026\/"/);
+    assert.doesNotMatch(app, /window\.location\.href = "\.\/battle"/);
+    assert.doesNotMatch(app, /href="\.\/wsc2026\/"/);
+    assert.doesNotMatch(app, /href="\.\/battle\/"/);
+});
+
 test("Clear Mark and Solve record a Penpa undo transaction", function() {
     assert.match(solver, /function applySolution\([^)]*\)[\s\S]*?beginPenpaUndoTransaction\(puzzle,\s*"Solve"\)/);
     assert.match(solver, /function clearAutoSolution\([^)]*\)[\s\S]*?beginPenpaUndoTransaction\(puzzle,\s*"Clear Mark"\)/);
@@ -60,7 +67,7 @@ test("Midpoint uses one direct clue mode for edges and intersections", function(
 });
 
 test("native Penpa completion uses CSP validation and Solve Once stays in Solution mode", function() {
-    assert.match(puzzle, /check_solution\(\)[\s\S]*?SudokuSolver\.checkCompletion\(this\)/);
+    assert.match(puzzle, /check_solution\(\)[\s\S]*?this\.mmode === "solve" && !this\.solution[\s\S]*?SudokuSolver\.checkCompletion\(this\)/);
     assert.match(solver, /function handleResult\(result\)[\s\S]*?SudokuSolver\.commitSolveOnce\(pu,\s*result\.board\)/);
     assert.doesNotMatch(
         solver.match(/function handleResult\(result\) \{([\s\S]*?)\n        \}/)?.[1] || "",
@@ -97,11 +104,14 @@ test("variant references use the clean list route", function() {
     assert.doesNotMatch(catalog, /list\/list\.html|\.\/list\.html/);
 });
 
-test("embedded solver keypad keeps the four-row five-column composition", function() {
+test("mobile and embedded solver keypads keep the four-row five-column composition", function() {
     assert.match(app, /\.mobile-keypad\s*\{[\s\S]*?grid-template-columns:\s*repeat\(5/);
-    assert.match(app, /\.studio-shell\.embedded \.solver-shared-keypad\s*\{\s*display:\s*contents/);
+    assert.match(app, /\.solver-shared-keypad\s*\{\s*display:\s*contents/);
+    assert.doesNotMatch(app, /\.solver-shared-keypad\s*\{[^}]*grid-column:\s*1\s*\/\s*-1/);
     assert.match(app, /\.digit-9\)\s*\{\s*grid-column:\s*4;\s*grid-row:\s*3/);
     assert.match(app, /\.mode-corner\)\s*\{\s*grid-column:\s*5;\s*grid-row:\s*3/);
+    assert.match(app, /class="key-undo"[\s\S]*?aria-label="Undo"[\s\S]*?legacyClick\("sudoku_undo"\)/);
+    assert.match(app, /class="note-key note-clear"[\s\S]*?aria-label="Reset marks"/);
 });
 
 test("Shift-number selects corner entry while Ctrl-number selects center entry", function() {
@@ -132,6 +142,11 @@ test("solver controls and status use separate horizontal rows", function() {
     assert.match(app, /\.studio-shell\.dark \.solver-settings-btn[\s\S]*?background:\s*#263340 !important/);
     assert.match(app, /\.log-host #sudoku-solver-status[\s\S]*?flex:\s*0 0 100% !important/);
     assert.match(app, /\.bottom-actions\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3/);
+});
+
+test("solver running overlay restores its visible status text", function() {
+    assert.match(app, /<strong>Solver running… \{solverElapsedLabel\}<\/strong>/);
+    assert.match(app, /:global\(body\.sudoku-solver-running\) \.board-busy-overlay\s*\{\s*display:\s*flex/);
 });
 
 test("solver toolbar moves every button before marking the board ready", function() {
@@ -191,6 +206,7 @@ test("WSC developer tab adds solver links to an exact booklet entry grouped by r
     assert.match(wscApp, /request\('links',token\|\|crypto\.randomUUID\(\)\)/);
     assert.doesNotMatch(wscApp, /tab==='dev'[\s\S]{0,500}\{#if session\}/);
     assert.match(wscApp, /q\.booklet_ref\?q\.booklet_ref===p\.id/);
+    assert.match(wscApp, /session\.members\.length\}\/7 members/);
 });
 
 test("WSC print pages use round-puzzle numbering and bottom-align puzzle images", function() {

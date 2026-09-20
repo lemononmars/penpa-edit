@@ -1,4 +1,5 @@
 import { supabase } from '../battle/supabase';
+export { safeUrl, playerUrl } from './url.mjs';
 export const SESSION_KEY = 'wsc2026-device-key';
 export async function request(action: string, token: string, payload: object = {}) {
  const password=localStorage.getItem('wsc2026-password');
@@ -16,20 +17,8 @@ export function parseTime(value: string) {
  if (seconds < 1 || seconds > 86400) throw new Error('Time must be between 0:01 and 1440:00.');
  return seconds;
 }
-export function safeUrl(value: string) {
- try { const url=new URL(value,location.origin); return ['http:','https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; }
-}
 export async function readImage(file: File | undefined) {
  if (!file) return '';
  if (!['image/png','image/jpeg','image/webp'].includes(file.type) || file.size>3*1024*1024) throw new Error('Use a PNG, JPEG or WebP up to 3 MB.');
  return await new Promise<string>((resolve,reject)=> { const r=new FileReader(); r.onload=()=>resolve(String(r.result)); r.onerror=()=>reject(new Error('Could not read image.')); r.readAsDataURL(file); });
-}
-
-// Saved Penpa/Sudotoku payloads always launch in this site's main player.
-export function playerUrl(value: string) {
- const href=safeUrl(value);if(!href)return '';
- const url=new URL(href);const hash=new URLSearchParams(url.hash.slice(1));
- const params=hash.has('p')?hash:url.searchParams;
- if(!params.get('p'))return '';
- params.set('m','solve');return '/#'+params.toString();
 }

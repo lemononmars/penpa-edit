@@ -13833,7 +13833,9 @@ class Puzzle {
     }
 
     check_solution() {
-        if (this.mmode === "solve" && typeof SudokuSolver !== "undefined" &&
+        // A published answer payload is authoritative. CSP completion is the
+        // fallback for puzzles that intentionally omit an encoded answer.
+        if (this.mmode === "solve" && !this.solution && typeof SudokuSolver !== "undefined" &&
             typeof SudokuSolver.checkCompletion === "function") {
             let completion = SudokuSolver.checkCompletion(this);
             if (completion.handled) {
@@ -13848,7 +13850,10 @@ class Puzzle {
         if (!this.multisolution) {
             if (this.solution) {
                 var text = JSON.stringify(this.make_solution());
-                let conflict = this.check_conflict(text);
+                // An exact match to the author's encoded answer is sufficient.
+                // Some image-backed or custom-region puzzles cannot expose all
+                // of their visual constraints to the generic conflict parser.
+                let conflict = text === this.solution ? false : this.check_conflict(text);
                 if (!conflict) {
                     if (text === this.solution && this.sol_flag === 0) {
                         this.trigger_solution_complete();

@@ -2647,8 +2647,11 @@
           />
         </div>
       {/if}
+      <button type="button" class="key-undo"
+        aria-label="Undo" title="Undo" on:click={() => legacyClick("sudoku_undo")}
+      ><i class="fa fa-undo" aria-hidden="true"></i></button>
       <button type="button" class="note-key note-clear"
-        aria-label="Clear marks" title="Clear marks" on:click={clearMarks}
+        aria-label="Reset marks" title="Reset marks" on:click={clearMarks}
       ><i class="fa fa-eraser" aria-hidden="true"></i></button>
     </div>
 
@@ -3508,13 +3511,6 @@
             >
           </div>
           <div class="action-group bottom-actions">
-            <button on:click={() => (window.location.href = "./wsc2026/")}>WSC 2026</button>
-            <button
-              class="battle-action"
-              title="Open realtime Sudoku Battle"
-              on:click={() => (window.location.href = "./battle")}
-              ><span>⚔</span>Battle</button
-            >
             <button
               class="mobile-panel-position-action"
               on:click={toggleMobilePanelPosition}
@@ -3944,12 +3940,8 @@
             The solver runs on your device, and it does not collect nor send any
             of your data.
           </p>
-          <a href="./wsc2026/" target="_blank" rel="noreferrer">WSC 2026</a>
           <a href="./list/" target="_blank" rel="noreferrer"
             >See list of variants ↗</a
-          >
-          <a href="./battle/" target="_blank" rel="noreferrer"
-            >Play multiplayer Battle mode ↗</a
           >
           <a
             href="https://github.com/lemononmars/penpa-edit"
@@ -5085,7 +5077,7 @@
     cursor: progress;
   }
   :global(body.sudoku-solver-running) .board-busy-overlay {
-    display: none !important;
+    display: flex;
   }
   .board-busy-overlay small {
     color: #65727f;
@@ -7194,30 +7186,30 @@
     grid-template-rows: repeat(4, minmax(38px, 1fr));
     gap: 5px;
   }
-  .solver-shared-keypad { grid-column: 1 / -1; width: 100%; }
-  .studio-shell.embedded .solver-shared-keypad {
+  .solver-shared-keypad {
     display: contents;
   }
-  .studio-shell.embedded .solver-shared-keypad :global(.sudoku-keypad) {
+  .solver-shared-keypad :global(.sudoku-keypad) {
     display: contents;
   }
-  .studio-shell.embedded .solver-shared-keypad :global(button) {
+  .solver-shared-keypad :global(button) {
     width: auto;
     min-width: 0;
     min-height: 38px;
+    height: auto;
   }
-  .studio-shell.embedded .solver-shared-keypad :global(.digit-1) { grid-column: 2; grid-row: 1; }
-  .studio-shell.embedded .solver-shared-keypad :global(.digit-2) { grid-column: 3; grid-row: 1; }
-  .studio-shell.embedded .solver-shared-keypad :global(.digit-3) { grid-column: 4; grid-row: 1; }
-  .studio-shell.embedded .solver-shared-keypad :global(.digit-4) { grid-column: 2; grid-row: 2; }
-  .studio-shell.embedded .solver-shared-keypad :global(.digit-5) { grid-column: 3; grid-row: 2; }
-  .studio-shell.embedded .solver-shared-keypad :global(.digit-6) { grid-column: 4; grid-row: 2; }
-  .studio-shell.embedded .solver-shared-keypad :global(.digit-7) { grid-column: 2; grid-row: 3; }
-  .studio-shell.embedded .solver-shared-keypad :global(.digit-8) { grid-column: 3; grid-row: 3; }
-  .studio-shell.embedded .solver-shared-keypad :global(.digit-9) { grid-column: 4; grid-row: 3; }
-  .studio-shell.embedded .solver-shared-keypad :global(.mode-normal) { grid-column: 5; grid-row: 1; }
-  .studio-shell.embedded .solver-shared-keypad :global(.mode-center) { grid-column: 5; grid-row: 2; }
-  .studio-shell.embedded .solver-shared-keypad :global(.mode-corner) { grid-column: 5; grid-row: 3; }
+  .solver-shared-keypad :global(.digit-1) { grid-column: 2; grid-row: 1; }
+  .solver-shared-keypad :global(.digit-2) { grid-column: 3; grid-row: 1; }
+  .solver-shared-keypad :global(.digit-3) { grid-column: 4; grid-row: 1; }
+  .solver-shared-keypad :global(.digit-4) { grid-column: 2; grid-row: 2; }
+  .solver-shared-keypad :global(.digit-5) { grid-column: 3; grid-row: 2; }
+  .solver-shared-keypad :global(.digit-6) { grid-column: 4; grid-row: 2; }
+  .solver-shared-keypad :global(.digit-7) { grid-column: 2; grid-row: 3; }
+  .solver-shared-keypad :global(.digit-8) { grid-column: 3; grid-row: 3; }
+  .solver-shared-keypad :global(.digit-9) { grid-column: 4; grid-row: 3; }
+  .solver-shared-keypad :global(.mode-normal) { grid-column: 5; grid-row: 1; }
+  .solver-shared-keypad :global(.mode-center) { grid-column: 5; grid-row: 2; }
+  .solver-shared-keypad :global(.mode-corner) { grid-column: 5; grid-row: 3; }
   .mobile-keypad > button {
     font-size: 17px;
   }

@@ -1,0 +1,22 @@
+import {PGlite} from '@electric-sql/pglite';
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+
+const db=new PGlite();
+await db.exec('create role anon;create role authenticated;');
+for(const name of ['20260918000000_wsc2026_practice.sql','20260920000000_wsc2026_dev_links.sql','20260920010000_wsc2026_anonymous_links.sql','20260920020000_wsc2026_repair_team.sql','20260920030000_wsc2026_repair_private_api.sql','20260920040000_wsc2026_seven_members.sql'])await db.exec(fs.readFileSync('supabase/migrations/'+name,'utf8'));
+await db.exec('set role anon');
+const key=randomUUID(),password='กู้ชาติ';
+const links=await db.query("select public.wsc2026_api('links',$1::uuid,$2::jsonb) as data",[key,JSON.stringify({password})]);
+assert.deepEqual(links.rows[0].data.puzzles,[]);
+const added=await db.query("select public.wsc2026_api('add_link',$1::uuid,$2::jsonb) as data",[key,JSON.stringify({password,booklet_ref:'r06-05',puzzle_url:'/#m=solve&p=repair-test'})]);
+assert.equal(added.rows[0].data.puzzles[0].booklet_ref,'r06-05');
+const joined=await db.query("select public.wsc2026_api('join',$1::uuid,$2::jsonb) as data",[key,JSON.stringify({password,username:'alice'})]);
+assert.equal(joined.rows[0].data.member.username,'alice');
+await db.query("select public.wsc2026_api('plan',$1::uuid,$2::jsonb)",[key,JSON.stringify({password,puzzle_ref:'r06-05',round_id:6,planned:true})]);
+await db.query("select public.wsc2026_api('record',$1::uuid,$2::jsonb)",[key,JSON.stringify({password,puzzle_ref:'r06-05',round_id:6,display_name:'Alice',seconds:123,outcome:'solved'})]);
+const state=await db.query("select public.wsc2026_api('state',$1::uuid,$2::jsonb) as data",[key,JSON.stringify({password})]);
+assert.equal(state.rows[0].data.plans.length,1);assert.equal(state.rows[0].data.attempts.length,1);
+console.log('PASS repaired missing singleton team table, private API, profiles, records, plans and anonymous links');
+await db.close();
