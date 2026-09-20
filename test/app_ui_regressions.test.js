@@ -183,12 +183,23 @@ test("Add Variant has one metadata-backed availability source without status lab
 
 test("WSC developer tab adds solver links to an exact booklet entry grouped by round", function() {
     const wscApp = fs.readFileSync(path.join(root, "docs/src/Wsc2026App.svelte"), "utf8");
-    assert.match(wscApp, /\['dev','Dev'\]/);
+    assert.match(wscApp, /\['dev','Add puzzle'\]/);
     assert.match(wscApp, /<label>Link<input bind:value=\{devLink\}/);
     assert.match(wscApp, /<label>Variant name<select bind:value=\{devPuzzleId\}/);
     assert.match(wscApp, /<optgroup label=\{`Round /);
-    assert.match(wscApp, /act\('add_link',\{booklet_ref:devPuzzleId,puzzle_url:link\}\)/);
+    assert.match(wscApp, /request\('add_link',token\|\|crypto\.randomUUID\(\),\{booklet_ref:devPuzzleId,puzzle_url:link\}\)/);
+    assert.match(wscApp, /request\('links',token\|\|crypto\.randomUUID\(\)\)/);
+    assert.doesNotMatch(wscApp, /tab==='dev'[\s\S]{0,500}\{#if session\}/);
     assert.match(wscApp, /q\.booklet_ref\?q\.booklet_ref===p\.id/);
+});
+
+test("WSC print pages use round-puzzle numbering and bottom-align puzzle images", function() {
+    const wscApp = fs.readFileSync(path.join(root, "docs/src/Wsc2026App.svelte"), "utf8");
+    assert.match(wscApp, /#\{p\.round\}\.\{p\.number\|\|'P'\}/);
+    assert.match(wscApp, /\.print-puzzle\{[^}]*display:flex;flex-direction:column/);
+    assert.match(wscApp, /\.print-puzzle img\{[^}]*margin:auto auto 3mm/);
+    assert.match(wscApp, /\.print-puzzle\.samurai img\{[^}]*margin:auto auto 2mm!important/);
+    assert.match(wscApp, /\.round-preview ol\{[^}]*display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
 
 test("mobile theme toggle updates the global Penpa theme and persists it", function() {
