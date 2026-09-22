@@ -288,6 +288,10 @@ export default defineConfig({
       input: {
         main: resolve(process.cwd(), "docs/index.html"),
         wsc2026: resolve(process.cwd(), "docs/wsc2026/index.html"),
+        starSolver: resolve(process.cwd(), "docs/solver/star/index.html"),
+        hexSolver: resolve(process.cwd(), "docs/solver/hex/index.html"),
+        parquetSolver: resolve(process.cwd(), "docs/solver/parquet/index.html"),
+        isodokuSolver: resolve(process.cwd(), "docs/solver/isodoku/index.html"),
         list: resolve(process.cwd(), "docs/list/index.html"),
         battle: resolve(process.cwd(), "docs/battle/index.html"),
         battleLeaderboard: resolve(process.cwd(), "docs/battle/leaderboard/index.html"),

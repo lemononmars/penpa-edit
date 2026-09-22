@@ -126,6 +126,12 @@ for (const puzzle of puzzles) {
           board.pu_q.lineE[horizontal(0, col)] = 2; board.pu_q.lineE[horizontal(9, col)] = 2;
         }
       }
+    } else {
+      // Serialize the 3×3 box borders explicitly instead of depending on the
+      // viewer's current grid-style preference.
+      const standardIds = Array.from({length:81}, (_, index) => String(Math.floor(index / 27) * 3 + Math.floor((index % 9) / 3) + 1));
+      board.mode.grid = ["1", "1", "1"];
+      for (const key of window.SudokuSolver.irregularBoundaryEdges(board, standardIds)) board.pu_q.lineE[key] = 2;
     }
     if (definition.diagonals) {
       for (let index = 0; index < 8; index += 1) {

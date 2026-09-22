@@ -2624,13 +2624,16 @@
         "diagonal",
         "irregular"
       ],
-      "status": "infeasible",
+      "status": "available",
       "inputType": {
         "categories": [
-          "no-input"
+          "cell"
         ],
-        "instructions": []
-      }
+        "instructions": [
+          "Open the dedicated geometry solver to enter digits on the actual grid."
+        ]
+      },
+      "solverRoute": "/solver/hex/"
     },
     {
       "otherNames": "",
@@ -4296,7 +4299,8 @@
         "irregular",
         "math"
       ],
-      "status": "infeasible",
+      "status": "available",
+      "solverRoute": "/solver/parquet/",
       "inputType": {
         "categories": [
           "cell"
@@ -7670,13 +7674,13 @@
       ],
       "inputType": {
         "categories": [
-          "no-input"
+          "cell"
         ],
         "instructions": [
-          "Use the dedicated WSC Layout solver. Enter explicit givens, rows, columns and regions for this nonstandard geometry."
+          "Open the dedicated geometry solver to enter digits on the actual grid."
         ]
       },
-      "solverRoute": "/wsc2026/?tab=solver&variant=star"
+      "solverRoute": "/solver/star/"
     },
     {
       "id": "disjointhundred",
@@ -7839,6 +7843,26 @@
           "Global rule: the centre must connect to all four edges through odd cells. No marks are required."
         ]
       }
+    },
+    {
+      "id": "isodoku",
+      "name": "Isodoku",
+      "rules": {
+        "9x9": "Use the indicated digit range without repeats in each row or bold region. Rows pass through opposite parallel sides of each rhombus and bend across folds. Cell orientations and regions can be customized in the dedicated solver."
+      },
+      "status": "available",
+      "tags": [
+        "geometry"
+      ],
+      "inputType": {
+        "categories": [
+          "cell"
+        ],
+        "instructions": [
+          "Open the dedicated Isodoku solver. Edit the layout to add or remove cells, set their orientations, and assign regions."
+        ]
+      },
+      "solverRoute": "/solver/isodoku/"
     }
   ]
 }

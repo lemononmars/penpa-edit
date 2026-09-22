@@ -1,7 +1,8 @@
 import { chromium } from "playwright";
 import links from "../docs/src/wsc2026/round1Playable.json" with { type: "json" };
 
-globalThis.location = { origin: "http://localhost:5174" };
+const appUrl = (process.env.SUDOTOKU_URL || "http://localhost:5174/").replace(/\/$/, "");
+globalThis.location = { origin: appUrl };
 const { playerUrl } = await import("../docs/src/wsc2026/url.mjs");
 
 const browser = await chromium.launch({ headless: true });
@@ -9,7 +10,7 @@ const page = await browser.newPage();
 const expectedNative = {
   "r01-01": { givens: 20 },
   "r01-02": { cages: 33, cageLabels: 33 },
-  "r01-03": { regions: 81, edges: 48 },
+  "r01-03": { regions: 81, minimumEdges: 48 },
   "r01-04": { regions: 81, minimumEdges: 48 },
   "r01-05": { lines: 16 },
   "r01-06": { givens: 14 },
@@ -19,7 +20,7 @@ const expectedNative = {
 };
 for (const [id, link] of Object.entries(links)) {
   const normalized = playerUrl(link);
-  await page.goto(`http://localhost:5174/?verify=${id}#${normalized.split('#')[1]}`, { waitUntil: "networkidle" });
+  await page.goto(`${appUrl}/?verify=${id}#${normalized.split('#')[1]}`, { waitUntil: "networkidle" });
   await page.waitForFunction(() => window.pu?.centerlist?.length === 81 && window.pu?.solution);
   const result = await page.evaluate((expectedId) => ({
     cells: window.pu.centerlist.length,

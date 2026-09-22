@@ -57,12 +57,18 @@ export const hundredCombinationGroups = (() => {
   }
  }
  visit(0,0,new Set(),[]);
- return definitions.map(definition=>({
-  ...definition,
-  combinations:combinations
+ return definitions.map(definition=>{
+  const entries=combinations
    .filter(entry=>entry.twoDigitCount===definition.twoDigitCount&&entry.singleCount===definition.singleCount)
-   .map(entry=>entry.text),
- }));
+   .map(entry=>entry.text);
+  const numbers=[...new Set(entries.flatMap(text=>text.split(' + ').map(Number).filter(value=>value>=10)))].sort((a,b)=>a-b);
+  const digitLookup=(givenTens)=>Array.from({length:9},(_,index)=>{
+   const digit=index+1;
+   const matches=numbers.filter(value=>(givenTens?Math.floor(value/10):value%10)===digit);
+   return {digit,possibleDigits:[...new Set(matches.map(value=>givenTens?value%10:Math.floor(value/10)))].sort((a,b)=>a-b)};
+  });
+  return {...definition,combinations:entries,byTens:digitLookup(true),byUnits:digitLookup(false)};
+ });
 })();
 
 export const primeRunCombinations = (() => {
