@@ -1,11 +1,18 @@
 (function(root,factory){var api=factory();if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Wsc2026Rules=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- const kinds=['wscescape','creasing','palindrome','hundred','flamepath','fractal','disguisedqueen','antiwindoku','nothreeinaline','clonealongline','tunnel','number5stillalive','missingarrow','missingthermo','transparentkropkipairs','unordereddistances','nexttox','anticlone','friends','enemies','antioutside','multidiagonal','sudokuwithnames','sforsudoku','attacktheleader','trishula','divisorsumpairs','magicsword','neighbouringdisparity','indextoone','primerunsum','even','odd'];
+ const kinds=['wscescape','creasing','palindrome','hundred','flamepath','fractal','disguisedqueen','antiwindoku','nothreeinaline','clonealongline','tunnel','number5stillalive','missingarrow','missingthermo','transparentkropkipairs','unordereddistances','nexttox','anticlone','friends','enemies','antioutside','multidiagonal','sudokuwithnames','sforsudoku','attacktheleader','trishula','divisorsumpairs','magicsword','neighbouringdisparity','indextoone','primerunsum','even','odd','division','nonconsecutiveonline','weightedkiller','258','differences','entropiclines','insideskyscraper','pointingdigits','threeup'];
  const cell=c=>c&&Number.isInteger(c.row)&&Number.isInteger(c.col)&&c.row>=0&&c.row<9&&c.col>=0&&c.col<9;
  const cells=a=>Array.isArray(a)&&a.length>0&&a.every(cell)&&new Set(a.map(c=>c.row*9+c.col)).size===a.length;
  function valid(q){
   if(!q||!kinds.includes(q.kind))return false;
-  if(['wscescape','flamepath','fractal','disguisedqueen','antiwindoku'].includes(q.kind))return cells(q.cells)&&q.cells.length===81;
+  if(['wscescape','flamepath','fractal','disguisedqueen','antiwindoku','258'].includes(q.kind))return cells(q.cells)&&q.cells.length===81;
+  if(['division','differences'].includes(q.kind))return cells(q.cells)&&q.cells.length===2&&Number.isInteger(q.value)&&q.value>=0&&q.value<=9;
+  if(q.kind==='weightedkiller')return cells(q.cells)&&Array.isArray(q.shaded)&&q.shaded.every(cell)&&q.shaded.every(c=>q.cells.some(x=>x.row===c.row&&x.col===c.col))&&Number.isInteger(q.value)&&q.value>=1;
+  if(q.kind==='pointingdigits')return cells(q.cells)&&q.cells.length>=2;
+  if(q.kind==='threeup')return cells(q.cells)&&q.cells.length===3;
+  if(q.kind==='insideskyscraper')return cells(q.cells)&&q.cells.length>=2;
+  if(q.kind==='entropiclines')return cells(q.cells)&&q.cells.length>=3;
+  if(q.kind==='nonconsecutiveonline')return cells(q.cells)&&q.cells.length>=2;
   if(q.kind==='hundred')return Array.isArray(q.groups)&&q.groups.length>0&&q.groups.every(cells);
   if(q.kind==='trishula')return cells(q.cells)&&cells(q.tips)&&q.tips.length===3;
   if(['clonealongline','anticlone'].includes(q.kind))return cells(q.cells)&&cells(q.other)&&q.other.length===q.cells.length;
@@ -27,6 +34,15 @@
   if(!valid(q))return false;
   const at=c=>board[c.row]?.[c.col]||0, vals=cs=>cs.map(at), v=vals(q.cells||[]), full=v.every(Boolean), unique=a=>new Set(a.filter(Boolean)).size===a.filter(Boolean).length;
   switch(q.kind){
+   case '258': for(let r=0;r<9;r++)for(const [col,digit] of [[1,2],[4,5],[7,8]]){const index=board[r][col];if(index&&board[r][index-1]&&board[r][index-1]!==digit)return false;const position=board[r].indexOf(digit);if(position>=0&&index&&index!==position+1)return false;}return true;
+   case 'division':return !full||Math.max(...v)%Math.min(...v)===0&&Math.max(...v)/Math.min(...v)===q.value;
+   case 'differences':return !full||Math.abs(v[0]-v[1])===q.value;
+   case 'nonconsecutiveonline':return v.every((d,i)=>!i||!d||!v[i-1]||Math.abs(d-v[i-1])!==1);
+   case 'weightedkiller':{if(!unique(v))return false;const shaded=new Set(q.shaded.map(c=>c.row*9+c.col));let sum=0,unknown=0;for(let i=0;i<v.length;i++){const weight=shaded.has(q.cells[i].row*9+q.cells[i].col)?2:1;if(v[i])sum+=v[i]*weight;else unknown+=weight;}return sum+unknown<=q.value&&sum+9*unknown>=q.value;}
+   case 'entropiclines':return v.every((d,i)=>i<2||![v[i-2],v[i-1],d].every(Boolean)||new Set([v[i-2],v[i-1],d].map(n=>Math.floor((n-1)/3))).size===3);
+   case 'insideskyscraper':{if(!full)return true;let max=0,visible=0;for(const d of v.slice(1)){if(d>max){max=d;visible++;}}return v[0]===visible;}
+   case 'pointingdigits':{const n=v[0];return !n||n<v.length&&(!v[n]||v[n]===n);}
+   case 'threeup':return v.every((d,i)=>!i||!d||!v[i-1]||v[i-1]<d);
    case 'hundred': {let lo=0,hi=0;for(const g of q.groups){let l=0,h=0;for(const d of vals(g)){l=l*10+(d||1);h=h*10+(d||9);}lo+=l;hi+=h;}return lo<=100&&hi>=100;}
    case 'fractal': for(let br=0;br<9;br+=3)for(let bc=0;bc<9;bc+=3)for(let k=0;k<3;k++){for(const group of [[0,1,2].map(j=>board[br+k][bc+j]),[0,1,2].map(j=>board[br+j][bc+k])]){const bins=group.filter(Boolean).map(d=>Math.floor((d-1)/3));if(new Set(bins).size!==bins.length)return false;}}return true;
    case 'wscescape': {const seen=new Set(),queue=[[4,4]],edges=new Set();while(queue.length){const [r,c]=queue.pop();if(r<0||r>8||c<0||c>8||seen.has(r*9+c)||(board[r][c]&&board[r][c]%2===0))continue;seen.add(r*9+c);if(r===0)edges.add('top');if(r===8)edges.add('bottom');if(c===0)edges.add('left');if(c===8)edges.add('right');queue.push([r+1,c],[r-1,c],[r,c+1],[r,c-1]);}return edges.size===4;}

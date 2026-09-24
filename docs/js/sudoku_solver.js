@@ -5056,7 +5056,7 @@ var SudokuTools = (function() {
         pu.battenburg_mode = pu.activeSudokuVariant === "battenburg";
         pu.sudoku_midpoint_clue_mode = pu.activeSudokuVariant === "midpoint" &&
             (mode === "number" || mode === "symbol");
-        pu.sudoku_edge_clue_mode = ["divisorsumpairs", "transparentkropkipairs", "inequalityhundred", "difference", "sum", "product", "arithmetic", "greater", "lesser",
+        pu.sudoku_edge_clue_mode = ["divisorsumpairs", "division", "differences", "transparentkropkipairs", "inequalityhundred", "difference", "sum", "product", "arithmetic", "greater", "lesser",
             "consecutive", "consecutivepairs", "kropki", "kropkipairs", "xv", "xvpairs", "evensumpairs", "oddsumpairs", "inequality", "xydifference", "perfectsquares", "multiplication", "xivi", "lc",
             "primesums", "twodigitprimenumbers", "blocksumrelations", "divisor", "eitheror", "anticonsecutive", "fives", "sumnine", "fadedkropki", "doublekropki",
             "oneortwodifferencepairs", "teneleven", "tenspositionproducts"].indexOf(pu.activeSudokuVariant) !== -1 &&
@@ -5064,9 +5064,9 @@ var SudokuTools = (function() {
         pu.sudoku_corner_clue_mode = ["quadruple", "equalsums", "equaldifferences", "equalproducts",
             "equalratios", "consecutivequads", "quadmax", "quadmin", "exclusion", "groupsum", "wheel", "crosssums", "determinant", "fullorhalf"].indexOf(pu.activeSudokuVariant) !== -1 &&
             (mode === "number" || mode === "symbol");
-        pu.sudoku_directional_cell_mode = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious",
+        pu.sudoku_directional_cell_mode = ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointtoprevious", "pointingdigits", "insideskyscraper", "threeup",
             "search9", "sumdetector", "detection", "deadoralivearrows", "twindetector"].indexOf(pu.activeSudokuVariant) !== -1 && mode === "symbol";
-        pu.sudokuSymbolVariantOwner = mode === "symbol" && ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext",
+        pu.sudokuSymbolVariantOwner = mode === "symbol" && ["biggestneighbours", "smallestneighbours", "eliminate", "pointtonext", "pointingdigits", "insideskyscraper", "threeup",
             "pointtoprevious", "quadmax", "quadmin", "search9", "sumdetector", "detection", "deadoralivearrows", "twindetector"].indexOf(pu.activeSudokuVariant) !== -1 ?
             pu.activeSudokuVariant : null;
         if (pu.battenburg_mode) {

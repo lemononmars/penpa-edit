@@ -19,6 +19,24 @@ The main solver no longer shows a dedicated WSC clue editor. Variants that can b
 
 ## New rule IDs
 
+### Team-round additions (booklet v2)
+
+Round 8's `pips` uses the Classic 6x6 solver; count the pips in each cell and enter that digit. Existing solver IDs cover most of the standard-grid variants in rounds 9 and 13–15. These new IDs use the WSC rule verifier:
+
+| Variant ID | Clue shape |
+| --- | --- |
+| `division` | `{ "cells": [cell, cell], "value": quotient }` |
+| `nonconsecutiveonline` | `{ "cells": [ordered line cells...] }` |
+| `weightedkiller` | `{ "cells": [cage cells...], "shaded": [shaded cage cells...], "value": weighted total }` |
+| `258` | Global; all 81 cells are supplied automatically |
+| `differences` | `{ "cells": [cell, cell], "value": absolute difference }` |
+| `entropiclines` | `{ "cells": [ordered line cells...] }` |
+| `insideskyscraper` | `{ "cells": [arrow cell, ray cells...] }` |
+| `pointingdigits` | `{ "cells": [arrow cell, ray cells...] }` |
+| `threeup` | `{ "cells": [arrow cell, next cell, third cell] }` |
+
+The Layout solver tab accepts explicit cells and units for Flower, Pentagram and Shifted layouts. For an eight-digit Pentagram, set `digitCount` to 9, make each row, column and region an eight-cell unit, and list their unit indices in `sharedDigitSetGroups`. Team-wide transfers, rotations and variant matching still require author-supplied linking information; booklet illustrations are not automatically transcribed.
+
 | Variant ID | Display name | Accepted clue shape |
 | --- | --- | --- |
 | `hundred` | Hundred | `{ "groups": [[cell, ...], ...] }` |

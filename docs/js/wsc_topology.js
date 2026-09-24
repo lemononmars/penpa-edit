@@ -5,6 +5,7 @@
   if(!p||!Array.isArray(p.values)||!p.values.length||p.values.length>1000||!p.values.every(d=>Number.isInteger(d)&&d>=0&&d<=digitCount))throw new Error('values must contain 1–1000 digits in range (0 for empty).');
   const index=i=>Number.isInteger(i)&&i>=0&&i<p.values.length;
   if(!Array.isArray(p.units)||!p.units.length||!p.units.every(u=>Array.isArray(u)&&u.length>=1&&u.length<=digitCount&&u.every(index)&&new Set(u).size===u.length))throw new Error('Every unit must list distinct cell indices, no more than the digit range.');
+  if((p.sharedDigitSetGroups||[]).some(group=>!Array.isArray(group)||group.length<2||!group.every(i=>Number.isInteger(i)&&i>=0&&i<p.units.length)||new Set(group.map(i=>p.units[i].length)).size!==1))throw new Error('Shared-digit-set groups must list at least two equal-length unit indices.');
   const covered=new Set(p.units.flat());if(covered.size!==p.values.length)throw new Error('Every cell must belong to at least one unit. Include all row, column and region units.');
   if((p.grids||[]).some(g=>!Array.isArray(g.cells)||g.cells.length!==81||!g.cells.every(index)||new Set(g.cells).size!==81||!Array.isArray(g.clues)||!g.clues.every(rules.valid)))throw new Error('Each grid must map 81 distinct cells and contain valid WSC clues.');
   if((p.clones||[]).some(c=>!Array.isArray(c.a)||!Array.isArray(c.b)||!c.a.length||c.a.length!==c.b.length||![...c.a,...c.b].every(index)))throw new Error('Clone lines need equal-length lists of cell indices.');
@@ -15,6 +16,7 @@
   p.units.forEach(u=>u.forEach(a=>u.forEach(b=>{if(a!==b)peers[a].add(b);})));const valid=()=>{
    if(exclude&&values[exclude.index]===exclude.value)return false;
    for(const u of p.units){const filled=u.map(i=>values[i]).filter(Boolean);if(new Set(filled).size!==filled.length)return false;}
+   for(const group of p.sharedDigitSetGroups||[]){const seen=new Set(group.flatMap(i=>p.units[i].map(cell=>values[cell]).filter(Boolean)));if(seen.size>p.units[group[0]].length)return false;}
    for(const g of p.grids||[]){const board=Array.from({length:9},(_,r)=>g.cells.slice(r*9,r*9+9).map(i=>values[i]));if(!g.clues.every(q=>rules.validate(board,q)))return false;}
    for(const c of p.clones||[]){const a=c.a.map(i=>values[i]),b=c.b.map(i=>values[i]);if(![b,...(c.reversible?[b.slice().reverse()]:[])].some(v=>a.every((d,i)=>!d||!v[i]||d===v[i])))return false;}
    return true;

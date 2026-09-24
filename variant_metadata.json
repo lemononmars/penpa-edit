@@ -4515,16 +4515,20 @@
       "id": "pointingdigits",
       "name": "Pointing Digits",
       "rules": {
-        "9x9": "A digit N in a cell with an arrow sees another digit N, which is N cells away in the arrow's direction (diagonally). Arrows may be reciprocal (pointing towards each other). Not all possible arrows are given."
+        "9x9": "A digit X in an arrow cell points to another X exactly X cells away."
       },
-      "status": "planned",
+      "status": "available",
       "inputType": {
         "categories": [
           "cell"
         ],
-        "instructions": []
+        "instructions": [
+          "Use Penpa marks or saved WSC clue payloads."
+        ]
       },
-      "tags": []
+      "tags": [
+        "wsc2026"
+      ]
     },
     {
       "otherNames": "",
@@ -7863,6 +7867,241 @@
         ]
       },
       "solverRoute": "/solver/isodoku/"
+    },
+    {
+      "id": "division",
+      "name": "Division",
+      "rules": {
+        "9x9": "A clue between adjacent cells gives the exact quotient of the larger digit divided by the smaller."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "edge"
+        ],
+        "instructions": [
+          "Use Penpa marks or saved WSC clue payloads."
+        ]
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "otherNames": ""
+    },
+    {
+      "id": "nonconsecutiveonline",
+      "name": "Non Consecutive On Line",
+      "rules": {
+        "9x9": "Digits next to one another along a marked line are not consecutive."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "line"
+        ],
+        "instructions": [
+          "Use Penpa marks or saved WSC clue payloads."
+        ]
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "otherNames": ""
+    },
+    {
+      "id": "weightedkiller",
+      "name": "Weighted Killer",
+      "rules": {
+        "9x9": "Each cage clue is the sum of its unshaded digits plus twice its shaded digits. Cage digits do not repeat."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cage"
+        ],
+        "instructions": [
+          "Use Penpa marks or saved WSC clue payloads."
+        ]
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "otherNames": ""
+    },
+    {
+      "id": "258",
+      "name": "258",
+      "rules": {
+        "9x9": "In each row, the digit in column 2 gives the position of 2; the digit in column 5 gives the position of 5; the digit in column 8 gives the position of 8."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": [
+          "Use Penpa marks or saved WSC clue payloads."
+        ]
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "otherNames": ""
+    },
+    {
+      "id": "differences",
+      "name": "Differences",
+      "rules": {
+        "9x9": "A clue between adjacent cells gives the absolute difference of their digits."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "edge"
+        ],
+        "instructions": [
+          "Use Penpa marks or saved WSC clue payloads."
+        ]
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "otherNames": ""
+    },
+    {
+      "id": "entropiclines",
+      "name": "Entropic Lines",
+      "rules": {
+        "9x9": "Every three consecutive cells on a line contain one digit from 1–3, one from 4–6 and one from 7–9."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "line"
+        ],
+        "instructions": [
+          "Use Penpa marks or saved WSC clue payloads."
+        ]
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "otherNames": ""
+    },
+    {
+      "id": "insideskyscraper",
+      "name": "Inside Skyscraper",
+      "rules": {
+        "9x9": "An arrow cell gives the number of skyscrapers visible from that cell in the arrow direction; digits represent heights."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cell"
+        ],
+        "instructions": [
+          "Use Penpa marks or saved WSC clue payloads."
+        ]
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "otherNames": ""
+    },
+    {
+      "id": "threeup",
+      "name": "3 Up",
+      "rules": {
+        "9x9": "The first three cells along an arrow, including its cell, have increasing digits."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "cell"
+        ],
+        "instructions": [
+          "Use Penpa marks or saved WSC clue payloads."
+        ]
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "otherNames": ""
+    },
+    {
+      "id": "pips",
+      "name": "Pips Sudoku",
+      "rules": {
+        "6x6": "Fill a 6x6 Sudoku with 1–6; each digit is represented by that many pips."
+      },
+      "status": "available",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "otherNames": ""
+    },
+    {
+      "id": "flower",
+      "name": "Flower Sudoku",
+      "rules": {
+        "9x9": "Fill each nine-cell flower row, column and outlined region with 1–9."
+      },
+      "status": "planned",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "otherNames": "",
+      "solverRoute": "/wsc2026/?tab=solver&variant=flower"
+    },
+    {
+      "id": "pentagram",
+      "name": "Pentagram Sudoku",
+      "rules": {
+        "9x9": "Fill each eight-cell star row, column and outlined region with the same eight digits from 1–9."
+      },
+      "status": "planned",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "otherNames": "",
+      "solverRoute": "/wsc2026/?tab=solver&variant=pentagram"
+    },
+    {
+      "id": "shifted",
+      "name": "Shifted Sudoku",
+      "rules": {
+        "9x9": "Classic Sudoku rules apply with 3x3 boxes that wrap around the grid."
+      },
+      "status": "planned",
+      "inputType": {
+        "categories": [
+          "no-input"
+        ],
+        "instructions": []
+      },
+      "tags": [
+        "wsc2026"
+      ],
+      "otherNames": "",
+      "solverRoute": "/wsc2026/?tab=solver&variant=shifted"
     }
   ]
 }

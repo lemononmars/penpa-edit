@@ -2791,12 +2791,19 @@ if (typeof module !== "undefined" && module.exports) {
 
 (function(root,factory){var api=factory();if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Wsc2026Rules=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- const kinds=['wscescape','creasing','palindrome','hundred','flamepath','fractal','disguisedqueen','antiwindoku','nothreeinaline','clonealongline','tunnel','number5stillalive','missingarrow','missingthermo','transparentkropkipairs','unordereddistances','nexttox','anticlone','friends','enemies','antioutside','multidiagonal','sudokuwithnames','sforsudoku','attacktheleader','trishula','divisorsumpairs','magicsword','neighbouringdisparity','indextoone','primerunsum','even','odd'];
+ const kinds=['wscescape','creasing','palindrome','hundred','flamepath','fractal','disguisedqueen','antiwindoku','nothreeinaline','clonealongline','tunnel','number5stillalive','missingarrow','missingthermo','transparentkropkipairs','unordereddistances','nexttox','anticlone','friends','enemies','antioutside','multidiagonal','sudokuwithnames','sforsudoku','attacktheleader','trishula','divisorsumpairs','magicsword','neighbouringdisparity','indextoone','primerunsum','even','odd','division','nonconsecutiveonline','weightedkiller','258','differences','entropiclines','insideskyscraper','pointingdigits','threeup'];
  const cell=c=>c&&Number.isInteger(c.row)&&Number.isInteger(c.col)&&c.row>=0&&c.row<9&&c.col>=0&&c.col<9;
  const cells=a=>Array.isArray(a)&&a.length>0&&a.every(cell)&&new Set(a.map(c=>c.row*9+c.col)).size===a.length;
  function valid(q){
   if(!q||!kinds.includes(q.kind))return false;
-  if(['wscescape','flamepath','fractal','disguisedqueen','antiwindoku'].includes(q.kind))return cells(q.cells)&&q.cells.length===81;
+  if(['wscescape','flamepath','fractal','disguisedqueen','antiwindoku','258'].includes(q.kind))return cells(q.cells)&&q.cells.length===81;
+  if(['division','differences'].includes(q.kind))return cells(q.cells)&&q.cells.length===2&&Number.isInteger(q.value)&&q.value>=0&&q.value<=9;
+  if(q.kind==='weightedkiller')return cells(q.cells)&&Array.isArray(q.shaded)&&q.shaded.every(cell)&&q.shaded.every(c=>q.cells.some(x=>x.row===c.row&&x.col===c.col))&&Number.isInteger(q.value)&&q.value>=1;
+  if(q.kind==='pointingdigits')return cells(q.cells)&&q.cells.length>=2;
+  if(q.kind==='threeup')return cells(q.cells)&&q.cells.length===3;
+  if(q.kind==='insideskyscraper')return cells(q.cells)&&q.cells.length>=2;
+  if(q.kind==='entropiclines')return cells(q.cells)&&q.cells.length>=3;
+  if(q.kind==='nonconsecutiveonline')return cells(q.cells)&&q.cells.length>=2;
   if(q.kind==='hundred')return Array.isArray(q.groups)&&q.groups.length>0&&q.groups.every(cells);
   if(q.kind==='trishula')return cells(q.cells)&&cells(q.tips)&&q.tips.length===3;
   if(['clonealongline','anticlone'].includes(q.kind))return cells(q.cells)&&cells(q.other)&&q.other.length===q.cells.length;
@@ -2818,6 +2825,15 @@ if (typeof module !== "undefined" && module.exports) {
   if(!valid(q))return false;
   const at=c=>board[c.row]?.[c.col]||0, vals=cs=>cs.map(at), v=vals(q.cells||[]), full=v.every(Boolean), unique=a=>new Set(a.filter(Boolean)).size===a.filter(Boolean).length;
   switch(q.kind){
+   case '258': for(let r=0;r<9;r++)for(const [col,digit] of [[1,2],[4,5],[7,8]]){const index=board[r][col];if(index&&board[r][index-1]&&board[r][index-1]!==digit)return false;const position=board[r].indexOf(digit);if(position>=0&&index&&index!==position+1)return false;}return true;
+   case 'division':return !full||Math.max(...v)%Math.min(...v)===0&&Math.max(...v)/Math.min(...v)===q.value;
+   case 'differences':return !full||Math.abs(v[0]-v[1])===q.value;
+   case 'nonconsecutiveonline':return v.every((d,i)=>!i||!d||!v[i-1]||Math.abs(d-v[i-1])!==1);
+   case 'weightedkiller':{if(!unique(v))return false;const shaded=new Set(q.shaded.map(c=>c.row*9+c.col));let sum=0,unknown=0;for(let i=0;i<v.length;i++){const weight=shaded.has(q.cells[i].row*9+q.cells[i].col)?2:1;if(v[i])sum+=v[i]*weight;else unknown+=weight;}return sum+unknown<=q.value&&sum+9*unknown>=q.value;}
+   case 'entropiclines':return v.every((d,i)=>i<2||![v[i-2],v[i-1],d].every(Boolean)||new Set([v[i-2],v[i-1],d].map(n=>Math.floor((n-1)/3))).size===3);
+   case 'insideskyscraper':{if(!full)return true;let max=0,visible=0;for(const d of v.slice(1)){if(d>max){max=d;visible++;}}return v[0]===visible;}
+   case 'pointingdigits':{const n=v[0];return !n||n<v.length&&(!v[n]||v[n]===n);}
+   case 'threeup':return v.every((d,i)=>!i||!d||!v[i-1]||v[i-1]<d);
    case 'hundred': {let lo=0,hi=0;for(const g of q.groups){let l=0,h=0;for(const d of vals(g)){l=l*10+(d||1);h=h*10+(d||9);}lo+=l;hi+=h;}return lo<=100&&hi>=100;}
    case 'fractal': for(let br=0;br<9;br+=3)for(let bc=0;bc<9;bc+=3)for(let k=0;k<3;k++){for(const group of [[0,1,2].map(j=>board[br+k][bc+j]),[0,1,2].map(j=>board[br+j][bc+k])]){const bins=group.filter(Boolean).map(d=>Math.floor((d-1)/3));if(new Set(bins).size!==bins.length)return false;}}return true;
    case 'wscescape': {const seen=new Set(),queue=[[4,4]],edges=new Set();while(queue.length){const [r,c]=queue.pop();if(r<0||r>8||c<0||c>8||seen.has(r*9+c)||(board[r][c]&&board[r][c]%2===0))continue;seen.add(r*9+c);if(r===0)edges.add('top');if(r===8)edges.add('bottom');if(c===0)edges.add('left');if(c===8)edges.add('right');queue.push([r+1,c],[r-1,c],[r,c+1],[r,c-1]);}return edges.size===4;}
@@ -7559,12 +7575,19 @@ if (typeof module !== "undefined" && module.exports) {
 
 (function(root,factory){var api=factory();if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Wsc2026Rules=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- const kinds=['wscescape','creasing','palindrome','hundred','flamepath','fractal','disguisedqueen','antiwindoku','nothreeinaline','clonealongline','tunnel','number5stillalive','missingarrow','missingthermo','transparentkropkipairs','unordereddistances','nexttox','anticlone','friends','enemies','antioutside','multidiagonal','sudokuwithnames','sforsudoku','attacktheleader','trishula','divisorsumpairs','magicsword','neighbouringdisparity','indextoone','primerunsum','even','odd'];
+ const kinds=['wscescape','creasing','palindrome','hundred','flamepath','fractal','disguisedqueen','antiwindoku','nothreeinaline','clonealongline','tunnel','number5stillalive','missingarrow','missingthermo','transparentkropkipairs','unordereddistances','nexttox','anticlone','friends','enemies','antioutside','multidiagonal','sudokuwithnames','sforsudoku','attacktheleader','trishula','divisorsumpairs','magicsword','neighbouringdisparity','indextoone','primerunsum','even','odd','division','nonconsecutiveonline','weightedkiller','258','differences','entropiclines','insideskyscraper','pointingdigits','threeup'];
  const cell=c=>c&&Number.isInteger(c.row)&&Number.isInteger(c.col)&&c.row>=0&&c.row<9&&c.col>=0&&c.col<9;
  const cells=a=>Array.isArray(a)&&a.length>0&&a.every(cell)&&new Set(a.map(c=>c.row*9+c.col)).size===a.length;
  function valid(q){
   if(!q||!kinds.includes(q.kind))return false;
-  if(['wscescape','flamepath','fractal','disguisedqueen','antiwindoku'].includes(q.kind))return cells(q.cells)&&q.cells.length===81;
+  if(['wscescape','flamepath','fractal','disguisedqueen','antiwindoku','258'].includes(q.kind))return cells(q.cells)&&q.cells.length===81;
+  if(['division','differences'].includes(q.kind))return cells(q.cells)&&q.cells.length===2&&Number.isInteger(q.value)&&q.value>=0&&q.value<=9;
+  if(q.kind==='weightedkiller')return cells(q.cells)&&Array.isArray(q.shaded)&&q.shaded.every(cell)&&q.shaded.every(c=>q.cells.some(x=>x.row===c.row&&x.col===c.col))&&Number.isInteger(q.value)&&q.value>=1;
+  if(q.kind==='pointingdigits')return cells(q.cells)&&q.cells.length>=2;
+  if(q.kind==='threeup')return cells(q.cells)&&q.cells.length===3;
+  if(q.kind==='insideskyscraper')return cells(q.cells)&&q.cells.length>=2;
+  if(q.kind==='entropiclines')return cells(q.cells)&&q.cells.length>=3;
+  if(q.kind==='nonconsecutiveonline')return cells(q.cells)&&q.cells.length>=2;
   if(q.kind==='hundred')return Array.isArray(q.groups)&&q.groups.length>0&&q.groups.every(cells);
   if(q.kind==='trishula')return cells(q.cells)&&cells(q.tips)&&q.tips.length===3;
   if(['clonealongline','anticlone'].includes(q.kind))return cells(q.cells)&&cells(q.other)&&q.other.length===q.cells.length;
@@ -7586,6 +7609,15 @@ if (typeof module !== "undefined" && module.exports) {
   if(!valid(q))return false;
   const at=c=>board[c.row]?.[c.col]||0, vals=cs=>cs.map(at), v=vals(q.cells||[]), full=v.every(Boolean), unique=a=>new Set(a.filter(Boolean)).size===a.filter(Boolean).length;
   switch(q.kind){
+   case '258': for(let r=0;r<9;r++)for(const [col,digit] of [[1,2],[4,5],[7,8]]){const index=board[r][col];if(index&&board[r][index-1]&&board[r][index-1]!==digit)return false;const position=board[r].indexOf(digit);if(position>=0&&index&&index!==position+1)return false;}return true;
+   case 'division':return !full||Math.max(...v)%Math.min(...v)===0&&Math.max(...v)/Math.min(...v)===q.value;
+   case 'differences':return !full||Math.abs(v[0]-v[1])===q.value;
+   case 'nonconsecutiveonline':return v.every((d,i)=>!i||!d||!v[i-1]||Math.abs(d-v[i-1])!==1);
+   case 'weightedkiller':{if(!unique(v))return false;const shaded=new Set(q.shaded.map(c=>c.row*9+c.col));let sum=0,unknown=0;for(let i=0;i<v.length;i++){const weight=shaded.has(q.cells[i].row*9+q.cells[i].col)?2:1;if(v[i])sum+=v[i]*weight;else unknown+=weight;}return sum+unknown<=q.value&&sum+9*unknown>=q.value;}
+   case 'entropiclines':return v.every((d,i)=>i<2||![v[i-2],v[i-1],d].every(Boolean)||new Set([v[i-2],v[i-1],d].map(n=>Math.floor((n-1)/3))).size===3);
+   case 'insideskyscraper':{if(!full)return true;let max=0,visible=0;for(const d of v.slice(1)){if(d>max){max=d;visible++;}}return v[0]===visible;}
+   case 'pointingdigits':{const n=v[0];return !n||n<v.length&&(!v[n]||v[n]===n);}
+   case 'threeup':return v.every((d,i)=>!i||!d||!v[i-1]||v[i-1]<d);
    case 'hundred': {let lo=0,hi=0;for(const g of q.groups){let l=0,h=0;for(const d of vals(g)){l=l*10+(d||1);h=h*10+(d||9);}lo+=l;hi+=h;}return lo<=100&&hi>=100;}
    case 'fractal': for(let br=0;br<9;br+=3)for(let bc=0;bc<9;bc+=3)for(let k=0;k<3;k++){for(const group of [[0,1,2].map(j=>board[br+k][bc+j]),[0,1,2].map(j=>board[br+j][bc+k])]){const bins=group.filter(Boolean).map(d=>Math.floor((d-1)/3));if(new Set(bins).size!==bins.length)return false;}}return true;
    case 'wscescape': {const seen=new Set(),queue=[[4,4]],edges=new Set();while(queue.length){const [r,c]=queue.pop();if(r<0||r>8||c<0||c>8||seen.has(r*9+c)||(board[r][c]&&board[r][c]%2===0))continue;seen.add(r*9+c);if(r===0)edges.add('top');if(r===8)edges.add('bottom');if(c===0)edges.add('left');if(c===8)edges.add('right');queue.push([r+1,c],[r-1,c],[r,c+1],[r,c-1]);}return edges.size===4;}
@@ -9086,7 +9118,7 @@ if (typeof module !== "undefined" && module.exports) {
  return function(id,label,category){return {id,label,supportedSizes:[9],constraintTypes:['wscRules'],inputType:{categories:[category],instructions:['Use the supported Penpa marks or a saved structured clue payload; cell coordinates are zero-based.']},parse:function(e,emit,diagnostic){
   const saved=e.option('wsc2026Clues'),hasSaved=!!saved&&Object.prototype.hasOwnProperty.call(saved,id);
   let clues=hasSaved?saved[id]:undefined;
-  const global=['wscescape','flamepath','fractal','disguisedqueen','antiwindoku'];
+  const global=['wscescape','flamepath','fractal','disguisedqueen','antiwindoku','258'];
   if(global.includes(id))clues=[{cells:e.cells()}];
   if(!clues){
    if(id==='trishula'){const puzzle=e.option('pu_q')||{},nx=Number(e.option('nx0'))||13,space=e.option('space')||[0,0,0,0],toCell=key=>{const col=Number(key)%nx-2-Number(space[2]||0),row=Math.floor(Number(key)/nx)-2-Number(space[0]||0);return e.cell(row,col);},handles=(puzzle.nobulbthermo||[]).map(path=>path.map(toCell).filter(Boolean)).filter(path=>path.length),arrows=puzzle.direction||[];clues=handles.map((cells,index)=>{const keys=new Set((puzzle.nobulbthermo[index]||[]).map(Number)),tips=arrows.filter(path=>path.length>1&&path.some(key=>keys.has(Number(key)))).map(path=>toCell(path[path.length-1])).filter(Boolean);return {cells,tips};}).filter(clue=>clue.tips.length===3);}
@@ -9094,6 +9126,13 @@ if (typeof module !== "undefined" && module.exports) {
    if(id==='neighbouringdisparity')clues=e.symbolMarks().filter(m=>m.cell&&m.entry&&['square_L','diamond_L'].includes(m.entry[1])&&Number(m.entry[0])===1).map(m=>{const offsets=m.entry[1]==='square_L'?[[-1,-1],[-1,1],[1,-1],[1,1]]:[[-1,0],[0,1],[1,0],[0,-1]];return {origin:m.cell,cells:offsets.map(([dr,dc])=>e.cell(m.cell.row+dr,m.cell.col+dc)).filter(Boolean),shape:m.entry[1]==='square_L'?'diagonal':'orthogonal'};});
    if(id==='hundred') {clues=[];for(let r=0;r<9;r++){let groups=[],g=[];for(let c=0;c<9;c++){if(e.isShaded(r,c))g.push(e.cell(r,c));else if(g.length){groups.push(g);g=[];}}if(g.length)groups.push(g);if(groups.length)clues.push({groups});}}
    if(id==='number5stillalive')clues=e.cages().map(c=>({cells:c.cells}));
+   if(id==='nonconsecutiveonline'||id==='entropiclines')clues=e.connectedLinePaths(3).concat(e.connectedLinePaths(5)).map(cells=>({cells}));
+   if(id==='weightedkiller')clues=e.cages().filter(c=>Number.isInteger(c.total)).map(c=>({cells:c.cells,value:c.total,shaded:c.cells.filter(x=>e.isShaded(x.row,x.col))}));
+   if(id==='division'||id==='differences')clues=e.numberMarks().filter(m=>m.neighbors.length===2&&Number.isInteger(Number(m.entry[0]))).map(m=>({cells:m.neighbors,value:Number(m.entry[0])}));
+   if(['insideskyscraper','pointingdigits','threeup'].includes(id)){
+    const offsets=[[0,-1],[-1,-1],[-1,0],[-1,1],[0,1],[1,1],[1,0],[1,-1]];
+    clues=e.symbolMarks().filter(m=>m.cell&&m.entry&&m.entry[1]==='arrow_eight'&&Array.isArray(m.entry[0])).flatMap(m=>m.entry[0].flatMap((on,i)=>{if(on!==1)return [];const [dr,dc]=offsets[i],cells=[m.cell];for(let step=1;step<9;step++){const c=e.cell(m.cell.row+dr*step,m.cell.col+dc*step);if(!c)break;cells.push(c);}return cells.length>=(id==='threeup'?3:2)?[{cells:id==='threeup'?cells.slice(0,3):cells}]:[];}));
+   }
    if(['nothreeinaline','tunnel','missingarrow','missingthermo','multidiagonal'].includes(id))clues=e.connectedLinePaths(3).concat(e.connectedLinePaths(5)).map(cells=>({cells}));
    if(['friends','enemies','even','odd'].includes(id)){const marks=e.symbolMarks().filter(m=>m.cell&&(id==='even'?/square/:/circle/).test(String(m.entry[1]))).map(m=>m.cell);clues=marks.length?[{cells:marks}]:[];}
    if(id==='divisorsumpairs')clues=e.numberMarks().filter(m=>m.neighbors.length===2).map(m=>({cells:m.neighbors,value:Number(m.entry[0])}));
@@ -9391,6 +9430,8 @@ if (typeof module !== "undefined" && module.exports) {
     "use strict"; return createDescriptor("difference");
 });
 
+(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("differences","Differences","edge");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
+
 (function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("disguisedqueen","Disguised Queen","no-input");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
 
 (function(root, factory) {
@@ -9410,6 +9451,8 @@ if (typeof module !== "undefined" && module.exports) {
     "use strict";
     return createDescriptor("divisiblebythree");
 });
+
+(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("division","Division","edge");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
 
 (function(root, factory) {
     var descriptor = factory(typeof module !== "undefined" && module.exports ?
@@ -9473,6 +9516,8 @@ if (typeof module !== "undefined" && module.exports) {
 });
 
 (function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("enemies","Enemies","cell");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
+
+(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("entropiclines","Entropic Lines","line");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
 
 (function(root, factory) {
     var descriptor = factory(typeof module !== "undefined" && module.exports ?
@@ -9603,6 +9648,8 @@ if (typeof module !== "undefined" && module.exports) {
 })(typeof globalThis !== "undefined" ? globalThis : this, function(createDescriptor) {
     "use strict"; return createDescriptor("inequality");
 });
+
+(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("insideskyscraper","Inside Skyscraper","cell");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
 
 (function(root, factory) {
     var descriptor = factory();
@@ -9760,6 +9807,8 @@ if (typeof module !== "undefined" && module.exports) {
     return createDescriptor("nonconsecutive");
 });
 
+(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("nonconsecutiveonline","Non Consecutive On Line","line");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
+
 (function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("nothreeinaline","No Three in A Line","line");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
 
 (function(root, factory) {
@@ -9899,6 +9948,8 @@ if (typeof module !== "undefined" && module.exports) {
     "use strict"; return createDescriptor("pinocchio");
 });
 
+(function(root){var descriptor={id:'pips',label:'Pips Sudoku',supportedSizes:[6],constraintTypes:[],inputType:{categories:['no-input'],instructions:['Enter each cell by its number of pips, from 1 to 6.']},parse:function(){}};if(typeof module!=='undefined'&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=='undefined'?globalThis:this);
+
 (function(root, factory) {
     var descriptor = factory(typeof module !== "undefined" && module.exports ? require("../parsers/global_descriptor.js") : root.createSudokuGlobalVariantDescriptor);
     if (typeof module !== "undefined" && module.exports) module.exports = descriptor;
@@ -9906,6 +9957,8 @@ if (typeof module !== "undefined" && module.exports) {
 })(typeof globalThis !== "undefined" ? globalThis : this, function(createDescriptor) {
     "use strict"; return createDescriptor("pirate");
 });
+
+(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("pointingdigits","Pointing Digits","cell");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
 
 (function(root, factory) {
     var descriptor = factory(typeof module !== "undefined" && module.exports ?
@@ -10121,6 +10174,8 @@ if (typeof module !== "undefined" && module.exports) {
     "use strict"; return createDescriptor("termination");
 });
 
+(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("threeup","3 Up","cell");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
+
 (function(root, factory) {
     var descriptor = factory(typeof module !== "undefined" && module.exports ?
         require("../parsers/global_descriptor.js") : root.createSudokuGlobalVariantDescriptor);
@@ -10187,6 +10242,8 @@ if (typeof module !== "undefined" && module.exports) {
     "use strict"; return createDescriptor("twodigitprimenumbers");
 });
 
+(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("258","258","no-input");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
+
 (function(root, factory) {
     var descriptor = factory(typeof module !== "undefined" && module.exports ? require("../parsers/global_descriptor.js") : root.createSudokuGlobalVariantDescriptor);
     if (typeof module !== "undefined" && module.exports) module.exports = descriptor;
@@ -10196,6 +10253,8 @@ if (typeof module !== "undefined" && module.exports) {
 });
 
 (function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("unordereddistances","Unordered Distances","outside");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
+
+(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("weightedkiller","Weighted Killer","cage");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
 
 (function(root, factory) {
     var descriptor = factory(typeof module !== "undefined" && module.exports ?

@@ -71,7 +71,7 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     if (["anti king", "anti knight", "disjoint", "queen", "disparity", "liardiagonal", "magicsquares", "onefivenine", "unicorn", "citywalk", "poleposition", "pole position", "sequence top-bottom", "pirate", "touchy"].includes(variation.value)) {
         return { position: "none", mark: "none" };
     }
-    if (["attacktheleader", "biggestneighbours", "smallestneighbours", "detection", "eliminate", "sumdetector", "twindetector"].includes(variation.value)) {
+    if (["attacktheleader", "biggestneighbours", "smallestneighbours", "detection", "eliminate", "sumdetector", "twindetector", "pointingdigits", "insideskyscraper", "threeup"].includes(variation.value)) {
         return { position: "center", mark: "8-way" };
     }
     if (["quadmax", "quadmin"].includes(variation.value)) {
@@ -80,6 +80,7 @@ export function inferredMarkChoice(variation: Variation): VariantMarkChoice {
     if (variation.value === "coded") return { position: "corner", mark: "text" };
     if (variation.value === "pencilmarks") return { position: "center", mark: "text" };
     if (["xydifference", "primesums", "twodigitprimenumbers"].includes(variation.value)) return { position: "edge", mark: "diamond" };
+    if (["division", "differences"].includes(variation.value)) return { position: "edge", mark: "text" };
     if (variation.value === "xivi" || variation.value === "termination") return { position: "edge", mark: "text" };
     if (variation.value === "clock") return { position: "center", mark: "cage" };
     if (variation.value === "slotmachine") return { position: "center", mark: "surface" };

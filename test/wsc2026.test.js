@@ -48,9 +48,40 @@ test('Trishula remains supported while its marks are incomplete, but rejects mal
 test('Hundred composite emits both base sum and disjoint constraints',()=>{const p=puzzle('disjointhundred');p.pu_q.wsc2026Clues={hundred:[{groups:[[c(0,0),c(0,1)],[c(0,3),c(0,4)]]}]};const cs=solver.readConstraints(p);assert.equal(cs.diagnostics.length,0);assert.equal(cs.wscRules.length,1);assert.equal(cs.diagonalAllDifferent.length,9);assert(cs.supported.includes('disjointhundred'));});
 test('WSC constraint is enforced by the actual CSP solve',()=>{const b=Array.from({length:9},(_,r)=>Array.from({length:9},(_,c)=>(r*3+Math.floor(r/3)+c)%9+1));b[0][0]=0;const result=csp.solve(b,{wscRules:[{kind:'odd',cells:[c(0,0)]}]});assert(result);assert.equal(csp.findConflict([[2,...b[0].slice(1)],...b.slice(1)],{baseRows:false,baseCols:false,baseBoxes:false,wscRules:[{kind:'odd',cells:[c(0,0)]}]}).constraint,'wscRules');});
 test('Topology solver handles gaps, overlapping cell identity and non-square units',()=>{assert.equal(topology.samurai().values.length,369);assert.equal(topology.samurai().units.length,135);assert.equal(topology.solve({values:[1,2,3,4,5,6,7,8,0],units:[[0,1,2,3,4,5,6,7,8]]}).solutions[0][8],9);assert.equal(topology.solve({values:[1,1],units:[[0,1]]}).status,'invalid');assert.throws(()=>topology.solve({values:[0,0],units:[[0,0]]}));assert.equal(topology.solve({values:[0,0],units:[[0,1]]},{maxNodes:1}).status,'limit');});
+test('Pentagram units can share one eight-digit set',()=>{const units=[[0,1],[2,3]],sharedDigitSetGroups=[[0,1]];assert.equal(topology.solve({digitCount:3,values:[1,2,1,3],units,sharedDigitSetGroups}).status,'invalid');assert.equal(topology.solve({digitCount:3,values:[1,2,2,1],units,sharedDigitSetGroups}).status,'unique');});
 test('Missing Thermo permits a branch only when one open end can be its bulb',()=>{const q={kind:'missingthermo',cells:[c(0,0),c(0,1),c(0,2),c(1,1)],paths:[[c(0,0),c(0,1),c(0,2)],[c(0,1),c(1,1)]]},b=blank();b[0][0]=1;b[0][1]=3;b[0][2]=7;b[1][1]=6;assert(rules.validate(b,q));b[0][2]=2;assert(!rules.validate(b,q));});
-test('Booklet inventory has correct published totals and valid assets',()=>{const fs=require('fs'),catalog=require('../docs/src/wsc2026/catalog.json');assert.equal(catalog.puzzles.length,95);for(const r of catalog.rounds.filter(r=>r.available&&r.id!==16)){assert.equal(catalog.puzzles.filter(p=>p.round===r.id).reduce((s,p)=>s+p.points,0),r.points,'round '+r.id);}for(const p of catalog.puzzles){assert(p.rules.length>20,p.id);for(const key of ['image','example','solution'])assert(fs.existsSync('docs/public'+p[key]),p.id+' '+key);}});
+test('Booklet inventory includes the five team rounds and valid assets',()=>{const fs=require('fs'),catalog=require('../docs/src/wsc2026/catalog.json');assert.equal(catalog.puzzles.length,130);assert.equal(catalog.published,'2026-09-22');for(const id of [8,9,13,14,15])assert(catalog.rounds[id-1].teamRules);for(const r of catalog.rounds.filter(r=>r.available&&![13,14,15,16].includes(r.id))){assert.equal(catalog.puzzles.filter(p=>p.round===r.id).reduce((s,p)=>s+(p.points||0),0),r.points,'round '+r.id);}for(const p of catalog.puzzles){assert(p.rules.length>20,p.id);for(const key of ['image','example','solution'])if(p[key])assert(fs.existsSync('docs/public'+p[key]),p.id+' '+key);}});
 
 test('Every Round 1 booklet entry has a playable official example with an answer payload',()=>{const links=require('../docs/src/wsc2026/round1Playable.json');assert.deepEqual(Object.keys(links),Array.from({length:9},(_,i)=>`r01-${String(i+1).padStart(2,'0')}`));for(const [id,href] of Object.entries(links)){const hash=new URL(href).hash.slice(1),params=new URLSearchParams(hash);assert.equal(params.get('m'),'solve',id);assert(params.get('p'),id+' puzzle payload');assert(params.get('a'),id+' answer payload');assert(params.get('variants'),id+' variants');}});
 
 test('WSC Escape is odd reachability from the centre to all four edges, distinct from legacy Escape',()=>{const b=blank(),q={kind:'wscescape',cells:all};assert(rules.validate(b,q));b[4][4]=2;assert(!rules.validate(b,q));b[4][4]=1;b[0].fill(2);assert(!rules.validate(b,q));b[0][4]=3;assert(rules.validate(b,q));assert.equal(registry.resolve('wscescape').label,'Escape (WSC 2026)');});
+
+test('new team variants enforce their marked constraints',()=>{
+ const b=blank(),line=[c(0,0),c(0,1),c(0,2)];
+ for(const id of ['division','nonconsecutiveonline','weightedkiller','258','differences','entropiclines','insideskyscraper','pointingdigits','threeup'])assert(registry.resolve(id),id);
+ b[0][0]=2;b[0][1]=6;
+ assert(rules.validate(b,{kind:'division',cells:line.slice(0,2),value:3}));
+ assert(!rules.validate(b,{kind:'division',cells:line.slice(0,2),value:2}));
+ assert(rules.validate(b,{kind:'differences',cells:line.slice(0,2),value:4}));
+ assert(!rules.validate(b,{kind:'differences',cells:line.slice(0,2),value:3}));
+ b[0][1]=3;b[0][2]=7;
+ assert(!rules.validate(b,{kind:'nonconsecutiveonline',cells:line}));
+ b[0][1]=5;
+ assert(rules.validate(b,{kind:'entropiclines',cells:line}));
+ b[0][2]=4;assert(!rules.validate(b,{kind:'entropiclines',cells:line}));
+ b[0][2]=7;
+ assert(rules.validate(b,{kind:'weightedkiller',cells:line,value:2+2*5+7,shaded:[c(0,1)]}));
+ assert(!rules.validate(b,{kind:'weightedkiller',cells:line,value:14,shaded:[c(0,1)]}));
+ b[0][0]=2;b[0][1]=1;b[0][2]=2;
+ assert(rules.validate(b,{kind:'pointingdigits',cells:line}));
+ b[0][2]=3;assert(!rules.validate(b,{kind:'pointingdigits',cells:line}));
+ b[0][0]=1;b[0][1]=2;b[0][2]=3;
+ assert(rules.validate(b,{kind:'threeup',cells:line}));
+ b[0][2]=1;assert(!rules.validate(b,{kind:'threeup',cells:line}));
+});
+test('new team descriptors reach the Sudoku solver',()=>{
+ const division=puzzle('division');division.pu_q.wsc2026Clues={division:[{cells:[c(0,0),c(0,1)],value:2}]};
+ const parsed=solver.readConstraints(division);assert.equal(parsed.diagnostics.length,0);assert.equal(parsed.wscRules[0].kind,'division');
+ const global=solver.readConstraints(puzzle('258'));assert.equal(global.diagnostics.length,0);assert.equal(global.wscRules[0].kind,'258');
+ const missing=solver.readConstraints(puzzle('pointingdigits'));assert(missing.diagnostics.some(d=>d.code==='missing-wsc-clues'));
+});

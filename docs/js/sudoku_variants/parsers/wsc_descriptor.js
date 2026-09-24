@@ -2,7 +2,7 @@
  return function(id,label,category){return {id,label,supportedSizes:[9],constraintTypes:['wscRules'],inputType:{categories:[category],instructions:['Use the supported Penpa marks or a saved structured clue payload; cell coordinates are zero-based.']},parse:function(e,emit,diagnostic){
   const saved=e.option('wsc2026Clues'),hasSaved=!!saved&&Object.prototype.hasOwnProperty.call(saved,id);
   let clues=hasSaved?saved[id]:undefined;
-  const global=['wscescape','flamepath','fractal','disguisedqueen','antiwindoku'];
+  const global=['wscescape','flamepath','fractal','disguisedqueen','antiwindoku','258'];
   if(global.includes(id))clues=[{cells:e.cells()}];
   if(!clues){
    if(id==='trishula'){const puzzle=e.option('pu_q')||{},nx=Number(e.option('nx0'))||13,space=e.option('space')||[0,0,0,0],toCell=key=>{const col=Number(key)%nx-2-Number(space[2]||0),row=Math.floor(Number(key)/nx)-2-Number(space[0]||0);return e.cell(row,col);},handles=(puzzle.nobulbthermo||[]).map(path=>path.map(toCell).filter(Boolean)).filter(path=>path.length),arrows=puzzle.direction||[];clues=handles.map((cells,index)=>{const keys=new Set((puzzle.nobulbthermo[index]||[]).map(Number)),tips=arrows.filter(path=>path.length>1&&path.some(key=>keys.has(Number(key)))).map(path=>toCell(path[path.length-1])).filter(Boolean);return {cells,tips};}).filter(clue=>clue.tips.length===3);}
@@ -10,6 +10,13 @@
    if(id==='neighbouringdisparity')clues=e.symbolMarks().filter(m=>m.cell&&m.entry&&['square_L','diamond_L'].includes(m.entry[1])&&Number(m.entry[0])===1).map(m=>{const offsets=m.entry[1]==='square_L'?[[-1,-1],[-1,1],[1,-1],[1,1]]:[[-1,0],[0,1],[1,0],[0,-1]];return {origin:m.cell,cells:offsets.map(([dr,dc])=>e.cell(m.cell.row+dr,m.cell.col+dc)).filter(Boolean),shape:m.entry[1]==='square_L'?'diagonal':'orthogonal'};});
    if(id==='hundred') {clues=[];for(let r=0;r<9;r++){let groups=[],g=[];for(let c=0;c<9;c++){if(e.isShaded(r,c))g.push(e.cell(r,c));else if(g.length){groups.push(g);g=[];}}if(g.length)groups.push(g);if(groups.length)clues.push({groups});}}
    if(id==='number5stillalive')clues=e.cages().map(c=>({cells:c.cells}));
+   if(id==='nonconsecutiveonline'||id==='entropiclines')clues=e.connectedLinePaths(3).concat(e.connectedLinePaths(5)).map(cells=>({cells}));
+   if(id==='weightedkiller')clues=e.cages().filter(c=>Number.isInteger(c.total)).map(c=>({cells:c.cells,value:c.total,shaded:c.cells.filter(x=>e.isShaded(x.row,x.col))}));
+   if(id==='division'||id==='differences')clues=e.numberMarks().filter(m=>m.neighbors.length===2&&Number.isInteger(Number(m.entry[0]))).map(m=>({cells:m.neighbors,value:Number(m.entry[0])}));
+   if(['insideskyscraper','pointingdigits','threeup'].includes(id)){
+    const offsets=[[0,-1],[-1,-1],[-1,0],[-1,1],[0,1],[1,1],[1,0],[1,-1]];
+    clues=e.symbolMarks().filter(m=>m.cell&&m.entry&&m.entry[1]==='arrow_eight'&&Array.isArray(m.entry[0])).flatMap(m=>m.entry[0].flatMap((on,i)=>{if(on!==1)return [];const [dr,dc]=offsets[i],cells=[m.cell];for(let step=1;step<9;step++){const c=e.cell(m.cell.row+dr*step,m.cell.col+dc*step);if(!c)break;cells.push(c);}return cells.length>=(id==='threeup'?3:2)?[{cells:id==='threeup'?cells.slice(0,3):cells}]:[];}));
+   }
    if(['nothreeinaline','tunnel','missingarrow','missingthermo','multidiagonal'].includes(id))clues=e.connectedLinePaths(3).concat(e.connectedLinePaths(5)).map(cells=>({cells}));
    if(['friends','enemies','even','odd'].includes(id)){const marks=e.symbolMarks().filter(m=>m.cell&&(id==='even'?/square/:/circle/).test(String(m.entry[1]))).map(m=>m.cell);clues=marks.length?[{cells:marks}]:[];}
    if(id==='divisorsumpairs')clues=e.numberMarks().filter(m=>m.neighbors.length===2).map(m=>({cells:m.neighbors,value:Number(m.entry[0])}));
