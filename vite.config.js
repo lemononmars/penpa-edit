@@ -254,7 +254,7 @@ function directoryTrailingSlashPlugin() {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = new URL(req.url || "/", "http://localhost");
-        if (url.pathname === "/wsc2026") { req.url = "/wsc2026/" + url.search; } else if (url.pathname === "/tournament") {
+        if (url.pathname === "/puzzle" || url.pathname === "/puzzle/") { req.url = "/index.html" + url.search; } else if (url.pathname === "/wsc2026") { req.url = "/wsc2026/" + url.search; } else if (url.pathname === "/wpc2026") { req.url = "/wpc2026/" + url.search; } else if (url.pathname === "/tournament") {
           req.url = "/tournament/" + url.search;
         } else if (url.pathname === "/tournament/host") {
           req.url = "/tournament/host/" + url.search;
@@ -273,6 +273,15 @@ function directoryTrailingSlashPlugin() {
         }
         next();
       });
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = new URL(req.url || "/", "http://localhost");
+        if (url.pathname === "/puzzle" || url.pathname === "/puzzle/") {
+          req.url = "/index.html" + url.search;
+        }
+        next();
+      });
     }
   };
 }
@@ -288,6 +297,7 @@ export default defineConfig({
       input: {
         main: resolve(process.cwd(), "docs/index.html"),
         wsc2026: resolve(process.cwd(), "docs/wsc2026/index.html"),
+        wpc2026: resolve(process.cwd(), "docs/wpc2026/index.html"),
         starSolver: resolve(process.cwd(), "docs/solver/star/index.html"),
         hexSolver: resolve(process.cwd(), "docs/solver/hex/index.html"),
         parquetSolver: resolve(process.cwd(), "docs/solver/parquet/index.html"),

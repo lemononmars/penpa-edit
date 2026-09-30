@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script>if (location.pathname === "/puzzle" || location.pathname === "/puzzle/") { const base = document.createElement("base"); base.href = "/"; document.head.appendChild(base); }</script>
     <script>
         if (window.self === window.top && (location.hostname.includes("sudokubattle") || location.hostname.includes("sudoku-battle")) && !location.search.includes("embed=1")) {
             window.isBattleDomain = true;
@@ -70,7 +71,7 @@
     <!-- Local styles -->
     <script>
         if (!window.isBattleDomain) {
-            var ver = "3.3.42";
+            var ver = "3.3.43";
             let style_sources = [
                 "./css/font-awesome.min.css",
                 "./css/light_theme.css",
@@ -87,7 +88,7 @@
                 "custom_color_css",
                 "constraints_settings_css"
             ];
-            const style_tag_cache = [];
+            window.style_tag_cache = [];
             for (let i = 0; i < style_sources.length; i++) {
                 let style = document.createElement('link');
                 style.rel = "stylesheet";
@@ -96,7 +97,7 @@
                 style.href = style_sources[i] + "?v=" + ver;
                 style.async = false;
                 document.head.appendChild(style);
-                style_tag_cache[style_sources_ids[i]] = style;
+                window.style_tag_cache[style_sources_ids[i]] = style;
             }
         }
     </script>
@@ -952,7 +953,7 @@
             </select>
         </span><br>
         <h4><label class="label_nb" id="nb_size_lb">Size:</label></h4>
-        <span>
+        <span class="newgrid-size-options">
             <span><label class="label_nb" id="name_size2">Rows:</label></span>
             <input type="number" pattern="\d*" name="nb_size2" id="nb_size2" value="10" min="1" max="100" step="1">
             <span><label class="label_nb" id="name_size1">Columns:</label></span>
@@ -985,7 +986,7 @@
             <span><label class="label_nb" id="nb_sudoku7_lb"></label></span>
         </span>
         <br>
-        <h4><label class="label_nb" id="nb_space_lb">White space:</label></h4>
+        <div class="editor-hidden-whitespace"><h4><label class="label_nb" id="nb_space_lb">White space:</label></h4>
         <!--Mode Setting-->
         <span id="modal-spaceud" style="display:inline;">
             <span><label class="label_nb" id="name_space1">Over:</label></span>
@@ -1002,6 +1003,7 @@
             <input type="number" pattern="\d*" name="nb_space4" id="nb_space4" value="0" min="0" max="20" step="1">
         </span>
         <br>
+        </div>
         <hr size=1 noshade class="newgridhrline">
         <h5><label id="nb_note">*Update display* button only affects the following properties:</label></h5>
         <br>

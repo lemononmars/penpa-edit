@@ -1,5 +1,7 @@
 <script lang="ts">
+  export let editorMode = false;
   import { onMount } from "svelte";
+  import { checkLaxman } from "./laxmanCheck.mjs";
   import { guideFor, variantRules } from "./variantRules";
   import {
     installVariationCatalog,
@@ -166,6 +168,9 @@
   let legacyModesSection: HTMLElement;
   let desktopLegacyModesAnchor: HTMLElement;
   let mobileMiscSlot: HTMLElement;
+  let genreSection: HTMLElement;
+  let desktopGenreAnchor: HTMLElement;
+  let mobileGenreSlot: HTMLElement;
   let logHost: HTMLElement;
   let solverSettingsButton: HTMLButtonElement;
   let legacyControlsHost: HTMLElement;
@@ -204,9 +209,28 @@
   let autoEnabled = false;
   let initialized = false;
   let zoom = 1;
+  let panX = 0;
+  let panY = 0;
+  let panEnabled = false;
+  let panDragging = false;
+  let panStartX = 0;
+  let panStartY = 0;
+  let checkMessage = "";
+  let solutionVisible = true;
+  let checkHighlight: HTMLElement | null = null;
   let variantMenuOpen = false;
   let inputVariantMenuOpen = false;
-  let mobileDeckView: "keypad" | "variants" | "misc" = "keypad";
+  let mobileDeckView: "keypad" | "variants" | "misc" | "genre" = "keypad";
+  let selectedGenre = "";
+  let genreGroup = "myopia";
+  const laxmanGroups = [
+    { id: "myopia", label: "Myopia", description: "Place directional arrows in cells. Inside: nearest loop segments. Outside: farthest segments." },
+    { id: "line-of-sight", label: "Line of Sight", description: "Numbered arrows show the length of the first visible loop segment. Outside clues differ by one." },
+    { id: "polygraph", label: "Polygraph", description: "A cell number counts used edges inside the loop or unused edges outside." },
+    { id: "parallel-counts", label: "Parallel Counts", description: "Squares sit between cells. Add an optional number on the edge; the loop cannot pass through a square." },
+    { id: "sheep-wolf", label: "Sheep / Wolf", description: "S marks an inside cell; W marks an outside cell." },
+    { id: "kurarin", label: "Kurarin", description: "White means more cells inside, gray means equal, and black means more cells outside. Dots may sit on edges or corners." },
+  ];
   let mobileVariantDrawerOpen = false;
   let mobileVariantLabel = "Sudoku";
   let mobileInputModeLabel = "Number";
@@ -331,7 +355,7 @@
 
   function clearMarks() {
     legacyClick("sudoku_reset");
-    chooseLayer("problem");
+    chooseLayer(editorMode ? "modes" : "problem");
   }
 
   function toggleMobilePanelPosition() {
@@ -358,19 +382,183 @@
     queueMicrotask(syncState);
   }
 
-  function chooseLayer(nextLayer: "problem" | "solution" | "modes") {
+  function chooseLayer(nextLayer: "problem" | "solution" | "modes" | "genre") {
     layer = nextLayer;
+    if (nextLayer !== "genre" && (window as any).pu) {
+      (window as any).pu.editorGenrePointNumber = false;
+      (window as any).pu.editorGenreGroup = null;
+    }
     if (typeof (window as any).pu === "undefined") return;
     if (nextLayer !== "problem") {
       (window as any).SudokuTools?.finishIrregularEditor?.();
     }
     variantMenuOpen = false;
     legacyPress(nextLayer === "solution" ? "pu_a_label" : "pu_q_label");
+    if (editorMode && nextLayer === "solution") {
+      const pu = (window as any).pu;
+      pu.mode_set("combi");
+      pu.subcombimode("edgex");
+    }
     if (nextLayer === "modes") queueMicrotask(moveLegacyControls);
     queueMicrotask(() => {
       syncState();
       syncToolPanel();
     });
+  }
+
+  function initializeEditorGrid() {
+    const search = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    if (search.has("p") || hash.has("p")) return;
+    const gridType = document.getElementById("gridtype") as HTMLSelectElement | null;
+    const rows = document.getElementById("nb_size2") as HTMLInputElement | null;
+    const columns = document.getElementById("nb_size1") as HTMLInputElement | null;
+    if (!gridType || !rows || !columns) return;
+    gridType.value = "square";
+    gridType.dispatchEvent(new Event("change", { bubbles: true }));
+    rows.value = "10";
+    columns.value = "10";
+    (window as any).create_newboard?.();
+  }
+
+  function createLaxmanRekhaGrid() {
+    const gridType = document.getElementById("gridtype") as HTMLSelectElement | null;
+    const rows = document.getElementById("nb_size2") as HTMLInputElement | null;
+    const columns = document.getElementById("nb_size1") as HTMLInputElement | null;
+    if (!gridType || !rows || !columns) return;
+    gridType.value = "square";
+    gridType.dispatchEvent(new Event("change", { bubbles: true }));
+    rows.value = "25";
+    columns.value = "25";
+    ["nb_space1", "nb_space2", "nb_space3", "nb_space4"].forEach((id) => {
+      const field = document.getElementById(id) as HTMLInputElement | null;
+      if (field) field.value = "0";
+    });
+    (window as any).create_newboard?.();
+    const pu = (window as any).pu;
+    if (!pu) return;
+    pu.mode_grid("nb_grid2");
+    pu.mode_grid("nb_lat1");
+    pu.mode_grid("nb_out2");
+    pu.make_frameline();
+    pu.redraw();
+    window.requestAnimationFrame(fitBoard);
+  }
+
+  function chooseGenre(value: string) {
+    selectedGenre = value;
+    if (value === "laxman-rekha") {
+      const pu = (window as any).pu;
+      if (pu?.gridtype === "square" && pu.nx === 25 && pu.ny === 25) {
+        pu.mode_grid("nb_grid2");
+        pu.mode_grid("nb_lat1");
+        pu.mode_grid("nb_out2");
+        pu.make_frameline();
+        pu.redraw();
+      } else {
+        createLaxmanRekhaGrid();
+      }
+      (window as any).pu.editorGenre = value;
+      chooseGenreGroup("myopia");
+    } else {
+      if ((window as any).pu) (window as any).pu.editorGenre = value;
+      toolPanelOptions = [];
+      toolPanelSelected = new Set<string>();
+    }
+  }
+
+  function setSolutionVisible(visible: boolean) {
+    solutionVisible = visible;
+    (window as any).penpaEditorHideSolution = editorMode && !visible;
+    (window as any).pu?.redraw?.();
+  }
+
+  function chooseGenreGroup(group: string) {
+    genreGroup = group;
+    const pu = (window as any).pu;
+    if (!pu) return;
+    pu.editorGenreGroup = group;
+    legacyPress("pu_q_label");
+    const edge = group === "parallel-counts" || group === "kurarin";
+    const settings = (window as any).PenpaUserSettings;
+    if (settings && settings.draw_edges !== edge) settings.draw_edges = edge;
+    pu.editorGenrePointNumber = ["line-of-sight", "polygraph", "parallel-counts", "sheep-wolf"].includes(group);
+    if (group === "myopia") {
+      pu.mode_set("symbol");
+      pu.subsymbolmode("arrow_cross");
+      pu.stylemode_check("st_symbol2");
+    } else if (group === "kurarin") {
+      pu.mode_set("symbol");
+      pu.subsymbolmode("circle_SS");
+      pu.stylemode_check("st_symbol2");
+    } else {
+      pu.mode_set("number");
+      pu.submode_check(group === "line-of-sight" ? "sub_number2" : group === "parallel-counts" ? "sub_number5" : "sub_number1");
+      pu.stylemode_check(group === "polygraph" ? "st_number3" : "st_number1");
+      if (group === "polygraph") {
+        const cells = new Set<number>(pu.centerlist);
+        for (const [id, mark] of Object.entries(pu.pu_q.number) as [string, any][]) {
+          if (cells.has(Number(id)) && mark?.[1] === 2 && mark?.[2] === "1" && /^\d$/.test(String(mark[0]))) {
+            mark[1] = 3;
+          }
+        }
+      }
+    }
+    pu.type = group === "parallel-counts" ? [2, 3]
+      : group === "kurarin" ? [1, 2, 3] : pu.type_set();
+    pu.redraw();
+    syncToolPanel();
+  }
+
+  function applyGenrePanelOption(option: ToolPanelOption) {
+    const pu = (window as any).pu;
+    if (!pu) return;
+    if (option.action === "backspace") pu.key_backspace?.();
+    else if (option.action === "delete") pu.key_space?.(46, false, false);
+    else {
+      chooseGenreGroup(genreGroup);
+      if (["polygraph", "parallel-counts", "sheep-wolf"].includes(genreGroup)) {
+        const mode = pu.mode[pu.mode.qa].number;
+        pu.undoredo_counter++;
+        pu.set_value("number", pu.cursol, [option.value, mode[1], mode[0]], null);
+      } else {
+        pu.key_number(option.value, true);
+      }
+    }
+    pu.redraw();
+    queueMicrotask(syncToolPanel);
+  }
+
+  function clearCheckHighlight() {
+    checkHighlight?.remove();
+    checkHighlight = null;
+  }
+
+  function checkPuzzle() {
+    clearCheckHighlight();
+    const pu = (window as any).pu;
+    if (!pu || selectedGenre !== "laxman-rekha") {
+      checkMessage = "Select Laxman Rekha first.";
+      return;
+    }
+    const result = checkLaxman(pu);
+    checkMessage = result.message;
+    if (result.point !== undefined && pu.point?.[result.point]) {
+      const board = document.getElementById("puzzle-container");
+      const canvas = document.querySelector<HTMLCanvasElement>("#dvique canvas:not(#pause_canvas)");
+      if (board && canvas) {
+        const boardRect = board.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+        const mark = document.createElement("div");
+        mark.className = "puzzle-check-highlight";
+        mark.setAttribute("aria-label", "Incorrect clue or loop vertex");
+        mark.style.left = `${(canvasRect.left - boardRect.left) / zoom + pu.point[result.point].x}px`;
+        mark.style.top = `${(canvasRect.top - boardRect.top) / zoom + pu.point[result.point].y}px`;
+        board.appendChild(mark);
+        checkHighlight = mark;
+      }
+    }
+    showToast(result.message, result.ok ? "success" : "error", result.ok ? "Puzzle check" : "Check stopped");
   }
 
   function chooseNoteMode(mode: "1" | "2" | "3") {
@@ -387,8 +575,8 @@
     applyToolPanelOption({ value: "delete", label: "Clear", action: "delete" });
   }
 
-  function showMobileLayer(nextLayer: "problem" | "solution" | "modes") {
-    mobileDeckView = nextLayer === "modes" ? "misc" : "keypad";
+  function showMobileLayer(nextLayer: "problem" | "solution" | "modes" | "genre") {
+    mobileDeckView = nextLayer === "modes" ? "misc" : nextLayer === "genre" ? "genre" : "keypad";
     mobileVariantDrawerOpen = false;
     chooseLayer(nextLayer);
   }
@@ -485,6 +673,51 @@
 
   function syncToolPanel() {
     const pu = (window as any).pu;
+    if (editorMode && layer === "solution") {
+      toolPanelMode = "Composite · Edge X";
+      toolPanelOptions = [];
+      toolPanelSelected = new Set<string>();
+      return;
+    }
+    if (editorMode && layer === "genre") {
+      if (selectedGenre !== "laxman-rekha" || !pu) {
+        toolPanelOptions = [];
+        toolPanelSelected = new Set<string>();
+        return;
+      }
+      toolPanelMode = `Laxman Rekha · ${laxmanGroups.find((group) => group.id === genreGroup)?.label || "Clues"}`;
+      const arrowBits = (index: number) => Array.from({ length: 8 }, (_, bit) => bit === index ? 1 : 0);
+      const choices: ToolPanelOption[] = genreGroup === "myopia"
+        ? [{ value: "1", label: "Left arrow", sym: "arrow_cross", num: arrowBits(0) },
+           { value: "2", label: "Up arrow", sym: "arrow_cross", num: arrowBits(1) },
+           { value: "3", label: "Right arrow", sym: "arrow_cross", num: arrowBits(2) },
+           { value: "4", label: "Down arrow", sym: "arrow_cross", num: arrowBits(3) }]
+        : genreGroup === "line-of-sight"
+          ? Array.from({ length: 10 }, (_, index) => ({ value: String(index), label: String(index) }))
+        : genreGroup === "polygraph"
+          ? Array.from({ length: 5 }, (_, index) => ({ value: String(index), label: String(index) }))
+        : genreGroup === "parallel-counts"
+          ? Array.from({ length: 10 }, (_, index) => ({ value: String(index), label: String(index) }))
+        : genreGroup === "sheep-wolf"
+          ? [{ value: "S", label: "S" }, { value: "W", label: "W" }]
+        : [{ value: "1", label: "White", sym: "circle_SS", num: 1 },
+           { value: "5", label: "Gray", sym: "circle_SS", num: 5 },
+           { value: "2", label: "Black", sym: "circle_SS", num: 2 }];
+      toolPanelOptions = [...choices,
+        { value: "backspace", label: "⌫", action: "backspace" },
+        { value: "delete", label: "Clear", action: "delete" }];
+      const selected = new Set<string>();
+      const symbol = pu[pu.mode.qa]?.symbol?.[pu.cursol];
+      const number = pu[pu.mode.qa]?.number?.[pu.cursol];
+      if (genreGroup === "myopia" && symbol?.[1] === "arrow_cross" && Array.isArray(symbol[0])) {
+        symbol[0].slice(0, 4).forEach((on: number, index: number) => { if (on) selected.add(String(index + 1)); });
+      } else if (genreGroup === "kurarin" && symbol?.[1] === "circle_SS") {
+        selected.add(String(symbol[0]));
+      }
+      if (number?.[0] != null) selected.add(String(number[0]).replace(/_[1-8]$/, ""));
+      toolPanelSelected = selected;
+      return;
+    }
     if (pu?.irregular_mode) {
       toolPanelMode = "Regions";
       toolPanelOptions = [];
@@ -784,6 +1017,10 @@
   function applyToolPanelOption(option: ToolPanelOption) {
     const pu = (window as any).pu;
     if (!pu) return;
+    if (editorMode && layer === "genre" && selectedGenre === "laxman-rekha") {
+      applyGenrePanelOption(option);
+      return;
+    }
     if (currentVariant === "neighbouringdisparity") {
       pu.activeSudokuVariant = "neighbouringdisparity";
       pu.odd_even_mode = false;
@@ -870,11 +1107,15 @@
       )
     )
       return;
-    const match = /^(?:Digit|Numpad)([1-9])$/.exec(event.code);
+    const match = /^(?:Digit|Numpad)([0-9])$/.exec(event.code);
     if (!match) return;
-    const option = toolPanelOptions.filter((item) => !item.action)[
-      Number(match[1]) - 1
-    ];
+    const numericGenre = editorMode && layer === "genre" &&
+      ["line-of-sight", "polygraph", "parallel-counts"].includes(genreGroup);
+    const option = numericGenre
+      ? toolPanelOptions.find((item) => !item.action && item.value === match[1])
+      : Number(match[1]) > 0
+        ? toolPanelOptions.filter((item) => !item.action)[Number(match[1]) - 1]
+        : undefined;
     if (!option) return;
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -896,7 +1137,7 @@
     )
       return;
     const layerByKey: Record<string, "problem" | "solution" | "modes"> = {
-      F2: "problem",
+      F2: editorMode ? "modes" : "problem",
       F3: "solution",
       F4: "modes",
     };
@@ -993,7 +1234,7 @@
           "9": "Pink", "10": "Orange", "11": "Purple", "12": "Brown",
         };
         const strokeNames: Record<string, string> = {
-          "2": "Black", "3": "Gray", "5": "Green", "8": "Red", "9": "Blue",
+          "2": "Black", "3": "Green", "5": "Gray", "8": "Red", "9": "Blue",
           "12": "Dotted", "13": "Fat dots", "17": "Fat dots", "21": "Thicker",
           "30": "Double", "40": "Short", "80": "Thin",
         };
@@ -1335,37 +1576,44 @@
   })();
 
   let variantHighlightIndex = 0;
-  $: if (visibleVariantOptions) variantHighlightIndex = 0;
+  $: enabledVariantOptions = visibleVariantOptions.filter(
+    (v) => !conflictingVariant(v.value) && !unavailableVariant(v.value),
+  );
+  $: if (visibleVariantOptions) {
+    const selectedIndex = enabledVariantOptions.findIndex((v) => v.value === selectedVariant);
+    variantHighlightIndex = selectedIndex >= 0 ? selectedIndex : Math.min(variantHighlightIndex, Math.max(0, enabledVariantOptions.length - 1));
+  }
+
+  function highlightVariant(value: string) {
+    const index = enabledVariantOptions.findIndex((variant) => variant.value === value);
+    if (index >= 0) variantHighlightIndex = index;
+    previewRule(value);
+  }
 
   function handleVariantKeydown(event: KeyboardEvent) {
-    if (!variantMenuOpen || !visibleVariantOptions.length) return;
-    const enabledOptions = visibleVariantOptions.filter(
-      (v) => !conflictingVariant(v.value) && !unavailableVariant(v.value),
-    );
-    if (!enabledOptions.length) return;
+    if ((!variantMenuOpen && !inputVariantMenuOpen) || !enabledVariantOptions.length) return;
 
     if (event.key === "ArrowDown") {
-      variantHighlightIndex = (variantHighlightIndex + 1) % enabledOptions.length;
-      const target = enabledOptions[variantHighlightIndex];
-      if (target) previewRule(target.value);
+      variantHighlightIndex = (variantHighlightIndex + 1) % enabledVariantOptions.length;
+      const target = enabledVariantOptions[variantHighlightIndex];
+      if (target) highlightVariant(target.value);
       event.preventDefault();
     } else if (event.key === "ArrowUp") {
-      variantHighlightIndex = (variantHighlightIndex - 1 + enabledOptions.length) % enabledOptions.length;
-      const target = enabledOptions[variantHighlightIndex];
-      if (target) previewRule(target.value);
+      variantHighlightIndex = (variantHighlightIndex - 1 + enabledVariantOptions.length) % enabledVariantOptions.length;
+      const target = enabledVariantOptions[variantHighlightIndex];
+      if (target) highlightVariant(target.value);
       event.preventDefault();
     } else if (event.key === "Enter") {
-      const target = enabledOptions[variantHighlightIndex] || enabledOptions[0];
+      const target = enabledVariantOptions[variantHighlightIndex] || enabledVariantOptions[0];
       if (target) {
         chooseVariant(target.value);
-        variantMenuOpen = false;
         event.preventDefault();
       }
     } else if (event.key === "Escape") {
       variantMenuOpen = false;
+      inputVariantMenuOpen = false;
     }
   }
-
   function ensureOutsideSpace(target = 1, sides = [0, 1, 2, 3]) {
     const pu = (window as any).pu;
     if (!pu?.space || !pu.grid_is_square?.()) return;
@@ -1695,6 +1943,9 @@
       generated +=
         "&variants=" + encodeURIComponent(pu.activeSudokuVariants.join(","));
     }
+    if (!forPenpa && editorMode && selectedGenre) {
+      generated += "&genre=" + encodeURIComponent(selectedGenre);
+    }
     const hash = generated.includes("#")
       ? generated.slice(generated.indexOf("#"))
       : "";
@@ -1764,8 +2015,10 @@
   function applyShareMetadata() {
     if (typeof (window as any).pu !== "undefined" && (window as any).pu) {
       const pu = (window as any).pu;
-      pu.title = "";
-      pu.rules = "";
+      if (!editorMode) {
+        pu.title = "";
+        pu.rules = "";
+      }
       pu.author = shareAuthor || "";
     }
     if (typeof (window as any).UserSettings !== "undefined") {
@@ -2174,7 +2427,7 @@
 
   function applyZoom() {
     const board = document.getElementById("puzzle-container");
-    if (board) board.style.transform = `scale(${zoom})`;
+    if (board) board.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
   }
 
   function fitBoard() {
@@ -2191,6 +2444,8 @@
         (boardHost.clientHeight - 28) / height,
       ),
     );
+    panX = 0;
+    panY = 0;
     applyZoom();
   }
 
@@ -2199,8 +2454,44 @@
     applyZoom();
   }
 
+  function wheelBoard(event: WheelEvent) {
+    if (!editorMode) return;
+    event.preventDefault();
+    const oldZoom = zoom;
+    zoom = Math.max(0.35, Math.min(4, zoom * (event.deltaY < 0 ? 1.1 : 1 / 1.1)));
+    if (boardHost) {
+      const rect = boardHost.getBoundingClientRect();
+      const x = event.clientX - rect.left - rect.width / 2;
+      const y = event.clientY - rect.top - rect.height / 2;
+      panX += (x - panX) * (1 - zoom / oldZoom);
+      panY += (y - panY) * (1 - zoom / oldZoom);
+    }
+    applyZoom();
+  }
+
+  function startBoardPan(event: PointerEvent) {
+    panDragging = true;
+    panStartX = event.clientX - panX;
+    panStartY = event.clientY - panY;
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    event.preventDefault();
+  }
+
+  function moveBoardPan(event: PointerEvent) {
+    if (!panDragging) return;
+    panX = event.clientX - panStartX;
+    panY = event.clientY - panStartY;
+    applyZoom();
+  }
+
+  function stopBoardPan() { panDragging = false; }
+
   function syncState() {
     const pu = (window as any).pu;
+    if (editorMode && layer === "genre" && selectedGenre === "laxman-rekha" && pu && pu.editorGenreGroup !== genreGroup) {
+      pu.editorGenreGroup = genreGroup;
+      queueMicrotask(() => chooseGenreGroup(genreGroup));
+    }
     if (pu) {
       activeVariantId = metadataVariantIdForActiveVariants(
         pu.activeSudokuVariants,
@@ -2248,7 +2539,7 @@
       if (typeof (window as any).pu !== "undefined" && (window as any).pu?.mode?.qa !== "pu_a") {
         chooseLayer("solution");
       }
-    } else if (layer !== "modes") {
+    } else if (layer !== "modes" && layer !== "genre") {
       layer = document.getElementById("pu_a")?.checked ? "solution" : "problem";
     }
     noteMode = String((window as any).pu?.mode?.pu_a?.sudoku?.[0] || "1");
@@ -2400,6 +2691,11 @@
       } else if (desktopLegacyModesAnchor?.parentElement) {
         desktopLegacyModesAnchor.after(legacyModesSection);
       }
+      if (genreSection && useMobileDeck && mobileGenreSlot) {
+        mobileGenreSlot.appendChild(genreSection);
+      } else if (desktopGenreAnchor?.parentElement) {
+        desktopGenreAnchor.after(genreSection);
+      }
     };
     placeMobilePanels();
     mobileLayout.addEventListener("change", placeMobilePanels);
@@ -2430,6 +2726,21 @@
       installVariationCatalog();
       if (!moveLegacyNodes()) return false;
       if (isEmbedded) chooseLayer("solution");
+      else if (editorMode) {
+        initializeEditorGrid();
+        const requestedGenre = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("genre");
+        if (requestedGenre === "laxman-rekha") {
+          mobileDeckView = "genre";
+          selectedGenre = requestedGenre;
+          void (window as any).penpaBoardReadyPromise?.then(() => {
+            chooseLayer("genre");
+            chooseGenre(requestedGenre);
+          });
+        } else {
+          mobileDeckView = "misc";
+          chooseLayer("modes");
+        }
+      }
       const settings = (window as any).UserSettings;
       if (settings) {
         if (settings.color_theme === 2) {
@@ -2457,6 +2768,7 @@
           }),
         );
       resizeObserver = new ResizeObserver(fitBoard);
+      boardHost.addEventListener("pointerdown", clearCheckHighlight);
       resizeObserver.observe(boardHost);
       const board = document.getElementById("puzzle-container");
       if (board) resizeObserver.observe(board);
@@ -2508,8 +2820,10 @@
     document.addEventListener("pointerdown", clearConflictHighlights);
     document.addEventListener("keydown", clearConflictHighlights);
     return () => {
+      (window as any).penpaEditorHideSolution = false;
       observer?.disconnect();
       resizeObserver?.disconnect();
+      boardHost?.removeEventListener("pointerdown", clearCheckHighlight);
       window.clearInterval(solverClock);
       if (syncFrame) window.cancelAnimationFrame(syncFrame);
       document.removeEventListener("keydown", desktopLayerShortcut, true);
@@ -2532,7 +2846,7 @@
 </script>
 
 <svelte:head>
-  <title>Sudotoku</title>
+  <title>{editorMode ? "Puzzle editor · Sudotoku" : "Sudotoku"}</title>
   <meta
     name="description"
     content="A Sudoku setter and solver powered by Penpa+."
@@ -2545,6 +2859,7 @@
   class:dark={darkTheme}
   class:embedded={isEmbedded}
   class:battle={isBattle}
+  class:editor={editorMode}
   class:hide-left-sidebar={hideLeftSidebar}
 >
   <ToastContainer {toasts} onDismiss={dismissToast} />
@@ -2554,23 +2869,43 @@
     class="mobile-input-deck"
     class:panel-top={mobilePanelPosition === "above"}
     class:panel-bottom={mobilePanelPosition === "below"}
+    class:genre-open={editorMode && mobileDeckView === "genre"}
     aria-label="Puzzle inputs"
   >
     {#if !isEmbedded}
       <div class="mobile-deck-tabs" role="tablist" aria-label="Input layer">
+{#if !editorMode}
         <button type="button" role="tab"
           aria-selected={layer === "problem" && mobileDeckView !== "misc"}
           class:active={layer === "problem" && mobileDeckView !== "misc"}
           on:click={() => showMobileLayer("problem")}>Set</button>
+        {/if}
+        {#if editorMode}
+          <button type="button" role="tab"
+            aria-selected={mobileDeckView === "misc"}
+            class:active={mobileDeckView === "misc"}
+            on:click={() => showMobileLayer("modes")}>Set</button>
+        {/if}
         <button type="button" role="tab"
           aria-selected={layer === "solution" && mobileDeckView !== "misc"}
           class:active={layer === "solution" && mobileDeckView !== "misc"}
           on:click={() => showMobileLayer("solution")}>Solve</button>
-        <button type="button" role="tab"
-          aria-selected={mobileDeckView === "misc"}
-          class:active={mobileDeckView === "misc"}
-          on:click={() => showMobileLayer("modes")}>Misc</button>
+{#if !editorMode}
+          <button type="button" role="tab"
+            aria-selected={mobileDeckView === "misc"}
+            class:active={mobileDeckView === "misc"}
+            on:click={() => showMobileLayer("modes")}>Misc</button>
+        {/if}
+        {#if editorMode}
+          <button type="button" role="tab" aria-selected={mobileDeckView === "genre"} class:active={mobileDeckView === "genre"} on:click={() => showMobileLayer("genre")}>Genre</button>
+        {/if}
       </div>
+      {#if editorMode}
+        <button type="button" class="editor-mobile-actions"
+          aria-expanded={mobileActiveTab === "actions"}
+          on:click={() => (mobileActiveTab = mobileActiveTab === "actions" ? "none" : "actions")}
+        >☰ Penpa actions</button>
+      {/if}
     {/if}
 
     <div class:hidden-section={mobileDeckView !== "keypad"} class="mobile-keypad">
@@ -2641,6 +2976,11 @@
           <span>{mobileInputModeLabel}</span>
           {#if mobileInputModeCount > 1}<i class="fa fa-refresh cycle-indicator" aria-hidden="true"></i>{/if}
         </button>
+      {:else if editorMode && layer === "solution"}
+        <div class="editor-solve-mobile">
+          <strong>Composite · Edge X</strong>
+          <label><input type="checkbox" checked={solutionVisible} on:change={(event) => setSolutionVisible((event.currentTarget as HTMLInputElement).checked)} /> Show solution</label>
+        </div>
       {:else}
         <div class="solver-shared-keypad">
           <SudokuKeypad
@@ -2672,6 +3012,26 @@
       aria-label="Mode controls">
       <div bind:this={mobileMiscSlot} class="mobile-misc-slot"></div>
     </div>
+    {#if editorMode}
+      <div class="mobile-deck-pane" class:hidden-section={mobileDeckView !== "genre"} aria-label="Genre controls">
+        <div bind:this={mobileGenreSlot}></div>
+        {#if layer === "genre" && toolPanelOptions.length}
+          <div class="tool-input-panel genre-mobile-panel" aria-label={`${toolPanelMode} input panel`}>
+            {#each toolPanelOptions as option, index}
+              <button type="button" aria-label={option.label}
+                class:selected={toolPanelSelected.has(option.value)}
+                class:panel-action={Boolean(option.action)}
+                on:pointerdown={(event) => useToolPanelOption(event, option)}>
+                {#if option.sym && option.num !== undefined}
+                  <canvas use:renderSymbol={{ sym: option.sym, num: option.num, darkTheme }} class="symbol-canvas"></canvas>
+                {:else}{option.label}{/if}
+                {#if !option.action && index < 9}<kbd>{index + 1}</kbd>{/if}
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/if}
   </section>
   {/if}
 
@@ -2789,7 +3149,13 @@
       >
         <section>
           <div class="segmented">
-            {#if currentVariant !== "sudokuwithstars"}
+            {#if editorMode}
+              <button
+                class:active={layer === "modes"}
+                on:click={() => chooseLayer("modes")}
+                ><i class="fa fa-sliders" aria-hidden="true"></i>Set <kbd>F2</kbd></button
+              >
+            {:else if currentVariant !== "sudokuwithstars"}
               <button
                 class:active={layer === "problem"}
                 on:click={() => chooseLayer("problem")}
@@ -2801,13 +3167,24 @@
               on:click={() => chooseLayer("solution")}
               ><i class="fa fa-check" aria-hidden="true"></i>{currentVariant === "sudokuwithstars" ? "Star" : "Solve"} <kbd>F3</kbd></button
             >
+{#if editorMode}
+            <button class:active={layer === "genre"} on:click={() => chooseLayer("genre")}><i class="fa fa-th-large" aria-hidden="true"></i>Genre</button>
+            {:else}
             <button
               class:active={layer === "modes"}
               on:click={() => chooseLayer("modes")}
               ><i class="fa fa-sliders" aria-hidden="true"></i>Misc <kbd>F4</kbd></button
             >
+            {/if}
           </div>
         </section>
+        {#if editorMode && layer === "solution"}
+          <section class="editor-solve-options" aria-label="Solve options">
+            <strong>Composite · Edge X</strong>
+            <p>Drag along cell edges for the loop. Click an edge to mark X.</p>
+            <label><input type="checkbox" checked={solutionVisible} on:change={(event) => setSolutionVisible((event.currentTarget as HTMLInputElement).checked)} /> Show solution</label>
+          </section>
+        {/if}
 
         <section
           class="variant-picker"
@@ -2820,7 +3197,7 @@
               aria-label="Add variant"
               aria-expanded={variantMenuOpen}
               bind:value={variantSearch}
-              on:focus={() => (variantMenuOpen = true)}
+              on:focus={() => { variantMenuOpen = true; highlightVariant(selectedVariant); }}
               on:input={() => (variantMenuOpen = true)}
               on:keydown={handleVariantKeydown}
               placeholder="Add variant"
@@ -2861,14 +3238,14 @@
                   <button
                     role="menuitem"
                     class:current={variant.value === selectedVariant}
-                    class:highlighted={enabledOpts[variantHighlightIndex]?.value === variant.value}
+                    class:highlighted={enabledVariantOptions[variantHighlightIndex]?.value === variant.value}
                     disabled={Boolean(conflict || unavailable)}
                     title={unavailable ||
                       (conflict
                         ? `${guideFor(conflict).title} already uses this input type`
                         : "")}
-                    on:mouseenter={() => previewRule(variant.value)}
-                    on:focus={() => previewRule(variant.value)}
+                    on:mouseenter={() => highlightVariant(variant.value)}
+                    on:focus={() => highlightVariant(variant.value)}
                     on:click={() => chooseVariant(variant.value)}
                   >
                     <span class="variant-icon"
@@ -2915,6 +3292,32 @@
           </section>
         {/if}
 
+        {#if editorMode}
+        <div bind:this={desktopGenreAnchor}></div>
+        <section bind:this={genreSection} class="genre-section" class:hidden-section={layer !== "genre"}>
+          <label class="genre-label" for="puzzle-genre">Genre</label>
+          <select id="puzzle-genre" bind:value={selectedGenre} on:change={() => chooseGenre(selectedGenre)}>
+            <option value="">Choose a genre</option>
+            <option value="laxman-rekha">Laxman Rekha</option>
+          </select>
+          {#if selectedGenre === "laxman-rekha"}
+            <p class="genre-intro">Round 10 · Loop Mashup. Draw a single loop on cell edges, then place its six kinds of clues.</p>
+            <div class="genre-groups" role="tablist" aria-label="Laxman Rekha clue groups">
+              {#each laxmanGroups as group}
+                <button role="tab" aria-selected={genreGroup === group.id} class:active={genreGroup === group.id} on:click={() => chooseGenreGroup(group.id)}>{group.label}</button>
+              {/each}
+            </div>
+            <button type="button" class="genre-check" aria-label="Check puzzle" on:click={checkPuzzle}>✓ Check</button>
+            {#if checkMessage}<p class="puzzle-check-message" role="status">{checkMessage}</p>{/if}
+            {#each laxmanGroups as group}
+              {#if genreGroup === group.id}
+                <h2>{group.label}</h2>
+                <p>{group.description}</p>
+              {/if}
+            {/each}
+          {/if}
+        </section>
+        {/if}
         <div
           bind:this={desktopLegacyModesAnchor}
           class="desktop-legacy-modes-anchor"
@@ -3151,6 +3554,7 @@
                 disabled={layer === "solution"}
                 aria-label="Add variant"
                 bind:value={variantSearch}
+                on:keydown={handleVariantKeydown}
                 placeholder="Add variant"
               />
               <span class="variant-chevron">+</span>
@@ -3181,13 +3585,14 @@
                 <button
                   role="menuitem"
                   class:current={variant.value === selectedVariant}
+                  class:highlighted={enabledVariantOptions[variantHighlightIndex]?.value === variant.value}
                   disabled={Boolean(conflict || unavailable)}
                   title={unavailable ||
                     (conflict
                       ? `${guideFor(conflict).title} already uses this input type`
                       : "")}
-                  on:mouseenter={() => previewRule(variant.value)}
-                  on:focus={() => previewRule(variant.value)}
+                  on:mouseenter={() => highlightVariant(variant.value)}
+                  on:focus={() => highlightVariant(variant.value)}
                   on:click={() => chooseVariant(variant.value)}
                 >
                   <span class="variant-icon">{variantIcon(variant.value)}</span>
@@ -3261,6 +3666,7 @@
             {#each toolPanelOptions as option, index}
               <button
                 type="button"
+                aria-label={option.label}
                 class:selected={toolPanelSelected.has(option.value)}
                 class:panel-action={Boolean(option.action)}
                 on:pointerdown={(event) => useToolPanelOption(event, option)}
@@ -3309,6 +3715,7 @@
             {#each toolPanelOptions as option, index}
               <button
                 type="button"
+                aria-label={option.label}
                 class:selected={toolPanelSelected.has(option.value)}
                 class:panel-action={Boolean(option.action)}
                 on:pointerdown={(event) => useToolPanelOption(event, option)}
@@ -3350,8 +3757,10 @@
           >{Math.round(zoom * 100)}%</button
         >
         <button on:click={() => changeZoom(0.1)} aria-label="Zoom in">+</button>
+        {#if editorMode}<button class:active={panEnabled} on:click={() => (panEnabled = !panEnabled)} aria-label="Pan board" aria-pressed={panEnabled}>✥ Pan</button>{/if}
       </div>
-      <div bind:this={boardHost} class="board-host">
+      <div bind:this={boardHost} class="board-host" on:wheel|nonpassive={wheelBoard}>
+        {#if editorMode && panEnabled}<div class="board-pan-overlay" class:dragging={panDragging} role="button" tabindex="0" aria-label="Drag to pan board" on:pointerdown={startBoardPan} on:pointermove={moveBoardPan} on:pointerup={stopBoardPan} on:pointercancel={stopBoardPan}></div>{/if}
         {#if !initialized}
           <div class="skeleton-board-container" aria-label="Preparing puzzle board">
             <img src="./grid-placeholder.png" alt="Sudoku Grid" class="placeholder-grid-img" />
@@ -3390,7 +3799,7 @@
       class:open={mobileActiveTab === "actions"}
       aria-label="Solver and Penpa controls"
     >
-      <section bind:this={logHost} class="log-host">
+      <section bind:this={logHost} class="log-host" class:editor-hidden={editorMode}>
         <button
           bind:this={solverSettingsButton}
           type="button"
@@ -3404,6 +3813,9 @@
         <h2>Penpa actions</h2>
         <div class="action-list">
           <div class="action-group">
+            {#if editorMode}
+              <button on:click={() => legacyPress("newboard")}><span>▦</span>New grid</button>
+            {:else}
             <div class="action-dropdown">
               <button
                 aria-haspopup="menu"
@@ -3428,9 +3840,12 @@
                 </div>
               {/if}
             </div>
-            <button on:click={requestGenerator}
-              ><span>✦</span>Generate</button
-            >
+            {/if}
+            {#if !editorMode}
+              <button on:click={requestGenerator}
+                ><span>✦</span>Generate</button
+              >
+            {/if}
             <div class="action-dropdown">
               <button
                 aria-haspopup="menu"
@@ -3496,11 +3911,11 @@
             <button on:click={openLoadModal}
               ><span>⇩</span>Load</button
             >
-            <button
+            {#if !editorMode}<button
               class="solver-settings-action"
               on:click={() => (studioModal = "solver-settings")}
               ><span>⚙</span>Solver settings</button
-            >
+            >{/if}
           </div>
           <div class="action-group final-actions">
             <button on:click={() => legacyClick("sudoku_undo")}
@@ -3644,10 +4059,12 @@
             <input type="checkbox" bind:checked={autoShorten} id="auto_shorten_chk" />
             <span>Shortened</span>
           </label>
-          <label class="modal-field-checkbox">
-            <input type="checkbox" bind:checked={verifyUniqueness} id="verify_uniqueness_chk" />
-            <span>Uniqueness</span>
-          </label>
+          {#if !editorMode}
+            <label class="modal-field-checkbox">
+              <input type="checkbox" bind:checked={verifyUniqueness} id="verify_uniqueness_chk" />
+              <span>Uniqueness</span>
+            </label>
+          {/if}
         </div>
 
         <div class="studio-modal-actions share-url-buttons" style="justify-content: center; margin-top: 16px;">
@@ -4906,6 +5323,7 @@
     background: #fff;
   }
   .board-host {
+    position: relative;
     width: 100%;
     height: 100%;
     min-height: 0;
@@ -4923,8 +5341,48 @@
     transition: transform 0.12s ease-out;
   }
   .zoom-controls {
-    display: none !important;
+    display: none;
   }
+  .studio-shell.editor .zoom-controls {
+    display: flex;
+    position: absolute;
+    z-index: 3;
+    top: 8px;
+    right: 8px;
+    border: 1px solid #8bbd98;
+    border-radius: 7px;
+    background: #f6fff7;
+    overflow: hidden;
+  }
+  .studio-shell.editor .zoom-controls button { padding: 0 9px; }
+  .studio-shell.editor .zoom-controls button.active { background: #bceac7; }
+  .board-pan-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    cursor: grab;
+    touch-action: none;
+  }
+  .board-pan-overlay.dragging { cursor: grabbing; }
+  .puzzle-check-message { padding: 7px 10px; color: #215331; font-size: 12px; line-height: 1.4; }
+  .genre-section .genre-check { align-self: flex-start; padding: 8px 14px; border: 1px solid #32854a; border-radius: 7px; background: #e7f7eb; color: #1b6530; font-weight: 700; cursor: pointer; }
+  .editor-solve-options, .editor-solve-mobile { padding: 12px; display: grid; gap: 7px; color: #215331; }
+  .editor-solve-options p { margin: 0; font-size: 12px; }
+  .editor-solve-options label, .editor-solve-mobile label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .editor-solve-mobile { grid-column: 2 / span 3; align-content: center; }
+  :global(.puzzle-check-highlight) {
+    position: absolute;
+    z-index: 5;
+    width: 31px;
+    height: 31px;
+    transform: translate(-50%, -50%);
+    border: 4px solid #e02b34;
+    border-radius: 50%;
+    background: #f43f5e33;
+    box-shadow: 0 0 0 3px white, 0 0 12px #e02b34;
+    pointer-events: none;
+  }
+  :global(.studio-shell.editor #puzzle-container) { position: relative; }
   .zoom-controls button {
     height: 32px;
     padding: 0;
@@ -7109,7 +7567,8 @@
     background: #32414f !important;
     color: #fff !important;
   }
-  .studio-shell.dark .variant-menu button[role="menuitem"].current {
+  .studio-shell.dark .variant-menu button[role="menuitem"].current,
+  .studio-shell.dark .variant-menu button[role="menuitem"].highlighted {
     background: var(--primary-color) !important;
     color: #fff !important;
   }
@@ -7521,4 +7980,105 @@
     width: calc(100% - 16px) !important;
     max-width: none !important;
   }
+  /* Puzzle editor keeps the Sudoku workspace layout with a green identity. */
+  .studio-shell.editor {
+    --primary-color: #25844e;
+    --primary-color-dark: #176638;
+    --primary-color-light: #e7f5eb;
+    --primary-color-rgb: 37, 132, 78;
+  }
+  .editor .segmented { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .editor .mobile-deck-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .editor-mobile-actions {
+    width: 100%;
+    margin-top: 6px;
+    padding: 7px;
+    border: 1px solid #5b9069;
+    border-radius: 6px;
+    color: #d8f2dd;
+    background: #2b4835;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .editor-mobile-actions[aria-expanded="true"] { background: #25844e; }
+  .editor .editor-hidden,
+  .editor .mobile-header-row.solver-row,
+  .editor .solver-status-row,
+  .editor .solver-full-log,
+  .editor .auto-slot,
+  .editor .solve-slot { display: none !important; }
+  .editor section:not(.board-column) { border-color: #cbded1; }
+  .editor h2, .editor .control-label { color: #456a50; }
+  .studio-shell.editor.dark { background: #14241b; }
+  .studio-shell.editor.dark section:not(.board-column) {
+    border-color: #395b44;
+    background: #20372a;
+  }
+  .studio-shell.editor.dark .board-column,
+  .studio-shell.editor.dark .board-host { border-color: #395b44; background: #182b20; }
+  .studio-shell.editor.dark .action-list button:not([role="menuitem"]) {
+    border-color: #446b50;
+    background: #2b4835;
+  }
+  .studio-shell.editor.dark h2,
+  .studio-shell.editor.dark .control-label { color: #b4d6bb; }
+  .genre-section { display: grid; gap: 8px; }
+  .genre-section .genre-label { font-size: 11px; font-weight: 700; color: #456a50; text-transform: uppercase; letter-spacing: .04em; }
+  .genre-section select { width: 100%; padding: 8px; border: 1px solid #bdd3c3; border-radius: 6px; background: #fff; color: #233b2c; font: inherit; }
+  .genre-section p { margin: 0; color: #53675a; font-size: 12px; line-height: 1.4; }
+  .genre-section h2 { margin: 4px 0 0; font-size: 14px; }
+  .genre-section button { padding: 7px 8px; border: 1px solid #bdd3c3; border-radius: 6px; background: #f5faf6; color: #214c2f; font: inherit; font-size: 12px; cursor: pointer; }
+  .genre-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+  @media (max-width: 768px) {
+    .studio-shell.editor .mobile-input-deck.genre-open {
+      height: min(330px, 45dvh);
+      flex-basis: min(330px, 45dvh);
+    }
+    :global(.studio-shell.editor .mobile-input-deck .genre-section) {
+      gap: 4px;
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+    :global(.studio-shell.editor .mobile-input-deck .genre-section .genre-label) { grid-column: 1 / -1; }
+    :global(.studio-shell.editor .mobile-input-deck .genre-section select) { grid-column: 1; grid-row: 2; }
+    :global(.studio-shell.editor .mobile-input-deck .genre-section .genre-check) { grid-column: 2; grid-row: 2; white-space: nowrap; }
+    :global(.studio-shell.editor .mobile-input-deck .genre-groups) { grid-column: 1 / -1; grid-row: 3; }
+    :global(.studio-shell.editor .mobile-input-deck .genre-intro),
+    :global(.studio-shell.editor .mobile-input-deck .genre-section h2),
+    :global(.studio-shell.editor .mobile-input-deck .genre-section p:not(.genre-intro)) { display: none; }
+    :global(.studio-shell.editor .mobile-input-deck .genre-section p.puzzle-check-message) { display: block; grid-column: 1 / -1; }
+    :global(.studio-shell.editor .mobile-input-deck .genre-groups) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 3px;
+    }
+    :global(.studio-shell.editor .mobile-input-deck .genre-groups button) {
+      min-height: 28px;
+      padding: 3px;
+      font-size: 10px;
+    }
+  }
+  .genre-mobile-panel { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .genre-mobile-panel button { min-height: 36px; }
+  :global(html.puzzle-editor #modal-new-content) { width: min(390px, calc(100vw - 32px)); padding: 20px; font-family: inherit; font-size: 13px; }
+  :global(html.puzzle-editor #modal-new-content .modal-header) { margin: 0 34px 14px 0; padding: 0; border: 0; background: transparent !important; color: #1d2633; font-size: 19px; text-align: left; text-transform: none; box-shadow: none; }
+  :global(html.puzzle-editor #modal-new-content h4) { color: #536170; font-size: 12px; }
+  :global(html.puzzle-editor #modal-new-content #nb_size1),
+  :global(html.puzzle-editor #modal-new-content #nb_size2) { width: 96px; min-width: 96px; }
+  :global(html.puzzle-editor #modal-new-content .editor-hidden-whitespace),
+  :global(html.puzzle-editor #modal-new-content .newgrid-size-options br) { display: none !important; }
+  :global(html.puzzle-editor #modal-new-content #gridtype) { background: #f7f9fb !important; color: #1d2633 !important; border: 1px solid #bdc8d3 !important; }
+  :global(html.puzzle-editor #modal-new-content input[type="radio"]:checked + label) { box-shadow: 0 0 0 1px #25844e; }
+
+  :global(html.puzzle-editor #modal-new-content input[type="checkbox"]),
+  :global(html.puzzle-editor #modal-new-content input[type="radio"]) { accent-color: #25844e; }
+  :global(html.puzzle-editor #modal-new-content input:focus),
+  :global(html.puzzle-editor #modal-new-content select:focus) {
+    border-color: #25844e;
+    box-shadow: 0 0 0 2px rgba(37, 132, 78, .18);
+  }
+  :global(html.puzzle-editor #modal-new-content input[type="button"]) {
+    background: #e7f5eb !important;
+    color: #175e34 !important;
+    border-color: #8dc89d !important;
+  }
+  :global(html.puzzle-editor #modal-new-content #nb_size3) { width: 72px; }
 </style>

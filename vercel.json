@@ -5,6 +5,18 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/puzzle",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/puzzle/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/wpc2026",
+      "destination": "/wpc2026/index.html"
+    },
+    {
       "source": "/",
       "has": [
         {

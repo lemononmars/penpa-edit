@@ -113,6 +113,7 @@ onload = function() {
     }
 
     function onDown(e) {
+        if (!window.pu?.point?.length) return;
         if ((ondown_key === "mousedown" && e.button !== 1) || (ondown_key === "touchstart")) { // Ignore Middle button
             if (e.type === "mousedown" || e.type === "dblclick") {
                 var event = e;
@@ -146,6 +147,7 @@ onload = function() {
                 obj = coord_point(event);
                 pu.type = previousTypes;
             }
+            if (!obj || !pu.point?.[obj.num]) return;
             var x = obj.x,
                 y = obj.y,
                 num = obj.num;
@@ -250,6 +252,7 @@ onload = function() {
     }
 
     function onUp(e) {
+        if (!window.pu?.point?.length) return;
         let edit_mode = pu.mode[pu.mode.qa].edit_mode;
         if ((ondown_key === "mousedown" && e.button !== 1) || (ondown_key === "touchstart")) { // Ignore Middle button
             if (e.type === "mouseup") {
@@ -266,6 +269,7 @@ onload = function() {
             } else {
                 var obj = coord_point(event);
             }
+            if (!obj || !pu.point?.[obj.num]) { onOut(); return; }
             var x = obj.x,
                 y = obj.y,
                 num = obj.num;
@@ -282,7 +286,7 @@ onload = function() {
     }
 
     function onMove(e) {
-        if (!window.pu) {
+        if (!window.pu?.point?.length) {
             return;
         }
         let edit_mode = pu.mode[pu.mode.qa].edit_mode;
@@ -310,6 +314,7 @@ onload = function() {
                 }
                 pu.mouse_click = 0;
             }
+            if (!obj || !pu.point?.[obj.num]) { onOut(); return; }
             var x = obj.x,
                 y = obj.y,
                 num = obj.num;

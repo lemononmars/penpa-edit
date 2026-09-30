@@ -1698,6 +1698,7 @@ class Puzzle {
         // small-number mode as a cell selection reproduces the old XV bug:
         // Penpa starts the rectangular/multi-cell lifecycle before the edge is
         // available to key_number().
+        if (this.editorGenrePointNumber) return false;
         if (this.xv_mode || this.sudoku_edge_clue_mode || this.sudoku_corner_clue_mode ||
             this.sudoku_midpoint_clue_mode) {
             return false;
@@ -7381,6 +7382,19 @@ class Puzzle {
         }
     }
 
+    syncParallelCountsSquare(key) {
+        if (this.editorGenre !== "laxman-rekha") return;
+        if (this.mode.qa !== "pu_q" || !this.point[key] || ![2, 3].includes(this.point[key].type)) return;
+        const number = this.pu_q.number[key];
+        const symbol = this.pu_q.symbol[key];
+        if (number && String(number[2]) === "5" && String(number[0]).length > 0) {
+            if (this.editorGenreGroup === "parallel-counts" && !symbol)
+                this.set_value("symbol", key, [1, "square_S", 2], null);
+        } else if (symbol?.[1] === "square_S") {
+            this.remove_value("symbol", key, true);
+        }
+    }
+
     set_value(prop, key, value, color_value = undefined) {
         this.record(prop, key, this.undoredo_counter);
         this[this.mode.qa][prop][key] = value;
@@ -7390,6 +7404,7 @@ class Puzzle {
         else if (color_value !== undefined)
             this[this.mode.qa + "_col"][prop][key] = color_value;
         this.record_replay(prop, key, this.undoredo_counter);
+        if (prop === "number") this.syncParallelCountsSquare(key);
     }
 
     remove_value(prop, key, remove_color = false) {
@@ -7398,6 +7413,7 @@ class Puzzle {
         if (remove_color)
             delete this[this.mode.qa + "_col"][prop][key];
         this.record_replay(prop, key, this.undoredo_counter);
+        if (prop === "number") this.syncParallelCountsSquare(key);
     }
 
     set_surface(key, value, cc) {
@@ -8466,7 +8482,7 @@ class Puzzle {
         if (this.mode[this.mode.qa].edit_mode === "number") {
             let submode = this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0];
             let direct_clue = (this.xv_mode || this.sudoku_edge_clue_mode || this.sudoku_corner_clue_mode ||
-                this.sudoku_midpoint_clue_mode) &&
+                this.sudoku_midpoint_clue_mode || this.editorGenreGroup === "parallel-counts") &&
                 this.cursol >= 0 && this.point[this.cursol];
             if (this.selection.length > 0 || direct_clue) {
                 if (this.selection.length === 1) {
@@ -8652,6 +8668,7 @@ class Puzzle {
                 }
             }
         }
+        this.syncParallelCountsSquare(this.cursol);
         this.redraw();
     }
 
@@ -8678,7 +8695,7 @@ class Puzzle {
         if (this.mode[this.mode.qa].edit_mode === "number") {
             let submode = this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0];
             let direct_clue = (this.xv_mode || this.sudoku_edge_clue_mode || this.sudoku_corner_clue_mode ||
-                this.sudoku_midpoint_clue_mode) &&
+                this.sudoku_midpoint_clue_mode || this.editorGenreGroup === "parallel-counts") &&
                 this.cursol >= 0 && this.point[this.cursol];
             if (this.selection.length > 0 || direct_clue) {
                 if (this.selection.length === 1) {
@@ -8761,6 +8778,7 @@ class Puzzle {
                     this.remove_value("surface", k);
             }
         }
+        this.syncParallelCountsSquare(this.cursol);
         this.redraw();
     }
 
@@ -9633,6 +9651,19 @@ class Puzzle {
     }
 
     mouse_number(x, y, num) {
+        if (this.editorGenreGroup === "parallel-counts" && this.mode.qa === "pu_q") {
+            if (this.mouse_mode === "down_left" || this.mouse_mode === "down_right") {
+                this.cursol = num;
+                this.selection = [];
+                this.drawing = false;
+                this.last = -1;
+                this.redraw();
+            } else if (this.mouse_mode === "up" || this.mouse_mode === "out") {
+                this.drawing = false;
+                this.last = -1;
+            }
+            return;
+        }
         if (this.mouse_mode === "down_left") {
             if (this.xv_mode && String(this.mode[this.mode.qa].number[0]) === "5") {
                 this.cycleXVClue(num);

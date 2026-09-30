@@ -784,7 +784,7 @@ class Puzzle_square extends Puzzle {
     draw() {
         this._find_common_cache = {};
         var present_mode = this.mode.qa;
-        if (present_mode !== "pu_q" || UserSettings.show_solution) {
+        if ((present_mode !== "pu_q" || UserSettings.show_solution) && !window.penpaEditorHideSolution) {
             this.draw_frameBold();
             this.draw_surface("pu_q");
             this.draw_surface("pu_a");

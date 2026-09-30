@@ -8,6 +8,7 @@
  let entries:Grid = [];
  let revealed:number[] = [];
  let loading = true;
+ let highlightFilled = true;
  let error = '';
  let worker:Worker|undefined;
  const pipPositions:Record<number,number[]> = {
@@ -73,7 +74,7 @@
 </script>
 
 <section class="blind-practice" aria-label="Blind Pips Sudoku practice">
- <div class="practice-heading"><div><h3>Blind 6×6 practice</h3><p>Solve a unique Classic Sudoku. Select cells to see their pips; only the two most recently selected cells stay visible. Enter digits with the pip buttons.</p></div><button type="button" onclick={newPuzzle}>New random puzzle</button></div>
+ <div class="practice-heading"><div><h3>Blind 6×6 practice</h3><p>Solve a unique Classic Sudoku. Select cells to see their pips; only the two most recently selected cells stay visible. Enter digits with the pip buttons.</p></div><div class="practice-actions"><label class="fill-toggle"><input type="checkbox" bind:checked={highlightFilled}/> Green background on filled cells</label><button type="button" onclick={newPuzzle}>New random puzzle</button></div></div>
  {#if loading}<p role="status">Generating puzzle…</p>{/if}
  {#if error}<p role="alert">{error}</p>{/if}
  {#if board.length}
@@ -84,7 +85,7 @@
       {@const index = r*6+c}
       {@const visible = revealed.includes(index)}
       {@const digit = given || entries[r][c]}
-      <button type="button" class="blind-cell" class:revealed={visible} class:selected={selected===index} class:given={!!given} class:box-right={c===2} class:box-bottom={r===1||r===3} aria-label={`Row ${r+1}, column ${c+1}: ${visible ? digit ? `${digit} pips${given?' given':''}` : 'empty' : 'hidden'}`} aria-pressed={selected===index} onclick={event=>selectCell(event,index)}>
+      <button type="button" class="blind-cell" class:revealed={visible} class:selected={selected===index} class:given={!!given} class:filled={highlightFilled && !!digit} class:box-right={c===2} class:box-bottom={r===1||r===3} aria-label={`Row ${r+1}, column ${c+1}: ${visible ? digit ? `${digit} pips${given?' given':''}` : 'empty' : 'hidden'}`} aria-pressed={selected===index} onclick={event=>selectCell(event,index)}>
        {#if visible && digit}<span class="pips" aria-hidden="true">{#each Array.from({length:9},(_,i)=>i+1) as position}<span class:pip={pipPositions[digit].includes(position)}></span>{/each}</span>{:else}<span class="hidden-mark" aria-hidden="true">·</span>{/if}
       </button>
      {/each}
@@ -110,13 +111,13 @@
  .practice-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}
  h3{margin:0 0 5px;font-size:17px;color:#244d3b}
  p{margin:0;line-height:1.45;color:#59685b}
- .practice-heading button{flex:none;border:0;border-radius:6px;background:#244d3b;color:white;padding:9px 12px;cursor:pointer}
+ .practice-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.fill-toggle{display:flex;align-items:center;gap:7px;font-size:13px;color:#244d3b;cursor:pointer;white-space:nowrap}.fill-toggle input{accent-color:#244d3b}.practice-heading button{flex:none;border:0;border-radius:6px;background:#244d3b;color:white;padding:9px 12px;cursor:pointer}
  .practice-layout{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap}
  .blind-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));width:min(100%,390px);border:3px solid #244d3b;background:#fff}
  .blind-cell{aspect-ratio:1;border:0;border-right:1px solid #aebcaf;border-bottom:1px solid #aebcaf;background:#fff;display:grid;place-items:center;cursor:pointer;min-width:0;padding:5px;color:#8b9c8d}
  .blind-cell:nth-child(6n){border-right:0}.blind-cell:nth-last-child(-n+6){border-bottom:0}
  .blind-cell.box-right{border-right:3px solid #244d3b}.blind-cell.box-bottom{border-bottom:3px solid #244d3b}
- .blind-cell.given{background:#f2f4ed}.blind-cell.revealed{background:#e8efdf;color:#244d3b}.blind-cell.selected{outline:3px solid #d08a3a;outline-offset:-4px;z-index:1}
+ .blind-cell.filled{background:#e8efdf}.blind-cell.revealed{color:#244d3b}.blind-cell.selected{outline:3px solid #d08a3a;outline-offset:-4px;z-index:1}
  .blind-cell:focus-visible,.pip-key:focus-visible,.clear-button:focus-visible{outline:3px solid #d08a3a;outline-offset:-4px;z-index:1}
  .hidden-mark{font-size:25px;line-height:1}
  .pips{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);width:70%;height:70%;gap:1px}

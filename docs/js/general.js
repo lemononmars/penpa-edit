@@ -1603,12 +1603,12 @@ function savetext_edit() {
 }
 
 async function savetext_solve() {
+    const pu = window.pu;
     const verifyUniqueness = document.getElementById("verify_uniqueness_chk")?.checked;
     if (!verifyUniqueness) {
         var text = pu.maketext_solve();
         return update_textarea(text);
     }
-    const pu = window.pu;
     const SudokuSolver = window.SudokuSolver;
     const SudokuCSP = window.SudokuCSP;
     if (!pu || !SudokuSolver || !SudokuCSP) {

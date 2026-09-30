@@ -155,6 +155,7 @@
         var outsideNumbers = Object.create(null);
         var activeCellKeys;
         var linePaths = Object.create(null);
+        var lineStrands = Object.create(null);
         var numberMarks;
         var symbolMarks;
         var wallSegments;
@@ -245,6 +246,77 @@
             return linePaths[cacheKey];
         }
 
+        // Keep independent strokes separate when they cross at a shared cell.
+        function connectedLineStrands(style) {
+            var cacheKey = String(style);
+            if (lineStrands[cacheKey]) return lineStrands[cacheKey];
+            if (!activeCellKeys) {
+                activeCellKeys = Object.create(null);
+                (puzzle.centerlist || []).forEach(function(key) { activeCellKeys[key] = true; });
+            }
+            var adjacency = Object.create(null), edgeLookup = Object.create(null);
+            Object.keys(puzzle.pu_q && puzzle.pu_q.line || {}).forEach(function(edge) {
+                if (puzzle.pu_q.line[edge] !== style) return;
+                var endpoints = edge.split(",").map(Number);
+                if (endpoints.length !== 2 || !activeCellKeys[endpoints[0]] || !activeCellKeys[endpoints[1]]) return;
+                var id = endpoints[0] < endpoints[1] ? endpoints.join(",") : endpoints.reverse().join(",");
+                if (edgeLookup[id]) return;
+                edgeLookup[id] = true;
+                (adjacency[endpoints[0]] || (adjacency[endpoints[0]] = [])).push(endpoints[1]);
+                (adjacency[endpoints[1]] || (adjacency[endpoints[1]] = [])).push(endpoints[0]);
+            });
+            var usedEdges = Object.create(null), paths = [];
+            function edgeId(a, b) { return a < b ? a + "," + b : b + "," + a; }
+            function trace(first, second) {
+                var path = [first], previous = first, current = second;
+                while (!usedEdges[edgeId(previous, current)]) {
+                    usedEdges[edgeId(previous, current)] = true;
+                    if (current !== path[0]) path.push(current);
+                    if (current === path[0]) break;
+                    var neighbors = adjacency[current] || [];
+                    var available = neighbors.filter(function(next) { return !usedEdges[edgeId(current, next)]; });
+                    if (!available.length) break;
+                    var next;
+                    if (neighbors.length === 2) {
+                        next = available[0];
+                    } else {
+                        var previousCell = cellFromKey(previous);
+                        var currentCell = cellFromKey(current);
+                        var incomingRow = currentCell.row - previousCell.row;
+                        var incomingCol = currentCell.col - previousCell.col;
+                        var straight = available.filter(function(candidate) {
+                            var candidateCell = cellFromKey(candidate);
+                            return candidateCell.row - currentCell.row === incomingRow &&
+                                candidateCell.col - currentCell.col === incomingCol;
+                        });
+                        if (straight.length !== 1) break;
+                        next = straight[0];
+                    }
+                    previous = current;
+                    current = next;
+                }
+                var cells = path.map(cellFromKey).filter(Boolean);
+                if (cells.length > 1) paths.push(Object.freeze(cells));
+            }
+            var nodes = Object.keys(adjacency).map(Number).sort(function(a, b) { return a - b; });
+            nodes.filter(function(node) { return adjacency[node].length === 1; }).forEach(function(node) {
+                adjacency[node].forEach(function(next) {
+                    if (!usedEdges[edgeId(node, next)]) trace(node, next);
+                });
+            });
+            nodes.filter(function(node) { return adjacency[node].length > 2; }).forEach(function(node) {
+                adjacency[node].forEach(function(next) {
+                    if (!usedEdges[edgeId(node, next)]) trace(node, next);
+                });
+            });
+            nodes.forEach(function(node) {
+                adjacency[node].forEach(function(next) {
+                    if (!usedEdges[edgeId(node, next)]) trace(node, next);
+                });
+            });
+            lineStrands[cacheKey] = Object.freeze(paths);
+            return lineStrands[cacheKey];
+        }
         function authoredMarks(sourceName) {
             var source = puzzle.pu_q && puzzle.pu_q[sourceName] || {};
             var centerLookup = Object.create(null);
@@ -320,6 +392,7 @@
                 return entry && entry[0] !== undefined ? String(entry[0]).trim() : null;
             },
             connectedLinePaths: connectedLinePaths,
+            connectedLineStrands: connectedLineStrands,
             numberMarks: function() {
                 if (!numberMarks) numberMarks = authoredMarks("number");
                 return numberMarks;
@@ -1561,7 +1634,8 @@
     const offsets=[[0,-1],[-1,-1],[-1,0],[-1,1],[0,1],[1,1],[1,0],[1,-1]];
     clues=e.symbolMarks().filter(m=>m.cell&&m.entry&&m.entry[1]==='arrow_eight'&&Array.isArray(m.entry[0])).flatMap(m=>m.entry[0].flatMap((on,i)=>{if(on!==1)return [];const [dr,dc]=offsets[i],cells=[m.cell];for(let step=1;step<9;step++){const c=e.cell(m.cell.row+dr*step,m.cell.col+dc*step);if(!c)break;cells.push(c);}return cells.length>=(id==='threeup'?3:2)?[{cells:id==='threeup'?cells.slice(0,3):cells}]:[];}));
    }
-   if(['nothreeinaline','tunnel','missingarrow','missingthermo','multidiagonal'].includes(id))clues=e.connectedLinePaths(3).concat(e.connectedLinePaths(5)).map(cells=>({cells}));
+   if(id==='multidiagonal')clues=e.connectedLineStrands(3).concat(e.connectedLineStrands(5)).map(cells=>({cells}));
+   else if(['nothreeinaline','tunnel','missingarrow','missingthermo'].includes(id))clues=e.connectedLinePaths(3).concat(e.connectedLinePaths(5)).map(cells=>({cells}));
    if(['friends','enemies','even','odd'].includes(id)){const marks=e.symbolMarks().filter(m=>m.cell&&(id==='even'?/square/:/circle/).test(String(m.entry[1]))).map(m=>m.cell);clues=marks.length?[{cells:marks}]:[];}
    if(id==='divisorsumpairs')clues=e.numberMarks().filter(m=>m.neighbors.length===2).map(m=>({cells:m.neighbors,value:Number(m.entry[0])}));
    if(id==='transparentkropkipairs')clues=e.symbolMarks().filter(m=>m.neighbors.length===2&&/circle/.test(m.entry[1])).map(m=>({cells:m.neighbors}));
@@ -2162,7 +2236,7 @@
 
 (function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("missingthermo","Missing Thermo","line");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
 
-(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("multidiagonal","Multi Diagonal","line");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
+(function(root){var make=typeof module!=="undefined"&&module.exports?require('../parsers/wsc_descriptor.js'):root.createWsc2026Descriptor;var descriptor=make("multidiagonal","Multi Diagonal","edge");if(typeof module!=="undefined"&&module.exports)module.exports=descriptor;else(root.SudokuVariantDescriptorSources||(root.SudokuVariantDescriptorSources=[])).push(descriptor);})(typeof globalThis!=="undefined"?globalThis:this);
 
 (function(root, factory) {
     var descriptor = factory(typeof module !== "undefined" && module.exports ?

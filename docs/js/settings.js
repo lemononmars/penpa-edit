@@ -360,8 +360,8 @@ const UserSettings = {
 
         const themeOption = document.getElementById("theme_mode_opt");
         if (themeOption) themeOption.value = valueInt;
-        if (style_tag_cache['color_theme']) {
-            style_tag_cache['color_theme'].href = themeStylesheet;
+        if (window.style_tag_cache?.['color_theme']) {
+            window.style_tag_cache['color_theme'].href = themeStylesheet;
         } else {
             console.error('Could not find color theme stylesheet to change.');
         }
@@ -670,3 +670,6 @@ const UserSettings = {
         }
     }
 };
+
+// Shared setting used by the Svelte puzzle editor.
+window.PenpaUserSettings = UserSettings;

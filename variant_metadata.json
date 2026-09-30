@@ -8,6 +8,10 @@
     "transparentkropkipairs": {
       "position": "edge",
       "mark": "circle"
+    },
+    "weightedkiller": {
+      "position": "center",
+      "mark": "cage"
     }
   },
   "scrapedAliases": {
@@ -3396,10 +3400,10 @@
       "status": "available",
       "inputType": {
         "categories": [
-          "line"
+          "edge"
         ],
         "instructions": [
-          "Draw a simple line using line style 3 or 5, or enter structured clues in the WSC clue editor.",
+          "Mark each diagonal edge that belongs to a diagonal, or enter structured clues in the WSC clue editor.",
           "Structured clues use zero-based {row, col} cells and are saved with the puzzle."
         ]
       }
@@ -7917,10 +7921,11 @@
       "status": "available",
       "inputType": {
         "categories": [
-          "cage"
+          "cage",
+          "shading"
         ],
         "instructions": [
-          "Use Penpa marks or saved WSC clue payloads."
+          "Draw cages with totals using the Number 11 clue style. Shade any cells that count double."
         ]
       },
       "tags": [

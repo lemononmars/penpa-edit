@@ -17,7 +17,8 @@
     const offsets=[[0,-1],[-1,-1],[-1,0],[-1,1],[0,1],[1,1],[1,0],[1,-1]];
     clues=e.symbolMarks().filter(m=>m.cell&&m.entry&&m.entry[1]==='arrow_eight'&&Array.isArray(m.entry[0])).flatMap(m=>m.entry[0].flatMap((on,i)=>{if(on!==1)return [];const [dr,dc]=offsets[i],cells=[m.cell];for(let step=1;step<9;step++){const c=e.cell(m.cell.row+dr*step,m.cell.col+dc*step);if(!c)break;cells.push(c);}return cells.length>=(id==='threeup'?3:2)?[{cells:id==='threeup'?cells.slice(0,3):cells}]:[];}));
    }
-   if(['nothreeinaline','tunnel','missingarrow','missingthermo','multidiagonal'].includes(id))clues=e.connectedLinePaths(3).concat(e.connectedLinePaths(5)).map(cells=>({cells}));
+   if(id==='multidiagonal')clues=e.connectedLineStrands(3).concat(e.connectedLineStrands(5)).map(cells=>({cells}));
+   else if(['nothreeinaline','tunnel','missingarrow','missingthermo'].includes(id))clues=e.connectedLinePaths(3).concat(e.connectedLinePaths(5)).map(cells=>({cells}));
    if(['friends','enemies','even','odd'].includes(id)){const marks=e.symbolMarks().filter(m=>m.cell&&(id==='even'?/square/:/circle/).test(String(m.entry[1]))).map(m=>m.cell);clues=marks.length?[{cells:marks}]:[];}
    if(id==='divisorsumpairs')clues=e.numberMarks().filter(m=>m.neighbors.length===2).map(m=>({cells:m.neighbors,value:Number(m.entry[0])}));
    if(id==='transparentkropkipairs')clues=e.symbolMarks().filter(m=>m.neighbors.length===2&&/circle/.test(m.entry[1])).map(m=>({cells:m.neighbors}));

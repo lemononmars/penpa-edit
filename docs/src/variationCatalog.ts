@@ -196,8 +196,12 @@ function genericSetting(variation: Variation) {
         add('symbol','circle_SS',2,['mo_symbol_lb','ms1','ms1_circle','li_circle_SS']);
         return {show,modeset:modes,submodeset:submodes,styleset:styles,outside:false};
     }
-    if (['nothreeinaline','tunnel','missingarrow','missingthermo','multidiagonal','clonealongline'].includes(variation.value)) {
+    if (['nothreeinaline','tunnel','missingarrow','missingthermo','clonealongline'].includes(variation.value)) {
         add('line','2',5,['mo_line_lb','sub_line2_lb']);
+        return {show,modeset:modes,submodeset:submodes,styleset:styles,outside:false};
+    }
+    if (variation.value === 'multidiagonal') {
+        add('symbol','diagonal_consecutive',2,['mo_symbol_lb']);
         return {show,modeset:modes,submodeset:submodes,styleset:styles,outside:false};
     }
     if (['indextoone','primerunsum','antioutside','sudokuwithnames','magicsword','nexttox','unordereddistances'].includes(variation.value)) {
@@ -249,6 +253,12 @@ function genericSetting(variation: Variation) {
     }
     if (variation.value === "blocksumrelations") {
         add("number", "5", 6, ["mo_number_lb", "sub_number5_lb"]);
+        return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
+    }
+    if (variation.value === "weightedkiller") {
+        add("cage", "1", 10, ["mo_cage_lb", "sub_cage1_lb", "sub_cage2_lb"]);
+        add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);
+        add("surface", "", 1, ["mo_surface_lb"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
     if (variation.value === "threedigitnumberskiller") {

@@ -461,7 +461,8 @@ var SudokuCSP = (function() {
             for (var itemIndex = 0; itemIndex < items.length; itemIndex++) {
                 var handler = constraintRegistry[name];
                 if (!handler.validatePartial(normalized, items[itemIndex], helpers)) {
-                    var cells = cellsInConstraint(items[itemIndex]);
+                    var cells = typeof handler.conflictCells === "function" ?
+                        handler.conflictCells(normalized, items[itemIndex]) : cellsInConstraint(items[itemIndex]);
                     return {
                         kind: "constraint",
                         constraint: name,
@@ -1392,6 +1393,38 @@ registerConstraint("threeDigitNumbersKillers", {
                 }
             }
             return true;
+        },
+        conflictCells: function(board, shaded) {
+            if (!Array.isArray(shaded)) shaded = shaded ? [shaded] : [];
+            var SIZE = board.length;
+            var offsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            var shadedLookup = {};
+            shaded.forEach(function(cell) { shadedLookup[cell.row + ":" + cell.col] = true; });
+            for (var r = 0; r < SIZE; r++) {
+                for (var c = 0; c < SIZE; c++) {
+                    var counts = {}, emptyCount = 0;
+                    offsets.forEach(function(offset) {
+                        var nr = r + offset[0], nc = c + offset[1];
+                        if (nr < 0 || nr >= SIZE || nc < 0 || nc >= SIZE) return;
+                        var digit = cellValue(board, { row: nr, col: nc });
+                        if (!digit) emptyCount++;
+                        else {
+                            (counts[digit] || (counts[digit] = [])).push({ row: nr, col: nc });
+
+                        }
+                    });
+                    var repeatedDigits = Object.keys(counts).filter(function(digit) { return counts[digit].length > 1; });
+                    var isShaded = !!shadedLookup[r + ":" + c];
+                    if ((isShaded && emptyCount === 0 && !repeatedDigits.length) || (!isShaded && repeatedDigits.length)) {
+                        var result = [{ row: r, col: c }];
+                        repeatedDigits.forEach(function(digit) {
+                            result.push.apply(result, counts[digit]);
+                        });
+                        return result;
+                    }
+                }
+            }
+            return [];
         },
         validateComplete: function(board, shaded) {
             if (!shaded) return true;

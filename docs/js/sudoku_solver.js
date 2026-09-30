@@ -2,7 +2,7 @@ var SudokuCSPRuntime = typeof SudokuCSP !== "undefined" ? SudokuCSP :
     (typeof require === "function" ? require("./sudoku_csp.js") : null);
 var SudokuVariantRegistryRuntime = typeof SudokuVariantRegistry !== "undefined" ? SudokuVariantRegistry :
     (typeof require === "function" ? require("./sudoku_variants/index.js") : null);
-var SudokuWorkerAssetVersion = typeof ver !== "undefined" ? ver : "3.3.41";
+var SudokuWorkerAssetVersion = typeof ver !== "undefined" ? ver : "3.3.43";
 // Worker bundles are copied outside Vite's hashed asset graph. Keep one stable
 // URL per page load so repeated generations can share it, but never let a new
 // page reuse a worker bundle cached by an older deployment.
@@ -1295,7 +1295,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             constraints.supported.push("oneknightstep");
         }
         if (variantEnabled(puzzle, "repeatedneighbors")) {
-            constraints.repeatedNeighbors = shadedCells.slice();
+            constraints.repeatedNeighbors = [shadedCells.slice()];
             constraints.supported.push("repeatedneighbors");
         }
         if (variantEnabled(puzzle, "alloddalleven")) {
@@ -1876,7 +1876,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             Object.keys(symbols).forEach(function(key) {
                 var entry = symbols[key];
                 var point = puzzle.point && puzzle.point[key];
-                if (!entry || entry[1] !== "bars_G" || entry[0] !== 1 || !point) return;
+                if (!entry || entry[1] !== "bars_G" || !point) return;
                 var cells = (point.neighbor || []).filter(function(neighbor) {
                     return activeCells[neighbor];
                 }).map(function(neighbor) {

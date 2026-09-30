@@ -4353,6 +4353,49 @@ test("Escape verifies valid disjoint paths to edge", function() {
     assert.equal(SudokuCSP.solve(validBoard, { escapeStarts: [[{row: 0, col: 0}, {row: 0, col: 1}]] }).solved, false);
 });
 
+test("Repeated Neighbors accepts the completed screenshot grid and exact shaded pattern", function() {
+    const centerlist = Array.from({ length: 81 }, (_, index) => (Math.floor(index / 9) + 2) * 13 + (index % 9) + 2);
+    const shadingRows = [
+        "..##..#..", "..##.##..", ".##.##..#", "#.##.###.", "...#.#...",
+        "...#..###", "..##.#.##", "..##.#...", "..#...#.."
+    ];
+    const surface = {};
+    shadingRows.forEach((row, r) => [...row].forEach((mark, c) => {
+        if (mark === "#") surface[centerlist[r * 9 + c]] = 1;
+    }));
+    const parsed = SudokuSolver.readConstraints({
+        nx: 9, ny: 9, nx0: 13, ny0: 13, space: [0, 0, 0, 0], centerlist,
+        activeSudokuVariant: "repeatedneighbors", activeSudokuVariants: ["classic", "repeatedneighbors"],
+        point: {}, pu_q: { number: {}, numberS: {}, symbol: {}, line: {}, surface }
+    });
+    const screenshotBoard = boardFromString(
+        "856342197" + "713698254" + "942571863" +
+        "295813746" + "678254319" + "431769528" +
+        "564137982" + "389425671" + "127986435"
+    );
+    assert.equal(Object.keys(surface).length, 34);
+    assert.ok(parsed.repeatedNeighbors.some(cells => cells.some(cell => cell.row === 0 && cell.col === 3)));
+    assert.equal(parsed.repeatedNeighbors.length, 1, "the full shading pattern is one rule instance");
+    assert.equal(SudokuCSP.findConflict(screenshotBoard, parsed), null);
+    assert.equal(SudokuCSP.solve(screenshotBoard, parsed).solved, true);
+});test("Repeated Neighbors conflict highlights only the unshaded cell that violates the pattern", function() {
+    const board = emptyBoard();
+    board[0][2] = 6;
+    board[0][3] = 3;
+    board[1][2] = 3;
+    board[3][4] = 5;
+    board[5][4] = 5;
+    const constraints = {
+        baseRows: false, baseCols: false, baseBoxes: false,
+        repeatedNeighbors: [[{ row: 0, col: 2 }, { row: 1, col: 3 }, { row: 7, col: 7 }]]
+    };
+    const conflict = SudokuCSP.findConflict(board, constraints);
+    assert.equal(conflict.constraint, "repeatedNeighbors");
+    assert.deepEqual(conflict.cells, [
+        { row: 4, col: 4 }, { row: 3, col: 4 }, { row: 5, col: 4 }
+    ]);
+    assert.equal(conflict.cells.some(cell => cell.row === 0 && cell.col === 2), false);
+});
 test("Repeated Neighbors validates duplicate orthogonal neighbors", function() {
     const solved = boardFromString(
         "859761423" + "426853791" + "713924856" +
@@ -5227,3 +5270,30 @@ test("maxGivens upper bound caps total given count", function() {
 });
 
 
+
+test("Consecutive Pairs reads both vertical and horizontal bars", function() {
+    const centerlist = Array.from({ length: 81 }, function(_, index) {
+        return (Math.floor(index / 9) + 2) * 13 + (index % 9) + 2;
+    });
+    [
+        { direction: 1, neighbors: [28, 29], cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }] },
+        { direction: 2, neighbors: [28, 41], cells: [{ row: 0, col: 0 }, { row: 1, col: 0 }] }
+    ].forEach(function(mark) {
+        const puzzle = {
+            nx: 9, ny: 9, nx0: 13, ny0: 13, space: [0, 0, 0, 0], centerlist,
+            point: { 300: { neighbor: mark.neighbors } },
+            activeSudokuVariant: "consecutivepairs",
+            activeSudokuVariants: ["classic", "consecutivepairs"],
+            pu_q: { number: {}, symbol: { 300: [mark.direction, "bars_G", 2] }, line: {}, surface: {} }
+        };
+        const parsed = SudokuSolver.readConstraints(puzzle);
+        assert.deepEqual(parsed.edgeRelations.filter(function(clue) {
+            return clue.relation === "consecutivepairs";
+        }).map(function(clue) { return clue.cells; }), [mark.cells]);
+        assert.equal(parsed.consecutive.some(function(clue) {
+            return clue.kind === "marked" && clue.cells[0].row === mark.cells[0].row &&
+                clue.cells[0].col === mark.cells[0].col && clue.cells[1].row === mark.cells[1].row &&
+                clue.cells[1].col === mark.cells[1].col;
+        }), true);
+    });
+});

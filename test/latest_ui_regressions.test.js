@@ -37,6 +37,13 @@ test("mobile input modes expose a keyboard-free Add variant menu", function() {
     assert.match(app, /class="variant-menu input-mode-variant-menu"/);
 });
 
+test("variant dropdown arrow navigation highlights the selected and next option", function() {
+    assert.match(app, /selectedIndex = enabledVariantOptions\.findIndex\(\(v\) => v\.value === selectedVariant\)/);
+    assert.match(app, /if \(\(!variantMenuOpen && !inputVariantMenuOpen\) \|\| !enabledVariantOptions\.length\)/);
+    assert.equal((app.match(/on:keydown=\{handleVariantKeydown\}/g) || []).length, 2);
+    assert.equal((app.match(/class:highlighted=\{enabledVariantOptions\[variantHighlightIndex\]\?\.value === variant\.value\}/g) || []).length, 2);
+    assert.match(app, /button\[role="menuitem"\]\.current,[\s\S]*?button\[role="menuitem"\]\.highlighted/);
+});
 test("region-family variants are available as no-input rules", function() {
     const metadata = JSON.parse(fs.readFileSync(path.join(root, "variant_metadata.json"), "utf8"));
     const byId = new Map(metadata.variants.map((variant) => [variant.id, variant]));
@@ -68,6 +75,9 @@ test("variant input types separate cages from surface shading", function() {
     assert.equal(Object.hasOwn(metadata, "icons"), false);
     assert.equal(metadata.variants.some((variant) => variant.inputType?.categories?.includes("region")), false);
     assert.deepEqual(byId.get("killer").inputType.categories, ["cage"]);
+    assert.deepEqual(byId.get("weightedkiller").inputType.categories, ["cage", "shading"]);
+    assert.deepEqual(metadata.markOverrides.weightedkiller, { position: "center", mark: "cage" });
+    assert.ok(catalog.includes('if (variation.value === "weightedkiller")') && catalog.includes('add("number", "11", 1, ["mo_number_lb", "sub_number11_lb"]);') && catalog.includes('add("surface", "", 1, ["mo_surface_lb"]);'));
     assert.deepEqual(byId.get("difference2neighbours").inputType.categories, ["shading"]);
     assert.deepEqual(byId.get("samesum").inputType.categories, ["shading"]);
     assert.deepEqual(byId.get("plusminuskiller").inputType.categories, ["cage", "shading"]);
