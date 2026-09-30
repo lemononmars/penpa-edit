@@ -6,11 +6,11 @@
   "rewrites": [
     {
       "source": "/puzzle",
-      "destination": "/index.html"
+      "destination": "/"
     },
     {
       "source": "/puzzle/",
-      "destination": "/index.html"
+      "destination": "/"
     },
     {
       "source": "/wpc2026",
