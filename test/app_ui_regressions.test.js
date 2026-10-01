@@ -181,6 +181,15 @@ test("Auto Solve ignores answer marks while Solve Once respects them", function(
     assert.match(solveOnce, /readBoard\(pu, true\)/);
 });
 
+test("turning Auto Solve off preserves filled digits", function() {
+    const toggleAuto = solver.match(/function toggleAuto\(\) \{([\s\S]*?)\n    \}/)?.[1] || "";
+    const stopWork = solver.match(/function stopWork\(\) \{([\s\S]*?)\n    \}/)?.[1] || "";
+    assert.match(toggleAuto, /if \(!SudokuTools\.autoEnabled\) \{[\s\S]*?cancelCandidateAnalysis\(\)/);
+    assert.doesNotMatch(toggleAuto, /clearAutoSolution|pu_a\.number\s*=|delete\s+.*pu_a\.number/);
+    assert.match(stopWork, /if \(SudokuTools\.autoEnabled\) \{[\s\S]*?cancelCandidateAnalysis\(\)/);
+    assert.doesNotMatch(stopWork, /clearAutoSolution|pu_a\.number\s*=|delete\s+.*pu_a\.number/);
+});
+
 test("Penpa Actions shows Solver Settings only on mobile", function() {
     assert.match(app, /class="solver-settings-action"[\s\S]*?Solver settings/);
     assert.match(app, /\.solver-settings-action\s*\{[\s\S]*?display:\s*none !important/);
