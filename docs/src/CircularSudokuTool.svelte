@@ -1,4 +1,5 @@
 <script lang="ts">
+ export let mode: 'circular' | 'shifted' = 'circular';
  import {
   CIRCULAR_OUTER_GRID_COUNT,
   CIRCULAR_OUTER_ORIENTATION_COUNT,
@@ -30,7 +31,7 @@
  const cellIds = (surface: Surface, row: number, col: number) => `circular-cell-${surface}-${row}-${col}`;
  const makeDigits = (rows: number, cols: number) => Array.from({ length: rows }, () => Array(cols).fill(''));
 
- let view: 'classic' | 'outer' = 'classic';
+  let view: 'classic' | 'outer' = 'classic';
  let coreDigits: string[][] = makeDigits(9, 9);
  let outerDigits: string[][] = makeDigits(9, CIRCULAR_OUTER_SECTOR_COUNT);
  let coreRotations = [0, 0, 0];
@@ -203,23 +204,23 @@
  <header class="tool-heading">
   <div>
    <p class="eyebrow">ROUND 15 · CHAKRAVYUHA</p>
-   <h2 id="circular-title">Circular Sudoku practice</h2>
-   <p>The three inner rings each hold three Sudoku rows. Spin each ring with its digits. The outer ring contains six grids and turns through six spoke-aligned orientations.</p>
+   <h2 id="circular-title">{mode==='shifted'?'Shifted Sudoku tool':'Circular Sudoku practice'}</h2>
+   <p>{mode==='shifted'?'Enter digits in the central three-ring Shifted Sudoku and rotate each ring. Digits move with their ring.':'The three inner rings each hold three Sudoku rows. Spin each ring with its digits. The outer ring contains six grids and turns through six spoke-aligned orientations.'}</p>
   </div>
-  <div class="view-switch" role="group" aria-label="Circular Sudoku layout">
+  {#if mode==='circular'}<div class="view-switch" role="group" aria-label="Circular Sudoku layout">
    <button class:active={view==='classic'} aria-pressed={view==='classic'} onclick={()=>{view='classic';selectedCell=null;selectedRing=0;}}>Classic · 3 rings</button>
    <button class:active={view==='outer'} aria-pressed={view==='outer'} onclick={()=>{view='outer';selectedCell=null;selectedRing=0;}}>Add outer ring · 6 grids</button>
-  </div>
+  </div>{/if}
  </header>
 
- <div class="practice-layout" class:classic-board={view==='classic'}>
+  <div class="practice-layout" class:classic-board={view==='classic'||mode==='shifted'}>
   <div class="board-column">
    <div class="board-tools">
-   <div><strong>{view==='classic'?'Classic circular Sudoku':'Classic + six outer Sudokus'}</strong><span>{selectedLabel} · type 1–9; Backspace clears. Right-click and drag a ring to spin it.</span></div>
+   <div><strong>{mode==='shifted'?'Shifted Sudoku · three rings':view==='classic'?'Classic circular Sudoku':'Classic + six outer Sudokus'}</strong><span>{selectedLabel} · type 1–9; Backspace clears. Right-click and drag a ring to spin it.</span></div>
     <div class="board-actions"><button class="example-button" onclick={addExample}>Add example</button><button class="clear-board" onclick={clearBoard}>Clear board</button></div>
    </div>
    <div class="board-scroll">
-    <svg bind:this={boardSvg} viewBox={view==='classic'?CORE_VIEWBOX:FULL_VIEWBOX} role="group" aria-label="Circular Sudoku board" onpointermove={moveSpin} onpointerup={endSpin} onpointercancel={endSpin} oncontextmenu={preventContextMenu}>
+    <svg bind:this={boardSvg} viewBox={view==='classic'||mode==='shifted'?CORE_VIEWBOX:FULL_VIEWBOX} role="group" aria-label={mode==='shifted'?'Shifted Sudoku board':'Circular Sudoku board'} onpointermove={moveSpin} onpointerup={endSpin} onpointercancel={endSpin} oncontextmenu={preventContextMenu}>
      {#each Array.from({length:9},(_,row)=>row) as row}
       {#each Array.from({length:9},(_,col)=>col) as col}
        {@const rotation=coreRotations[Math.floor(row/3)]}
@@ -236,7 +237,7 @@
        {/each}
       </g>
      {/each}
-     {#if view==='outer'}
+     {#if view==='outer'&&mode==='circular'}
       {#each Array.from({length:9},(_,row)=>row) as row}
        {#each Array.from({length:CIRCULAR_OUTER_SECTOR_COUNT},(_,col)=>col) as col}
         {@const grid=Math.floor(col/9)}
@@ -256,7 +257,7 @@
      {#each Array.from({length:10},(_,boundary)=>boundary) as boundary}
       {@const coreRadius=CORE_INNER+boundary*CORE_ROW}
       <circle cx={CENTER} cy={CENTER} r={coreRadius} class="grid-circle" class:box-circle={boundary%3===0} />
-      {#if view==='outer'}
+      {#if view==='outer'&&mode==='circular'}
        {@const outerRadius=OUTER_INNER+boundary*OUTER_ROW}
        <circle cx={CENTER} cy={CENTER} r={outerRadius} class="grid-circle outer-circle" class:box-circle={boundary%3===0} />
       {/if}
@@ -282,7 +283,7 @@
       {/each}
      {/each}
 
-     {#if view==='outer'}
+     {#if view==='outer'&&mode==='circular'}
       {#each Array.from({length:9},(_,row)=>row) as row}
        {#each Array.from({length:CIRCULAR_OUTER_SECTOR_COUNT+1},(_,line)=>line) as line}
         {@const angle=-90+(line+outerRotation)*CIRCULAR_OUTER_STEP}
@@ -303,24 +304,24 @@
       {/each}
      {/if}
 
-     <circle cx={CENTER} cy={CENTER} r="48" class="hub" />
+     {#if mode==='circular'}<circle cx={CENTER} cy={CENTER} r="48" class="hub" />
      <text x={CENTER} y={CENTER-2} text-anchor="middle" class="hub-label">{selectedRing<3?`INNER RING ${selectedRing+1}`:'OUTER RING'}</text>
-     <text x={CENTER} y={CENTER+14} text-anchor="middle" class="hub-detail">{activeDigit||'SELECT CELL'}</text>
+     <text x={CENTER} y={CENTER+14} text-anchor="middle" class="hub-detail">{activeDigit||'SELECT CELL'}</text>{/if}
     </svg>
    </div>
 
    <div class="ring-picker" role="group" aria-label="Choose a ring to spin">
     {#each Array.from({length:3},(_,ring)=>ring) as ring}<button class:active={selectedRing===ring} aria-pressed={selectedRing===ring} onclick={()=>chooseRing(ring)}>Ring {ring+1} <small>rows {ring*3+1}–{ring*3+3}</small></button>{/each}
-    {#if view==='outer'}<button class:active={selectedRing===3} aria-pressed={selectedRing===3} onclick={()=>chooseRing(3)}>Outer ring <small>grids A–F</small></button>{/if}
+    {#if view==='outer'&&mode==='circular'}<button class:active={selectedRing===3} aria-pressed={selectedRing===3} onclick={()=>chooseRing(3)}>Outer ring <small>grids A–F</small></button>{/if}
    </div>
    <div class="rotation-controls"><strong>{selectedRing<3?`Ring ${selectedRing+1} · 3 rows`:'Outer ring · 6 grids'}</strong><button aria-label={selectedRing===3?'Rotate selected ring counterclockwise one orientation':'Rotate selected ring counterclockwise one cell'} onclick={()=>rotateSelected(-1)}>↶ {selectedRing===3?'60°':'One cell'}</button><button aria-label={selectedRing===3?'Rotate selected ring clockwise one orientation':'Rotate selected ring clockwise one cell'} onclick={()=>rotateSelected(1)}>{selectedRing===3?'60°':'One cell'} ↷</button><span>{spinStatusText}</span></div>
    <div class="digit-pad" aria-label="Digit entry">{#each Array.from({length:9},(_,i)=>String(i+1)) as digit}<button class:active={activeDigit===digit} aria-label={'Enter '+digit} onclick={()=>setDigit(digit)}>{digit}</button>{/each}<button class="erase" aria-label="Clear selected digit" onclick={()=>setDigit('')}>⌫</button></div>
   </div>
   <aside class="example-reference">
-   <h3>{view==='classic'?'Classic example':'Competition layout · page 64'}</h3>
-   <p>{view==='classic'?'Use the official Shifted Sudoku example as the reference for the central three-ring grid.':'The fourth layer contains six 9×9 Sudoku grids. Gray connector spokes are drawn only over this outer layer.'}</p>
-   <img src={view==='classic'?'/wsc2026/r15-01.png':'/wsc2026/round15-layout.png'} alt={view==='classic'?'Official Round 15 Shifted Sudoku example':'Official Round 15 competition layout showing the six outer Sudoku grids and gray spokes'} loading="lazy" />
-   <a href={`/wsc2026/WSC2026IB.pdf#page=${view==='classic'?60:64}`} target="_blank" rel="noreferrer">Open booklet page {view==='classic'?60:64} ↗</a>
+   <h3>{mode==='shifted'||view==='classic'?'Classic example':'Competition layout · page 64'}</h3>
+   <p>{mode==='shifted'||view==='classic'?'Use the official Shifted Sudoku example as the reference for the central three-ring grid.':'The fourth layer contains six 9×9 Sudoku grids. Gray connector spokes are drawn only over this outer layer.'}</p>
+   <img src={mode==='shifted'||view==='classic'?'/wsc2026/r15-01.png':'/wsc2026/round15-layout.png'} alt={mode==='shifted'||view==='classic'?'Official Round 15 Shifted Sudoku example':'Official Round 15 competition layout showing the six outer Sudoku grids and gray spokes'} loading="lazy" />
+   <a href={`/wsc2026/WSC2026IB.pdf#page=${mode==='shifted'||view==='classic'?60:64}`} target="_blank" rel="noreferrer">Open booklet page {mode==='shifted'||view==='classic'?60:64} ↗</a>
    <p class="hint">Select a cell and type a digit. Use the ring buttons and one-cell controls, or right-click and drag around the center. Every turn snaps to a cell line and carries the digits with that ring.</p>
   </aside>
  </div>
