@@ -3401,7 +3401,16 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
         }
         if (candidateCache.pendingSignature !== signature) {
             var seedSolutions = [];
-            if (candidateCache.constraintsSignature === constraintsSignature) {
+            // Only extend witnesses when the edit preserves every previous given.
+            // Removing or replacing a given can introduce new solutions; analyze
+            // that board from scratch rather than carrying its old witnesses over.
+            var onlyAddedGivens = candidateCache.board && candidateCache.board.length === board.length &&
+                candidateCache.board.every(function(row, y) {
+                    return row.length === board[y].length && row.every(function(digit, x) {
+                        return !digit || board[y][x] === digit;
+                    });
+                });
+            if (onlyAddedGivens && candidateCache.constraintsSignature === constraintsSignature) {
                 seedSolutions = (candidateCache.witnesses || []).filter(function(solution) {
                     for (var row = 0; row < SIZE; row++) {
                         for (var col = 0; col < SIZE; col++) {
@@ -3421,8 +3430,15 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
     }
 
     function primeUniqueSolution(puzzle, solution) {
+        invalidateCandidateAnalysis();
         var board = readBoard(puzzle, false);
         var constraints = readConstraints(puzzle);
+        // A generator witness is not a uniqueness proof for the displayed marks.
+        // Prime forced digits only after checking the actual Penpa puzzle.
+        var answers = SudokuCSPRuntime.createProblem(board, constraints).enumerateAnswers(2);
+        if (answers.length !== 1 || JSON.stringify(answers[0]) !== JSON.stringify(solution)) {
+            return false;
+        }
         var candidates = solution.map(function(row) {
             return row.map(function(value) { return [value]; });
         });
@@ -3440,6 +3456,7 @@ if (variantEnabled(puzzle, "sumorproductkiller")) {
             forced: solution.map(function(row) { return row.slice(); }),
             witnessSolutions: candidateCache.witnesses
         };
+        return true;
     }
 
     /** Prevents native Penpa primitives from being claimed by two variants. */
@@ -4290,19 +4307,12 @@ var SudokuTools = (function() {
         setToolbarState();
         pu.redraw();
         if (!options.skipFinalize) try {
-            var displayedBoard = SudokuSolver.readBoard(pu, false);
-            var displayedConstraints = SudokuSolver.readConstraints(pu);
-            var displayedAnswers = SudokuCSPRuntime.createProblem(displayedBoard, displayedConstraints).enumerateAnswers(2);
-            if (displayedAnswers.length !== 1 || JSON.stringify(displayedAnswers[0]) !== JSON.stringify(result.solution)) {
-                console.warn("[SudokuSolver] Round-trip verification note: Penpa board constraint state differs from generator verification.", {
-                    displayedAnswersCount: displayedAnswers.length,
-                    solutionMatch: displayedAnswers.length === 1 && JSON.stringify(displayedAnswers[0]) === JSON.stringify(result.solution)
-                });
+            if (!SudokuSolver.primeUniqueSolution(pu, result.solution)) {
+                console.warn("[SudokuSolver] Round-trip verification failed: the displayed puzzle does not uniquely match the generator solution. Candidate cache was not primed.");
             }
         } catch (rtErr) {
             console.warn("[SudokuSolver] Round-trip verification note:", rtErr);
         }
-        if (!options.skipFinalize) SudokuSolver.primeUniqueSolution(pu, result.solution);
     }
 
     function prepareBattleGrid(size, variants) {

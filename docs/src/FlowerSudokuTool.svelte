@@ -1,113 +1,96 @@
 <script lang="ts">
- import { FLOWER_CELL_COUNT, FLOWER_LAYERS, FLOWER_CELL_UNITS, FLOWER_UNITS, flowerLabel, flowerConflicts, solveFlower, randomFlowerSolution, generateFlowerPuzzle } from './wsc2026/flowerSudoku.mjs';
-
- const CENTER = 400;
+ import SudokuAnswerControls from './SudokuAnswerControls.svelte';
+ import { FLOWER_CELL_COUNT, flowerLabel, flowerConflicts, solveFlower, randomFlowerSolution, generateFlowerPuzzle } from './wsc2026/flowerSudoku.mjs';
+ import { FLOWER_CENTER as CENTER, FLOWER_GEOMETRIES, FLOWER_REGION_BORDERS, flowerHighlightMask } from './wsc2026/flowerGeometry.mjs';
  const EMPTY = () => Array(FLOWER_CELL_COUNT).fill(0);
- let values = EMPTY();
- let selected = 0;
- let solution: number[] | null = null;
- let generationClues = '36';
- let activeFeature: 'solution' | 'generated' | null = null;
+ const EMPTY_NOTES = () => Array.from({length:FLOWER_CELL_COUNT},()=>[] as number[]);
+ let values = EMPTY(), centerNotes = EMPTY_NOTES(), cornerNotes = EMPTY_NOTES();
+ let selected = 0, solution: number[] | null = null, generationClues = 36;
+ let mode: 'normal'|'center'|'corner' = 'normal';
+ let activeFeature: 'solution'|'generated'|null = null;
+ let history: any[] = [];
  let message = 'Select a cell and enter a digit. Each cell belongs to two columns and one region.';
+ const highlightColors = ['#fff','#c5eeee','#ccdffc','#cfddf4','#ffe4bd','#d6ecc4','#e4def0','#f4e4cf'];
  $: conflicts = flowerConflicts(values);
- $: selectedUnits = FLOWER_CELL_UNITS[selected] || [];
- $: highlightedCells = new Set(selectedUnits.flatMap((unitId) => FLOWER_UNITS[unitId]));
- $: labels = Array.from({ length: FLOWER_CELL_COUNT }, (_, i) => flowerLabel(i));
-
- function polar(radius: number, angle: number) { const rad = angle * Math.PI / 180; return { x: CENTER + radius * Math.cos(rad), y: CENTER + radius * Math.sin(rad) }; }
- function cellGeometry(index: number) {
-  const label = labels[index] || 'A1';
-  const layer = FLOWER_LAYERS.indexOf(label[0]);
-  const petal = Number(label.slice(1));
-  const angle = -90 + (petal - 1) * 18;
-  const inner = 100 + layer * 52, outer = inner + 52;
-  const halfAngle = layer === 4 ? 18 : 9;
-  const center = polar((inner + outer) / 2, angle);
-  const a = polar(outer, angle - halfAngle), b = polar(outer, angle + halfAngle);
-  const c = polar(inner, angle + halfAngle), d = polar(inner, angle - halfAngle);
-  const path = `M${a.x},${a.y} A${outer},${outer} 0 0 1 ${b.x},${b.y} L${c.x},${c.y} A${inner},${inner} 0 0 0 ${d.x},${d.y} Z`;
-  return { path, center };
+ $: labels = Array.from({length:FLOWER_CELL_COUNT},(_,i)=>flowerLabel(i));
+ function remember() { history = [...history, { values:values.slice(), centerNotes:centerNotes.map(n=>n.slice()), cornerNotes:cornerNotes.map(n=>n.slice()), solution:solution?.slice()||null, activeFeature, selected, message }]; }
+ function undo() {
+  if (!history.length) return;
+  const previous=history[history.length-1]; history=history.slice(0,-1);
+  ({values,centerNotes,cornerNotes,solution,activeFeature,selected,message}=previous);
  }
- function select(index: number, event?: Event) {
-  selected = index;
-  (event?.currentTarget as SVGPathElement | undefined)?.focus();
+ function select(index:number,event?:Event) { selected=index; (event?.currentTarget as SVGPathElement)?.focus(); }
+ function enter(digit:number) {
+  remember();
+  if (digit && mode !== 'normal') {
+   const notes = mode==='center'?centerNotes:cornerNotes;
+   notes[selected] = notes[selected].includes(digit) ? notes[selected].filter(n=>n!==digit) : [...notes[selected],digit].sort();
+   if (mode==='center') centerNotes=notes.slice(); else cornerNotes=notes.slice();
+  } else {
+   values[selected]=digit; values=values.slice();
+   centerNotes[selected]=[]; cornerNotes[selected]=[];
+   centerNotes=centerNotes.slice(); cornerNotes=cornerNotes.slice();
+  }
+  solution=null; activeFeature=null;
  }
- function enter(digit: number) {
-  values[selected] = digit;
-  values = values.slice();
-  solution = null;
-  activeFeature = null;
- }
- function keydown(event: KeyboardEvent, index: number) {
-  if (/^[1-9]$/.test(event.key)) { event.preventDefault(); select(index); enter(Number(event.key)); }
-  else if (event.key === 'Backspace' || event.key === 'Delete' || event.key === '0') { event.preventDefault(); select(index); enter(0); }
+ function keydown(event:KeyboardEvent,index:number) {
+  if ((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z') {event.preventDefault();undo();return;}
+  if (/^[1-9]$/.test(event.key)) {event.preventDefault();select(index);enter(Number(event.key));}
+  else if (['Backspace','Delete','0'].includes(event.key)) {event.preventDefault();select(index);enter(0);}
+  else if (['z','x','c'].includes(event.key.toLowerCase())) {event.preventDefault();mode=event.key.toLowerCase()==='z'?'normal':event.key.toLowerCase()==='x'?'center':'corner';}
   else if (event.key.startsWith('Arrow')) {
-   event.preventDefault();
-   const next = (index + (event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : event.key === 'ArrowLeft' ? -5 : 5) + FLOWER_CELL_COUNT) % FLOWER_CELL_COUNT;
-   selected = next;
-   document.getElementById(`flower-cell-${next}`)?.focus();
+   event.preventDefault(); selected=(index+(event.key==='ArrowUp'?-20:event.key==='ArrowDown'?20:event.key==='ArrowLeft'?-1:1)+90)%90;
+   document.getElementById(`flower-cell-${selected}`)?.focus();
   }
  }
- function clearBoard() {
-  values = EMPTY();
-  selected = 0;
-  solution = null;
-  activeFeature = null;
-  message = 'Board cleared. Select a cell and enter a digit.';
- }
+ function clearBoard() {remember();values=EMPTY();centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();selected=0;solution=null;activeFeature=null;message='Board cleared.';}
  function solve() {
-  const result = solveFlower(values);
-  solution = result.solution;
-  activeFeature = 'solution';
-  if (result.status === 'solved') message = `A completion was found after ${result.nodes.toLocaleString()} search steps. Blue digits show the completion.`;
-  else if (result.status === 'invalid') message = 'There are repeated digits in a row, column, or region. Fix the highlighted cells first.';
-  else if (result.status === 'limit') message = 'Search limit reached. Add more digits and try again.';
-  else message = 'No solution fits these entries. Check the highlighted cells.';
+  const result=solveFlower(values); if(result.solution)remember(); solution=result.solution;activeFeature='solution';
+  message=result.status==='solved'?'Completion shown in blue.':result.status==='invalid'?'Fix the highlighted repeated digits first.':result.status==='limit'?'Search limit reached. Add more digits and try again.':'No solution fits these entries.';
  }
  function makeRandomSolution() {
-  const result = randomFlowerSolution();
-  solution = result.solution;
-  activeFeature = 'solution';
-  if (solution) { values = solution.slice(); message = 'Random valid Flower Sudoku solution created.'; }
-  else message = 'No solution found within the search limit.';
+  const result=randomFlowerSolution();
+  if(result.solution){remember();values=result.solution.slice();solution=null;centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();activeFeature=null;message='Random valid Flower Sudoku solution created.';}
+  else message='No solution found within the search limit.';
  }
  function generatePuzzle() {
-  const result = generateFlowerPuzzle({ clues: Math.max(20, Math.min(89, Number(generationClues) || 36)) });
-  if (result.puzzle) { values = result.puzzle.slice(); solution = result.solution; activeFeature = 'generated'; message = `Generated a uniquely solvable Flower Sudoku with ${result.clues} clues.`; }
-  else message = 'Puzzle generation could not find a solution within the search limit.';
+  const result=generateFlowerPuzzle({clues:Math.max(20,Math.min(89,Number(generationClues)||36))});
+  if(result.puzzle){remember();values=result.puzzle.slice();solution=result.solution;centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();activeFeature='generated';message=`Generated a uniquely solvable Flower Sudoku with ${result.clues} clues.`;}
+  else message='Puzzle generation could not find a solution within the search limit.';
  }
 </script>
 
 <section class="flower-tool" aria-labelledby="flower-title">
- <header class="flower-header">
-  <div><p class="eyebrow">ROUND 9 · DRAUPADI’S SWAYAMVARA</p><h2 id="flower-title">Flower Sudoku editor &amp; solver</h2><p>Fill the 90-cell flower with 1–9 once in each of its ten rows, columns, and outlined regions. Rows and columns curve around the flower in opposite directions.</p></div>
-  <button onclick={clearBoard}>Clear board</button>
- </header>
+ <header><p class="eyebrow">ROUND 9 · DRAUPADI’S SWAYAMVARA</p><h2 id="flower-title">Flower Sudoku editor &amp; solver</h2><p>Fill each column and region with 1–9. The circular layout uses the flower’s A–E cell mapping.</p></header>
  <div class="flower-layout">
   <div class="editor">
    <svg viewBox="0 0 800 800" role="group" aria-label="90-cell Flower Sudoku board">
-    {#each Array.from({length:FLOWER_CELL_COUNT},(_,index)=>index) as index}
-     {@const geometry=cellGeometry(index)}
-     {@const label=labels[index]}
-     <path id={`flower-cell-${index}`} d={geometry.path} class="cell" class:related={highlightedCells.has(index)} class:selected={selected===index} class:conflict={conflicts.has(index)} role="button" aria-label={`${label}${values[index]?`, digit ${values[index]}`:', empty'}`} aria-pressed={selected===index} tabindex={selected===index?0:-1} onclick={(event)=>select(index,event)} onfocus={()=>selected=index} onkeydown={(event)=>keydown(event,index)} />
-     {#if values[index]}<text x={geometry.center.x} y={geometry.center.y+5} class:solved-digit={!!solution&&values[index]!==solution[index]} class="digit">{values[index]}</text>{:else if solution}<text x={geometry.center.x} y={geometry.center.y+5} class="digit solved-digit">{solution[index]}</text>{/if}
+    {#each FLOWER_GEOMETRIES as geometry,index}
+     {@const displayed=values[index] || (activeFeature==='solution'?solution?.[index]:0)}
+     <path id={`flower-cell-${index}`} d={geometry.path} class="cell" style:fill={conflicts.has(index)?'#f5b8ad':selected===index?'#ffd477':highlightColors[flowerHighlightMask(selected,index)]} role="button" aria-label={`${labels[index]}${values[index]?`, digit ${values[index]}`:', empty'}`} aria-pressed={selected===index} tabindex={selected===index?0:-1} onclick={event=>select(index,event)} onfocus={()=>selected=index} onkeydown={event=>keydown(event,index)}/>
+     {#if displayed}<text x={geometry.center.x} y={geometry.center.y} class="digit" class:solved-digit={!values[index]}>{displayed}</text>
+     {:else}
+      {#if centerNotes[index].length}<text x={geometry.center.x} y={geometry.center.y} class="notes">{centerNotes[index].join('')}</text>{/if}
+      {#if cornerNotes[index].length}<text x={geometry.center.x} y={geometry.center.y-13} class="notes corner">{cornerNotes[index].join('')}</text>{/if}
+     {/if}
     {/each}
-    <circle cx={CENTER} cy={CENTER} r="100" class="hub" />
-    <text x={CENTER} y={CENTER+5} text-anchor="middle" class="hub-label">{labels[selected]}</text>
+    {#each FLOWER_REGION_BORDERS as border}<path d={border} class="region-border"/>{/each}
+    <circle cx={CENTER} cy={CENTER} r="100" class="hub"/><text x={CENTER} y={CENTER} class="hub-label">{labels[selected]}</text>
    </svg>
-   <div class="number-pad" aria-label="Digit entry">
-    {#each Array.from({length:9},(_,i)=>i+1) as digit}<button class:active={values[selected]===digit} onclick={()=>enter(digit)} aria-label={`Enter ${digit}`}>{digit}</button>{/each}
-    <button onclick={()=>enter(0)} aria-label="Clear selected cell">⌫</button>
-    <button class="solve" onclick={solve}>Solve</button>
-   </div>
-   <div class="generator-controls"><button onclick={makeRandomSolution}>Random solution</button><label>Clues<input type="number" min="20" max="89" bind:value={generationClues}/></label><button onclick={generatePuzzle}>Generate unique puzzle</button></div>
-   <div class="unit-legend" aria-label="Selected cell constraints"><span class="ccw">Counterclockwise column</span><span class="cw">Clockwise column</span><span class="inner">Inner region</span><span class="outer">Outer region</span></div>
+   <div class="unit-legend" aria-label="Selected cell constraints"><span class="ccw">Counterclockwise column</span><span class="cw">Clockwise column</span><span class="region">Region</span></div>
    <p class="status" aria-live="polite">{message}</p>
   </div>
-  <aside class="reference"><h3>Official Round 9 example</h3><p>Use the booklet diagram as a reference while entering clues.</p><img src="/wsc2026/r09-01.png" alt="Official Flower Sudoku puzzle and completed example"/><a href="/wsc2026/WSC2026IB.pdf#page=30" target="_blank" rel="noreferrer">Open booklet page 30 ↗</a></aside>
+  <SudokuAnswerControls {mode} canUndo={history.length>0} onDigit={enter} onMode={next=>mode=next} onDelete={()=>enter(0)} onUndo={undo}>
+   <button class="primary" onclick={solve}>Solve</button>
+   <button onclick={clearBoard}>Clear board</button>
+   <button onclick={makeRandomSolution}>Random solution</button>
+   <label>Clues<input type="number" min="20" max="89" bind:value={generationClues}/></label>
+   <button onclick={generatePuzzle}>Generate unique puzzle</button>
+   <a href="/wsc2026/WSC2026IB.pdf#page=30" target="_blank" rel="noreferrer">Booklet rules &amp; example · page 30 ↗</a>
+  </SudokuAnswerControls>
  </div>
 </section>
 
 <style>
- .flower-tool{margin:24px 0;padding:24px;background:#fff;border:1px solid #dce1d6;border-radius:10px;color:#20382e}.flower-header{display:flex;justify-content:space-between;gap:20px;align-items:start}.flower-header h2{margin:0 0 8px;font-size:22px}.flower-header p:not(.eyebrow){max-width:680px;color:#697467;line-height:1.5}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.4px;color:#6a7869;margin:0 0 6px}.flower-header button,.number-pad button,.generator-controls button{border:1px solid #c5cec4;background:#f8faf6;color:#244d3b;padding:8px 11px;border-radius:6px;cursor:pointer}.flower-layout{display:grid;grid-template-columns:minmax(400px,1fr) minmax(240px,310px);gap:22px;align-items:start;margin-top:14px}.editor{max-width:680px;margin:auto;width:100%}.editor svg{display:block;width:min(100%,650px);height:auto;margin:auto;touch-action:none}.cell{fill:#fff;stroke:#303833;stroke-width:1;cursor:pointer}.cell.related{fill:#e7f1ed}.cell.selected{fill:#ffe29a}.cell.conflict{fill:#f5b8ad}.cell:focus{outline:none}.digit{font:500 12px Inter,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle;fill:#1f3027;pointer-events:none}.solved-digit{fill:#2469bf}.unit-outline{fill:none;stroke-width:3.5;stroke-linejoin:round;opacity:.65;pointer-events:none}.unit-outline.column{stroke-width:3}.unit-outline.inner-region{stroke-width:4}.unit-outline.outer-region{stroke-width:4}.hub{fill:#676767;stroke:#171723;stroke-width:2}.hub-label{font:700 13px Inter,Arial,sans-serif;fill:#f8f8f8;letter-spacing:.4px;pointer-events:none}.number-pad{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px}.number-pad button{width:40px;height:40px;padding:0;font-size:17px}.number-pad button.active,.number-pad .solve{background:#244d3b;color:white}.number-pad .solve{width:auto;padding:0 16px}.generator-controls{display:flex;justify-content:center;align-items:end;gap:8px;flex-wrap:wrap;margin:12px 0}.generator-controls label{display:flex;flex-direction:column;gap:4px;font-size:11px}.generator-controls input{width:72px;padding:7px}.unit-legend{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;font-size:11px;color:#5e695f}.unit-legend span::before{content:'';display:inline-block;width:9px;height:9px;margin-right:5px;border-radius:50%}.unit-legend .ccw::before{background:#14acb0}.unit-legend .cw::before{background:#318ee8}.unit-legend .inner::before{background:#ff7700}.unit-legend .outer::before{background:#c61a15}.status{min-height:24px;text-align:center;font-size:13px;color:#59675d}.reference{border-left:1px solid #dce1d6;padding-left:18px}.reference h3{margin:0 0 8px;font-size:17px}.reference p{font-size:13px;line-height:1.55;color:#697467}.reference img{display:block;width:100%;height:auto;border:1px solid #e1e5dc;border-radius:4px}.reference a{display:inline-block;margin:10px 0;color:#315e43;font-size:13px}@media(max-width:760px){.flower-tool{padding:16px}.flower-header{display:block}.flower-header button{margin-top:4px}.flower-layout{grid-template-columns:1fr}.reference{border-left:0;border-top:1px solid #dce1d6;padding:16px 0 0}.reference img{max-width:420px;margin:auto}}
+ .flower-tool{margin:24px 0;padding:24px;background:#fff;border:1px solid #dce1d6;border-radius:10px;color:#20382e}h2{margin:0 0 8px;font-size:22px}header>p:not(.eyebrow){color:#697467;line-height:1.5}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.4px;color:#6a7869;margin:0 0 6px}.flower-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:32px;align-items:start;margin-top:20px}.editor{min-width:0;width:100%;max-width:760px;margin:auto}svg{display:block;width:100%;height:auto;touch-action:none}.cell{stroke:#737b74;stroke-width:1;cursor:pointer}.cell:focus{outline:none}.digit{font:500 24px Inter,Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#1f3027;pointer-events:none}.notes{font:500 12px Inter,Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#3a5947;pointer-events:none}.corner{font-size:10px}.solved-digit{fill:#2469bf}.region-border{fill:none;stroke:#252b27;stroke-width:3.5;stroke-linejoin:round;pointer-events:none}.hub{fill:#676767;stroke:#171723;stroke-width:3.5}.hub-label{font:700 18px Inter,Arial,sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:central;pointer-events:none}.unit-legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:12px;color:#5e695f}.unit-legend span::before{content:'';display:inline-block;width:11px;height:11px;margin-right:5px;border-radius:3px}.ccw::before{background:#9fd9d9}.cw::before{background:#9cbceb}.region::before{background:#edc184}.status{min-height:24px;text-align:center;font-size:13px;color:#59675d;line-height:1.5}@media(max-width:760px){.flower-tool{padding:16px}.flower-layout{grid-template-columns:1fr;gap:20px}}
 </style>

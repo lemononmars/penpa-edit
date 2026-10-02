@@ -1,19 +1,40 @@
 <script lang="ts">
- import { PENTAGRAM_CELL_COUNT, PENTAGRAM_UNITS, PENTAGRAM_CELL_UNITS, pentagramGeometry, pentagramPosition, pentagramConflicts } from './wsc2026/pentagram.mjs';
- let values = Array(PENTAGRAM_CELL_COUNT).fill(0), selected = 0, omitted = 9;
- $: conflicts = pentagramConflicts(values, Number(omitted));
+ import SudokuAnswerControls from './SudokuAnswerControls.svelte';
+ import { PENTAGRAM_CELL_COUNT, PENTAGRAM_UNITS, PENTAGRAM_CELL_UNITS, pentagramGeometry, pentagramPosition, pentagramConflicts, solvePentagram, randomPentagramSolution, generatePentagramPuzzle } from './wsc2026/pentagram.mjs';
+ let values = Array(PENTAGRAM_CELL_COUNT).fill(0), selected = 0, generationClues=32;
+ const EMPTY_NOTES=()=>Array.from({length:80},()=>[] as number[]);
+ let centerNotes=EMPTY_NOTES(),cornerNotes=EMPTY_NOTES(),history:any[]=[],solution:number[]|null=null;
+ let mode:'normal'|'center'|'corner'='normal';
+ let message='Select a cell and enter a digit.';
+ $: conflicts = pentagramConflicts(values);
  $: related = new Set(PENTAGRAM_CELL_UNITS[selected].flatMap((id) => PENTAGRAM_UNITS[id]));
- $: digits = Array.from({length:9}, (_, i) => i + 1).filter((digit) => digit !== Number(omitted));
- $: complete = values.every(Boolean) && conflicts.size === 0;
+ $: usedDigits = new Set(values.filter(Boolean));
+ $: complete = values.every(Boolean) && conflicts.size === 0 && usedDigits.size===8;
  const geometries = Array.from({length:80}, (_, i) => pentagramGeometry(i));
  const line = (point:number, u1:number, v1:number, u2:number, v2:number) => {
   const a = pentagramPosition(point,u1,v1), b = pentagramPosition(point,u2,v2);
   return `M${a.x},${a.y} L${b.x},${b.y}`;
  };
- function enter(value:number) { values[selected] = value; values = values.slice(); }
+ function remember(){history=[...history,{values:values.slice(),centerNotes:centerNotes.map(n=>n.slice()),cornerNotes:cornerNotes.map(n=>n.slice()),selected,solution:solution?.slice()||null,message}];}
+ function undo(){if(!history.length)return;const previous=history[history.length-1];history=history.slice(0,-1);({values,centerNotes,cornerNotes,selected,solution,message}=previous);}
+ function enter(value:number) {
+  remember();solution=null;
+  if(value&&mode!=='normal'){
+   const notes=mode==='center'?centerNotes:cornerNotes;
+   notes[selected]=notes[selected].includes(value)?notes[selected].filter(n=>n!==value):[...notes[selected],value].sort();
+   if(mode==='center')centerNotes=notes.slice();else cornerNotes=notes.slice();
+  }else{values[selected]=value;values=values.slice();centerNotes[selected]=[];cornerNotes[selected]=[];centerNotes=centerNotes.slice();cornerNotes=cornerNotes.slice();}
+ }
+ function clear(){remember();values=Array(80).fill(0);centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();selected=0;solution=null;message='Board cleared.';}
+ function applyBoard(board:number[],notice:string){remember();values=board.slice();centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();solution=null;message=notice;}
+ function solve(){const result=solvePentagram(values);if(result.solution){remember();solution=result.solution;message='Completion shown in blue.';}else message=result.status==='invalid'?'Check repeated digits and use only eight different digits.':result.status==='limit'?'Search limit reached. Add more digits and try again.':'No solution fits these entries.';}
+ function random(){const result=randomPentagramSolution();if(result.solution)applyBoard(result.solution,'Random valid Pentagram solution created.');else message='Search limit reached. Try again.';}
+ function generate(){const result=generatePentagramPuzzle({clues:Math.max(20,Math.min(79,Number(generationClues)||32))});if(result.puzzle)applyBoard(result.puzzle,`Generated a uniquely solvable Pentagram with ${result.clues} clues.`);else message='Search limit reached. Try again.';}
  function keydown(event:KeyboardEvent,index:number) {
+  if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){event.preventDefault();undo();return;}
   if (/^[1-9]$/.test(event.key)) { event.preventDefault(); selected=index; enter(Number(event.key)); }
   else if (['Backspace','Delete','0'].includes(event.key)) { event.preventDefault(); selected=index; enter(0); }
+  else if(['z','x','c'].includes(event.key.toLowerCase())){event.preventDefault();mode=event.key.toLowerCase()==='z'?'normal':event.key.toLowerCase()==='x'?'center':'corner';}
   else if (event.key.startsWith('Arrow')) {
    event.preventDefault();
    const direction = event.key === 'ArrowLeft' ? [-1,0] : event.key === 'ArrowRight' ? [1,0] : event.key === 'ArrowUp' ? [0,-1] : [0,1];
@@ -29,22 +50,26 @@
 </script>
 
 <section class="pentagram-tool" aria-labelledby="pentagram-title">
- <header><div><p class="eyebrow">ROUND 9 · PAGE 29</p><h2 id="pentagram-title">Pentagram Sudoku editor</h2><p>Enter the same eight digits in every row, column, and bold region. Each row or column runs across two adjacent star points.</p></div><button onclick={()=>{values=Array(80).fill(0);selected=0;}}>Clear board</button></header>
- <label class="omit">Omitted digit <select bind:value={omitted}>{#each Array.from({length:9},(_,i)=>i+1) as digit}<option value={digit}>{digit}</option>{/each}</select></label>
+ <header><div><p class="eyebrow">ROUND 9 · PAGE 29</p><h2 id="pentagram-title">Pentagram Sudoku editor &amp; solver</h2><p>Use the same eight of the digits 1–9 in every row, column, and bold region. Each row or column runs across two adjacent star points.</p></div></header>
+ <div class="pentagram-layout"><div class="editor">
  <svg viewBox="0 0 600 570" role="group" aria-label="80-cell Pentagram Sudoku board">
   {#each geometries as geometry,index}
    <path id={`pentagram-${index}`} d={geometry.path} class="cell" class:related={related.has(index)} class:selected={selected===index} class:conflict={conflicts.has(index)} role="button" tabindex={selected===index?0:-1} aria-pressed={selected===index} aria-label={`Star point ${geometry.point+1}, cell ${geometry.u+1}, ${geometry.v+1}${values[index]?`, digit ${values[index]}`:', empty'}`} onclick={(event)=>{selected=index;event.currentTarget.focus();}} onfocus={()=>selected=index} onkeydown={(event)=>keydown(event,index)}/>
-   {#if values[index]}<text x={geometry.center.x} y={geometry.center.y} class="digit">{values[index]}</text>{/if}
+   {#if values[index]||solution?.[index]}<text x={geometry.center.x} y={geometry.center.y} class="digit" class:solved-digit={!values[index]}>{values[index]||solution?.[index]}</text>
+   {:else}{#if centerNotes[index].length}<text x={geometry.center.x} y={geometry.center.y} class="notes">{centerNotes[index].join('')}</text>{/if}{#if cornerNotes[index].length}<text x={geometry.center.x} y={geometry.center.y-12} class="notes corner">{cornerNotes[index].join('')}</text>{/if}{/if}
   {/each}
   {#each Array.from({length:5},(_,i)=>i) as point}
    <path d={`${line(point,0,0,1,0)} ${line(point,1,0,1,1)} ${line(point,1,1,0,1)} ${line(point,0,1,0,0)} ${line(point,.5,0,.5,1)}`} class="bold"/>
   {/each}
  </svg>
- <div class="pad" aria-label="Digit entry">{#each digits as digit}<button class:active={values[selected]===digit} onclick={()=>enter(digit)}>{digit}</button>{/each}<button onclick={()=>enter(0)} aria-label="Clear selected cell">⌫</button></div>
- <p class="status" aria-live="polite">{complete?'Complete':conflicts.size?'Check the highlighted conflicts.':'Select a cell and enter a digit.'}</p>
- <p class="reference">80 cells · 20 rows/columns · 10 regions · <a href="/wsc2026/WSC2026IB.pdf#page=29" target="_blank" rel="noreferrer">Booklet geometry and round rules ↗</a></p>
+ <p class="status" aria-live="polite">{complete?'Complete':usedDigits.size>8?'Use eight of the digits 1–9 across the whole puzzle.':conflicts.size?'Check the highlighted conflicts.':message}</p>
+ </div><SudokuAnswerControls {mode} canUndo={history.length>0} onDigit={enter} onMode={next=>mode=next} onDelete={()=>enter(0)} onUndo={undo}>
+  <button class="primary" onclick={solve}>Solve</button><button onclick={clear}>Clear board</button><button onclick={random}>Random solution</button>
+  <label>Clues<input type="number" min="20" max="79" bind:value={generationClues}/></label><button onclick={generate}>Generate unique puzzle</button>
+  <a href="/wsc2026/WSC2026IB.pdf#page=29" target="_blank" rel="noreferrer">Booklet geometry &amp; rules · page 29 ↗</a>
+ </SudokuAnswerControls></div>
 </section>
 
 <style>
- .pentagram-tool{margin:24px 0;padding:24px;background:#fff;border:1px solid #dce1d6;border-radius:10px;color:#20382e}header{display:flex;justify-content:space-between;gap:20px}h2{margin:0 0 8px}header p:not(.eyebrow){max-width:650px;color:#697467;line-height:1.5}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.4px;color:#6a7869;margin:0 0 6px}button,select{border:1px solid #c5cec4;background:#f8faf6;color:#244d3b;padding:8px 11px;border-radius:6px;cursor:pointer}.omit{display:flex;gap:8px;align-items:center;margin:12px 0}svg{display:block;width:100%;max-width:650px;height:auto;margin:auto}.cell{fill:white;stroke:#333;stroke-width:.8;cursor:pointer}.cell.related{fill:#e7f1ed}.cell.selected{fill:#ffe29a}.cell.conflict{fill:#f5b8ad}.cell:focus{outline:none}.digit{text-anchor:middle;dominant-baseline:central;font:500 22px Arial,sans-serif;fill:#1f3027;pointer-events:none}.bold{fill:none;stroke:#202020;stroke-width:4;stroke-linejoin:round;pointer-events:none}.pad{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:12px auto}.pad button{width:40px;height:40px;padding:0;font-size:17px}.pad button.active{background:#244d3b;color:white}.status,.reference{text-align:center;font-size:13px;color:#697467}.reference a{color:#315e43}@media(max-width:740px){.pentagram-tool{padding:16px}header{display:block}header button{margin-top:8px}}
+ .pentagram-tool{margin:24px 0;padding:24px;background:#fff;border:1px solid #dce1d6;border-radius:10px;color:#20382e}h2{margin:0 0 8px;font-size:22px}header p:not(.eyebrow){max-width:680px;color:#697467;line-height:1.5}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.4px;color:#6a7869;margin:0 0 6px}.pentagram-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:32px;margin-top:20px;align-items:start}.editor{min-width:0}svg{display:block;width:100%;max-width:650px;height:auto;margin:auto}.cell{fill:#fff;stroke:#333;stroke-width:.8;cursor:pointer}.cell.related{fill:#e7f1ed}.cell.selected{fill:#ffe29a}.cell.conflict{fill:#f5b8ad}.cell:focus{outline:none}.digit{text-anchor:middle;dominant-baseline:central;font:500 22px Arial,sans-serif;fill:#1f3027;pointer-events:none}.solved-digit{fill:#2469bf}.notes{font:500 11px Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#3a5947;pointer-events:none}.corner{font-size:9px}.bold{fill:none;stroke:#202020;stroke-width:4;stroke-linejoin:round;pointer-events:none}.status{text-align:center;font-size:13px;color:#697467;line-height:1.5}@media(max-width:760px){.pentagram-tool{padding:16px}.pentagram-layout{grid-template-columns:1fr;gap:20px}}
 </style>

@@ -1514,6 +1514,16 @@ class Puzzle_square extends Puzzle {
         var p_x, p_y, factor;
         var str_alph_low = "abcdefghijklmnopqrstuvwxyz";
         for (var i in this[pu].number) {
+            // Auto Solver draws the current puzzle's proved facts separately.
+            // Saved solver answers may cease to be forced after a clue edit and
+            // must not be painted over the new candidate pencilmarks.
+            var entry = this[pu].number[i];
+            if (pu === "pu_a" && entry && entry[1] === 9 && entry[2] === "1" &&
+                window.SudokuTools && window.SudokuTools.autoEnabled &&
+                typeof SudokuSolver !== "undefined" && SudokuSolver.isClassicSudoku(this) &&
+                this.centerlist.indexOf(Number(i)) !== -1) {
+                continue;
+            }
             var numberColor = UserSettings.custom_colors_on && this[pu + "_col"].number[i] ? this[pu + "_col"].number[i] : "none";
             if (i.slice(-1) === "E") { // Overwriting in Edge Mode
                 if (!this.point[i.slice(0, -1)]) continue;

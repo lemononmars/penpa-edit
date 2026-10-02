@@ -217,6 +217,9 @@
   let panStartY = 0;
   let checkMessage = "";
   let solutionVisible = true;
+  let modeControlsOpen = true;
+  let numberTextOpen = false;
+  let numberText = "";
   let checkHighlight: HTMLElement | null = null;
   let variantMenuOpen = false;
   let inputVariantMenuOpen = false;
@@ -314,6 +317,7 @@
   type ToolPanelOption = {
     value: string;
     label: string;
+    glyph?: string;
     input?: string;
     action?: "backspace" | "delete";
     submode?: string;
@@ -399,7 +403,7 @@
       pu.mode_set("combi");
       pu.subcombimode("edgex");
     }
-    if (nextLayer === "modes") queueMicrotask(moveLegacyControls);
+    if (nextLayer === "modes" || (editorMode && nextLayer === "solution")) queueMicrotask(moveLegacyControls);
     queueMicrotask(() => {
       syncState();
       syncToolPanel();
@@ -471,6 +475,26 @@
     solutionVisible = visible;
     (window as any).penpaEditorHideSolution = editorMode && !visible;
     (window as any).pu?.redraw?.();
+  }
+
+  function insertNumberText() {
+    const pu = (window as any).pu;
+    if (!pu || pu.mode?.[pu.mode.qa]?.edit_mode !== "number") return;
+    pu.submode_check?.("sub_number8");
+    pu.key_space?.();
+    for (const char of numberText) pu.key_number?.(char);
+    pu.redraw?.();
+    queueMicrotask(syncState);
+  }
+
+  function loadNumberText() {
+    const pu = (window as any).pu;
+    if (!pu || pu.mode?.[pu.mode.qa]?.edit_mode !== "number") return;
+    const submode = String(pu.mode[pu.mode.qa].number?.[0] || "");
+    const mark = ["3", "9", "11"].includes(submode)
+      ? pu[pu.mode.qa]?.numberS?.[pu.cursolS]
+      : pu[pu.mode.qa]?.number?.[pu.cursol];
+    numberText = String(mark?.[0] || "").trim();
   }
 
   function chooseGenreGroup(group: string) {
@@ -673,12 +697,6 @@
 
   function syncToolPanel() {
     const pu = (window as any).pu;
-    if (editorMode && layer === "solution") {
-      toolPanelMode = "Composite · Edge X";
-      toolPanelOptions = [];
-      toolPanelSelected = new Set<string>();
-      return;
-    }
     if (editorMode && layer === "genre") {
       if (selectedGenre !== "laxman-rekha" || !pu) {
         toolPanelOptions = [];
@@ -724,7 +742,7 @@
       toolPanelSelected = new Set<string>();
       return;
     }
-    const mode = layer === "solution" ? "sudoku" : pu?.mode?.[pu?.mode?.qa]?.edit_mode || "sudoku";
+    const mode = layer === "solution" && !editorMode ? "sudoku" : pu?.mode?.[pu?.mode?.qa]?.edit_mode || "sudoku";
     const setting = pu?.mode?.[pu?.mode?.qa]?.[mode] || [];
     const submode = String(setting[0] || "");
     const variant = String(pu?.activeSudokuVariant || "classic");
@@ -799,7 +817,15 @@
       ].includes(variant)) &&
       /^arrow_/.test(submode)
     ) {
-      if (
+      if (/^(?:arrow_fouredge_[BGE]|arrow_cross|arrow_eight|arrow_fourtip)$/.test(submode)) {
+        const labels = submode === "arrow_cross" || submode === "arrow_fourtip"
+          ? ["←", "↑", "→", "↓", "↖", "↗", "↘", "↙"]
+          : arrows;
+        const count = Number(pu?.onoff_symbolmode_list?.[submode] || labels.length);
+        toolPanelOptions = labels.slice(0, count).map((glyph, index) => ({
+          value: String(index + 1), label: `Arrow ${index + 1}`, glyph, num: index + 1,
+        }));
+      } else if (
         [
           "quadmax",
           "quadmin",
@@ -1133,19 +1159,20 @@
         "input, textarea, select, [contenteditable='true'], .modal, .swal2-container",
       ) ||
       isEmbedded ||
-      window.matchMedia("(max-width: 768px)").matches
+      (!editorMode && window.matchMedia("(max-width: 768px)").matches)
     )
       return;
-    const layerByKey: Record<string, "problem" | "solution" | "modes"> = {
+    const layerByKey: Record<string, "problem" | "solution" | "modes" | "genre"> = {
       F2: editorMode ? "modes" : "problem",
       F3: "solution",
-      F4: "modes",
+      F4: editorMode ? "genre" : "modes",
     };
     const nextLayer = layerByKey[event.key];
     if (!nextLayer) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    chooseLayer(nextLayer);
+    if (editorMode && window.matchMedia("(max-width: 768px)").matches) showMobileLayer(nextLayer);
+    else chooseLayer(nextLayer);
   }
 
   function revealAllModes() {
@@ -2870,6 +2897,7 @@
     class:panel-top={mobilePanelPosition === "above"}
     class:panel-bottom={mobilePanelPosition === "below"}
     class:genre-open={editorMode && mobileDeckView === "genre"}
+    class:solve-open={editorMode && layer === "solution"}
     aria-label="Puzzle inputs"
   >
     {#if !isEmbedded}
@@ -2897,7 +2925,7 @@
             on:click={() => showMobileLayer("modes")}>Misc</button>
         {/if}
         {#if editorMode}
-          <button type="button" role="tab" aria-selected={mobileDeckView === "genre"} class:active={mobileDeckView === "genre"} on:click={() => showMobileLayer("genre")}>Genre</button>
+          <button type="button" role="tab" aria-selected={mobileDeckView === "genre"} class:active={mobileDeckView === "genre"} on:click={() => showMobileLayer("genre")}>Genre <kbd>F4</kbd></button>
         {/if}
       </div>
       {#if editorMode}
@@ -2908,7 +2936,7 @@
       {/if}
     {/if}
 
-    <div class:hidden-section={mobileDeckView !== "keypad"} class="mobile-keypad">
+    <div class:hidden-section={mobileDeckView !== "keypad" || (editorMode && layer === "solution")} class="mobile-keypad">
       {#if !isEmbedded}
         <button type="button" class="deck-action action-slot"
           class:active={mobileActiveTab === "actions"}
@@ -2953,7 +2981,7 @@
                 class="symbol-canvas"
               ></canvas>
             {:else}
-              {option.label}
+              {option.glyph || option.label}
             {/if}
           </button>
         {/each}
@@ -2976,11 +3004,6 @@
           <span>{mobileInputModeLabel}</span>
           {#if mobileInputModeCount > 1}<i class="fa fa-refresh cycle-indicator" aria-hidden="true"></i>{/if}
         </button>
-      {:else if editorMode && layer === "solution"}
-        <div class="editor-solve-mobile">
-          <strong>Composite · Edge X</strong>
-          <label><input type="checkbox" checked={solutionVisible} on:change={(event) => setSolutionVisible((event.currentTarget as HTMLInputElement).checked)} /> Show solution</label>
-        </div>
       {:else}
         <div class="solver-shared-keypad">
           <SudokuKeypad
@@ -3008,9 +3031,24 @@
       <div bind:this={mobileVariantSlot} class="mobile-variant-slot"></div>
     </div>
     <div class="mobile-deck-pane"
-      class:hidden-section={mobileDeckView !== "misc"}
+      class:hidden-section={mobileDeckView !== "misc" && !(editorMode && layer === "solution")}
       aria-label="Mode controls">
+      {#if editorMode && layer === "solution"}
+        <div class="editor-solve-mobile">
+          <label><input type="checkbox" checked={solutionVisible} on:change={(event) => setSolutionVisible((event.currentTarget as HTMLInputElement).checked)} /> Show solution</label>
+        </div>
+      {/if}
       <div bind:this={mobileMiscSlot} class="mobile-misc-slot"></div>
+      {#if editorMode && (layer === "modes" || layer === "solution") && toolPanelOptions.length}
+        <div class="tool-input-panel" aria-label={`${toolPanelMode} mobile input panel`}>
+          {#each toolPanelOptions as option, index}
+            <button type="button" aria-label={option.label} class:selected={toolPanelSelected.has(option.value)} class:panel-action={Boolean(option.action)} on:pointerdown={(event) => useToolPanelOption(event, option)}>
+              {#if option.sym && option.num !== undefined}<canvas use:renderSymbol={{ sym: option.sym, num: option.num, darkTheme }} class="symbol-canvas"></canvas>{:else}{option.glyph || option.label}{/if}
+              {#if !option.action && index < 9}<kbd>{index + 1}</kbd>{/if}
+            </button>
+          {/each}
+        </div>
+      {/if}
     </div>
     {#if editorMode}
       <div class="mobile-deck-pane" class:hidden-section={mobileDeckView !== "genre"} aria-label="Genre controls">
@@ -3024,7 +3062,7 @@
                 on:pointerdown={(event) => useToolPanelOption(event, option)}>
                 {#if option.sym && option.num !== undefined}
                   <canvas use:renderSymbol={{ sym: option.sym, num: option.num, darkTheme }} class="symbol-canvas"></canvas>
-                {:else}{option.label}{/if}
+                {:else}{option.glyph || option.label}{/if}
                 {#if !option.action && index < 9}<kbd>{index + 1}</kbd>{/if}
               </button>
             {/each}
@@ -3168,7 +3206,7 @@
               ><i class="fa fa-check" aria-hidden="true"></i>{currentVariant === "sudokuwithstars" ? "Star" : "Solve"} <kbd>F3</kbd></button
             >
 {#if editorMode}
-            <button class:active={layer === "genre"} on:click={() => chooseLayer("genre")}><i class="fa fa-th-large" aria-hidden="true"></i>Genre</button>
+            <button class:active={layer === "genre"} on:click={() => chooseLayer("genre")}><i class="fa fa-th-large" aria-hidden="true"></i>Genre <kbd>F4</kbd></button>
             {:else}
             <button
               class:active={layer === "modes"}
@@ -3180,8 +3218,6 @@
         </section>
         {#if editorMode && layer === "solution"}
           <section class="editor-solve-options" aria-label="Solve options">
-            <strong>Composite · Edge X</strong>
-            <p>Drag along cell edges for the loop. Click an edge to mark X.</p>
             <label><input type="checkbox" checked={solutionVisible} on:change={(event) => setSolutionVisible((event.currentTarget as HTMLInputElement).checked)} /> Show solution</label>
           </section>
         {/if}
@@ -3278,7 +3314,7 @@
           {/if}
         </section>
 
-        {#if layer === "solution"}
+        {#if layer === "solution" && !editorMode}
           <section
             class="tool-help"
             class:hidden-section={layer === "modes"}
@@ -3298,7 +3334,7 @@
           <label class="genre-label" for="puzzle-genre">Genre</label>
           <select id="puzzle-genre" bind:value={selectedGenre} on:change={() => chooseGenre(selectedGenre)}>
             <option value="">Choose a genre</option>
-            <option value="laxman-rekha">Laxman Rekha</option>
+            <option value="laxman-rekha">✎ Laxman Rekha</option>
           </select>
           {#if selectedGenre === "laxman-rekha"}
             <p class="genre-intro">Round 10 · Loop Mashup. Draw a single loop on cell edges, then place its six kinds of clues.</p>
@@ -3325,13 +3361,17 @@
         <section
           bind:this={legacyModesSection}
           class="legacy-modes-section"
-          class:hidden-section={layer !== "modes"}
+          class:hidden-section={layer !== "modes" && !(editorMode && layer === "solution")}
         >
           <div class="modes-heading">
             <h2>Mode controls</h2>
-            <button type="button" on:click={revealAllModes}>All modes</button>
+            <div class="modes-heading-actions">
+              <button type="button" on:click={revealAllModes}>All modes</button>
+              <button type="button" aria-expanded={modeControlsOpen} on:click={() => (modeControlsOpen = !modeControlsOpen)}>{modeControlsOpen ? "Hide" : "Show"}</button>
+            </div>
           </div>
           <div class="tool-picker" aria-label="Penpa tool picker">
+            <div class="tool-picker-details" class:hidden-section={!modeControlsOpen}>
             <div class="tool-picker-modes" aria-label="Mode">
               {#each pickerModes as mode}
                 <button
@@ -3433,6 +3473,21 @@
               </div>
             {/if}
 
+            {#if pickerMode === "number"}
+              <div class="tool-picker-section number-text-section">
+                <button type="button" class="number-text-tab" class:active={numberTextOpen} aria-expanded={numberTextOpen} on:click={() => (numberTextOpen = !numberTextOpen)}>Text</button>
+                {#if numberTextOpen}
+                  <label for="number-text-input">Enter text for the selected cell</label>
+                  <textarea id="number-text-input" bind:value={numberText} rows="3" maxlength="1000"></textarea>
+                  <div class="number-text-actions">
+                    <button type="button" on:click={insertNumberText}>Insert</button>
+                    <button type="button" on:click={() => (numberText = "")}>Clear</button>
+                    <button type="button" on:click={loadNumberText}>Load</button>
+                  </div>
+                {/if}
+              </div>
+            {/if}
+
             {#if pickerStyleOptions.length}
               <div class="tool-picker-section">
                 <span class="tool-picker-label">Style</span>
@@ -3443,6 +3498,7 @@
                       class:active={pickerStyleValue === option.value}
                       class:surface-swatch={pickerMode === "surface" || pickerMode === "multicolor"}
                       class:number-style-preview={pickerMode === "number" || pickerMode === "sudoku"}
+                      class:symbol-layer-option={pickerMode === "symbol" && ["1", "2"].includes(option.value)}
                       data-style-value={option.value}
                       title={pickerStyleTitle(option)}
                       aria-label={pickerStyleTitle(option)}
@@ -3450,7 +3506,7 @@
                     >
                       {#if pickerMode === "number" || pickerMode === "sudoku"}
                         <svg class="number-style-svg" viewBox="0 0 36 36" aria-hidden="true">
-                          <rect class:white-cell={option.value === "4"} x="2" y="2" width="32" height="32" rx="1" />
+                          <rect class:white-cell={option.value === "4"} class:gray-cell={option.value === "5"} x="2" y="2" width="32" height="32" rx="1" />
                           {#if ["5", "6", "7", "11"].includes(option.value)}
                             <circle
                               cx="18" cy="18" r="11"
@@ -3497,6 +3553,7 @@
                 </div>
               </div>
             {/if}
+            </div>
             <div class="tool-picker-current">
               <span>Current</span><strong>{pickerSelection}</strong>
               {#if pickerAction}
@@ -3677,7 +3734,7 @@
                     class="symbol-canvas"
                   ></canvas>
                 {:else}
-                  {option.label}
+                  {option.glyph || option.label}
                 {/if}
                 {#if !option.action && index < 9}<kbd>{index + 1}</kbd>{/if}
               </button>
@@ -3726,7 +3783,7 @@
                     class="symbol-canvas"
                   ></canvas>
                 {:else}
-                  {option.label}
+                  {option.glyph || option.label}
                 {/if}
                 {#if !option.action && index < 9}<kbd>{index + 1}</kbd>{/if}
               </button>
@@ -4962,6 +5019,7 @@
   .modes-heading h2 {
     margin: 0;
   }
+  .modes-heading-actions { display: flex; align-items: center; gap: 5px; }
   .modes-heading button {
     min-height: 28px;
     padding: 3px 9px;
@@ -4995,6 +5053,7 @@
     font-weight: 700;
     touch-action: manipulation;
   }
+  .tool-input-panel button[aria-label^="Arrow "] { font-size: 21px; line-height: 1; }
   .tool-input-panel button kbd {
     position: absolute;
     right: 2px;
@@ -5367,9 +5426,10 @@
   .puzzle-check-message { padding: 7px 10px; color: #215331; font-size: 12px; line-height: 1.4; }
   .genre-section .genre-check { align-self: flex-start; padding: 8px 14px; border: 1px solid #32854a; border-radius: 7px; background: #e7f7eb; color: #1b6530; font-weight: 700; cursor: pointer; }
   .editor-solve-options, .editor-solve-mobile { padding: 12px; display: grid; gap: 7px; color: #215331; }
-  .editor-solve-options p { margin: 0; font-size: 12px; }
   .editor-solve-options label, .editor-solve-mobile label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-  .editor-solve-mobile { grid-column: 2 / span 3; align-content: center; }
+  .editor-solve-mobile { padding: 4px 6px 8px; }
+  .studio-shell.editor.dark .editor-solve-options,
+  .studio-shell.editor.dark .editor-solve-mobile { color: #d0e1d3; }
   :global(.puzzle-check-highlight) {
     position: absolute;
     z-index: 5;
@@ -5864,6 +5924,12 @@
     border-radius: 8px;
     background: #f8fafc;
   }
+  .tool-picker-details { display: grid; gap: 10px; min-width: 0; }
+  .number-text-section { border-top: 1px solid #d7dee5; padding-top: 8px; }
+  .number-text-section .number-text-tab { justify-self: start; min-height: 28px; }
+  .number-text-section label { font-size: 11px; color: #536170; }
+  .number-text-section textarea { box-sizing: border-box; width: 100%; min-height: 64px; padding: 7px; border: 1px solid #bdc8d3; border-radius: 6px; color: #263443; background: #fff; font: inherit; resize: vertical; }
+  .number-text-actions { display: flex; flex-wrap: wrap; gap: 5px; }
   .tool-picker button {
     min-width: 0;
     min-height: 32px;
@@ -6046,6 +6112,7 @@
   .number-style-svg > rect.white-cell {
     fill: #64748b;
   }
+  .number-style-svg > rect.gray-cell { fill: #c9d1d8; }
   .number-style-svg text {
     font-size: 22px;
     font-weight: 700;
@@ -6061,6 +6128,8 @@
     width: 48px;
     height: 36px;
   }
+  .tool-picker-options button.symbol-layer-option { width: 42px; min-height: 30px; padding: 1px 2px; }
+  .symbol-layer-option .symbol-layer-style-svg { width: 36px; height: 27px; }
   .cage-style-svg {
     display: block;
     width: 48px;
@@ -6754,6 +6823,9 @@
     color: #e6eef4;
     background: #202d38;
   }
+  .studio-shell.dark .number-text-section { border-color: #536473; }
+  .studio-shell.dark .number-text-section label { color: #c5d2dc; }
+  .studio-shell.dark .number-text-section textarea { color: #eef4f8; border-color: #536473; background: #202d38; }
   .studio-shell.dark :global(.legacy-controls-host #legacy_mode_controls),
   .studio-shell.dark :global(.legacy-controls-host #submode_button),
   .studio-shell.dark :global(.legacy-controls-host #stylemode_button) {
@@ -8026,6 +8098,8 @@
   .genre-section .genre-label { font-size: 11px; font-weight: 700; color: #456a50; text-transform: uppercase; letter-spacing: .04em; }
   .genre-section select { width: 100%; padding: 8px; border: 1px solid #bdd3c3; border-radius: 6px; background: #fff; color: #233b2c; font: inherit; }
   .genre-section p { margin: 0; color: #53675a; font-size: 12px; line-height: 1.4; }
+  .studio-shell.editor.dark .genre-section p { color: #d0e1d3; }
+  .studio-shell.editor.dark .genre-section .genre-label { color: #b4d6bb; }
   .genre-section h2 { margin: 4px 0 0; font-size: 14px; }
   .genre-section button { padding: 7px 8px; border: 1px solid #bdd3c3; border-radius: 6px; background: #f5faf6; color: #214c2f; font: inherit; font-size: 12px; cursor: pointer; }
   .genre-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
@@ -8034,6 +8108,8 @@
       height: min(330px, 45dvh);
       flex-basis: min(330px, 45dvh);
     }
+    .studio-shell.editor .mobile-input-deck.solve-open { height: min(380px, 50dvh); flex-basis: min(380px, 50dvh); }
+    .studio-shell.editor .mobile-input-deck.solve-open .mobile-deck-pane { overflow-y: auto; }
     :global(.studio-shell.editor .mobile-input-deck .genre-section) {
       gap: 4px;
       grid-template-columns: minmax(0, 1fr) auto;

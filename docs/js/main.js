@@ -392,6 +392,7 @@ onload = function() {
         "custom_message": 1,
         "iostring": 1,
         "inputtext": 1,
+        "number-text-input": 1,
         "select2_search": 1,
         "saveinforules": 1,
         "urlstring": 1
