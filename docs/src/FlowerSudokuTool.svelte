@@ -1,12 +1,14 @@
 <script lang="ts">
  import SudokuAnswerControls from './SudokuAnswerControls.svelte';
  import { FLOWER_CELL_COUNT, flowerLabel, flowerConflicts, solveFlower, randomFlowerSolution, generateFlowerPuzzle } from './wsc2026/flowerSudoku.mjs';
- import { FLOWER_CENTER as CENTER, FLOWER_GEOMETRIES, FLOWER_REGION_BORDERS, flowerHighlightMask } from './wsc2026/flowerGeometry.mjs';
+ import { FLOWER_CENTER as CENTER, FLOWER_LAYOUTS, flowerHighlightMask } from './wsc2026/flowerGeometry.mjs';
  const EMPTY = () => Array(FLOWER_CELL_COUNT).fill(0);
  const EMPTY_NOTES = () => Array.from({length:FLOWER_CELL_COUNT},()=>[] as number[]);
  let values = EMPTY(), centerNotes = EMPTY_NOTES(), cornerNotes = EMPTY_NOTES();
  let selected = 0, solution: number[] | null = null, generationClues = 36;
  let mode: 'normal'|'center'|'corner' = 'normal';
+ const geometryLayout = FLOWER_LAYOUTS.petals;
+ let showHighlights = true, showConflicts = true;
  let activeFeature: 'solution'|'generated'|null = null;
  let history: any[] = [];
  let message = 'Select a cell and enter a digit. Each cell belongs to two columns and one region.';
@@ -46,7 +48,7 @@
  function clearBoard() {remember();values=EMPTY();centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();selected=0;solution=null;activeFeature=null;message='Board cleared.';}
  function solve() {
   const result=solveFlower(values); if(result.solution)remember(); solution=result.solution;activeFeature='solution';
-  message=result.status==='solved'?'Completion shown in blue.':result.status==='invalid'?'Fix the highlighted repeated digits first.':result.status==='limit'?'Search limit reached. Add more digits and try again.':'No solution fits these entries.';
+  message=result.status==='solved'?'Completion shown in blue.':result.status==='invalid'?'Fix the repeated digits first.':result.status==='limit'?'Search limit reached. Add more digits and try again.':'No solution fits these entries.';
  }
  function makeRandomSolution() {
   const result=randomFlowerSolution();
@@ -61,26 +63,29 @@
 </script>
 
 <section class="flower-tool" aria-labelledby="flower-title">
- <header><p class="eyebrow">ROUND 9 · DRAUPADI’S SWAYAMVARA</p><h2 id="flower-title">Flower Sudoku editor &amp; solver</h2><p>Fill each column and region with 1–9. The circular layout uses the flower’s A–E cell mapping.</p></header>
+ <header><p class="eyebrow">ROUND 9 · DRAUPADI’S SWAYAMVARA</p><h2 id="flower-title">Flower Sudoku editor &amp; solver</h2><p>Fill each column and region with 1–9. Select a cell to highlight its two columns and region.</p></header>
  <div class="flower-layout">
   <div class="editor">
    <svg viewBox="0 0 800 800" role="group" aria-label="90-cell Flower Sudoku board">
-    {#each FLOWER_GEOMETRIES as geometry,index}
+    {#each geometryLayout.geometries as geometry,index}
      {@const displayed=values[index] || (activeFeature==='solution'?solution?.[index]:0)}
-     <path id={`flower-cell-${index}`} d={geometry.path} class="cell" style:fill={conflicts.has(index)?'#f5b8ad':selected===index?'#ffd477':highlightColors[flowerHighlightMask(selected,index)]} role="button" aria-label={`${labels[index]}${values[index]?`, digit ${values[index]}`:', empty'}`} aria-pressed={selected===index} tabindex={selected===index?0:-1} onclick={event=>select(index,event)} onfocus={()=>selected=index} onkeydown={event=>keydown(event,index)}/>
+     <path id={`flower-cell-${index}`} d={geometry.path} class="cell" style:fill={showConflicts&&conflicts.has(index)?'#f5b8ad':selected===index?'#ffd477':showHighlights?highlightColors[flowerHighlightMask(selected,index)]:'#fff'} role="button" aria-label={`${labels[index]}${values[index]?`, digit ${values[index]}`:', empty'}`} aria-pressed={selected===index} tabindex={selected===index?0:-1} onclick={event=>select(index,event)} onfocus={()=>selected=index} onkeydown={event=>keydown(event,index)}/>
+     <path d={geometry.outline} class="cell-outline"/>
      {#if displayed}<text x={geometry.center.x} y={geometry.center.y} class="digit" class:solved-digit={!values[index]}>{displayed}</text>
      {:else}
       {#if centerNotes[index].length}<text x={geometry.center.x} y={geometry.center.y} class="notes">{centerNotes[index].join('')}</text>{/if}
       {#if cornerNotes[index].length}<text x={geometry.center.x} y={geometry.center.y-13} class="notes corner">{cornerNotes[index].join('')}</text>{/if}
      {/if}
     {/each}
-    {#each FLOWER_REGION_BORDERS as border}<path d={border} class="region-border"/>{/each}
+    {#each geometryLayout.borders as border}<path d={border} class="region-border"/>{/each}
     <circle cx={CENTER} cy={CENTER} r="100" class="hub"/><text x={CENTER} y={CENTER} class="hub-label">{labels[selected]}</text>
    </svg>
-   <div class="unit-legend" aria-label="Selected cell constraints"><span class="ccw">Counterclockwise column</span><span class="cw">Clockwise column</span><span class="region">Region</span></div>
+   {#if showHighlights}<div class="unit-legend" aria-label="Selected cell constraints"><span class="ccw">Counterclockwise column</span><span class="cw">Clockwise column</span><span class="region">Region</span></div>{/if}
    <p class="status" aria-live="polite">{message}</p>
   </div>
   <SudokuAnswerControls {mode} canUndo={history.length>0} onDigit={enter} onMode={next=>mode=next} onDelete={()=>enter(0)} onUndo={undo}>
+   <button aria-pressed={showHighlights} onclick={()=>showHighlights=!showHighlights}>Highlights: {showHighlights?'On':'Off'}</button>
+   <button aria-pressed={showConflicts} onclick={()=>showConflicts=!showConflicts}>Show conflict: {showConflicts?'On':'Off'}</button>
    <button class="primary" onclick={solve}>Solve</button>
    <button onclick={clearBoard}>Clear board</button>
    <button onclick={makeRandomSolution}>Random solution</button>
@@ -92,5 +97,6 @@
 </section>
 
 <style>
- .flower-tool{margin:24px 0;padding:24px;background:#fff;border:1px solid #dce1d6;border-radius:10px;color:#20382e}h2{margin:0 0 8px;font-size:22px}header>p:not(.eyebrow){color:#697467;line-height:1.5}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.4px;color:#6a7869;margin:0 0 6px}.flower-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:32px;align-items:start;margin-top:20px}.editor{min-width:0;width:100%;max-width:760px;margin:auto}svg{display:block;width:100%;height:auto;touch-action:none}.cell{stroke:#737b74;stroke-width:1;cursor:pointer}.cell:focus{outline:none}.digit{font:500 24px Inter,Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#1f3027;pointer-events:none}.notes{font:500 12px Inter,Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#3a5947;pointer-events:none}.corner{font-size:10px}.solved-digit{fill:#2469bf}.region-border{fill:none;stroke:#252b27;stroke-width:3.5;stroke-linejoin:round;pointer-events:none}.hub{fill:#676767;stroke:#171723;stroke-width:3.5}.hub-label{font:700 18px Inter,Arial,sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:central;pointer-events:none}.unit-legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:12px;color:#5e695f}.unit-legend span::before{content:'';display:inline-block;width:11px;height:11px;margin-right:5px;border-radius:3px}.ccw::before{background:#9fd9d9}.cw::before{background:#9cbceb}.region::before{background:#edc184}.status{min-height:24px;text-align:center;font-size:13px;color:#59675d;line-height:1.5}@media(max-width:760px){.flower-tool{padding:16px}.flower-layout{grid-template-columns:1fr;gap:20px}}
+ .cell-outline{fill:none;stroke:#737b74;stroke-width:1;pointer-events:none}
+ .flower-tool{margin:24px 0;padding:24px;background:#fff;border:1px solid #dce1d6;border-radius:10px;color:#20382e}h2{margin:0 0 8px;font-size:22px}header>p:not(.eyebrow){color:#697467;line-height:1.5}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.4px;color:#6a7869;margin:0 0 6px}.flower-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:32px;align-items:start;margin-top:20px}.editor{min-width:0;width:100%;max-width:760px;margin:auto}svg{display:block;width:100%;height:auto;touch-action:none}.cell{stroke:none;cursor:pointer}.cell:focus{outline:none}.digit{font:500 24px Inter,Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#1f3027;pointer-events:none}.notes{font:500 12px Inter,Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#3a5947;pointer-events:none}.corner{font-size:10px}.solved-digit{fill:#2469bf}.region-border{fill:none;stroke:#252b27;stroke-width:3.5;stroke-linejoin:round;pointer-events:none}.hub{fill:#676767;stroke:#171723;stroke-width:3.5}.hub-label{font:700 18px Inter,Arial,sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:central;pointer-events:none}.unit-legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:12px;color:#5e695f}.unit-legend span::before{content:'';display:inline-block;width:11px;height:11px;margin-right:5px;border-radius:3px}.ccw::before{background:#9fd9d9}.cw::before{background:#9cbceb}.region::before{background:#edc184}.status{min-height:24px;text-align:center;font-size:13px;color:#59675d;line-height:1.5}@media(max-width:760px){.flower-tool{padding:16px}.flower-layout{grid-template-columns:1fr;gap:20px}}
 </style>

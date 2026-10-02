@@ -1,6 +1,7 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
+import { FLOWER_LAYOUTS } from '../docs/src/wsc2026/flowerGeometry.mjs';
 const base=process.env.WSC_BASE_URL || 'http://127.0.0.1:5180';
 const browser=await chromium.launch({headless:true});
 const page=await browser.newPage({viewport:{width:1280,height:1000}});
@@ -12,6 +13,10 @@ try {
   await page.getByRole('button',{name:'Enter',exact:true}).click();
  }
  const flower=page.locator('.flower-tool');await flower.waitFor();
+ const centers=FLOWER_LAYOUTS.petals.geometries.map(geometry=>geometry.center);
+ assert.ok(await flower.locator('.cell').evaluateAll((cells,points)=>cells.every((cell,index)=>cell.isPointInFill(new DOMPoint(points[index].x,points[index].y))),centers),'Digit centers must remain inside their petal cells');
+ const petalPath=await flower.locator('#flower-cell-0').getAttribute('d');
+ assert.equal(await flower.getByRole('button',{name:'Circular',exact:true}).count(),0);
  assert.equal(await page.getByRole('tab',{name:'Circular Sudoku',exact:true}).count(),0);
  assert.equal(await flower.locator('img').count(),0);
  assert.equal(await flower.locator('.cell').count(),90);
@@ -21,6 +26,20 @@ try {
  const boardBounds=await flower.locator('svg').boundingBox(),controlBounds=await flower.locator('.answer-controls').boundingBox();
  assert.ok(controlBounds.x>=boardBounds.x+boardBounds.width);
  await flower.locator('.sudoku-keypad .digit-9').click();
+ assert.match(await flower.locator('#flower-cell-0').getAttribute('aria-label'),/digit 9/);
+ await flower.getByRole('button',{name:'Highlights: On',exact:true}).click();
+ assert.equal(await flower.locator('#flower-cell-1').evaluate(el=>el.style.fill),'rgb(255, 255, 255)');
+ await flower.getByRole('button',{name:'Highlights: Off',exact:true}).click();
+ await flower.locator('#flower-cell-1').focus();
+ await flower.locator('.sudoku-keypad .digit-9').click();
+ assert.equal(await flower.locator('#flower-cell-0').evaluate(el=>el.style.fill),'rgb(245, 184, 173)');
+ await flower.getByRole('button',{name:'Show conflict: On',exact:true}).click();
+ assert.notEqual(await flower.locator('#flower-cell-0').evaluate(el=>el.style.fill),'rgb(245, 184, 173)');
+ await flower.getByRole('button',{name:'Show conflict: Off',exact:true}).click();
+ assert.equal(await flower.locator('#flower-cell-0').evaluate(el=>el.style.fill),'rgb(245, 184, 173)');
+ await flower.getByRole('button',{name:'Undo',exact:true}).click();
+ await flower.locator('#flower-cell-0').focus();
+ assert.equal(await flower.locator('#flower-cell-0').getAttribute('d'),petalPath);
  assert.match(await flower.locator('#flower-cell-0').getAttribute('aria-label'),/digit 9/);
  assert.equal(await flower.locator('svg .digit').evaluate(el=>getComputedStyle(el).fontSize),'24px');
  await flower.getByRole('button',{name:'Delete selected cell',exact:true}).click();
