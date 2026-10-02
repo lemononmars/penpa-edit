@@ -12,6 +12,13 @@ try {
   await page.getByLabel('Password',{exact:true}).fill('กู้ชาติ');
   await page.getByRole('button',{name:'Enter',exact:true}).click();
  }
+ await page.getByRole('tab',{name:'Rules & examples',exact:true}).click();
+ const rulesToggle=page.locator('.rules-toggle').first();
+ await rulesToggle.focus();await rulesToggle.press('Enter');
+ assert.equal(await rulesToggle.getAttribute('aria-expanded'),'true');
+ await rulesToggle.press('Space');
+ assert.equal(await rulesToggle.getAttribute('aria-expanded'),'false');
+ await page.getByRole('tab',{name:'Flower Sudoku',exact:true}).click();
  const flower=page.locator('.flower-tool');await flower.waitFor();
  const centers=FLOWER_LAYOUTS.petals.geometries.map(geometry=>geometry.center);
  assert.ok(await flower.locator('.cell').evaluateAll((cells,points)=>cells.every((cell,index)=>cell.isPointInFill(new DOMPoint(points[index].x,points[index].y))),centers),'Digit centers must remain inside their petal cells');
