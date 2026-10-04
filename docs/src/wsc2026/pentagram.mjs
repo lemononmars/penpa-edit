@@ -28,7 +28,7 @@ export function pentagramPosition(point, u, v) {
 export function pentagramGeometry(index) {
   const point = Math.floor(index / 16), u = index % 4, v = Math.floor(index % 16 / 4);
   const vertices = [[u, v], [u + 1, v], [u + 1, v + 1], [u, v + 1]].map(([a, b]) => pentagramPosition(point, a / 4, b / 4));
-  return { point, u, v, path: vertices.map((p, i) => `${i ? 'L' : 'M'}${p.x},${p.y}`).join(' ') + ' Z', center: pentagramPosition(point, (u + .5) / 4, (v + .5) / 4) };
+  return { point, u, v, vertices, path: vertices.map((p, i) => `${i ? 'L' : 'M'}${p.x},${p.y}`).join(' ') + ' Z', center: pentagramPosition(point, (u + .5) / 4, (v + .5) / 4) };
 }
 export function pentagramConflicts(values, omitted = null) {
   const conflicts = new Set();

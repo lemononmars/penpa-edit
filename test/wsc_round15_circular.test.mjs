@@ -73,3 +73,22 @@ test('three grey column centers align exactly with core grid lines after the cou
  assert.equal(centers.filter(angle=>angle%40===0).length,3);
  assert.ok(CIRCULAR_OUTER_PHASE<0);
 });
+
+test('generation and solving allow staggered bold region borders',async()=>{
+ const {generateShiftedPuzzle}=await import('../docs/src/wsc2026/circularSudoku.mjs');
+ const random=[.2,.5];
+ const generated=generateShiftedPuzzle([0,0,0],false,0,40,()=>random.shift());
+ assert.deepEqual(generated.rotations,[0,1,4]);
+ const solved=solveCircularAlignments(generated.puzzle,[0,0,0],false,0,{limitSolutions:2});
+ assert.equal(solved.status,'solved');assert.equal(solved.solutions.length,1);
+ assert.deepEqual(solved.rotations,[0,1,4]);
+ assert.deepEqual(solved.solution,generated.solution);
+});
+
+test('solving keeps a twenty-degree anchor and aligns half-step rings correctly',()=>{
+ const solution=solveCircular(Array(81).fill(0),[.5,1.5,4.5]).solution;
+ const solved=solveCircularAlignments(solution,[.5,0,0]);
+ assert.equal(solved.status,'solved');
+ assert.ok(solved.rotations.every(rotation=>rotation%1===.5));
+ assert.deepEqual(solved.solution,solution);
+});

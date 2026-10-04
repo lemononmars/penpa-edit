@@ -1,9 +1,7 @@
 <script lang="ts">
- import SudokuSetSolveControls from './SudokuSetSolveControls.svelte';
  let editMode: 'set'|'solve' = 'set';
- import { downloadEmptySvg } from './wsc2026/downloadEmptySvg.mjs';
  let boardSvg: SVGSVGElement;
- import SudokuAnswerControls from './SudokuAnswerControls.svelte';
+ import SudokuPuzzleControls from './SudokuPuzzleControls.svelte';
  import { FLOWER_CELL_COUNT, flowerLabel, flowerConflicts, solveFlower, randomFlowerSolution, generateFlowerPuzzle } from './wsc2026/flowerSudoku.mjs';
  import { FLOWER_CENTER as CENTER, FLOWER_LAYOUTS, flowerHighlightMask } from './wsc2026/flowerGeometry.mjs';
  const EMPTY = () => Array(FLOWER_CELL_COUNT).fill(0);
@@ -52,6 +50,7 @@
    document.getElementById(`flower-cell-${selected}`)?.focus();
   }
  }
+ function clearSolution(){remember();values=values.map((value,index)=>givens[index]?value:0);solution=null;activeFeature=null;message='Solution cleared; givens kept.';}
  function clearBoard() {remember();values=EMPTY();givens=Array(FLOWER_CELL_COUNT).fill(false);centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();selected=0;solution=null;activeFeature=null;message='Board cleared.';}
  function solve() {
   const result=solveFlower(values); if(result.solution)remember(); solution=result.solution;editMode='solve';activeFeature='solution';
@@ -90,19 +89,7 @@
    {#if showHighlights}<div class="unit-legend" aria-label="Selected cell constraints"><span class="ccw">Counterclockwise column</span><span class="cw">Clockwise column</span><span class="region">Region</span></div>{/if}
    <p class="status" aria-live="polite">{message}</p>
   </div>
-  <SudokuAnswerControls {mode} canUndo={history.length>0} onDigit={enter} onMode={next=>mode=next} onDelete={()=>enter(0)} onUndo={undo}>
-   <button aria-pressed={showHighlights} onclick={()=>showHighlights=!showHighlights}>Highlights: {showHighlights?'On':'Off'}</button>
-   <button aria-pressed={showConflicts} onclick={()=>showConflicts=!showConflicts}>Show conflict: {showConflicts?'On':'Off'}</button>
-   <SudokuSetSolveControls mode={editMode} onChange={next=>editMode=next}/>
-   <button class="primary" onclick={solve}>Solve</button>
-   <button onclick={clearBoard}>Clear board</button>
-   <button onclick={makeRandomSolution}>Random solution</button>
-   <label>Clues<input type="number" min="20" max="89" bind:value={generationClues}/></label>
-   <button onclick={generatePuzzle}>Generate unique puzzle</button>
-   <a href="/wsc2026/WSC2026IB.pdf#page=30" target="_blank" rel="noreferrer">Booklet rules &amp; example · page 30 ↗</a>
-   <button onclick={()=>downloadEmptySvg(boardSvg,'flower-sudoku-puzzle.svg')}>Download puzzle</button>
-   <button onclick={()=>downloadEmptySvg(boardSvg,'flower-sudoku-solution.svg',true)}>Download solution</button>
-  </SudokuAnswerControls>
+  <SudokuPuzzleControls {mode} {editMode} canUndo={history.length>0} onDigit={enter} onMode={next=>mode=next} onEditMode={next=>editMode=next} onDelete={()=>enter(0)} onUndo={undo} onSolve={solve} onClearBoard={clearBoard} onClearSolution={clearSolution} onRandom={makeRandomSolution} onGenerate={generatePuzzle} bind:generationClues maxClues={89} {showHighlights} {showConflicts} onHighlights={()=>showHighlights=!showHighlights} onConflicts={()=>showConflicts=!showConflicts} {boardSvg} filename="flower-sudoku" bookletPage={30}/>
  </div>
 </section>
 

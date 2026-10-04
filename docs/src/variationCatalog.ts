@@ -113,7 +113,7 @@ function genericSetting(variation: Variation) {
         add("symbol", "arrow_B_G", 2, ["mo_symbol_lb", "ms3", "li_arrow_B"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }
-    if (["arrowsum", "countdifferentarrow", "counttheoddonesarrow", "averagearrows", "attacktheleader", "biggestneighbours", "smallestneighbours", "eliminate", "detection", "sumdetector", "twindetector"].includes(variation.value)) {
+    if (["threeup", "insideskyscraper", "pointingdigits", "arrowsum", "countdifferentarrow", "counttheoddonesarrow", "averagearrows", "attacktheleader", "biggestneighbours", "smallestneighbours", "eliminate", "detection", "sumdetector", "twindetector"].includes(variation.value)) {
         add("symbol", "arrow_eight", 2, ["mo_symbol_lb", "ms3", "li_arrow_eight"]);
         return { show: Array.from(new Set(show)), modeset: modes, submodeset: submodes, styleset: styles, outside: false };
     }

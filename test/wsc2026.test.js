@@ -44,6 +44,18 @@ test('Attack the Leader parses every enabled 8-way arrow bit',()=>{const p=puzzl
 test('Trishula parses a no-bulb handle and three ordinary Arrow tips',()=>{const p=puzzle('trishula');p.centerlist=Array.from({length:81},(_,i)=>(Math.floor(i/9)+2)*13+i%9+2);p.pu_q.nobulbthermo=[[84,85]];p.pu_q.direction=[[85,71],[85,86],[85,99]];const clues=solver.readConstraints(p).wscRules;assert.equal(clues.length,1);assert.deepEqual(clues[0].cells,[c(4,4),c(4,5)]);assert.equal(clues[0].tips.length,3);});
 test('Neighbouring Disparity derives diagonal and orthogonal neighbours from its two shapes',()=>{const p=puzzle('neighbouringdisparity');p.centerlist=Array.from({length:81},(_,i)=>(Math.floor(i/9)+2)*13+i%9+2);p.pu_q.symbol={84:[1,'square_L',2],85:[1,'diamond_L',2]};const clues=solver.readConstraints(p).wscRules;assert.equal(clues.length,2);assert.equal(clues[0].cells.length,4);assert.equal(clues[1].cells.length,4);assert.notDeepEqual(clues[0].cells,clues[1].cells);});
 function puzzle(id){return {nx:9,ny:9,nx0:13,ny0:13,space:[0,0,0,0],centerlist:[],point:{},activeSudokuVariants:['classic',id],pu_q:{number:{},symbol:{},surface:{},line:{},killercages:[]}};}
+test('3 Up and Inside Skyscraper parse all eight arrows independently in one cell',()=>{
+ for(const id of ['threeup','insideskyscraper']){
+  const p=puzzle(id);p.centerlist=Array.from({length:81},(_,i)=>(Math.floor(i/9)+2)*13+i%9+2);
+  p.pu_q.symbol={84:[Array(8).fill(1),'arrow_eight',2]};
+  const parsed=solver.readConstraints(p);assert.equal(parsed.diagnostics.length,0);assert.equal(parsed.wscRules.length,8);
+  assert.equal(new Set(parsed.wscRules.map(q=>q.cells[1].row+','+q.cells[1].col)).size,8);
+  const b=blank();b[4][4]=2;b[4][3]=3;b[4][2]=4;b[4][1]=1;b[4][0]=2;
+  const constraints={baseRows:false,baseCols:false,baseBoxes:false,wscRules:parsed.wscRules.filter(q=>q.cells[1].row===4&&q.cells[1].col===3)};
+  assert.equal(csp.findConflict(b,constraints),null);
+  b[4][2]=1;assert.equal(csp.findConflict(b,constraints).constraint,'wscRules');
+ }
+});
 test('Trishula remains supported while its marks are incomplete, but rejects malformed saved clues',()=>{const p=puzzle('trishula');let interpreted=registry.interpretPuzzle(p);assert.equal(interpreted.diagnostics.length,0);assert(solver.readConstraints(p).supported.includes('trishula'));p.pu_q.nobulbthermo=[[84,85]];p.pu_q.direction=[[85,71],[85,86]];interpreted=registry.interpretPuzzle(p);assert.equal(interpreted.diagnostics.length,0);assert(solver.readConstraints(p).supported.includes('trishula'));p.pu_q.wsc2026Clues={trishula:[{cells:[c(90,0)],tips:[]}]};assert(registry.interpretPuzzle(p).diagnostics.length);});
 test('Hundred composite emits both base sum and disjoint constraints',()=>{const p=puzzle('disjointhundred');p.pu_q.wsc2026Clues={hundred:[{groups:[[c(0,0),c(0,1)],[c(0,3),c(0,4)]]}]};const cs=solver.readConstraints(p);assert.equal(cs.diagnostics.length,0);assert.equal(cs.wscRules.length,1);assert.equal(cs.diagonalAllDifferent.length,9);assert(cs.supported.includes('disjointhundred'));});
 test('WSC constraint is enforced by the actual CSP solve',()=>{const b=Array.from({length:9},(_,r)=>Array.from({length:9},(_,c)=>(r*3+Math.floor(r/3)+c)%9+1));b[0][0]=0;const result=csp.solve(b,{wscRules:[{kind:'odd',cells:[c(0,0)]}]});assert(result);assert.equal(csp.findConflict([[2,...b[0].slice(1)],...b.slice(1)],{baseRows:false,baseCols:false,baseBoxes:false,wscRules:[{kind:'odd',cells:[c(0,0)]}]}).constraint,'wscRules');});

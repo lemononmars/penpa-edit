@@ -1,8 +1,10 @@
-export function solveUnitSudoku(values, units, digits, { maxNodes = 500_000, randomize = false, rng = Math.random, limitSolutions = 1 } = {}) {
+export function solveUnitSudoku(values, units, digits, { maxNodes = 500_000, randomize = false, rng = Math.random, limitSolutions = 1, isValid = null } = {}) {
   const cellCount = values.length, digitCount = digits.length;
   const memberships = Array.from({length:cellCount}, (_, cell) => units.map((unit, id) => unit.includes(cell) ? id : -1).filter((id) => id >= 0));
   const peers = memberships.map((ids, cell) => [...new Set(ids.flatMap((id) => units[id]).filter((other) => other !== cell))]);
   if (values.some((digit) => digit && !digits.includes(digit)) || units.some((unit) => { const filled = unit.map((cell) => values[cell]).filter(Boolean); return new Set(filled).size !== filled.length; })) return {status:'invalid', solution:null, solutions:[], nodes:0};
+  if(isValid&&!isValid(values))return {status:'invalid',solution:null,solutions:[],nodes:0};
+  const partial=values.slice();
   // Exact cover: a placement fills one cell and one digit slot in each of
   // its three units. Branch on the slot with the fewest remaining placements,
   // including unit/digit slots (hidden singles), rather than only on cells.
@@ -16,6 +18,7 @@ export function solveUnitSudoku(values, units, digits, { maxNodes = 500_000, ran
   for (let cell = 0; cell < cellCount; cell++) {
     const candidates = values[cell] ? [values[cell]] : digits.filter((digit) => !peers[cell].some((peer) => values[peer] === digit));
     for (const digit of candidates) {
+      if(isValid){const previous=partial[cell];partial[cell]=digit;const valid=isValid(partial);partial[cell]=previous;if(!valid)continue;}
       const headers = [cell + 1, ...memberships[cell].map((unit) => cellCount + unit * digitCount + digits.indexOf(digit) + 1)];
       const nodes = [];
       for (const header of headers) {
@@ -71,11 +74,14 @@ export function solveUnitSudoku(values, units, digits, { maxNodes = 500_000, ran
     for (const node of options) {
       if (nodes >= maxNodes) { limited = true; break; }
       nodes++;
+      const cell=Math.floor(row[node]/digitCount),digit=digits[row[node]%digitCount],previous=partial[cell];
+      partial[cell]=digit;
+      if(isValid&&!isValid(partial)){partial[cell]=previous;continue;}
       placements.push(row[node]);
       for (let j = right[node]; j !== node; j = right[j]) cover(column[j]);
       search();
       for (let j = left[node]; j !== node; j = left[j]) uncover(column[j]);
-      placements.pop();
+      placements.pop();partial[cell]=previous;
       if (solutions.length >= limitSolutions || limited) break;
     }
     uncover(target);

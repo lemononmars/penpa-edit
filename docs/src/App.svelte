@@ -854,7 +854,7 @@
           num: index + 1,
         }));
       }
-      if (["attacktheleader", "detection", "smallestneighbours", "biggestneighbours", "twindetector", "eliminate"].includes(variant)) {
+      if (["threeup", "insideskyscraper", "pointingdigits", "attacktheleader", "detection", "smallestneighbours", "biggestneighbours", "twindetector", "eliminate"].includes(variant)) {
         toolPanelMode = "8-way";
       }
     } else if (variant === "neighbouringdisparity" && mode === "symbol") {
