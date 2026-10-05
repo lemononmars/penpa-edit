@@ -7,16 +7,20 @@ var SudokuCSP = (function() {
     var constraintRegistry = {};
     var evaluatorCache = typeof WeakMap !== "undefined" ? new WeakMap() : null;
 
-    function cloneBoard(board) {
-        var requestedSize = board && board.length;
-        if (requestedSize) {
-            SIZE = requestedSize;
+    function activateSize(size) {
+        if (SIZE !== size) {
+            SIZE = size;
             ALL_DIGITS = (1 << (SIZE + 1)) - 2;
             if (helpers) {
                 helpers.size = SIZE;
                 helpers.allDigitsMask = ALL_DIGITS;
             }
         }
+    }
+
+    function cloneBoard(board) {
+        var requestedSize = board && board.length;
+        if (requestedSize) activateSize(requestedSize);
         return Array.from({ length: SIZE }, function(_, row) {
             return Array.from({ length: SIZE }, function(__, col) {
                 var value = board && board[row] ? parseInt(board[row][col], 10) : 0;
@@ -308,7 +312,10 @@ var SudokuCSP = (function() {
             }
             var handler = constraintRegistry[name];
             (constraints[name] || []).forEach(function(item) {
-                var entry = { handler: handler, item: item };
+                // Prepare immutable clue data once, rather than parsing it again
+                // for every trial digit during recursive search.
+                var prepared = typeof handler.prepare === "function" ? handler.prepare(item, helpers) : null;
+                var entry = { handler: prepared || handler, item: item };
                 entries.push(entry);
                 var cells = cellsInConstraint(item);
                 if (!cells.length) {
@@ -332,6 +339,9 @@ var SudokuCSP = (function() {
         }
         var evaluator = {
             validateAll: function(board, complete) { return validate(board, entries, complete); },
+            hasCellConstraints: function(row, col) {
+                return globalEntries.length > 0 || !!byCell[row + ":" + col];
+            },
             validateCell: function(board, row, col) {
                 if (!validate(board, globalEntries, false)) return false;
                 return validate(board, byCell[row + ":" + col] || [], false);
@@ -516,6 +526,9 @@ var SudokuCSP = (function() {
         var mask = coreMask(state, row, col);
         var allowed = 0;
         evaluator = evaluator || compileConstraints(constraints || {});
+        // Core row/column/box masks are sufficient when no variant rule
+        // touches this cell. Avoid trial placements and empty rule checks.
+        if (!evaluator.hasCellConstraints(row, col)) return mask;
         for (var digit = 1; digit <= SIZE; digit++) {
             var bit = 1 << digit;
             if (!(mask & bit)) {
@@ -701,15 +714,25 @@ var SudokuCSP = (function() {
 
     async function analyzeCandidatesAsync(board, constraints, options) {
         options = options || {};
-        var report = typeof options.onProgress === "function" ? options.onProgress : function() {};
-        var cancelled = typeof options.isCancelled === "function" ? options.isCancelled : function() { return false; };
+        var progressCallback = typeof options.onProgress === "function" ? options.onProgress : function() {};
+        var cancellationCallback = typeof options.isCancelled === "function" ? options.isCancelled : function() { return false; };
         var source = cloneBoard(board);
+        var analysisSize = source.length;
+        function report(event) {
+            try { progressCallback(event); }
+            finally { activateSize(analysisSize); }
+        }
+        function cancelled() {
+            try { return cancellationCallback(); }
+            finally { activateSize(analysisSize); }
+        }
         var state = createState(source, constraints);
         var candidates = Array.from({ length: SIZE }, function() {
             return Array.from({ length: SIZE }, function() { return []; });
         });
         report({ type: "start", message: "Validating givens and variant constraints." });
         await nextPaint();
+        activateSize(analysisSize);
         if (cancelled()) {
             return { cancelled: true };
         }
@@ -724,6 +747,10 @@ var SudokuCSP = (function() {
         var seedSolutions = [];
         var seenSeeds = {};
         (options.seedSolutions || []).forEach(function(solution) {
+            // An old witness from another grid size must not change the
+            // dimensions of this analysis while it is being normalized.
+            if (!Array.isArray(solution) || solution.length !== analysisSize ||
+                !solution.every(function(row) { return Array.isArray(row) && row.length === analysisSize; })) return;
             var normalized = cloneBoard(solution);
             var key = JSON.stringify(normalized);
             if (!seenSeeds[key] && solutionMatches(normalized, source, constraints)) {
@@ -748,6 +775,7 @@ var SudokuCSP = (function() {
                 "Found an initial complete solution."
         });
         await nextPaint();
+        activateSize(analysisSize);
 
         var possibleMasks = Array.from({ length: SIZE }, function() { return new Array(SIZE).fill(0); });
         var forced = cloneBoard(source);
@@ -783,8 +811,10 @@ var SudokuCSP = (function() {
             message: "Testing " + checks.length + " cell/digit answer facts against complete solutions."
         });
         await nextPaint();
+        activateSize(analysisSize);
 
         var tested = 0;
+        var lastYieldAt = Date.now();
         var witnessCount = witnessSolutions.length;
         var refutedCount = 0;
         for (var i = 0; i < checks.length; i++) {
@@ -814,8 +844,12 @@ var SudokuCSP = (function() {
                     (alreadyWitnessed ? " already covered by a witness." :
                         witness ? " occurs in a complete solution." : " is impossible in every solution.")
             });
-            if (tested % 4 === 0 || tested === checks.length) {
+            // Yield on elapsed work, not on a fixed count of already-covered
+            // facts. Cheap witness checks should not each incur timer delays.
+            if (tested === checks.length || (tested % 4 === 0 && Date.now() - lastYieldAt >= 12)) {
                 await nextPaint();
+                activateSize(analysisSize);
+                lastYieldAt = Date.now();
             }
         }
 
@@ -2901,7 +2935,19 @@ if (typeof module !== "undefined" && module.exports) {
    case 'odd':return v.every(d=>!d||d%2===1);
   }return false;
  }
- return {valid,validate,kinds};
+ function prepare(q,helpers){
+  if(!q||q.kind!=='differences')return null;
+  if(!valid(q))return {validatePartial:()=>false};
+  const first=q.cells[0],second=q.cells[1],difference=q.value;
+  return {validatePartial:function(board){
+   const a=board[first.row]?.[first.col]||0,b=board[second.row]?.[second.col]||0;
+   if(a&&b)return Math.abs(a-b)===difference;
+   const value=a||b,size=helpers.size;
+   if(!value)return difference<size;
+   return value-difference>=1||value+difference<=size;
+  }};
+ }
+ return {valid,validate,prepare,kinds};
 });
 
 
@@ -3914,7 +3960,7 @@ if (typeof module !== "undefined" && module.exports) {
 });
 
 // Source: region_constraints/wsc_rules.js
-(function(root,factory){if(typeof module!=='undefined'&&module.exports)module.exports=factory(require('../../sudoku_variants/wsc_rules.js'));else factory(root.Wsc2026Rules)(root.SudokuCSP);})(typeof globalThis!=='undefined'?globalThis:this,function(rules){return function(csp){csp.registerConstraint('wscRules',{validatePartial:rules.validate,validateComplete:rules.validate});};});
+(function(root,factory){if(typeof module!=='undefined'&&module.exports)module.exports=factory(require('../../sudoku_variants/wsc_rules.js'));else factory(root.Wsc2026Rules)(root.SudokuCSP);})(typeof globalThis!=='undefined'?globalThis:this,function(rules){return function(csp){csp.registerConstraint('wscRules',{validatePartial:rules.validate,validateComplete:rules.validate,prepare:rules.prepare});};});
 
 // Source: line_constraints/almost_palindromes.js
 (function(root, factory) {
@@ -4117,6 +4163,10 @@ if (typeof module !== "undefined" && module.exports) {
                 throw new Error(constraintName + " requires SudokuCSP.registerConstraint");
             }
             csp.registerConstraint(constraintName, {
+                prepare: function(clue, helpers) {
+                    var handler = validators[clue.relation];
+                    return handler && handler.prepare ? handler.prepare(clue, helpers) : null;
+                },
                 validatePartial: function(board, clue, helpers) {
                     var handler = validators[clue.relation];
                     return handler && handler.validatePartial ?
@@ -6935,15 +6985,39 @@ if (typeof module !== "undefined" && module.exports) {
             });
 
             var assignedOutside = values.filter(Boolean);
-            return (clue.clues || []).every(function(value) {
-                return assignedOutside.indexOf(value) !== -1 || assignedOutside.length < values.length;
-            }) && (assignedOutside.length < values.length || clue.clues.every(function(value) {
-                return assignedOutside.indexOf(value) !== -1;
-            }));
+            var required = Array.from(new Set(clue.clues || []));
+            var missing = required.filter(function(value) {
+                return assignedOutside.indexOf(value) === -1;
+            }).length;
+            // Each missing clue needs its own remaining cell. In a fully clued
+            // group this rejects non-clue digits as soon as they are assigned.
+            return missing <= values.length - assignedOutside.length;
         }
 
         ["outside","outside234"].forEach(function(relation) {
-            family.register(relation, validate);
+            family.register(relation, {
+                validatePartial: validate,
+                prepare: function(clue, helpers) {
+                    var required = Array.from(new Set(clue.clues || []));
+                    if (!required.every(function(value) {
+                        return Number.isInteger(value) && value >= 1 && value <= helpers.size;
+                    })) return null;
+                    var requiredMask = required.reduce(function(mask, value) { return mask | (1 << value); }, 0);
+                    var cells = clue.cells;
+                    return {
+                        validatePartial: function(board) {
+                            var assigned = 0;
+                            var remaining = 0;
+                            for (var index = 0; index < cells.length; index++) {
+                                var value = helpers.cellValue(board, cells[index]);
+                                if (value) assigned |= 1 << value;
+                                else remaining++;
+                            }
+                            return helpers.countBits(requiredMask & ~assigned) <= remaining;
+                        }
+                    };
+                }
+            });
         });
     };
 });
@@ -7685,7 +7759,19 @@ if (typeof module !== "undefined" && module.exports) {
    case 'odd':return v.every(d=>!d||d%2===1);
   }return false;
  }
- return {valid,validate,kinds};
+ function prepare(q,helpers){
+  if(!q||q.kind!=='differences')return null;
+  if(!valid(q))return {validatePartial:()=>false};
+  const first=q.cells[0],second=q.cells[1],difference=q.value;
+  return {validatePartial:function(board){
+   const a=board[first.row]?.[first.col]||0,b=board[second.row]?.[second.col]||0;
+   if(a&&b)return Math.abs(a-b)===difference;
+   const value=a||b,size=helpers.size;
+   if(!value)return difference<size;
+   return value-difference>=1||value+difference<=size;
+  }};
+ }
+ return {valid,validate,prepare,kinds};
 });
 
 (function(root, factory) {

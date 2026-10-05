@@ -21,10 +21,10 @@ try{
  assert.notEqual(await cell.getAttribute('d'),during);
  await cell.click();await tool.locator('.digit-4').click();assert.match(await cell.getAttribute('aria-label'),/digit 4/);
  await tool.getByRole('button',{name:'Undo',exact:true}).click();assert.match(await cell.getAttribute('aria-label'),/digit 7/);
- await tool.getByRole('button',{name:'Generate unique puzzle',exact:true}).click();assert.match(await tool.locator('.status').textContent(),/uniquely solvable/);
+ await tool.getByRole('button',{name:'Generate unique puzzle',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.circular-tool .status')?.textContent.includes('uniquely solvable'));assert.match(await tool.locator('.status').textContent(),/uniquely solvable/);
  await page.waitForTimeout(500);
  const scrambled=await tool.locator('#circular-cell-core-3-0').getAttribute('d');
- await tool.getByRole('button',{name:'Solve',exact:true}).click();
+ await tool.getByRole('button',{name:'Solve',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.circular-tool .status')?.textContent.includes('relative ring alignments'));
  assert.match(await tool.locator('.status').textContent(),/relative ring alignments/);
  await page.waitForTimeout(500);
  assert.notEqual(await tool.locator('#circular-cell-core-3-0').getAttribute('d'),scrambled);
@@ -35,10 +35,10 @@ try{
  assert.equal(await tool.locator('.third-ring-spoke').count(),0);
  const gap=await tool.locator('.connector-spoke:not(.third-ring-spoke)').evaluateAll(lines=>lines.every(line=>Math.abs(Math.hypot(line.x1.baseVal.value-600,line.y1.baseVal.value-600)-200)<.01));assert.ok(gap);
  assert.ok(await tool.locator('.connector-spoke').evaluateAll(lines=>lines.every(line=>Math.abs(Math.hypot(line.x2.baseVal.value-600,line.y2.baseVal.value-600)-220)<.01)));
- await tool.getByRole('button',{name:'Generate unique puzzle',exact:true}).click();assert.match(await tool.locator('.status').textContent(),/uniquely solvable/);
+ await tool.getByRole('button',{name:'Generate unique puzzle',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.circular-tool .status')?.textContent.includes('uniquely solvable'));assert.match(await tool.locator('.status').textContent(),/uniquely solvable/);
  assert.equal(await tool.locator('.outer-cell[aria-label*="digit"]').count(),0);
  mkdirSync('output/screenshots',{recursive:true});await tool.screenshot({path:'output/screenshots/shifted-controls-layout.png'});
- await tool.getByRole('button',{name:'Solve',exact:true}).click();assert.equal(await tool.locator('svg .digit:not(.note)').count(),567);
+ await tool.getByRole('button',{name:'Solve',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.circular-tool .status')?.textContent.includes('relative ring alignments'));assert.equal(await tool.locator('svg .digit:not(.note)').count(),567);
  assert.ok(await tool.locator('svg .digit').evaluateAll(texts=>texts.every(text=>text.parentElement.getAttribute('transform')?.startsWith('rotate('))));
  await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);
  console.log('Shifted keypad, drag preview, snap, entry after rotation, separators, spokes, solver, generator and mobile layout verified.');

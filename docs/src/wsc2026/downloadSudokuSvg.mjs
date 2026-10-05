@@ -1,4 +1,4 @@
-export function emptyLayoutSvg(board, includeSolution = false) {
+export function puzzleSvg(board, includeSolution = false) {
  const clone = board.cloneNode(true);
  const originals = [board, ...board.querySelectorAll('*')];
  const copies = [clone, ...clone.querySelectorAll('*')];
@@ -11,7 +11,7 @@ export function emptyLayoutSvg(board, includeSolution = false) {
   for(const attribute of [...copy.attributes])if(attribute.name==='id'||attribute.name==='tabindex'||attribute.name==='role'||attribute.name.startsWith('aria-')||attribute.name.startsWith('on'))copy.removeAttribute(attribute.name);
  });
  clone.querySelectorAll(includeSolution?'text:not(.grid-letter):not(.given-digit):not(.solved-digit):not(.decoration-clue)':'text:not(.grid-letter):not(.given-digit):not(.decoration-clue)').forEach(element=>element.remove());
- clone.querySelectorAll('.decoration-hit,.cage-draft').forEach(element=>element.remove());
+ clone.querySelectorAll('.decoration-hit,.cage-draft,.selection-outline').forEach(element=>element.remove());
  const box=board.viewBox.baseVal;
  clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
  const unitsPerCm=Number(board.getAttribute('data-units-per-cm'));
@@ -20,8 +20,8 @@ export function emptyLayoutSvg(board, includeSolution = false) {
  return '<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(clone);
 }
 
-export function downloadEmptySvg(board, filename, includeSolution = false) {
- const url=URL.createObjectURL(new Blob([emptyLayoutSvg(board, includeSolution)],{type:'image/svg+xml;charset=utf-8'}));
+export function downloadSudokuSvg(board, filename, includeSolution = false) {
+ const url=URL.createObjectURL(new Blob([puzzleSvg(board, includeSolution)],{type:'image/svg+xml;charset=utf-8'}));
  const link=document.createElement('a');link.href=url;link.download=filename;
  document.body.appendChild(link);link.click();link.remove();
  setTimeout(()=>URL.revokeObjectURL(url),1000);

@@ -1064,6 +1064,26 @@ test("generates unique Classic, Diagonal, and Odd/Even puzzles", function() {
     });
 });
 
+test("randomly prunes generated outside clues while preserving uniqueness", function() {
+    const generated = SudokuGenerator.generate({
+        size: 6,
+        variants: ["classic", "skyscraper"],
+        seed: 314,
+        minimal: false,
+        extraClues: 12
+    });
+    const complete = SudokuGenerator.outsideCluesForSolution(
+        generated.solution, ["classic", "skyscraper"]
+    );
+
+    assert.ok(generated.outsideMarks.length > 0, "keeps the outside variant visible");
+    assert.ok(generated.outsideMarks.length < complete.marks.length, "removes redundant outside clues");
+    assert.equal(generated.outsideMarks.length, generated.constraints.skyscrapers.length);
+    const answers = SudokuCSP.createProblem(generated.board, generated.constraints).enumerateAnswers(2);
+    assert.equal(answers.length, 1);
+    assert.deepEqual(answers[0], generated.solution);
+});
+
 test("generates rotationally symmetric givens and paired variant marks", function() {
     const generated = SudokuGenerator.generate({
         size: 6,
@@ -5223,7 +5243,19 @@ test("outside scratch variants prune digits and remain uniquely solvable", funct
         const answers = SudokuCSP.createProblem(generated.board, generated.constraints).enumerateAnswers(2);
         assert.ok(generated.givens < 81, variant + " should prune solved-grid digits");
         const expectedMarksCount = variant === "sandwich" ? 18 : 36;
-        assert.equal(generated.outsideMarks.length, expectedMarksCount, variant + " should retain every outside position");
+        assert.ok(generated.outsideMarks.length > 0, variant + " should retain its outside-clue identity");
+        if (variant === "rossini") {
+            assert.equal(generated.outsideMarks.length, expectedMarksCount,
+                "rossini should retain every fully-clued arrow position");
+        } else {
+            assert.ok(generated.outsideMarks.length < expectedMarksCount,
+                variant + " should prune redundant outside clues");
+        }
+        const constraintCount = variant === "rossini" ? generated.constraints.rossiniLines.length :
+            variant === "skyscraper" ? generated.constraints.skyscrapers.length :
+                variant === "sandwich" ? generated.constraints.sandwiches.length :
+                    generated.constraints.outsideRelations.length;
+        assert.equal(generated.outsideMarks.length, constraintCount, variant + " marks should match constraints");
         assert.equal(answers.length, 1, variant);
         assert.deepEqual(answers[0], generated.solution, variant);
     });

@@ -2,7 +2,8 @@
  import SudokuAnswerControls from './SudokuAnswerControls.svelte';
  import SudokuSetSolveControls from './SudokuSetSolveControls.svelte';
  import SudokuArrowControls from './SudokuArrowControls.svelte';
- import { downloadEmptySvg } from './wsc2026/downloadEmptySvg.mjs';
+ import ToolBackupControls from './ToolBackupControls.svelte';
+ import { downloadSudokuSvg } from './wsc2026/downloadSudokuSvg.mjs';
  export let mode: 'normal'|'center'|'corner' = 'normal';
  export let editMode: 'set'|'solve' = 'set';
  export let canUndo = false;
@@ -31,6 +32,13 @@
  export let multipleDiagonalArrows=false;
  export let onArrow: ((dx:number,dy:number)=>void)|undefined = undefined;
  export let onClearArrow: (()=>void)|undefined = undefined;
+ export let onDownloadPages: (()=>void)|undefined = undefined;
+ export let downloadingPages=false;
+ export let busy=false;
+ export let onCancel:(()=>void)|undefined=undefined;
+ export let onExportBackup:(()=>void)|undefined=undefined;
+ export let onImportBackup:((file:File)=>void)|undefined=undefined;
+ export let saveAvailable=true;
 </script>
 
 <SudokuAnswerControls {mode} {canUndo} {onDigit} {onMode} {onDelete} {onUndo}>
@@ -39,17 +47,22 @@
  {#if onArrow&&onClearArrow}<SudokuArrowControls {onArrow} onClear={onClearArrow} diagonalOnly={diagonalArrowsOnly} multipleDiagonal={multipleDiagonalArrows} disabled={editMode!=='set'}/>{/if}
  {#if onHighlights}<button aria-pressed={showHighlights} onclick={onHighlights}>Highlights: {showHighlights?'On':'Off'}</button>{/if}
  {#if onConflicts}<button aria-pressed={showConflicts} onclick={onConflicts}>Show conflict: {showConflicts?'On':'Off'}</button>{/if}
- <button class="primary" onclick={onSolve}>Solve</button>
+ {#if busy}<div class="search-status" role="status">Searching… <button onclick={onCancel}>Cancel search</button></div>{/if}
+ <button class="primary" disabled={busy} onclick={onSolve}>Solve</button>
  <div class="clear-actions"><button onclick={onClearBoard}>Clear board</button><button onclick={onClearSolution}>Clear solution</button></div>
- {#if onRandom}<button onclick={onRandom}>Random solution</button>{/if}
+ {#if onRandom}<button disabled={busy} onclick={onRandom}>Random solution</button>{/if}
  {#if onExample}<button onclick={onExample}>Add example</button>{/if}
  <label>{cluesLabel}<input type="number" min="20" max={maxClues} bind:value={generationClues}/></label>
- <button onclick={onGenerate}>Generate unique puzzle</button>
- <button onclick={()=>downloadEmptySvg(boardSvg,`${filename}-puzzle.svg`)}>Download puzzle</button>
- <button onclick={()=>downloadEmptySvg(boardSvg,`${filename}-solution.svg`,true)}>Download solution</button>
+ <button disabled={busy} onclick={onGenerate}>Generate unique puzzle</button>
+ <button onclick={()=>downloadSudokuSvg(boardSvg,`${filename}-puzzle.svg`)}>Download puzzle</button>
+ <button onclick={()=>downloadSudokuSvg(boardSvg,`${filename}-solution.svg`,true)}>Download solution</button>
+ {#if onDownloadPages}<button disabled={downloadingPages} onclick={onDownloadPages}>{downloadingPages?'Preparing PDF…':'Download puzzles · A4 PDF'}</button>{/if}
+ <slot name="print-options"/>
+ {#if onExportBackup&&onImportBackup}<ToolBackupControls onExport={onExportBackup} onImport={onImportBackup} {saveAvailable}/>{/if}
  <a href={`/wsc2026/WSC2026IB.pdf#page=${bookletPage}`} target="_blank" rel="noreferrer">Booklet rules &amp; example · page {bookletPage} ↗</a>
 </SudokuAnswerControls>
 
 <style>
  .clear-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.clear-actions button{font-size:12px;padding:12px 4px}
+ .search-status{font-size:13px;color:#697467}.search-status button{margin-top:6px}button:disabled{opacity:.5;cursor:wait}
 </style>

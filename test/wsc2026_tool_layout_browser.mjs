@@ -59,7 +59,7 @@ try {
  await flower.getByRole('button',{name:'Undo',exact:true}).click();
  assert.equal(await flower.locator('.notes').count(),0);
  await flower.locator('.mode-normal').click();
- await flower.getByRole('button',{name:'Generate unique puzzle',exact:true}).click();
+ await flower.getByRole('button',{name:'Generate unique puzzle',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.flower-tool .status')?.textContent.includes('uniquely solvable'));
  const status=await flower.locator('.status').innerText();assert.match(status,/uniquely solvable/);
  const clues=Number(status.match(/with (\d+) clues/)[1]);
  assert.equal(await flower.locator('svg .digit').count(),clues);
@@ -74,8 +74,8 @@ try {
  await pentagram.getByRole('button',{name:'Delete selected cell',exact:true}).click();
  await pentagram.getByRole('button',{name:'Undo',exact:true}).click();
  assert.match(await pentagram.locator('#pentagram-0').getAttribute('aria-label'),/digit 9/);
- await pentagram.getByRole('button',{name:'Generate unique puzzle',exact:true}).click();
- assert.equal(await pentagram.locator('svg .digit').count(),32);
+ await pentagram.getByRole('button',{name:'Generate unique puzzle',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.pentagram-tool .status')?.textContent.includes('uniquely solvable'));
+ assert.equal(await pentagram.locator('svg .digit').count(),Number((await pentagram.locator('.status').textContent()).match(/with (\d+) clues/)[1]));
  await pentagram.screenshot({path:'output/screenshots/pentagram-controls-layout.png'});
  await page.getByRole('tab',{name:'Shifted Sudoku',exact:true}).click();
  await page.getByRole('button',{name:'Add outer ring · 6 grids',exact:true}).click();

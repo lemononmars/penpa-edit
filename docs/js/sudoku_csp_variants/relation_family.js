@@ -26,6 +26,10 @@
                 throw new Error(constraintName + " requires SudokuCSP.registerConstraint");
             }
             csp.registerConstraint(constraintName, {
+                prepare: function(clue, helpers) {
+                    var handler = validators[clue.relation];
+                    return handler && handler.prepare ? handler.prepare(clue, helpers) : null;
+                },
                 validatePartial: function(board, clue, helpers) {
                     var handler = validators[clue.relation];
                     return handler && handler.validatePartial ?

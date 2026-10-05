@@ -1,31 +1,47 @@
 <script lang="ts">
   import bookletText from './wpc2026/pages.txt?raw';
   import { bookletUrl, rounds } from './wpc2026/content';
+  import WpcTeamEditor from './WpcTeamEditor.svelte';
 
+  const teamRounds = rounds.filter((round) => round.team);
   const pages = bookletText.replace(/\r/g, '').split('\f').filter((text) => text.trim());
   const totalPages = pages.length;
   const initialPage = Number(new URLSearchParams(location.search).get('page'));
   let page = Number.isInteger(initialPage) && initialPage >= 1 && initialPage <= totalPages ? initialPage : 1;
   let query = '';
   let view: 'page' | 'text' = 'page';
+  const initialEditor = Number(new URLSearchParams(location.search).get('editor'));
+  let showEditor = teamRounds.some((round) => round.number === initialEditor);
+  let selectedEditor = showEditor ? initialEditor : 8;
   $: activeRound = rounds.find((round) => page >= round.firstPage && page <= round.lastPage);
   $: matches = query.trim()
     ? pages.map((text, index) => ({ page: index + 1, text })).filter((item) => item.text.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))
     : [];
 
   function goToPage(next: number) {
+    showEditor = false;
     page = Math.min(totalPages, Math.max(1, next));
     const url = new URL(location.href);
+    url.searchParams.delete('editor');
     url.searchParams.set('page', String(page));
     history.replaceState(null, '', url);
   }
 
   function headingFor(pageNumber: number) {
     if (pageNumber === 1) return 'Schedule and cover';
-    if (pageNumber <= 3) return 'Competition rules and scoring';
-    if (pageNumber <= 5) return 'Glossary';
+    if (pageNumber === 2) return 'What changed in version 2';
+    if (pageNumber <= 4) return 'Competition rules and scoring';
+    if (pageNumber <= 6) return 'Glossary';
     const round = rounds.find((item) => pageNumber >= item.firstPage && pageNumber <= item.lastPage);
     return round ? `Round ${String(round.number).padStart(2, '0')} · ${round.name}` : 'Booklet page';
+  }
+  function openEditor(number = 8) {
+    showEditor = true;
+    selectedEditor = number;
+    const url = new URL(location.href);
+    url.searchParams.delete('page');
+    url.searchParams.set('editor', String(number));
+    history.replaceState(null, '', url);
   }
 
   function excerpt(text: string, needle: string) {
@@ -38,7 +54,7 @@
 
 <svelte:head>
   <title>WPC 2026 · Instructions booklet</title>
-  <meta name="description" content="Browse and search the 2026 World Puzzle Championship individual instructions booklet, including puzzle rules and illustrated examples." />
+  <meta name="description" content="Browse the WPC 2026 individual and team instructions, and sketch team round puzzles in construction workspaces." />
 </svelte:head>
 
 <div class="shell">
@@ -52,11 +68,19 @@
   <div class="hero">
     <p class="eyebrow">33rd World Puzzle Championship · Kolkata 2026</p>
     <h1>Instructions booklet</h1>
-    <p>Individual rounds and playoffs · Version 1, published 26 September 2026</p>
-    <p class="source">Browse all 53 original pages, including diagrams and solutions. The searchable text is extracted from the booklet; use the original page for precise rules and layouts.</p>
+    <p>Individual and team rounds · Version 2, published 5 October 2026</p>
+    <p class="source">Browse all 111 original pages, including diagrams and solutions. The searchable text is extracted from the booklet; use the original page for precise rules and layouts.</p>
+    <div class="section-switch" role="tablist" aria-label="WPC 2026 sections">
+      <button role="tab" aria-selected={!showEditor} class:chosen={!showEditor} onclick={() => goToPage(page)}>Booklet</button>
+      {#each teamRounds as round}
+        <button role="tab" aria-selected={showEditor && selectedEditor === round.number} class:chosen={showEditor && selectedEditor === round.number} onclick={() => openEditor(round.number)}>
+          <span class="tab-number">{String(round.number).padStart(2, '0')}</span> {round.name}
+        </button>
+      {/each}
+    </div>
   </div>
 
-  <div class="layout">
+  <div class="layout" class:editing={showEditor}>
     <aside aria-label="Booklet navigation">
       <label for="search">Search the booklet</label>
       <input id="search" type="search" placeholder="Puzzle name or rule" bind:value={query} />
@@ -75,32 +99,37 @@
       {:else}
         <div class="nav-group">
           <p class="group-title">Start here</p>
-          <button class:active={page === 1} onclick={() => goToPage(1)}>Schedule <span>1</span></button>
-          <button class:active={page >= 2 && page <= 3} onclick={() => goToPage(2)}>Rules & scoring <span>2–3</span></button>
-          <button class:active={page >= 4 && page <= 5} onclick={() => goToPage(4)}>Glossary <span>4–5</span></button>
+          <button class:active={!showEditor && page === 1} onclick={() => goToPage(1)}>Schedule <span>1</span></button>
+          <button class:active={!showEditor && page === 2} onclick={() => goToPage(2)}>Changes in v2 <span>2</span></button>
+          <button class:active={!showEditor && page >= 3 && page <= 4} onclick={() => goToPage(3)}>Rules & scoring <span>3–4</span></button>
+          <button class:active={!showEditor && page >= 5 && page <= 6} onclick={() => goToPage(5)}>Glossary <span>5–6</span></button>
         </div>
         {#each ['Thursday, 15 October', 'Friday, 16 October', 'Saturday, 17 October'] as day}
           <div class="nav-group">
             <p class="group-title">{day}</p>
             {#each rounds.filter((item) => item.day === day) as round}
-              <button class:active={activeRound?.number === round.number} onclick={() => goToPage(round.firstPage)}>
-                <span class="round-name"><small>{String(round.number).padStart(2, '0')}</small> {round.name}</span>
+              <button class:active={!showEditor && activeRound?.number === round.number} onclick={() => goToPage(round.firstPage)}>
+                <span class="round-name"><small>{String(round.number).padStart(2, '0')}</small> {round.name}{round.team ? ' · Team' : ''}</span>
                 <span>{round.firstPage}–{round.lastPage}</span>
               </button>
+              {#if round.team}<button class="editor-link" onclick={() => openEditor(round.number)}>↳ Construction editor <span>Open</span></button>{/if}
             {/each}
           </div>
         {/each}
-        <p class="note">The supplied individual booklet has no pages for team rounds 08, 16, 17, and 19–21.</p>
+        <p class="note">Team round construction boards are local drafts. The booklet remains the source for official rules and examples.</p>
       {/if}
     </aside>
 
     <main>
+      {#if showEditor}
+        {#key selectedEditor}<WpcTeamEditor initialRound={selectedEditor} />{/key}
+      {:else}
       <div class="page-header">
         <div>
           <p class="eyebrow">PDF PAGE {page} OF {totalPages}</p>
           <h2>{headingFor(page)}</h2>
           {#if activeRound}
-            <p class="meta">{activeRound.time} · {activeRound.minutes} minutes · {activeRound.points} points{activeRound.playoffs ? ' · Playoffs' : ` · ${activeRound.bonus}× bonus`}</p>
+            <p class="meta">{activeRound.time} · {activeRound.minutes} minutes · {activeRound.points}{activeRound.number === 8 ? '+' : ''} points{activeRound.team ? ' · Team' : activeRound.playoffs ? ' · Playoffs' : ''}{activeRound.playoffs ? '' : ` · ${activeRound.bonus}× bonus`}</p>
           {/if}
         </div>
         <div class="pager">
@@ -122,12 +151,14 @@
       {:else}
         <pre class="transcript">{pages[page - 1]}</pre>
       {/if}
-      <p class="credit">Source: WPC 2026 Instructions Booklet, Individual, version 1. Examples belong to their credited creators; non-commercial reference.</p>
+      <p class="credit">Source: WPC 2026 Instructions Booklet, version 2. Examples belong to their credited creators; non-commercial reference.</p>
+      {/if}
     </main>
   </div>
 </div>
 
 <style>
+  .section-switch{display:flex;gap:7px;margin-top:22px;overflow-x:auto;padding-bottom:5px}.section-switch button{font:inherit;font-size:13px;color:#285741;border:1px solid #b9c9bc;border-radius:6px;background:white;padding:10px 13px;cursor:pointer;white-space:nowrap;flex:none}.section-switch button.chosen{background:#285741;color:white;border-color:#285741}.tab-number{font-weight:700;margin-right:3px}.layout.editing{display:block}.layout.editing aside{display:none}.editor-link{padding-left:23px!important;color:#547b5e!important;font-size:12px!important}
   :global(*){box-sizing:border-box}
   :global(body){margin:0;background:#f5f4ef;color:#20382e;font-family:Inter,Arial,sans-serif}
   :global(button),:global(input),:global(select){font:inherit}

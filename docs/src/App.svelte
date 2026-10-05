@@ -818,12 +818,12 @@
       /^arrow_/.test(submode)
     ) {
       if (/^(?:arrow_fouredge_[BGE]|arrow_cross|arrow_eight|arrow_fourtip)$/.test(submode)) {
-        const labels = submode === "arrow_cross" || submode === "arrow_fourtip"
-          ? ["←", "↑", "→", "↓", "↖", "↗", "↘", "↙"]
-          : arrows;
-        const count = Number(pu?.onoff_symbolmode_list?.[submode] || labels.length);
-        toolPanelOptions = labels.slice(0, count).map((glyph, index) => ({
-          value: String(index + 1), label: `Arrow ${index + 1}`, glyph, num: index + 1,
+        const count = Number(pu?.onoff_symbolmode_list?.[submode] || (submode === "arrow_fourtip" ? 4 : 8));
+        toolPanelOptions = Array.from({ length: count }, (_, index) => ({
+          value: String(index + 1),
+          label: `Arrow ${index + 1}`,
+          sym: submode,
+          num: Array.from({ length: count }, (_, bit) => bit === index ? 1 : 0),
         }));
       } else if (
         [

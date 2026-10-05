@@ -1,28 +1,37 @@
 <script lang="ts">
+ import {onMount,onDestroy} from 'svelte';
+ import {loadToolState,saveToolState,downloadToolBackup,readToolBackup} from './wsc2026/toolState.mjs';
+ import {createToolSearch} from './wsc2026/toolSearch.mjs';
+ let ready=false,saveAvailable=true,searchBusy=false;
+ const search=createToolSearch(busy=>searchBusy=busy);
+ function cancelSearch(){search.cancel();message='Search cancelled; board kept.';}
+ async function runSearch(action:string,payload:any={}){message=action==='generate'?'Generating unique puzzle…':action==='random'?'Finding a random solution…':'Solving…';try{return await search.run('flower',action,payload);}catch(error){message=error instanceof Error?error.message:'Search failed.';return null;}}
+ onDestroy(()=>search.cancel());
+
  let editMode: 'set'|'solve' = 'set';
  let boardSvg: SVGSVGElement;
  import SudokuPuzzleControls from './SudokuPuzzleControls.svelte';
- import { FLOWER_CELL_COUNT, flowerLabel, flowerConflicts, solveFlower, randomFlowerSolution, generateFlowerPuzzle } from './wsc2026/flowerSudoku.mjs';
+ import { FLOWER_CELL_COUNT, flowerLabel, flowerConflicts } from './wsc2026/flowerSudoku.mjs';
  import { FLOWER_CENTER as CENTER, FLOWER_LAYOUTS, flowerHighlightMask } from './wsc2026/flowerGeometry.mjs';
  const EMPTY = () => Array(FLOWER_CELL_COUNT).fill(0);
  const EMPTY_NOTES = () => Array.from({length:FLOWER_CELL_COUNT},()=>[] as number[]);
  let values = EMPTY(), centerNotes = EMPTY_NOTES(), cornerNotes = EMPTY_NOTES();
  let givens = Array(FLOWER_CELL_COUNT).fill(false);
- let selected = 0, solution: number[] | null = null, generationClues = 36;
+ let selected = 0, generationClues = 36;
  let mode: 'normal'|'center'|'corner' = 'normal';
  const geometryLayout = FLOWER_LAYOUTS.petals;
  let showHighlights = true, showConflicts = true;
- let activeFeature: 'solution'|'generated'|null = null;
  let history: any[] = [];
  let message = 'Select a cell and enter a digit. Each cell belongs to two columns and one region.';
  const highlightColors = ['#fff','#c5eeee','#ccdffc','#cfddf4','#ffe4bd','#d6ecc4','#e4def0','#f4e4cf'];
  $: conflicts = flowerConflicts(values);
+ $: complete=values.every(Boolean)&&conflicts.size===0;
  $: labels = Array.from({length:FLOWER_CELL_COUNT},(_,i)=>flowerLabel(i));
- function remember() { history = [...history, { givens:givens.slice(), values:values.slice(), centerNotes:centerNotes.map(n=>n.slice()), cornerNotes:cornerNotes.map(n=>n.slice()), solution:solution?.slice()||null, activeFeature, selected, message }]; }
- function undo() {
+ function remember() { if(searchBusy)cancelSearch(); history = [...history, { givens:givens.slice(), values:values.slice(), centerNotes:centerNotes.map(n=>n.slice()), cornerNotes:cornerNotes.map(n=>n.slice()), selected, message }]; }
+ function undo() { if(searchBusy)cancelSearch();
   if (!history.length) return;
   const previous=history[history.length-1]; history=history.slice(0,-1);
-  ({givens,values,centerNotes,cornerNotes,solution,activeFeature,selected,message}=previous);
+  ({givens,values,centerNotes,cornerNotes,selected,message}=previous);
  }
  function select(index:number,event?:Event) { selected=index; (event?.currentTarget as SVGPathElement)?.focus(); }
  function enter(digit:number) {
@@ -38,7 +47,7 @@
    centerNotes[selected]=[]; cornerNotes[selected]=[];
    centerNotes=centerNotes.slice(); cornerNotes=cornerNotes.slice();
   }
-  solution=null; activeFeature=null;
+  
  }
  function keydown(event:KeyboardEvent,index:number) {
   if ((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z') {event.preventDefault();undo();return;}
@@ -50,22 +59,30 @@
    document.getElementById(`flower-cell-${selected}`)?.focus();
   }
  }
- function clearSolution(){remember();values=values.map((value,index)=>givens[index]?value:0);solution=null;activeFeature=null;message='Solution cleared; givens kept.';}
- function clearBoard() {remember();values=EMPTY();givens=Array(FLOWER_CELL_COUNT).fill(false);centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();selected=0;solution=null;activeFeature=null;message='Board cleared.';}
- function solve() {
-  const result=solveFlower(values); if(result.solution)remember(); solution=result.solution;editMode='solve';activeFeature='solution';
-  message=result.status==='solved'?'Completion shown in blue.':result.status==='invalid'?'Fix the repeated digits first.':result.status==='limit'?'Search limit reached. Add more digits and try again.':'No solution fits these entries.';
+ function clearSolution(){remember();values=values.map((value,index)=>givens[index]?value:0);message='Solution cleared; givens kept.';}
+ function clearBoard() {remember();values=EMPTY();givens=Array(FLOWER_CELL_COUNT).fill(false);centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();selected=0;message='Board cleared.';}
+ async function solve() {
+  const result=await runSearch('solve',{values});if(!result)return;
+  if(result.solution){remember();values=result.solution.slice();editMode='solve';centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();message='Solved; answers filled in blue.';}
+  else message=result.status==='invalid'?'Fix the repeated digits first.':result.status==='limit'?'Search limit reached. Add more digits and try again.':'No solution fits these entries.';
  }
- function makeRandomSolution() {
-  const result=randomFlowerSolution();
-  if(result.solution){remember();values=result.solution.slice();givens=Array(FLOWER_CELL_COUNT).fill(false);editMode='solve';solution=null;centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();activeFeature=null;message='Random valid Flower Sudoku solution created.';}
+ async function makeRandomSolution() {
+  const result=await runSearch('random');if(!result)return;
+  if(result.solution){remember();values=result.solution.slice();givens=Array(FLOWER_CELL_COUNT).fill(false);editMode='solve';centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();message='Random valid Flower Sudoku solution created.';}
   else message='No solution found within the search limit.';
  }
- function generatePuzzle() {
-  const result=generateFlowerPuzzle({clues:Math.max(20,Math.min(89,Number(generationClues)||36))});
-  if(result.puzzle){remember();values=result.puzzle.slice();givens=values.map(Boolean);editMode='solve';solution=result.solution;centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();activeFeature='generated';message=`Generated a uniquely solvable Flower Sudoku with ${result.clues} clues.`;}
+ async function generatePuzzle() {
+  const result=await runSearch('generate',{clues:Math.max(20,Math.min(89,Number(generationClues)||36))});if(!result)return;
+  if(result.puzzle){remember();values=result.puzzle.slice();givens=values.map(Boolean);editMode='solve';centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();message=`Generated a uniquely solvable Flower Sudoku with ${result.clues} clues.`;}
   else message='Puzzle generation could not find a solution within the search limit.';
  }
+
+ $: savedState={values,givens,centerNotes,cornerNotes,selected,mode,editMode,generationClues,showHighlights,showConflicts};
+ $: if(ready)saveAvailable=saveToolState('flower',savedState);
+ function restoreState(state:any){({values,givens,centerNotes,cornerNotes,selected,mode,editMode,generationClues,showHighlights,showConflicts}=state);}
+ onMount(()=>{const saved=loadToolState('flower');if(saved){restoreState(saved);message='Saved board restored.';}ready=true;});
+ function exportBackup(){downloadToolBackup('flower',savedState);}
+ async function importBackup(file:File){try{const state=await readToolBackup(file,'flower');remember();restoreState(state);message='Backup restored.';}catch(error){message=error instanceof Error?error.message:'Could not import backup.';throw error;}}
 </script>
 
 <section class="flower-tool" aria-labelledby="flower-title">
@@ -74,7 +91,7 @@
   <div class="editor">
    <svg bind:this={boardSvg} viewBox="0 0 800 800" role="group" aria-label="90-cell Flower Sudoku board">
     {#each geometryLayout.geometries as geometry,index}
-     {@const displayed=values[index] || (activeFeature==='solution'?solution?.[index]:0)}
+     {@const displayed=values[index]}
      <path id={`flower-cell-${index}`} d={geometry.path} class="cell" style:fill={showConflicts&&conflicts.has(index)?'#f5b8ad':selected===index?'#ffd477':showHighlights?highlightColors[flowerHighlightMask(selected,index)]:'#fff'} role="button" aria-label={`${labels[index]}${values[index]?`, digit ${values[index]}`:', empty'}`} aria-pressed={selected===index} tabindex={selected===index?0:-1} onclick={event=>select(index,event)} onfocus={()=>selected=index} onkeydown={event=>keydown(event,index)}/>
      <path d={geometry.outline} class="cell-outline"/>
      {#if displayed}<text x={geometry.center.x} y={geometry.center.y} class="digit" class:given-digit={givens[index]&&!!values[index]} class:solved-digit={!givens[index]}>{displayed}</text>
@@ -87,9 +104,9 @@
     <circle cx={CENTER} cy={CENTER} r="100" class="hub"/><text x={CENTER} y={CENTER} class="hub-label">{labels[selected]}</text>
    </svg>
    {#if showHighlights}<div class="unit-legend" aria-label="Selected cell constraints"><span class="ccw">Counterclockwise column</span><span class="cw">Clockwise column</span><span class="region">Region</span></div>{/if}
-   <p class="status" aria-live="polite">{message}</p>
+   <p class="status" aria-live="polite">{complete?'Complete':message}</p>
   </div>
-  <SudokuPuzzleControls {mode} {editMode} canUndo={history.length>0} onDigit={enter} onMode={next=>mode=next} onEditMode={next=>editMode=next} onDelete={()=>enter(0)} onUndo={undo} onSolve={solve} onClearBoard={clearBoard} onClearSolution={clearSolution} onRandom={makeRandomSolution} onGenerate={generatePuzzle} bind:generationClues maxClues={89} {showHighlights} {showConflicts} onHighlights={()=>showHighlights=!showHighlights} onConflicts={()=>showConflicts=!showConflicts} {boardSvg} filename="flower-sudoku" bookletPage={30}/>
+  <SudokuPuzzleControls busy={searchBusy} onCancel={cancelSearch} onExportBackup={exportBackup} onImportBackup={importBackup} {saveAvailable} {mode} {editMode} canUndo={history.length>0} onDigit={enter} onMode={next=>mode=next} onEditMode={next=>editMode=next} onDelete={()=>enter(0)} onUndo={undo} onSolve={solve} onClearBoard={clearBoard} onClearSolution={clearSolution} onRandom={makeRandomSolution} onGenerate={generatePuzzle} bind:generationClues maxClues={89} {showHighlights} {showConflicts} onHighlights={()=>showHighlights=!showHighlights} onConflicts={()=>showConflicts=!showConflicts} {boardSvg} filename="flower-sudoku" bookletPage={30}/>
  </div>
 </section>
 

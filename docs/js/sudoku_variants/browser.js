@@ -80,7 +80,19 @@
    case 'odd':return v.every(d=>!d||d%2===1);
   }return false;
  }
- return {valid,validate,kinds};
+ function prepare(q,helpers){
+  if(!q||q.kind!=='differences')return null;
+  if(!valid(q))return {validatePartial:()=>false};
+  const first=q.cells[0],second=q.cells[1],difference=q.value;
+  return {validatePartial:function(board){
+   const a=board[first.row]?.[first.col]||0,b=board[second.row]?.[second.col]||0;
+   if(a&&b)return Math.abs(a-b)===difference;
+   const value=a||b,size=helpers.size;
+   if(!value)return difference<size;
+   return value-difference>=1||value+difference<=size;
+  }};
+ }
+ return {valid,validate,prepare,kinds};
 });
 
 (function(root, factory) {

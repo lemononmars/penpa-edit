@@ -80,7 +80,19 @@
    case 'odd':return v.every(d=>!d||d%2===1);
   }return false;
  }
- return {valid,validate,kinds};
+ function prepare(q,helpers){
+  if(!q||q.kind!=='differences')return null;
+  if(!valid(q))return {validatePartial:()=>false};
+  const first=q.cells[0],second=q.cells[1],difference=q.value;
+  return {validatePartial:function(board){
+   const a=board[first.row]?.[first.col]||0,b=board[second.row]?.[second.col]||0;
+   if(a&&b)return Math.abs(a-b)===difference;
+   const value=a||b,size=helpers.size;
+   if(!value)return difference<size;
+   return value-difference>=1||value+difference<=size;
+  }};
+ }
+ return {valid,validate,prepare,kinds};
 });
 
 
@@ -1093,7 +1105,7 @@
 });
 
 // Source: region_constraints/wsc_rules.js
-(function(root,factory){if(typeof module!=='undefined'&&module.exports)module.exports=factory(require('../../sudoku_variants/wsc_rules.js'));else factory(root.Wsc2026Rules)(root.SudokuCSP);})(typeof globalThis!=='undefined'?globalThis:this,function(rules){return function(csp){csp.registerConstraint('wscRules',{validatePartial:rules.validate,validateComplete:rules.validate});};});
+(function(root,factory){if(typeof module!=='undefined'&&module.exports)module.exports=factory(require('../../sudoku_variants/wsc_rules.js'));else factory(root.Wsc2026Rules)(root.SudokuCSP);})(typeof globalThis!=='undefined'?globalThis:this,function(rules){return function(csp){csp.registerConstraint('wscRules',{validatePartial:rules.validate,validateComplete:rules.validate,prepare:rules.prepare});};});
 
 // Source: line_constraints/almost_palindromes.js
 (function(root, factory) {
@@ -1296,6 +1308,10 @@
                 throw new Error(constraintName + " requires SudokuCSP.registerConstraint");
             }
             csp.registerConstraint(constraintName, {
+                prepare: function(clue, helpers) {
+                    var handler = validators[clue.relation];
+                    return handler && handler.prepare ? handler.prepare(clue, helpers) : null;
+                },
                 validatePartial: function(board, clue, helpers) {
                     var handler = validators[clue.relation];
                     return handler && handler.validatePartial ?
@@ -4114,15 +4130,39 @@
             });
 
             var assignedOutside = values.filter(Boolean);
-            return (clue.clues || []).every(function(value) {
-                return assignedOutside.indexOf(value) !== -1 || assignedOutside.length < values.length;
-            }) && (assignedOutside.length < values.length || clue.clues.every(function(value) {
-                return assignedOutside.indexOf(value) !== -1;
-            }));
+            var required = Array.from(new Set(clue.clues || []));
+            var missing = required.filter(function(value) {
+                return assignedOutside.indexOf(value) === -1;
+            }).length;
+            // Each missing clue needs its own remaining cell. In a fully clued
+            // group this rejects non-clue digits as soon as they are assigned.
+            return missing <= values.length - assignedOutside.length;
         }
 
         ["outside","outside234"].forEach(function(relation) {
-            family.register(relation, validate);
+            family.register(relation, {
+                validatePartial: validate,
+                prepare: function(clue, helpers) {
+                    var required = Array.from(new Set(clue.clues || []));
+                    if (!required.every(function(value) {
+                        return Number.isInteger(value) && value >= 1 && value <= helpers.size;
+                    })) return null;
+                    var requiredMask = required.reduce(function(mask, value) { return mask | (1 << value); }, 0);
+                    var cells = clue.cells;
+                    return {
+                        validatePartial: function(board) {
+                            var assigned = 0;
+                            var remaining = 0;
+                            for (var index = 0; index < cells.length; index++) {
+                                var value = helpers.cellValue(board, cells[index]);
+                                if (value) assigned |= 1 << value;
+                                else remaining++;
+                            }
+                            return helpers.countBits(requiredMask & ~assigned) <= remaining;
+                        }
+                    };
+                }
+            });
         });
     };
 });

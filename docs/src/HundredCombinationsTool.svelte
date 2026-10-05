@@ -1,4 +1,8 @@
 <script lang="ts">
+ import {onMount} from 'svelte';
+ import ToolBackupControls from './ToolBackupControls.svelte';
+ import {loadToolState,saveToolState,downloadToolBackup,readToolBackup} from './wsc2026/toolState.mjs';
+ let ready=false,saveAvailable=true,backupError='';
  import { hundredCombinationGroups } from './wsc2026/references.js';
  let groupIndex=3, query='', chosenNumber:number|null=null;
  const digits=Array.from({length:9},(_,i)=>i+1);
@@ -8,10 +12,16 @@
  $: matches=terms.filter(({values})=>(chosenNumber===null||values.includes(chosenNumber)) && query.trim().split(/[\s,+]+/).filter(Boolean).every((term)=>values.includes(Number(term))));
  $: pairCounts=Object.fromEntries(Array.from({length:81},(_,i)=>{const number=(Math.floor(i/9)+1)*10+i%9+1;return [number,terms.filter(({values})=>values.includes(number)).length];}));
  function chooseGroup(index:number){groupIndex=index;chosenNumber=null;query='';}
+ $: savedState={groupIndex,query,chosenNumber};
+ $: if(ready)saveAvailable=saveToolState('hundred',savedState);
+ onMount(()=>{const saved=loadToolState('hundred');if(saved)({groupIndex,query,chosenNumber}=saved);ready=true;});
+ function exportBackup(){downloadToolBackup('hundred',savedState);}
+ async function importBackup(file:File){try{const state=await readToolBackup(file,'hundred');({groupIndex,query,chosenNumber}=state);backupError='';}catch(e){backupError=e instanceof Error?e.message:'Could not import backup.';throw e;}}
 </script>
 
 <section class="hundred-tool" aria-labelledby="hundred-title">
  <header><div><p class="eyebrow">ROUND 3 · NUMBER REFERENCE</p><h2 id="hundred-title">Make 100</h2><p>Find the numbers that can share a row. Every sum uses distinct digits and fits the available shaded cells.</p></div><div class="total"><strong>{total}</strong><span>valid combinations</span></div></header>
+ <ToolBackupControls onExport={exportBackup} onImport={importBackup} {saveAvailable}/>{#if backupError}<p role="alert">{backupError}</p>{/if}
  <div class="workspace">
   <nav class="group-picker" aria-label="Combination groups">
    <h3>Choose the row’s numbers</h3>

@@ -4,16 +4,20 @@ var SudokuCSP = (function() {
     var constraintRegistry = {};
     var evaluatorCache = typeof WeakMap !== "undefined" ? new WeakMap() : null;
 
-    function cloneBoard(board) {
-        var requestedSize = board && board.length;
-        if (requestedSize) {
-            SIZE = requestedSize;
+    function activateSize(size) {
+        if (SIZE !== size) {
+            SIZE = size;
             ALL_DIGITS = (1 << (SIZE + 1)) - 2;
             if (helpers) {
                 helpers.size = SIZE;
                 helpers.allDigitsMask = ALL_DIGITS;
             }
         }
+    }
+
+    function cloneBoard(board) {
+        var requestedSize = board && board.length;
+        if (requestedSize) activateSize(requestedSize);
         return Array.from({ length: SIZE }, function(_, row) {
             return Array.from({ length: SIZE }, function(__, col) {
                 var value = board && board[row] ? parseInt(board[row][col], 10) : 0;
@@ -305,7 +309,10 @@ var SudokuCSP = (function() {
             }
             var handler = constraintRegistry[name];
             (constraints[name] || []).forEach(function(item) {
-                var entry = { handler: handler, item: item };
+                // Prepare immutable clue data once, rather than parsing it again
+                // for every trial digit during recursive search.
+                var prepared = typeof handler.prepare === "function" ? handler.prepare(item, helpers) : null;
+                var entry = { handler: prepared || handler, item: item };
                 entries.push(entry);
                 var cells = cellsInConstraint(item);
                 if (!cells.length) {
@@ -329,6 +336,9 @@ var SudokuCSP = (function() {
         }
         var evaluator = {
             validateAll: function(board, complete) { return validate(board, entries, complete); },
+            hasCellConstraints: function(row, col) {
+                return globalEntries.length > 0 || !!byCell[row + ":" + col];
+            },
             validateCell: function(board, row, col) {
                 if (!validate(board, globalEntries, false)) return false;
                 return validate(board, byCell[row + ":" + col] || [], false);
@@ -513,6 +523,9 @@ var SudokuCSP = (function() {
         var mask = coreMask(state, row, col);
         var allowed = 0;
         evaluator = evaluator || compileConstraints(constraints || {});
+        // Core row/column/box masks are sufficient when no variant rule
+        // touches this cell. Avoid trial placements and empty rule checks.
+        if (!evaluator.hasCellConstraints(row, col)) return mask;
         for (var digit = 1; digit <= SIZE; digit++) {
             var bit = 1 << digit;
             if (!(mask & bit)) {
@@ -698,15 +711,25 @@ var SudokuCSP = (function() {
 
     async function analyzeCandidatesAsync(board, constraints, options) {
         options = options || {};
-        var report = typeof options.onProgress === "function" ? options.onProgress : function() {};
-        var cancelled = typeof options.isCancelled === "function" ? options.isCancelled : function() { return false; };
+        var progressCallback = typeof options.onProgress === "function" ? options.onProgress : function() {};
+        var cancellationCallback = typeof options.isCancelled === "function" ? options.isCancelled : function() { return false; };
         var source = cloneBoard(board);
+        var analysisSize = source.length;
+        function report(event) {
+            try { progressCallback(event); }
+            finally { activateSize(analysisSize); }
+        }
+        function cancelled() {
+            try { return cancellationCallback(); }
+            finally { activateSize(analysisSize); }
+        }
         var state = createState(source, constraints);
         var candidates = Array.from({ length: SIZE }, function() {
             return Array.from({ length: SIZE }, function() { return []; });
         });
         report({ type: "start", message: "Validating givens and variant constraints." });
         await nextPaint();
+        activateSize(analysisSize);
         if (cancelled()) {
             return { cancelled: true };
         }
@@ -721,6 +744,10 @@ var SudokuCSP = (function() {
         var seedSolutions = [];
         var seenSeeds = {};
         (options.seedSolutions || []).forEach(function(solution) {
+            // An old witness from another grid size must not change the
+            // dimensions of this analysis while it is being normalized.
+            if (!Array.isArray(solution) || solution.length !== analysisSize ||
+                !solution.every(function(row) { return Array.isArray(row) && row.length === analysisSize; })) return;
             var normalized = cloneBoard(solution);
             var key = JSON.stringify(normalized);
             if (!seenSeeds[key] && solutionMatches(normalized, source, constraints)) {
@@ -745,6 +772,7 @@ var SudokuCSP = (function() {
                 "Found an initial complete solution."
         });
         await nextPaint();
+        activateSize(analysisSize);
 
         var possibleMasks = Array.from({ length: SIZE }, function() { return new Array(SIZE).fill(0); });
         var forced = cloneBoard(source);
@@ -780,8 +808,10 @@ var SudokuCSP = (function() {
             message: "Testing " + checks.length + " cell/digit answer facts against complete solutions."
         });
         await nextPaint();
+        activateSize(analysisSize);
 
         var tested = 0;
+        var lastYieldAt = Date.now();
         var witnessCount = witnessSolutions.length;
         var refutedCount = 0;
         for (var i = 0; i < checks.length; i++) {
@@ -811,8 +841,12 @@ var SudokuCSP = (function() {
                     (alreadyWitnessed ? " already covered by a witness." :
                         witness ? " occurs in a complete solution." : " is impossible in every solution.")
             });
-            if (tested % 4 === 0 || tested === checks.length) {
+            // Yield on elapsed work, not on a fixed count of already-covered
+            // facts. Cheap witness checks should not each incur timer delays.
+            if (tested === checks.length || (tested % 4 === 0 && Date.now() - lastYieldAt >= 12)) {
                 await nextPaint();
+                activateSize(analysisSize);
+                lastYieldAt = Date.now();
             }
         }
 

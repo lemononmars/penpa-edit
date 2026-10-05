@@ -7,7 +7,9 @@
     "prebuild": "npm run build:csp-variants",
     "build": "vite build && node scripts/copy-static-assets.mjs",
     "preview": "vite preview",
-    "test:solver": "node --test test/sudoku_solver.test.js test/sudoku_witness_cache.test.js",
+    "test:solver": "node --test test/sudoku_solver.test.js test/sudoku_witness_cache.test.js test/sudoku_solver_performance.test.js test/sudoku_core_review.test.js",
+    "benchmark:solver": "node scripts/benchmark-sudoku-variants.cjs",
+    "benchmark:solver-core": "node scripts/benchmark-sudoku-core.cjs",
     "test": "nodemon --watch test/test_server.js test/test_server.js",
     "prelocal": "npm run build:csp-variants",
     "local": "vite --host 127.0.0.1",
@@ -28,6 +30,8 @@
     "@supabase/supabase-js": "^2.112.2",
     "@vercel/functions": "^3.9.8",
     "i18n-js": "^4.5.3",
-    "jules": "^1.0.0"
+    "jspdf": "^4.2.1",
+    "jules": "^1.0.0",
+    "svg2pdf.js": "^2.8.1"
   }
 }
