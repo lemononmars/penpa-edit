@@ -4609,6 +4609,7 @@ var SudokuTools = (function() {
             irregular: "Regions",
             sudoku: "Sudoku",
             symbol: variant === "deadoralivearrows" ? (submode === "arrow_B_W" ? "White Arrow" : "Grey Arrow") :
+                /arrow/i.test(submode || "") ? "Arrow" :
                 submode === "diamond_SS" && variant === "doublekropki" ? "Double Kropki Dot" :
                 submode === "circle_SS" ? (variant === "consecutive" || variant === "consecutivepairs" ? "Consecutive Bar" : "Kropki Dot") :
                 variant === "odd even" || variant === "odd even count" || variant === "odd even bridge" ? "Odd / Even Mark" :
@@ -4637,7 +4638,19 @@ var SudokuTools = (function() {
         return labels[mode] || mode;
     }
 
+    function variantPresentation(variant) {
+        var catalog = window.SudokuVariantPresentation || {};
+        var compact = variant.toLowerCase().replace(/[^a-z0-9]/g, "");
+        var key = Object.keys(catalog).find(function(value) {
+            return value.toLowerCase().replace(/[^a-z0-9]/g, "") === compact;
+        });
+        return catalog[variant] || (key && catalog[key]) || {};
+    }
+
     function variantLabel(variant) {
+        var presentation = variantPresentation(variant);
+        var setting = typeof penpa_constraints !== "undefined" && penpa_constraints.setting[variant];
+        if (presentation.title || (setting && setting.title)) return presentation.title || setting.title;
         var select = byId("constraints_settings_opt");
         var option = select && Array.prototype.find.call(select.options, function(candidate) {
             return candidate.value === variant;
@@ -5359,35 +5372,21 @@ var SudokuTools = (function() {
         }
 
         function getVariantIcon(variant) {
-            var icons = {
-                "classic": "∅",
-                "odd even": "∅",
-                "diagonal": "∅",
-                "anti diagonal": "∅",
-                "anti king": "∅",
-                "anti knight": "∅",
-                "non consecutive": "∅",
-                "arrow": "╱",
-                "thermo": "╱",
-                "palindrome": "╱",
-                "killer": "▧",
-                "24trio": "▧",
-                "24-trio": "▧",
-                "kropki": "⊟",
-                "doublekropki": "⊟",
-                "xv": "⊟",
-                "battenburg": "⊟",
-                "skyscraper": "↘",
-                "sandwich": "↘",
-                "starproduct": "□",
-                "sudokuwithstars": "□",
-                "irregular": "◩",
-                "scattered": "◩",
-                "deficit": "◩",
-                "surplus": "◩",
-                "toroidal": "◩"
-            };
-            return icons[variant] || "∅";
+            var icons = { "no-input": "∅", line: "╱", cage: "▧", shading: "◩",
+                outside: "↘", cell: "□", edge: "⊟", intersection: "✣" };
+            var setting = penpa_constraints.setting[variant] || {};
+            var categories = variantPresentation(variant).categories || setting.inputCategories || [];
+            var type = ["outside", "cage", "shading", "line", "no-input", "cell", "edge", "intersection"].find(function(category) {
+                return categories.indexOf(category) !== -1;
+            });
+            if (!type) {
+                var modes = setting.modeset || [];
+                type = setting.outside ? "outside" : modes.indexOf("cage") !== -1 ? "cage" :
+                    modes.indexOf("surface") !== -1 ? "shading" :
+                    modes.some(function(mode) { return mode === "line" || mode === "lineE" || mode === "special"; }) ? "line" :
+                    modes.indexOf("symbol") !== -1 ? "cell" : modes.indexOf("number") !== -1 ? "cell" : "no-input";
+            }
+            return icons[type];
         }
 
         var isZeroEight = ["0to8", "08arrow", "08skyscrapers"].some(function(v) { return activeVariants().indexOf(v) !== -1; });

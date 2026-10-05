@@ -1,5 +1,6 @@
 <script lang="ts">
   export let editorMode = false;
+  const laxmanRoute = /^\/wpc2026\/laxman-rekha\/?$/.test(location.pathname);
   import { onMount } from "svelte";
   import { checkLaxman } from "./laxmanCheck.mjs";
   import { guideFor, variantRules } from "./variantRules";
@@ -80,6 +81,12 @@
   }
 
   if (typeof window !== "undefined") {
+    (window as any).SudokuVariantPresentation = Object.fromEntries(
+      [...variationByValue].map(([value, variation]) => [value, {
+        title: variation.name,
+        categories: variation.inputType.categories,
+      }]),
+    );
     (window as any).SudokuSolverRuleText = Object.fromEntries(
       Object.entries(variantRules).map(([key, val]) => [key.replace(/\s+/g, ""), val.rule])
     );
@@ -450,6 +457,10 @@
   }
 
   function chooseGenre(value: string) {
+    if (value === "laxman-rekha" && !laxmanRoute) {
+      window.location.assign("/wpc2026/?editor=10");
+      return;
+    }
     selectedGenre = value;
     if (value === "laxman-rekha") {
       const pu = (window as any).pu;
@@ -1168,7 +1179,7 @@
       F4: editorMode ? "genre" : "modes",
     };
     const nextLayer = layerByKey[event.key];
-    if (!nextLayer) return;
+    if (!nextLayer || (editorMode && !laxmanRoute && event.key === "F4")) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     if (editorMode && window.matchMedia("(max-width: 768px)").matches) showMobileLayer(nextLayer);
@@ -2755,7 +2766,7 @@
       if (isEmbedded) chooseLayer("solution");
       else if (editorMode) {
         initializeEditorGrid();
-        const requestedGenre = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("genre");
+        const requestedGenre = laxmanRoute ? "laxman-rekha" : new URLSearchParams(window.location.hash.replace(/^#/, "")).get("genre");
         if (requestedGenre === "laxman-rekha") {
           mobileDeckView = "genre";
           selectedGenre = requestedGenre;
@@ -2887,6 +2898,7 @@
   class:embedded={isEmbedded}
   class:battle={isBattle}
   class:editor={editorMode}
+  class:laxman-editor={laxmanRoute}
   class:hide-left-sidebar={hideLeftSidebar}
 >
   <ToastContainer {toasts} onDismiss={dismissToast} />
@@ -2924,7 +2936,7 @@
             class:active={mobileDeckView === "misc"}
             on:click={() => showMobileLayer("modes")}>Misc</button>
         {/if}
-        {#if editorMode}
+        {#if editorMode && laxmanRoute}
           <button type="button" role="tab" aria-selected={mobileDeckView === "genre"} class:active={mobileDeckView === "genre"} on:click={() => showMobileLayer("genre")}>Genre <kbd>F4</kbd></button>
         {/if}
       </div>
@@ -3050,7 +3062,7 @@
         </div>
       {/if}
     </div>
-    {#if editorMode}
+    {#if editorMode && laxmanRoute}
       <div class="mobile-deck-pane" class:hidden-section={mobileDeckView !== "genre"} aria-label="Genre controls">
         <div bind:this={mobileGenreSlot}></div>
         {#if layer === "genre" && toolPanelOptions.length}
@@ -3205,9 +3217,9 @@
               on:click={() => chooseLayer("solution")}
               ><i class="fa fa-check" aria-hidden="true"></i>{currentVariant === "sudokuwithstars" ? "Star" : "Solve"} <kbd>F3</kbd></button
             >
-{#if editorMode}
+{#if editorMode && laxmanRoute}
             <button class:active={layer === "genre"} on:click={() => chooseLayer("genre")}><i class="fa fa-th-large" aria-hidden="true"></i>Genre <kbd>F4</kbd></button>
-            {:else}
+            {:else if !editorMode}
             <button
               class:active={layer === "modes"}
               on:click={() => chooseLayer("modes")}
@@ -3328,13 +3340,13 @@
           </section>
         {/if}
 
-        {#if editorMode}
+        {#if editorMode && laxmanRoute}
         <div bind:this={desktopGenreAnchor}></div>
         <section bind:this={genreSection} class="genre-section" class:hidden-section={layer !== "genre"}>
           <label class="genre-label" for="puzzle-genre">Genre</label>
           <select id="puzzle-genre" bind:value={selectedGenre} on:change={() => chooseGenre(selectedGenre)}>
             <option value="">Choose a genre</option>
-            <option value="laxman-rekha">✎ Laxman Rekha</option>
+            <option value="laxman-rekha">✎ Laxman Rekha · WPC 2026</option>
           </select>
           {#if selectedGenre === "laxman-rekha"}
             <p class="genre-intro">Round 10 · Loop Mashup. Draw a single loop on cell edges, then place its six kinds of clues.</p>
@@ -8061,6 +8073,8 @@
   }
   .editor .segmented { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .editor .mobile-deck-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .editor:not(.laxman-editor) .segmented,
+  .editor:not(.laxman-editor) .mobile-deck-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .editor-mobile-actions {
     width: 100%;
     margin-top: 6px;

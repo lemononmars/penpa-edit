@@ -2,7 +2,7 @@ import { mount } from "svelte";
 import App from "./App.svelte";
 import BattleApp from "./BattleApp.svelte";
 
-const editorMode = /^\/puzzle\/?$/.test(location.pathname);
+const editorMode = /^\/(?:puzzle|wpc2026\/laxman-rekha)\/?$/.test(location.pathname);
 if (editorMode) document.documentElement.classList.add("puzzle-editor");
 
 const isBattleDomain = (location.hostname.includes("sudokubattle") || location.hostname.includes("sudoku-battle")) && !location.search.includes("embed=1");

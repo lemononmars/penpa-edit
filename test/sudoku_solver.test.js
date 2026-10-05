@@ -3058,7 +3058,13 @@ test("validates parity sandwiches, clocks, XIVI, slots, wheels, Pinnochio, and S
     assert.equal(SudokuCSP.solve(solved, { sumDetectorGroups: [{ clues: [
         { origin: { row: 0, col: 5 }, rays: [[{ row: 1, col: 5 }, { row: 2, col: 5 }, { row: 3, col: 5 }]] },
         { origin: { row: 0, col: 6 }, rays: [[{ row: 1, col: 5 }, { row: 2, col: 4 }]] }
-    ] }] }).solved, false, "Sum Detector rejects arrows that individually require n=3 and n=2");
+    ] }] }).solved, true, "Sum Detector allows independent lengths n=3 and n=2");
+    assert.equal(SudokuCSP.solve(solved, { sumDetectorGroups: [{ clues: [
+        { origin: { row: 0, col: 5 }, rays: [[{ row: 1, col: 5 }]] }
+    ] }] }).solved, false, "The ray must contain a matching nonempty prefix");
+    assert.equal(SudokuCSP.solve(solved, { sumDetectorGroups: [{ clues: [
+        { origin: { row: 0, col: 5 }, rays: [[]] }
+    ] }] }).solved, false, "An arrow cannot sum zero cells");
 });
 
 test("normalizes supplied and blank Even Sandwich sightlines", function() {

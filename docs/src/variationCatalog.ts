@@ -583,6 +583,8 @@ export function installVariationCatalog() {
         } else if (!constraints.setting[variation.value]) {
             constraints.setting[variation.value] = genericSetting(variation);
         }
+        constraints.setting[variation.value].title = variation.name;
+        constraints.setting[variation.value].inputCategories = variation.inputType.categories;
         constraints.setting[variation.value].outside = outsideVariationValues.has(variation.value);
         const option = document.createElement("option");
         option.value = variation.value;

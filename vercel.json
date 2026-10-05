@@ -13,6 +13,14 @@
       "destination": "/"
     },
     {
+      "source": "/wpc2026/laxman-rekha",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/wpc2026/laxman-rekha/",
+      "destination": "/index.html"
+    },
+    {
       "source": "/wpc2026",
       "destination": "/wpc2026/index.html"
     },

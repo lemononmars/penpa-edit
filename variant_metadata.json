@@ -5738,7 +5738,7 @@
       "id": "sumdetector",
       "name": "Sum Detector",
       "rules": {
-        "9x9": "Each arrow in the grid indicates that the sum of the first N digits along the direction pointed by the arrow is equal to the digit in the cell for some value of N."
+        "9x9": "The digit in an arrow cell equals the sum of one or more consecutive cells in the indicated direction, starting with the adjacent cell. Each arrow may use a different number of cells. Not all possible arrows are marked."
       },
       "tags": [
         "direction",

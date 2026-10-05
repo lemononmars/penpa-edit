@@ -1892,24 +1892,21 @@ registerConstraint("threeDigitNumbersKillers", {
             (group.clues || []).forEach(function(clue) {
                 (clue.rays || []).forEach(function(ray) { rays.push({ origin: clue.origin, cells: ray }); });
             });
-            if (!rays.length) return true;
-            for (var n = 1; n <= SIZE; n++) {
-                var commonNWorks = rays.every(function(ray) {
-                    if (ray.cells.length < n) return false;
-                    var target = cellValue(board, ray.origin);
-                    var sum = 0, blanks = 0;
-                    for (var index = 0; index < n; index++) {
-                        var value = cellValue(board, ray.cells[index]);
-                        if (value) sum += value;
-                        else blanks++;
-                    }
-                    if (target) return sum + blanks <= target && sum + blanks * SIZE >= target &&
-                        (blanks > 0 || sum === target);
-                    return sum + blanks <= SIZE;
-                });
-                if (commonNWorks) return true;
-            }
-            return false;
+            return rays.every(function(ray) {
+                var target = cellValue(board, ray.origin);
+                var sum = 0, blanks = 0;
+                // Each arrow chooses its own nonempty prefix, beginning next to its origin.
+                for (var index = 0; index < ray.cells.length; index++) {
+                    var value = cellValue(board, ray.cells[index]);
+                    if (value) sum += value;
+                    else blanks++;
+                    var minimum = sum + blanks;
+                    var maximum = sum + blanks * SIZE;
+                    if (target ? minimum <= target && maximum >= target : minimum <= SIZE) return true;
+                    if (minimum > (target || SIZE)) return false;
+                }
+                return false;
+            });
         }
     });
 

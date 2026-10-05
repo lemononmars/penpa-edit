@@ -254,7 +254,7 @@ function directoryTrailingSlashPlugin() {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = new URL(req.url || "/", "http://localhost");
-        if (url.pathname === "/puzzle" || url.pathname === "/puzzle/") { req.url = "/index.html" + url.search; } else if (url.pathname === "/wsc2026") { req.url = "/wsc2026/" + url.search; } else if (url.pathname === "/wpc2026") { req.url = "/wpc2026/" + url.search; } else if (url.pathname === "/tournament") {
+        if (["/puzzle", "/puzzle/", "/wpc2026/laxman-rekha", "/wpc2026/laxman-rekha/"].includes(url.pathname)) { req.url = "/index.html" + url.search; } else if (url.pathname === "/wsc2026") { req.url = "/wsc2026/" + url.search; } else if (url.pathname === "/wpc2026") { req.url = "/wpc2026/" + url.search; } else if (url.pathname === "/tournament") {
           req.url = "/tournament/" + url.search;
         } else if (url.pathname === "/tournament/host") {
           req.url = "/tournament/host/" + url.search;
@@ -277,7 +277,7 @@ function directoryTrailingSlashPlugin() {
     configurePreviewServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = new URL(req.url || "/", "http://localhost");
-        if (url.pathname === "/puzzle" || url.pathname === "/puzzle/") {
+        if (["/puzzle", "/puzzle/", "/wpc2026/laxman-rekha", "/wpc2026/laxman-rekha/"].includes(url.pathname)) {
           req.url = "/index.html" + url.search;
         }
         next();

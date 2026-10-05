@@ -2,7 +2,18 @@
 <html lang="en">
 
 <head>
-    <script>if (location.pathname === "/puzzle" || location.pathname === "/puzzle/") { const base = document.createElement("base"); base.href = "/"; document.head.appendChild(base); }</script>
+    <script>
+        const legacyPuzzleRoute = /^\/puzzle\/?$/.test(location.pathname);
+        const laxmanRoute = /^\/wpc2026\/laxman-rekha\/?$/.test(location.pathname);
+        if (legacyPuzzleRoute && new URLSearchParams(location.hash.slice(1)).get("genre") === "laxman-rekha") {
+            location.replace("/wpc2026/laxman-rekha/" + location.search + location.hash);
+        }
+        if (legacyPuzzleRoute || laxmanRoute) {
+            const base = document.createElement("base");
+            base.href = "/";
+            document.head.appendChild(base);
+        }
+    </script>
     <script>
         if (window.self === window.top && (location.hostname.includes("sudokubattle") || location.hostname.includes("sudoku-battle")) && !location.search.includes("embed=1")) {
             window.isBattleDomain = true;
