@@ -28,9 +28,15 @@ test('all six Laxman clue types check and stop at the first wrong mark',()=>{
  p.pu_q.number[cell(0,0)]=['W',1,'1'];
  const dot=p.vertex[1][1]; p.point[dot].neighbor=[cell(0,0),cell(0,1),cell(1,0),cell(1,1)];
  p.pu_q.symbol[dot]=[2,'circle_SS',2];
- const square=p.point.length; p.point.push({x:2,y:.5,type:2,neighbor:[cell(0,1),cell(0,2)]});
- p.pu_q.symbol[square]=[1,'square_S',2]; p.pu_q.number[square]=['3',1,'5'];
+ const square=p.point.length; p.point.push({x:1,y:.5,type:2,neighbor:[cell(0,0),cell(0,1)]});
+ p.pu_q.symbol[square]=[1,'square_S',2]; p.pu_q.number[square]=['4',1,'5'];
  assert.equal(checkLaxman(p).ok,true);
  p.pu_q.number[cell(0,0)]=['S',1,'1'];
  const bad=checkLaxman(p); assert.equal(bad.ok,false); assert.equal(bad.point,cell(0,0)); assert.match(bad.message,/wrong side/i);
+});
+
+test('Myopia rejects diagonal arrow bits instead of ignoring them',()=>{
+ const p=board(), id=p.centerlist[5];
+ p.pu_q.symbol[id]=[[1,1,0,0,1,0,0,0],'arrow_cross',2];
+ assert.match(checkLaxman(p).message,/orthogonal/);
 });

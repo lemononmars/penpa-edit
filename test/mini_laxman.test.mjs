@@ -19,3 +19,16 @@ test('an unfinished or branched line is not a valid solution', () => {
   const puzzle = generateMiniLaxman(5, 123);
   assert.match(validateDrawnLoop(puzzle.solution.slice(1), 5).message, /open end|branch/);
 });
+
+test('Parallel Counts scans parallel edges on opposite sides, not collinear segments',()=>{
+ const cells=Array(16).fill(0);for(const i of [5,6,9,10])cells[i]=1;
+ assert.equal(clueHolds({type:'parallel',axis:'V',r:0,c:1,value:4},cells,4),true);
+ assert.equal(clueHolds({type:'parallel',axis:'V',r:0,c:1,value:2},cells,4),false);
+});
+
+test('Parallel Counts includes unused grid boundaries but excludes a boundary occupied by the loop',()=>{
+ const cells=Array(16).fill(0);for(const i of [5,6,9,10])cells[i]=1;
+ assert.equal(clueHolds({type:'parallel',axis:'V',r:1,c:2,value:0},cells,4),true);
+ const empty=Array(16).fill(0);
+ assert.equal(clueHolds({type:'parallel',axis:'H',r:1,c:0,value:4},empty,4),true);
+});

@@ -90,8 +90,8 @@ function parallel(cells, n, edges, axis, r, c) {
   const counts = [-1, 1].map(sign => {
     let count = 0;
     for (let step = 1; ; step++) {
-      const rr = axis === 'V' ? r + sign * step : r, cc = axis === 'H' ? c + sign * step : c;
-      if (axis === 'V' ? rr < 0 || rr >= n : cc < 0 || cc >= n) break;
+      const rr = axis === 'H' ? r + sign * step : r, cc = axis === 'V' ? c + sign * step : c;
+      if (axis === 'H' ? rr < 0 || rr > n : cc < 0 || cc > n) break;
       if (edges.has(axis === 'H' ? h(rr, cc) : v(rr, cc))) break;
       count++;
     }
@@ -280,7 +280,7 @@ export function generateMiniLaxman(n, seed = Math.floor(Math.random() * 0xffffff
       const next = clues.filter(item => !(item.type === 'polygraph' && item.r === clue.r && item.c === clue.c)).concat(clue);
       const result = findAlternative(n, next, target, 30000);
       if (result.proven && !result.alternate) { clues = next; added++; }
-      if (added >= (n === 5 ? 1 : 2)) break;
+      if (added >= Math.ceil(n * n / 5)) break;
     }
   }
   // Remove clues only after a complete search proves uniqueness survives.

@@ -3,6 +3,7 @@
   import { bookletUrl, rounds } from './wpc2026/content';
   import WpcTeamEditor from './WpcTeamEditor.svelte';
   import MiniLaxmanPractice from './MiniLaxmanPractice.svelte';
+  import VibhishanaPractice from './VibhishanaPractice.svelte';
 
   const editorRounds = rounds.filter((round) => round.team || round.number === 10);
   const pages = bookletText.replace(/\r/g, '').split('\f').filter((text) => text.trim());
@@ -13,7 +14,8 @@
   let view: 'page' | 'text' = 'page';
   const initialEditor = Number(new URLSearchParams(location.search).get('editor'));
   let showEditor = editorRounds.some((round) => round.number === initialEditor);
-  let showPractice = new URLSearchParams(location.search).get('practice') === 'laxman';
+  let practiceType = new URLSearchParams(location.search).get('practice') || 'laxman';
+  let showPractice = ['laxman','vibhishana','sanjeevani'].includes(new URLSearchParams(location.search).get('practice') || '');
   let selectedEditor = showEditor ? initialEditor : 8;
   $: activeRound = rounds.find((round) => page >= round.firstPage && page <= round.lastPage);
   $: matches = query.trim()
@@ -49,13 +51,14 @@
     url.searchParams.set('editor', String(number));
     history.replaceState(null, '', url);
   }
-  function openPractice() {
+  function openPractice(kind='laxman') {
+    practiceType=kind;
     showEditor = false;
     showPractice = true;
     const url = new URL(location.href);
     url.searchParams.delete('page');
     url.searchParams.delete('editor');
-    url.searchParams.set('practice', 'laxman');
+    url.searchParams.set('practice', kind);
     history.replaceState(null, '', url);
   }
 
@@ -72,7 +75,7 @@
   <meta name="description" content="Browse the WPC 2026 individual and team instructions, and sketch team round puzzles in construction workspaces." />
 </svelte:head>
 
-<div class="shell">
+<div class="shell" class:practice-wide={showPractice&&['vibhishana','sanjeevani'].includes(practiceType)}>
   <header>
     <div>
       <a class="home" href="/">Sudotoku</a><span class="divider">/</span><span>WPC 2026</span>
@@ -86,14 +89,23 @@
     <p>Individual and team rounds · Version 2, published 5 October 2026</p>
     <p class="source">Browse all 111 original pages, including diagrams and solutions. The searchable text is extracted from the booklet; use the original page for precise rules and layouts.</p>
     <div class="section-switch" role="tablist" aria-label="WPC 2026 sections">
-      <button role="tab" aria-selected={!showEditor && !showPractice} class:chosen={!showEditor && !showPractice} onclick={() => goToPage(page)}>Booklet</button>
-      <button role="tab" aria-selected={showPractice} class:chosen={showPractice} onclick={openPractice}>Mini Laxman Rekha</button>
-      {#each editorRounds as round}
-        <button role="tab" aria-selected={showEditor && selectedEditor === round.number} class:chosen={showEditor && selectedEditor === round.number} onclick={() => openEditor(round.number)}>
-          <span class="tab-number">{String(round.number).padStart(2, '0')}</span> {round.name}
-        </button>
-      {/each}
+      <button role="tab" aria-selected={!showEditor&&!showPractice} class:chosen={!showEditor&&!showPractice} onclick={()=>goToPage(page)}>IB</button>
+      <button role="tab" aria-selected={showPractice} class:chosen={showPractice} onclick={()=>openPractice(practiceType)}>Practice</button>
+      <button role="tab" aria-selected={showEditor} class:chosen={showEditor} onclick={()=>openEditor(selectedEditor)}>Editor</button>
     </div>
+    {#if showPractice}
+      <div class="round-switch" role="tablist" aria-label="Practice rounds">
+        <button role="tab" aria-selected={practiceType==='laxman'} class:chosen={practiceType==='laxman'} onclick={()=>openPractice('laxman')}>10 Laxman Rekha</button>
+        <button role="tab" aria-selected={practiceType==='vibhishana'} class:chosen={practiceType==='vibhishana'} onclick={()=>openPractice('vibhishana')}>19 Vibhishana</button>
+        <button role="tab" aria-selected={practiceType==='sanjeevani'} class:chosen={practiceType==='sanjeevani'} onclick={()=>openPractice('sanjeevani')}>21 Sanjeevani</button>
+      </div>
+    {:else if showEditor}
+      <div class="round-switch" role="tablist" aria-label="Editor rounds">
+        {#each editorRounds as round}
+          <button role="tab" aria-selected={selectedEditor===round.number} class:chosen={selectedEditor===round.number} onclick={()=>openEditor(round.number)}>{String(round.number).padStart(2,'0')} {round.name}</button>
+        {/each}
+      </div>
+    {/if}
   </div>
 
   <div class="layout" class:editing={showEditor || showPractice}>
@@ -129,7 +141,9 @@
                 <span>{round.firstPage}–{round.lastPage}</span>
               </button>
               {#if round.team || round.number === 10}<button class="editor-link" onclick={() => openEditor(round.number)}>↳ Construction editor <span>Open</span></button>{/if}
-              {#if round.number === 10}<button class="editor-link" onclick={openPractice}>↳ Mini practice <span>Play</span></button>{/if}
+              {#if round.number === 21}<button class="editor-link" onclick={()=>openPractice('sanjeevani')}>↳ Cube assembly practice <span>Play</span></button>{/if}
+              {#if round.number === 19}<button class="editor-link" onclick={()=>openPractice('vibhishana')}>↳ Generated practice sets <span>Play</span></button>{/if}
+              {#if round.number === 10}<button class="editor-link" onclick={()=>openPractice('laxman')}>↳ Mini practice <span>Play</span></button>{/if}
             {/each}
           </div>
         {/each}
@@ -139,7 +153,7 @@
 
     <main>
       {#if showPractice}
-        <MiniLaxmanPractice />
+        {#if practiceType==='sanjeevani'}{#await import('./SanjeevaniPractice.svelte')}<p>Loading cube practice…</p>{:then module}<module.default />{:catch}<p>Cube practice could not load. Reload the page to try again.</p>{/await}{:else if practiceType==='vibhishana'}<VibhishanaPractice />{:else}<MiniLaxmanPractice />{/if}
       {:else if showEditor}
         {#if selectedEditor === 10}
           <section class="loop-editor" aria-label="Round 10 Laxman Rekha editor">
@@ -184,7 +198,7 @@
 </div>
 
 <style>
-  .section-switch{display:flex;gap:7px;margin-top:22px;overflow-x:auto;padding-bottom:5px}.section-switch button{font:inherit;font-size:13px;color:#285741;border:1px solid #b9c9bc;border-radius:6px;background:white;padding:10px 13px;cursor:pointer;white-space:nowrap;flex:none}.section-switch button.chosen{background:#285741;color:white;border-color:#285741}.tab-number{font-weight:700;margin-right:3px}.layout.editing{display:block}.layout.editing aside{display:none}.editor-link{padding-left:23px!important;color:#547b5e!important;font-size:12px!important}.loop-editor-heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin:0 0 15px}.loop-editor-heading h2{margin:0}.loop-editor-heading a{font-size:13px;white-space:nowrap}.loop-editor iframe{display:block;width:100%;height:max(780px,calc(100vh - 240px));border:1px solid #cbded1;border-radius:10px;background:#fff}
+  .section-switch{display:flex;gap:7px;margin-top:22px;overflow-x:auto;padding-bottom:5px}.section-switch button{font:inherit;font-size:13px;color:#285741;border:1px solid #b9c9bc;border-radius:6px;background:white;padding:10px 13px;cursor:pointer;white-space:nowrap;flex:none}.section-switch button.chosen{background:#285741;color:white;border-color:#285741}.layout.editing{display:block}.layout.editing aside{display:none}.editor-link{padding-left:23px!important;color:#547b5e!important;font-size:12px!important}.loop-editor-heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin:0 0 15px}.loop-editor-heading h2{margin:0}.loop-editor-heading a{font-size:13px;white-space:nowrap}.loop-editor iframe{display:block;width:100%;height:max(780px,calc(100vh - 240px));border:1px solid #cbded1;border-radius:10px;background:#fff}
   :global(*){box-sizing:border-box}
   :global(body){margin:0;background:#f5f4ef;color:#20382e;font-family:Inter,Arial,sans-serif}
   :global(button),:global(input),:global(select){font:inherit}
@@ -210,4 +224,6 @@
   .loop-editor iframe{border-color:#dce1d6}
   @media(max-width:1260px){.hero,.layout{margin-inline:30px}header{padding-inline:30px}}
   @media(max-width:800px){header{padding:0 18px}.hero{padding:25px 0 18px}.hero,.layout{margin-inline:18px}.layout{padding:0 0 40px;display:block}aside{position:static;max-height:320px;overflow:auto;margin-bottom:18px}.section-switch{gap:24px}.page-header{align-items:start;flex-wrap:wrap}.document{height:auto}.transcript{min-height:460px;padding:14px}}
+  .shell.practice-wide .hero,.shell.practice-wide .layout{width:calc(100% - 32px);max-width:1800px;margin-inline:auto}
+  .round-switch{display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px}.round-switch button{flex:none;white-space:nowrap;font:inherit;font-size:13px;color:#54705e;border:1px solid #cbd6ca;background:transparent;border-radius:6px;padding:8px 12px;cursor:pointer}.round-switch button.chosen{background:#285741;color:white;border-color:#285741}
 </style>

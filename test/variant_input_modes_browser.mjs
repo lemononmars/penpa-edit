@@ -19,5 +19,20 @@ try {
  assert.equal(actual.find(x=>x.id==='fortress').icon,'◩');
  assert.equal(actual.find(x=>x.id==='thermo').icon,'╱');
  assert.equal(actual.find(x=>x.id==='killer').icon,'▧');
- console.log('Input mode titles, arrow labels, and type icons passed.');
+ await page.getByRole('button',{name:'Enlarge input-mode text',exact:true}).click();
+ const layout=await page.evaluate(()=>{
+   const group=document.querySelector('.sudoku-variant-group[data-variant="pointingdigits"]');
+   const header=group.querySelector('.sudoku-variant-header');
+   const row=group.querySelector('.sudoku-variant-row');
+   const title=group.querySelector('.sudoku-variant-title');
+   const close=group.querySelector('.sudoku-variant-close');
+   return {font:getComputedStyle(title).fontSize,background:getComputedStyle(row).backgroundColor,
+     display:getComputedStyle(header).display,closeRow:getComputedStyle(close).gridRowStart};
+ });
+ assert.equal(layout.font,'16px');
+ assert.equal(layout.background,'rgba(0, 0, 0, 0)');
+ assert.equal(layout.display,'grid');
+ assert.equal(layout.closeRow,'1');
+ await page.evaluate(()=>{pu.activeSudokuVariants=['classic','258'];pu.redraw();});
+ console.log('Input-mode titles, arrows, type icons, larger text, and fixed close layout passed.');
 } finally {await browser.close();}

@@ -96,6 +96,7 @@
     });
   }
 
+  let largeInputText = false;
   let toasts: ToastItem[] = [];
   let nextToastId = 1;
 
@@ -715,7 +716,7 @@
         return;
       }
       toolPanelMode = `Laxman Rekha · ${laxmanGroups.find((group) => group.id === genreGroup)?.label || "Clues"}`;
-      const arrowBits = (index: number) => Array.from({ length: 8 }, (_, bit) => bit === index ? 1 : 0);
+      const arrowBits = (index: number) => Array.from({ length: 4 }, (_, bit) => bit === index ? 1 : 0);
       const choices: ToolPanelOption[] = genreGroup === "myopia"
         ? [{ value: "1", label: "Left arrow", sym: "arrow_cross", num: arrowBits(0) },
            { value: "2", label: "Up arrow", sym: "arrow_cross", num: arrowBits(1) },
@@ -3586,6 +3587,7 @@
       <section
         bind:this={inputModesSection}
         class="input-modes-section"
+        class:large-input-text={largeInputText}
         class:hidden-section={layer !== "problem"}
         class:panel-above={mobilePanelPosition === "above"}
         class:panel-below={mobilePanelPosition === "below"}
@@ -3596,6 +3598,7 @@
           <kbd class="tab-key-hint" title="Press Tab to cycle input modes"
             >Tab ↹</kbd
           >
+          <button class="input-text-size" aria-label="Enlarge input-mode text" aria-pressed={largeInputText} title="Toggle larger input-mode text" on:click={()=>largeInputText=!largeInputText}>A↗</button>
         </div>
         {/if}
         <div class="input-mode-tools">
@@ -5290,7 +5293,7 @@
   }
   :global(.studio-shell.dark .sudoku-variant-row) {
     border-top-color: #334155 !important;
-    background: #1e293b !important;
+    background: transparent !important;
   }
   :global(.studio-shell.dark .sudoku-variant-rule) {
     color: #cbd5e1 !important;
@@ -8171,4 +8174,20 @@
     border-color: #8dc89d !important;
   }
   :global(html.puzzle-editor #modal-new-content #nb_size3) { width: 72px; }
+
+  .input-text-size { padding: 2px 6px; min-height: 24px; font-size: 13px; }
+  :global(.svelte-home .sudoku-variant-header) {
+    display: grid !important;
+    grid-template-columns: 10px 14px minmax(0, 1fr) 22px !important;
+    gap: 6px !important;
+    padding: 8px !important;
+  }
+  :global(.svelte-home .sudoku-variant-title) { grid-column: 3; grid-row: 1; white-space: normal !important; overflow-wrap: anywhere; }
+  :global(.svelte-home .variant-accordion-chevron) { grid-column: 1; grid-row: 1; }
+  :global(.svelte-home .variant-accordion-icon) { grid-column: 2; grid-row: 1; }
+  :global(.svelte-home .sudoku-variant-row) { grid-column: 3; grid-row: 2; min-width: 0; background: transparent !important; }
+  :global(.svelte-home .sudoku-variant-close) { grid-column: 4; grid-row: 1; margin: 0 !important; justify-self: center; font-size: 18px !important; }
+  :global(.large-input-text .sudoku-variant-title), :global(.large-input-text .variant-accordion-icon) { font-size: 16px !important; }
+  :global(.large-input-text .sudoku-variant-row button) { font-size: 14px !important; height: auto !important; min-height: 28px !important; }
+  :global(.large-input-text .sudoku-variant-rule) { font-size: 15px !important; line-height: 1.6 !important; }
 </style>

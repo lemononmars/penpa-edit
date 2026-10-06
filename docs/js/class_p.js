@@ -8026,7 +8026,13 @@ class Puzzle {
                 }
 
                 if (this.onoff_symbolmode_list[symbolname]) { // List in ON-OFF mode
-                    number = this.onofftext(this.onoff_symbolmode_list[symbolname], key, con);
+                    if (this.editorGenreGroup === "myopia" && symbolname === "arrow_cross") {
+                        if (!/^[1-4]$/.test(key)) return;
+                        con = Array.isArray(con) ? con.slice(0, 4) : [0, 0, 0, 0];
+                        number = this.onofftext(4, key, con);
+                    } else {
+                        number = this.onofftext(this.onoff_symbolmode_list[symbolname], key, con);
+                    }
                 } else {
                     number = parseInt(key, 10);
                 }
@@ -13266,6 +13272,16 @@ class Puzzle {
 
             // Take away the clipping path
             this.ctx.restore();
+        }
+
+        // Fixed 258 guides are visual only, so they never alter authored shading.
+        if (pu === "pu_q" && typeof SudokuSolver !== "undefined" &&
+            SudokuSolver.puzzleSize(this) === 9 &&
+            (this.activeSudokuVariants || [this.activeSudokuVariant]).includes("258")) {
+            set_surface_style(this.ctx, 1);
+            for (let row = 0; row < 9; row++) {
+                for (const col of [1, 4, 7]) draw_cell(SudokuSolver.cellKey(this, row, col));
+            }
         }
 
         // Draw normal surface colors

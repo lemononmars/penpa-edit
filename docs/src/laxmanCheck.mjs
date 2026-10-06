@@ -77,6 +77,7 @@ export function checkLaxman(pu) {
     if (symbol && !['arrow_cross','circle_SS','square_S'].includes(symbol[1]))
       return fail(`Unsupported question mark at point ${id}.`,id);
     if (symbol?.[1]==='arrow_cross') {
+      if (Array.isArray(symbol[0]) && symbol[0].slice(4).some(Boolean)) return fail('Myopia arrows must be orthogonal.',id);
       if (!validCell(p)) return fail('Myopia arrow is outside the grid.',id);
       const distances=directions.map(dir=>sight(p.r,p.c,dir)?.distance || null).filter(Boolean);
       if (!distances.length) return fail(`${label}: no loop segment is visible.`,id);
@@ -105,8 +106,8 @@ export function checkLaxman(pu) {
       for (const sign of [-1,1]) {
         let n=0;
         for (let step=1;;step++) {
-          const rr=isV?er+sign*step:er, cc=isV?ec:ec+sign*step;
-          if (isV?(rr<0||rr>=rows):(cc<0||cc>=cols)) break;
+          const rr=isV?er:er+sign*step, cc=isV?ec+sign*step:ec;
+          if (isV?(cc<0||cc>cols):(rr<0||rr>rows)) break;
           if (used.has(isV?v(rr,cc):h(rr,cc))) break;
           n++;
         }

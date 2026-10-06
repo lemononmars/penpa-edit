@@ -24,3 +24,7 @@ for (const file of files) {
 for (const worker of ["sudoku_solver_worker_bundle.js", "sudoku_generator_worker_bundle.js"]) {
   copyFileSync(join(generatedWorkersDir, worker), join(distDir, "js", worker));
 }
+
+const laxmanDir = join(distDir, "wpc2026", "laxman-rekha");
+mkdirSync(laxmanDir, { recursive: true });
+copyFileSync(join(distDir, "index.html"), join(laxmanDir, "index.html"));
