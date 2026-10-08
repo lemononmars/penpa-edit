@@ -5,7 +5,7 @@ try{
  await page.goto('http://127.0.0.1:5180/wsc2026/');
  if(await page.getByLabel('Password',{exact:true}).count()){await page.getByLabel('Password',{exact:true}).fill('กู้ชาติ');await page.getByRole('button',{name:'Enter',exact:true}).click();}
  await page.getByRole('tab',{name:'Shifted Sudoku',exact:true}).click();const tool=page.locator('.circular-tool');
- await tool.getByRole('button',{name:'Add outer ring · 6 grids',exact:true}).click();
+ await tool.getByRole('button',{name:'4 rings · 6 outer grids',exact:true}).click();
  assert.equal(await tool.getByLabel('Outer-grid rule',{exact:true}).count(),0);
  assert.equal(await tool.getByRole('group',{name:'Black orthogonal arrows',exact:true}).getByRole('button').count(),4);
  assert.equal(await tool.getByRole('group',{name:'Gray diagonal arrows',exact:true}).getByRole('button').count(),4);

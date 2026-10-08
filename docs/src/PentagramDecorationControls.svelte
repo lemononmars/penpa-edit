@@ -3,9 +3,10 @@
  export let onMode:(mode:string)=>void;
  export let onSaveCage:()=>void;
  export let onRemoveCage:()=>void;
+ export let allowedModes=['digits','black','white','cage'];
 </script>
 <fieldset class="decorations"><legend>Decorations</legend>
- <div class="tools">{#each [['digits','Digits'],['black','● Black dot'],['white','○ Number dot'],['cage','Cage']] as tool}<button {disabled} class:active={mode===tool[0]} aria-pressed={mode===tool[0]} onclick={()=>onMode(tool[0])}>{tool[1]}</button>{/each}</div>
+ <div class="tools">{#each [['digits','Digits'],['black','● Black dot'],['white','○ Number dot'],['cage','Cage']] as tool}{#if allowedModes.includes(tool[0])}<button {disabled} class:active={mode===tool[0]} aria-pressed={mode===tool[0]} onclick={()=>onMode(tool[0])}>{tool[1]}</button>{/if}{/each}</div>
  {#if mode==='white'}<label>Dot number<input {disabled} inputmode="numeric" maxlength="2" bind:value={dotClue}/></label><p>Enter 1–2 digits, then click a shared edge.</p>{/if}
  {#if mode==='black'}<p>Click a shared edge to toggle its black dot.</p>{/if}
  {#if mode==='cage'}<label>Cage number<input {disabled} inputmode="numeric" bind:value={cageClue}/></label><p>Select connected cells, then save the cage.</p><button {disabled} onclick={onSaveCage}>Save cage</button><button {disabled} onclick={onRemoveCage}>Remove cage</button>{/if}

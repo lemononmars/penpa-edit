@@ -9,6 +9,7 @@
 </script>
 
 <aside class="answer-controls" aria-label="Puzzle controls">
+ <slot name="above-keypad"/>
  <SudokuKeypad {mode} {onDigit} {onMode}/>
  <div class="edit-actions"><button onclick={onDelete} aria-label="Delete selected cell">⌫ Delete</button><button onclick={onUndo} disabled={!canUndo} aria-label="Undo">↶ Undo</button></div>
  <div class="tool-actions"><slot/></div>

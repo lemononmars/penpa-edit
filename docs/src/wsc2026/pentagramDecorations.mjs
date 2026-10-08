@@ -1,4 +1,4 @@
-import {pentagramGeometry} from './pentagram.mjs';
+import {pentagramGeometry,pentagramPosition} from './pentagram.mjs';
 const pointKey=p=>`${p.x.toFixed(4)},${p.y.toFixed(4)}`;
 const geometries=Array.from({length:80},(_,i)=>pentagramGeometry(i));
 const edges=new Map();
@@ -32,6 +32,28 @@ export function pentagramCageGeometry(cells,inset=3) {
   return {x:q.x+t*ax,y:q.y+t*ay};
  });}
  const outlines=loops.map(offset),vertices=outlines.flat();
- const top=vertices.reduce((best,p)=>p.y<best.y-1e-5||Math.abs(p.y-best.y)<1e-5&&p.x<best.x?p:best);
- return {path:outlines.map(loop=>loop.map((p,i)=>`${i?'L':'M'}${p.x},${p.y}`).join(' ')+' Z').join(' '),clue:{x:top.x+3,y:top.y+8}};
+ const cagePetals=new Set([...selected].map(cell=>geometries[cell].point));
+ const petal=[4,0,1,3,2].find(point=>cagePetals.has(point));
+ const origin=pentagramPosition(petal,0,0),u=pentagramPosition(petal,1,0),v=pentagramPosition(petal,0,1);
+ const ux=u.x-origin.x,uy=u.y-origin.y,vx=v.x-origin.x,vy=v.y-origin.y,det=ux*vy-uy*vx;
+ const local=p=>({u:((p.x-origin.x)*vy-(p.y-origin.y)*vx)/det,v:(ux*(p.y-origin.y)-uy*(p.x-origin.x))/det});
+ const petalVertices=vertices.filter(p=>{const q=local(p);return q.u>=-1e-5&&q.u<=1+1e-5&&q.v>=-1e-5&&q.v<=1+1e-5;});
+ const anchorVertices=petalVertices.length?petalVertices:vertices;
+ const top=anchorVertices.reduce((best,p)=>p.y<best.y-1e-5||Math.abs(p.y-best.y)<1e-5&&p.x<best.x?p:best);
+ let clue={x:top.x+3,y:top.y+8,anchor:'start'};
+ if(petal===0)clue={x:top.x,y:top.y+16,anchor:'middle'};
+ else if(petal===1)clue={x:top.x-1,y:top.y+12,anchor:'start'};
+ else if(petal===2)clue={x:top.x+3,y:top.y+12,anchor:'start'};
+ else {
+  const bottomLeft=anchorVertices.reduce((best,p)=>{
+   const a=local(best),b=local(p);
+   if(petal===4)return b.u+b.v>a.u+a.v+1e-5||Math.abs(b.u+b.v-a.u-a.v)<1e-5&&b.u>a.u?p:best;
+   return b.v>a.v+1e-5||Math.abs(b.v-a.v)<1e-5&&b.u<a.u?p:best;
+  });
+  // Inset toward the cell in the petal's own right/up directions.
+  const ul=Math.hypot(ux,uy),vl=Math.hypot(vx,vy);
+  if(petal===4)clue={x:bottomLeft.x-5*(ux/ul+vx/vl),y:bottomLeft.y-5*(uy/ul+vy/vl)+3,anchor:'start'};
+  else clue={x:bottomLeft.x+5*(ux/ul-vx/vl),y:bottomLeft.y+5*(uy/ul-vy/vl)+3,anchor:'start'};
+ }
+ return {path:outlines.map(loop=>loop.map((p,i)=>`${i?'L':'M'}${p.x},${p.y}`).join(' ')+' Z').join(' '),clue};
 }

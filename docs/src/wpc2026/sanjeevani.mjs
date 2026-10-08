@@ -2,7 +2,7 @@ export const frames=[
  {name:'Right',n:[1,0,0],u:[0,0,-1],v:[0,1,0],kind:'number'},
  {name:'Left',n:[-1,0,0],u:[0,0,1],v:[0,1,0],kind:'dot'},
  {name:'Top',n:[0,1,0],u:[1,0,0],v:[0,0,-1],kind:'letter'},
- {name:'Bottom',n:[0,-1,0],u:[1,0,0],v:[0,0,1],kind:'number'},
+ {name:'Bottom',n:[0,-1,0],u:[1,0,0],v:[0,0,1],kind:'letter'},
  {name:'Front',n:[0,0,1],u:[1,0,0],v:[0,1,0],kind:'letter'},
  {name:'Back',n:[0,0,-1],u:[-1,0,0],v:[0,1,0],kind:'shade'},
 ];
@@ -45,7 +45,7 @@ function signature(cube,slot,faceIndex,contact){const frame=frames[faceIndex];re
 function visibleMarks(board,slot,faceIndex,cube){const frame=frames[faceIndex],touching=board.contacts.filter(c=>(c.a===slot.id&&c.fa===faceIndex)||(c.b===slot.id&&c.fb===faceIndex));return cube.faces[faceIndex].filter(mark=>!touching.some(c=>inside(point(slot,frame,mark),c,frame)));}
 function exteriorValid(board,slot,cube){
  for(let f=0;f<6;f++)for(const mark of visibleMarks(board,slot,f,cube)){
-  if(mark.kind!==frames[f].kind&&!(f===2&&mark.kind==='star'))return false;
+  if(mark.kind!==frames[f].kind&&!((f===2||f===3)&&mark.kind==='star'))return false;
   if(['letter','number'].includes(mark.kind)&&(mark.turn!==0||mark.mirror))return false;
  }return true;
 }
@@ -74,15 +74,21 @@ export function generatePyramid(layers=2,seed=Date.now()){
  const rng=random(seed),pick=a=>a[Math.floor(rng()*a.length)],board=pyramid(layers);
  for(let attempt=0;attempt<40;attempt++){
   const cubes=board.slots.map((slot,i)=>({id:i+1,faces:frames.map(()=>[])}));
+  const topPositions=board.slots.map(()=>{
+   const positions=[[-1,-1],[-1,1],[1,-1],[1,1]];
+   for(let i=3;i>0;i--){const j=Math.floor(rng()*(i+1));[positions[i],positions[j]]=[positions[j],positions[i]];}
+   return positions.slice(0,2+Math.floor(rng()*3));
+  });
   const mark=(kind,size=2)=>({kind,value:kind==='letter'?pick('ACEMRST'):kind==='number'?String(Math.floor(rng()*9)+1):kind==='dot'?pick(['black','white']):'',size,x:0,y:0,turn:0,mirror:false});
   for(const contact of board.contacts){
-   const a=board.slots[contact.a],b=board.slots[contact.b],fa=frames[contact.fa],fb=frames[contact.fb],m=mark(pick(['letter','number','star','shade']),contact.half===.5?2:1),worldPoint=scale(contact.center,4),{right,up}=axes(m,fa);
+   const a=board.slots[contact.a],b=board.slots[contact.b],fa=frames[contact.fa],fb=frames[contact.fb],m=mark(pick(contact.fa===2||contact.fa===3?['letter','star']:['letter','number','star','shade']),contact.half===.5?2:1),worldPoint=scale(contact.center,4),{right,up}=axes(m,fa);
+   if(contact.fa===2){const local=worldPoint.map((v,i)=>v-a.position[i]*4-fa.n[i]*2),x=dot(local,fa.u),y=dot(local,fa.v);if(!topPositions[a.id].some(p=>p[0]===x&&p[1]===y))continue;}
    for(const [slot,face,index] of [[a,fa,contact.fa],[b,fb,contact.fb]])cubes[slot.id].faces[index].push(fromWorld(m,face,worldPoint.map((v,i)=>v-slot.position[i]*4-face.n[i]*2),right,up));
   }
   for(const slot of board.slots)for(let f=0;f<6;f++){
    const frame=frames[f],touching=board.contacts.filter(c=>(c.a===slot.id&&c.fa===f)||(c.b===slot.id&&c.fb===f));
-   if(f===2){for(const x of [-1,1])for(const y of [-1,1]){const m={...mark(pick(['letter','letter','star']),1),x,y};if(!touching.some(c=>inside(point(slot,frame,m),c,frame)))cubes[slot.id].faces[f].push(m);}}
-   else if(!touching.length&&f!==1)cubes[slot.id].faces[f].push(mark(frame.kind));
+   if(f===2){for(const [x,y] of topPositions[slot.id]){const m={...mark(pick(['letter','letter','star']),1),x,y};if(!touching.some(c=>inside(point(slot,frame,m),c,frame)))cubes[slot.id].faces[f].push(m);}}
+   else if(!touching.length&&f!==1)cubes[slot.id].faces[f].push(mark(f===3?pick(['letter','star']):frame.kind));
   }
   // Semicircles meet at shared borders in the left-side projection.
   const left=board.slots.filter(slot=>slot.col===0);

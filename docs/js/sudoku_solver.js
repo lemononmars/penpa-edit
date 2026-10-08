@@ -3735,6 +3735,7 @@ var SudokuTools = (function() {
     var solveOnceWorker = null;
     var solveOnceSignature = null;
     var solveOnceGeneration = 0;
+    var cancelSingleSolve = null;
 
     function byId(id) {
         return document.getElementById(id);
@@ -3912,14 +3913,28 @@ var SudokuTools = (function() {
             return;
         }
 
+        if (cancelSingleSolve) cancelSingleSolve();
         generatorLog("Solving", "Solving the puzzle...");
         document.body.classList.add("sudoku-solver-running");
 
         var solveWorker = null;
         var solveTimeout = null;
         var solveRunLimitMs = sudokuSolverTimeLimitMs();
+        var solveFinished = false;
+        var fallbackTimer = null;
+        var cancelRun = function() {
+            cleanup();
+            generatorLog("Stopped", "Solving stopped.");
+        };
+        cancelSingleSolve = cancelRun;
 
         function cleanup() {
+            solveFinished = true;
+            if (cancelSingleSolve === cancelRun) cancelSingleSolve = null;
+            if (fallbackTimer !== null) {
+                clearTimeout(fallbackTimer);
+                fallbackTimer = null;
+            }
             if (solveTimeout) {
                 clearTimeout(solveTimeout);
                 solveTimeout = null;
@@ -3932,6 +3947,7 @@ var SudokuTools = (function() {
         }
 
         function handleResult(result) {
+            if (solveFinished) return;
             cleanup();
             if (result && result.solved) {
                 SudokuSolver.commitSolveOnce(pu, result.board);
@@ -3956,7 +3972,9 @@ var SudokuTools = (function() {
         }
 
         if (typeof Worker === "undefined") {
-            window.setTimeout(function() {
+            fallbackTimer = window.setTimeout(function() {
+                fallbackTimer = null;
+                if (solveFinished) return;
                 try {
                     var result = SudokuSolver.solve(board, constraints);
                     handleResult(result);
@@ -3984,6 +4002,7 @@ var SudokuTools = (function() {
             }
 
             solveWorker.onmessage = function(event) {
+                if (solveFinished) return;
                 if (event.data.type === "result") {
                     handleResult(event.data.result);
                 } else if (event.data.type === "error") {
@@ -3999,6 +4018,7 @@ var SudokuTools = (function() {
             };
 
             solveWorker.onerror = function(event) {
+                if (solveFinished) return;
                 cleanup();
                 const msg = "Solver worker error: " + (event.message || "Worker error");
                 generatorLog("Error", msg);
@@ -4087,6 +4107,7 @@ var SudokuTools = (function() {
     }
 
     function stopWork() {
+        if (cancelSingleSolve) cancelSingleSolve();
         if (generatorWorker || generationBoardAnimator || generatorActiveRequest) {
             stopGenerator("Generation stopped.");
             return;

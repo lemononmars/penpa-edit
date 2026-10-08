@@ -7818,6 +7818,10 @@ class Puzzle {
     /////////////////////////////
 
     key_number(key, force_no_shortcut = false) {
+        // Sudoku answers and pencilmarks are digits; alphabetic clues belong to set mode.
+        if (this.mode.qa === "pu_a" && this.mode.pu_a.edit_mode === "sudoku" && !/^[0-9]$/.test(String(key))) {
+            return;
+        }
         var number;
         var con, conA;
         var arrow, mode;

@@ -1,12 +1,31 @@
 <script lang="ts">
+ import {sudokuInteraction} from './wsc2026/sudokuInteraction.mjs';
  import {onMount,onDestroy} from 'svelte';
  import {loadToolState,saveToolState,downloadToolBackup,readToolBackup} from './wsc2026/toolState.mjs';
  import {createToolSearch} from './wsc2026/toolSearch.mjs';
+ import {createFlowerAnalysis} from './wsc2026/flowerCsp.mjs';
+ import {downloadSudokuPdf} from './wsc2026/downloadSudokuPdf.mjs';
+ import {downloadSudokuPng} from './wsc2026/downloadSudokuPng.mjs';
+ import {decorateFlowerPdf} from './wsc2026/flowerPrint.mjs';
+ let downloadingPages=false;
+ async function downloadPdf(solution=false){
+  downloadingPages=true;
+  try{if(solution)await downloadSudokuPng(boardSvg,'flower-sudoku-solution.png');else await downloadSudokuPdf(boardSvg,'flower-sudoku-puzzle-a4.pdf',false,{decorate:decorateFlowerPdf});message=solution?'Downloaded solution PNG.':'Downloaded puzzle on one A4 page.';}
+  catch(error){message='Could not create download. Please try again.';console.error(error);}
+  finally{downloadingPages=false;}
+ }
  let ready=false,saveAvailable=true,searchBusy=false;
+ let elapsedSeconds=0,analysisBusy=false,analysisTimer:ReturnType<typeof setInterval>|undefined;
+ const analysis=createFlowerAnalysis(busy=>{
+  analysisBusy=busy;searchBusy=busy;
+  if(analysisTimer)clearInterval(analysisTimer);
+  analysisTimer=undefined;
+  if(busy){elapsedSeconds=0;const start=Date.now();analysisTimer=setInterval(()=>elapsedSeconds=Math.floor((Date.now()-start)/1000),250);}
+ },progress=>{message=progress.message||'Analyzing candidates…';});
  const search=createToolSearch(busy=>searchBusy=busy);
- function cancelSearch(){search.cancel();message='Search cancelled; board kept.';}
+ function cancelSearch(){search.cancel();analysis.cancel();message='Search stopped; board kept.';}
  async function runSearch(action:string,payload:any={}){message=action==='generate'?'Generating unique puzzle…':action==='random'?'Finding a random solution…':'Solving…';try{return await search.run('flower',action,payload);}catch(error){message=error instanceof Error?error.message:'Search failed.';return null;}}
- onDestroy(()=>search.cancel());
+ onDestroy(()=>{search.cancel();analysis.cancel();if(analysisTimer)clearInterval(analysisTimer);});
 
  let editMode: 'set'|'solve' = 'set';
  let boardSvg: SVGSVGElement;
@@ -59,12 +78,23 @@
    document.getElementById(`flower-cell-${selected}`)?.focus();
   }
  }
- function clearSolution(){remember();values=values.map((value,index)=>givens[index]?value:0);message='Solution cleared; givens kept.';}
+ function clearSolution(){remember();values=values.map((value,index)=>givens[index]?value:0);centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();message='Solution cleared; givens kept.';}
  function clearBoard() {remember();values=EMPTY();givens=Array(FLOWER_CELL_COUNT).fill(false);centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();selected=0;message='Board cleared.';}
  async function solve() {
-  const result=await runSearch('solve',{values});if(!result)return;
-  if(result.solution){remember();values=result.solution.slice();editMode='solve';centerNotes=EMPTY_NOTES();cornerNotes=EMPTY_NOTES();message='Solved; answers filled in blue.';}
-  else message=result.status==='invalid'?'Fix the repeated digits first.':result.status==='limit'?'Search limit reached. Add more digits and try again.':'No solution fits these entries.';
+  message='Analyzing exact candidates…';
+  try{
+   const result=await analysis.run(values);if(!result)return;
+   if(result.satisfiable){
+    remember();
+    const candidates=values.map((value,index)=>value?[]:result.candidates[Math.floor(index/10)][index%10]);
+    givens=givens.map((given,index)=>values[index]?given:false);
+    values=values.map((value,index)=>value||(candidates[index].length===1?candidates[index][0]:0));
+    centerNotes=candidates.map(list=>list.length>1?list:[]);
+    cornerNotes=EMPTY_NOTES();editMode='set';
+    message=`Single candidates filled; pencilmarks added to other empty cells · ${elapsedSeconds}s.`;
+   }
+   else message=result.valid===false?'Fix the repeated digits first.':'No solution fits these entries.';
+  }catch(error){message=error instanceof Error?error.message:'Candidate analysis failed.';}
  }
  async function makeRandomSolution() {
   const result=await runSearch('random');if(!result)return;
@@ -85,7 +115,7 @@
  async function importBackup(file:File){try{const state=await readToolBackup(file,'flower');remember();restoreState(state);message='Backup restored.';}catch(error){message=error instanceof Error?error.message:'Could not import backup.';throw error;}}
 </script>
 
-<section class="flower-tool" aria-labelledby="flower-title">
+<section use:sudokuInteraction={{cells:".cell",edit:next=>editMode=next,mode:()=>mode,notes:next=>mode=next}} class="flower-tool" aria-labelledby="flower-title">
  <header><p class="eyebrow">ROUND 9 · DRAUPADI’S SWAYAMVARA</p><h2 id="flower-title">Flower Sudoku editor &amp; solver</h2><p>Fill each column and region with 1–9. Select a cell to highlight its two columns and region.</p></header>
  <div class="flower-layout">
   <div class="editor">
@@ -106,13 +136,15 @@
    {#if showHighlights}<div class="unit-legend" aria-label="Selected cell constraints"><span class="ccw">Counterclockwise column</span><span class="cw">Clockwise column</span><span class="region">Region</span></div>{/if}
    <p class="status" aria-live="polite">{complete?'Complete':message}</p>
   </div>
-  <SudokuPuzzleControls busy={searchBusy} onCancel={cancelSearch} onExportBackup={exportBackup} onImportBackup={importBackup} {saveAvailable} {mode} {editMode} canUndo={history.length>0} onDigit={enter} onMode={next=>mode=next} onEditMode={next=>editMode=next} onDelete={()=>enter(0)} onUndo={undo} onSolve={solve} onClearBoard={clearBoard} onClearSolution={clearSolution} onRandom={makeRandomSolution} onGenerate={generatePuzzle} bind:generationClues maxClues={89} {showHighlights} {showConflicts} onHighlights={()=>showHighlights=!showHighlights} onConflicts={()=>showConflicts=!showConflicts} {boardSvg} filename="flower-sudoku" bookletPage={30}/>
+  <SudokuPuzzleControls solutionDownloadFormat="PNG" {downloadingPages} onDownloadPuzzle={()=>downloadPdf(false)} onDownloadSolution={()=>downloadPdf(true)} searchLabel={analysisBusy?`Solving… ${elapsedSeconds}s`:'Searching…'} cancelLabel="Stop" busy={searchBusy} onCancel={cancelSearch} onExportBackup={exportBackup} onImportBackup={importBackup} {saveAvailable} {mode} {editMode} canUndo={history.length>0} onDigit={enter} onMode={next=>mode=next} onEditMode={next=>editMode=next} onDelete={()=>enter(0)} onUndo={undo} onSolve={solve} onClearBoard={clearBoard} onClearSolution={clearSolution} onRandom={makeRandomSolution} onGenerate={generatePuzzle} bind:generationClues maxClues={89} {showHighlights} {showConflicts} onHighlights={()=>showHighlights=!showHighlights} onConflicts={()=>showConflicts=!showConflicts} {boardSvg} filename="flower-sudoku" bookletPage={30}/>
  </div>
 </section>
 
 <style>
+ .flower-tool{display:flex;flex-direction:column}header{order:2;margin-top:16px}.flower-layout{order:1;margin-top:0!important} :global(.multi-selected){fill:#ffe09a!important;stroke:#d08a3a!important;stroke-width:2!important}
+
 
  .cell-outline{fill:none;stroke:#737b74;stroke-width:1;pointer-events:none}
- .flower-tool{margin:24px 0;padding:24px;background:#fff;border:1px solid #dce1d6;border-radius:10px;color:#20382e}h2{margin:0 0 8px;font-size:22px}header>p:not(.eyebrow){color:#697467;line-height:1.5}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.4px;color:#6a7869;margin:0 0 6px}.flower-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:32px;align-items:start;margin-top:20px}.editor{min-width:0;width:100%;max-width:760px;margin:auto}svg{display:block;width:100%;height:auto;touch-action:none}.cell{stroke:none;cursor:pointer}.cell:focus{outline:none}.digit{font:500 24px Inter,Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#1f3027;pointer-events:none}.notes{font:500 12px Inter,Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#3a5947;pointer-events:none}.corner{font-size:10px}.solved-digit{fill:#2469bf}.region-border{fill:none;stroke:#252b27;stroke-width:3.5;stroke-linejoin:round;pointer-events:none}.hub{fill:#676767;stroke:#171723;stroke-width:3.5}.hub-label{font:700 18px Inter,Arial,sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:central;pointer-events:none}.unit-legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:12px;color:#5e695f}.unit-legend span::before{content:'';display:inline-block;width:11px;height:11px;margin-right:5px;border-radius:3px}.ccw::before{background:#9fd9d9}.cw::before{background:#9cbceb}.region::before{background:#edc184}.status{min-height:24px;text-align:center;font-size:13px;color:#59675d;line-height:1.5}@media(max-width:760px){.flower-tool{padding:16px}.flower-layout{grid-template-columns:1fr;gap:20px}}
+ .flower-tool{margin:24px 0;padding:24px;background:#fff;border:1px solid #dce1d6;border-radius:10px;color:#20382e}h2{margin:0 0 8px;font-size:22px}header>p:not(.eyebrow){color:#697467;line-height:1.5}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.4px;color:#6a7869;margin:0 0 6px}.flower-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:32px;align-items:start;margin-top:20px}.editor{min-width:0;width:100%;max-width:760px;margin:0 auto}svg{display:block;width:100%;height:auto;touch-action:none}.cell{stroke:none;cursor:pointer}.cell:focus{outline:none}.digit{font:500 24px Inter,Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#1f3027;pointer-events:none}.notes{font:500 12px Inter,Arial,sans-serif;text-anchor:middle;dominant-baseline:central;fill:#3a5947;pointer-events:none}.corner{font-size:10px}.solved-digit{fill:#2469bf}.region-border{fill:none;stroke:#252b27;stroke-width:3.5;stroke-linejoin:round;pointer-events:none}.hub{fill:#676767;stroke:#171723;stroke-width:3.5}.hub-label{font:700 18px Inter,Arial,sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:central;pointer-events:none}.unit-legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:12px;color:#5e695f}.unit-legend span::before{content:'';display:inline-block;width:11px;height:11px;margin-right:5px;border-radius:3px}.ccw::before{background:#9fd9d9}.cw::before{background:#9cbceb}.region::before{background:#edc184}.status{min-height:24px;text-align:center;font-size:13px;color:#59675d;line-height:1.5}@media(max-width:760px){.flower-tool{padding:16px}.flower-layout{grid-template-columns:1fr;gap:20px}}
  .given-digit{fill:#000}.solved-digit{fill:#2469bf}
 </style>

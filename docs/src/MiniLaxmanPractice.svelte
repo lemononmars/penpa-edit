@@ -20,6 +20,7 @@
   let erase: boolean | null = null;
   let visited = new Set<string>();
   const unit = 54, pad = 35;
+  function blocked(edge:string){return puzzle?.clues.some((clue:any)=>clue.type==='parallel'&&`${clue.axis}:${clue.r},${clue.c}`===edge);}
   function beginDrag(event: PointerEvent,r:number,c:number){
     if(!puzzle||busy||reveal||event.button!==0)return;
     event.preventDefault();board.setPointerCapture(event.pointerId);
@@ -36,6 +37,7 @@
     while(dragPoint.r!==r||dragPoint.c!==c){
       const rr=dragPoint.r+dr,cc=dragPoint.c+dc;
       const edge=dr?`V:${Math.min(rr,dragPoint.r)},${c}`:`H:${r},${Math.min(cc,dragPoint.c)}`;
+      if(blocked(edge)){ghost=null;dragPoint={r:rr,c:cc};continue;}
       if(erase===null)erase=next.has(edge);
       if(!visited.has(edge)){if(erase)next.delete(edge);else {next.add(edge);crosses.delete(edge);}visited.add(edge);}
       dragPoint={r:rr,c:cc};
@@ -58,6 +60,7 @@
     const r=horizontal?Math.round(rr):Math.floor(rr),c=horizontal?Math.floor(cc):Math.round(cc);
     if(r<0||c<0||r>(horizontal?size:size-1)||c>(horizontal?size-1:size))return;
     const edge=`${horizontal?'H':'V'}:${r},${c}`;
+    if(blocked(edge))return;
     const next=new Set(crosses);if(next.has(edge))next.delete(edge);else next.add(edge);
     crosses=next;const lines=new Set(drawn);lines.delete(edge);drawn=lines;
   }
@@ -87,6 +90,7 @@
   });
   function toggle(edge: string) {
     if (!puzzle || busy || reveal) return;
+    if(blocked(edge))return;
     const next = new Set(drawn);
     if (next.has(edge)) next.delete(edge); else {next.add(edge); const marks=new Set(crosses);marks.delete(edge);crosses=marks;}
     drawn = next; wrong = null; message = '';

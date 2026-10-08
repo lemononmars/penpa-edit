@@ -29,8 +29,8 @@ try{
  await page.waitForTimeout(500);
  assert.notEqual(await tool.locator('#circular-cell-core-3-0').getAttribute('d'),scrambled);
  assert.equal(await tool.locator('svg .digit:not(.note)').count(),81);
- await tool.getByRole('button',{name:'Clear board',exact:true}).click();
- await tool.getByRole('button',{name:'Add outer ring · 6 grids',exact:true}).click();
+ await tool.getByRole('button',{name:'Reset',exact:true}).click();
+ await tool.getByRole('button',{name:'4 rings · 6 outer grids',exact:true}).click();
  assert.equal(await tool.locator('.outer-cell').count(),486);assert.equal(await tool.locator('.separator').count(),6);assert.equal(await tool.locator('.connector-spoke:not(.third-ring-spoke)').count(),12);
  assert.equal(await tool.locator('.third-ring-spoke').count(),0);
  const gap=await tool.locator('.connector-spoke:not(.third-ring-spoke)').evaluateAll(lines=>lines.every(line=>Math.abs(Math.hypot(line.x1.baseVal.value-600,line.y1.baseVal.value-600)-200)<.01));assert.ok(gap);

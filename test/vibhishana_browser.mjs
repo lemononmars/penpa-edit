@@ -13,6 +13,7 @@ try{
  assert.equal(await tool.locator('.rule-card svg[role=img]').count(),4);
  assert.equal(await tool.getByLabel('Grid size').inputValue(),'6');
  const traitor=Number((await first.locator('.puzzle-actions').textContent()).match(/Traitor: Rule (\d)/)[1]);
+assert.equal(await first.getByRole('button',{name:'Rule '+traitor,exact:true}).getAttribute('aria-pressed'),'true');assert.equal(await first.getByRole('button',{name:'Rule '+traitor,exact:true}).isEnabled(),true);
  const lines=await first.locator('line.answer').evaluateAll(lines=>lines.map(el=>['x1','y1','x2','y2'].map(k=>Number(el.getAttribute(k)))));
  await tool.getByRole('checkbox',{name:'Reveal solution'}).uncheck();
  const svg=first.locator('svg');await svg.scrollIntoViewIfNeeded();
@@ -20,13 +21,13 @@ try{
  const [ax,ay,bx,by]=lines[0];await page.mouse.click(box.x+(ax+bx)/2*scale,box.y+(ay+by)/2*scale,{button:'right'});assert.equal(await first.locator('.edge-cross').count(),1);
  for(const [x1,y1,x2,y2] of lines){await page.mouse.move(box.x+x1*scale,box.y+y1*scale);await page.mouse.down();await page.mouse.move(box.x+x2*scale,box.y+y2*scale,{steps:3});await page.mouse.up();}
  assert.equal(await first.locator('.edge-cross').count(),0);
- await first.getByRole('button',{name:'Rule '+traitor,exact:true}).click();
+ if(await first.getByRole('button',{name:'Rule '+traitor,exact:true}).getAttribute('aria-pressed')!=='true')await first.getByRole('button',{name:'Rule '+traitor,exact:true}).click();
  await first.getByRole('button',{name:'Check puzzle',exact:true}).click();
  await tool.getByRole('dialog').waitFor();
  await tool.getByRole('button',{name:'Continue',exact:true}).click();
  assert.match(await first.locator('h3').textContent(),/✓/);
  const second=tool.locator('.puzzle-card').nth(1);
- await second.getByRole('button',{name:'Rule 1',exact:true}).click();
+ if(await second.getByRole('button',{name:'Rule 1',exact:true}).getAttribute('aria-pressed')==='true')await second.getByRole('button',{name:'Rule 2',exact:true}).click();await second.getByRole('button',{name:'Rule 1',exact:true}).click();
  assert.equal(await second.getByRole('button',{name:'Rule 1',exact:true}).getAttribute('aria-pressed'),'true');
  assert.equal(await first.getByRole('button',{name:'Rule '+traitor,exact:true}).getAttribute('aria-pressed'),'true');
  await tool.getByLabel('Grid size').selectOption('8');

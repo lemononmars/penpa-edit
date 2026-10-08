@@ -21,7 +21,7 @@ export function flowerCircleRotation(circle, layout = 'circular') {
 }
 export function flowerGeometry(index, layout = 'circular') {
   const label = flowerLabel(index), layer = FLOWER_LAYERS.indexOf(label[0]), petal = Number(label.slice(1));
-  const angle = -90 + (petal - 1) * 18, start = angle - 9, end = angle + 9;
+  const angle = -72 + (petal - 1) * 18, start = angle - 9, end = angle + 9;
   const inner = 100 + layer * 52, outer = inner + 52;
   const innerOffset = flowerCircleRotation(layer + 1, layout), outerOffset = flowerCircleRotation(layer + 2, layout);
   // Alternating triangles use every other intersection on each circle.

@@ -68,7 +68,7 @@ try {
  await flower.screenshot({path:'output/screenshots/flower-controls-layout.png'});
  await page.getByRole('tab',{name:'Pentagram Sudoku',exact:true}).click();
  const pentagram=page.locator('.pentagram-tool');await pentagram.waitFor();
- assert.equal(await pentagram.locator('select').count(),0);
+ assert.equal(await pentagram.getByLabel('Pentagram genre').count(),1);
  await pentagram.locator('.digit-9').click();
  assert.match(await pentagram.locator('#pentagram-0').getAttribute('aria-label'),/digit 9/);
  await pentagram.getByRole('button',{name:'Delete selected cell',exact:true}).click();
@@ -78,7 +78,7 @@ try {
  assert.equal(await pentagram.locator('svg .digit').count(),Number((await pentagram.locator('.status').textContent()).match(/with (\d+) clues/)[1]));
  await pentagram.screenshot({path:'output/screenshots/pentagram-controls-layout.png'});
  await page.getByRole('tab',{name:'Shifted Sudoku',exact:true}).click();
- await page.getByRole('button',{name:'Add outer ring · 6 grids',exact:true}).click();
+ await page.getByRole('button',{name:'4 rings · 6 outer grids',exact:true}).click();
  assert.equal(await page.locator('.outer-cell').count(),486);
  await page.locator('.ring-picker button').nth(3).waitFor({timeout:5000});
  assert.equal(await page.locator('.ring-picker button').count(),4);

@@ -7,8 +7,18 @@ export function puzzleSvg(board, includeSolution = false) {
   const copy=copies[index], computed=getComputedStyle(element);
   copy.removeAttribute('style');
   for(const property of properties)copy.style.setProperty(property,computed.getPropertyValue(property));
-  if(element.matches('.cell,.sudoku-cell'))copy.style.fill='#fff';
-  for(const attribute of [...copy.attributes])if(attribute.name==='id'||attribute.name==='tabindex'||attribute.name==='role'||attribute.name.startsWith('aria-')||attribute.name.startsWith('on'))copy.removeAttribute(attribute.name);
+  if(element.matches('.cell,.sudoku-cell')){
+   copy.style.setProperty('fill','#fff','important');
+   // Selection rules use !important and also change strokes. Keep the
+   // underlying grid border while discarding all interactive cell states.
+   if(element.matches('.multi-selected,.conflict,.chosen,.draft-cell')){
+    const square=element.classList.contains('square-cell'),pentagram=!!board.closest('.pentagram-tool');
+    copy.style.setProperty('stroke',square?'#8c998f':pentagram?'#333':'none','important');
+    copy.style.setProperty('stroke-width',square?'.7':pentagram?'.8':'0','important');
+   }
+   copy.classList.remove('multi-selected','conflict','chosen','draft-cell');
+  }
+  for(const attribute of [...copy.attributes])if(attribute.name==='id'&&!element.matches('clipPath,mask,linearGradient,radialGradient,pattern,filter,marker')||attribute.name==='tabindex'||attribute.name==='role'||attribute.name.startsWith('aria-')||attribute.name.startsWith('on'))copy.removeAttribute(attribute.name);
  });
  clone.querySelectorAll(includeSolution?'text:not(.grid-letter):not(.given-digit):not(.solved-digit):not(.decoration-clue)':'text:not(.grid-letter):not(.given-digit):not(.decoration-clue)').forEach(element=>element.remove());
  clone.querySelectorAll('.decoration-hit,.cage-draft,.selection-outline').forEach(element=>element.remove());

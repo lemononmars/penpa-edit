@@ -10,7 +10,7 @@ try{
  assert.equal(generated.clues.length,36);assert.equal(generated.entries.flat().filter(Boolean).length,0);
  const unique=await page.evaluate(async()=>{const {solveBlindPips,PIP_MASKS}=await import('/src/wsc2026/blindPractice.mjs');const state=JSON.parse(localStorage.getItem('wsc2026-tool-blind')).state;return {count:solveBlindPips(state.clues,state.entries,{limitSolutions:2}).solutions.length,partial:state.clues.some(mask=>mask&&!Object.values(PIP_MASKS).includes(mask))};});
  assert.equal(unique.count,1);assert.ok(unique.partial);
- await tool.getByRole('button',{name:'Clear board',exact:true}).click();await tool.locator('#blind-cell-0').click();
+ await tool.getByRole('button',{name:'Reset',exact:true}).click();await tool.locator('#blind-cell-0').click();
  await tool.getByRole('button',{name:'Clue pip center',exact:true}).click();assert.equal(await tool.locator('#blind-cell-0 .clue-pip.pip').count(),1);
  await tool.getByRole('button',{name:'Solve mode',exact:true}).click();assert.equal(await tool.getByRole('button',{name:'Enter 3',exact:true}).isDisabled(),false);
  await tool.getByRole('button',{name:'Enter 2',exact:true}).click();assert.match(await tool.getByRole('alert').textContent(),/misses a clue pip/);assert.equal(await tool.locator('#blind-cell-0 .pip').count(),1);await tool.getByRole('button',{name:'Enter 3',exact:true}).click();assert.equal(await tool.locator('#blind-cell-0 .pip').count(),3);assert.equal(await tool.locator('#blind-cell-0 .clue-pip.pip').count(),1);

@@ -16,11 +16,19 @@ test('both sizes generate and prove a unique valid assembly for varied seeds',()
  }
 });
 test('one corrupted upper-bottom quadrant breaks exactly one support contact',()=>{
- const p=generatePyramid(3,123),world={...p,cubes:p.cubes.map((cube,i)=>orientCube(cube,p.solution.find(a=>a.cube===i).orientation))},placements=p.solution.map(p=>({cube:p.cube,orientation:identity})),upper=pyramid(3).slots.find(s=>s.level===2),cube=world.cubes[placements[upper.id].cube];
+ const p=generatePyramid(3,123),world={...p,cubes:p.cubes.map((cube,i)=>orientCube(cube,p.solution.find(a=>a.cube===i).orientation))},placements=p.solution.map(p=>({cube:p.cube,orientation:identity})),upper=pyramid(3).slots.find(s=>s.level>0&&world.cubes[placements[s.id].cube].faces[3].length),cube=world.cubes[placements[upper.id].cube];
  const mark=cube.faces[3][0];mark.kind='number';mark.value='99';
  const result=checkAssembly(world,placements);assert.equal(result.ok,false);assert.equal(result.mismatches,1);assert.equal(result.conflicts.length,2);
 });
 test('matching semicircles must have the same colour',()=>{
  const p=generatePyramid(3,123),world={...p,cubes:p.cubes.map((cube,i)=>orientCube(cube,p.solution.find(a=>a.cube===i).orientation))},placements=p.solution.map(p=>({cube:p.cube,orientation:identity}));
  const mark=world.cubes.flatMap(c=>c.faces[1]).find(m=>m.kind==='dot');assert.ok(mark);mark.value=mark.value==='black'?'white':'black';assert.equal(checkAssembly(world,placements).ok,false);
+});
+
+test('top faces use two to four randomly chosen marks while contacts still match',()=>{
+ const counts=new Set();for(const layers of [2,3])for(const seed of [1,123,456]){const p=generatePyramid(layers,seed);for(const placement of p.solution){const face=orientCube(p.cubes[placement.cube],placement.orientation).faces[2];assert.ok(face.length>=2&&face.length<=4);counts.add(face.length);}assert.equal(checkAssembly(p,p.solution).ok,true);}assert.deepEqual([...counts].sort(),[2,3,4]);
+});
+
+test('top and bottom contain only letters or blank symbols in the solved orientation',()=>{
+ for(const layers of [2,3])for(const seed of [1,123,456]){const p=generatePyramid(layers,seed);for(const placement of p.solution){const cube=orientCube(p.cubes[placement.cube],placement.orientation);for(const face of [2,3])assert.ok(cube.faces[face].every(m=>['letter','star'].includes(m.kind)));}assert.equal(checkAssembly(p,p.solution).ok,true);}
 });

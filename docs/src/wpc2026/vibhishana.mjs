@@ -123,8 +123,8 @@ function largeAnswer(type,n,traitor,rng){
   for(let k=0;k<n*n;k++){const index=Math.floor(rng()*path.length),a=path[index],b=path[(index+1)%path.length];const shift=Math.floor(a/n)===Math.floor(b/n)?(rng()<.5?-n:n):(rng()<.5?-1:1);const c=a+shift,d=b+shift;if(c<0||d<0||c>=n*n||d>=n*n||!adjacent(a,c,n)||!adjacent(b,d,n)||path.includes(c)||path.includes(d))continue;path.splice(index+1,0,c,d);}return path;
  }
  if(type==='shading'){
-  const out=Array(n*n).fill(0);if(traitor===4){const row=Math.floor(rng()*n);for(let c=0;c<4;c++)out[row*n+c]=1;}else out[Math.floor(rng()*out.length)]=1;
-  for(const i of shuffle(Array.from({length:n*n},(_,i)=>i),rng).concat(shuffle(Array.from({length:n*n},(_,i)=>i),rng))){if(out.filter(Boolean).length>=n*n*.45)break;if(!out.some((v,j)=>v&&adjacent(i,j,n)))continue;out[i]=1;if(traitor!==4&&!noFour(out,n))out[i]=0;}return out;
+  const out=Array(n*n).fill(0),target=Math.floor(n*n*(.3+rng()*.15));if(traitor===4){const row=Math.floor(rng()*n),start=Math.floor(rng()*(n-3));for(let c=start;c<start+4;c++)out[row*n+c]=1;}else out[Math.floor(rng()*out.length)]=1;
+  for(const i of shuffle(Array.from({length:n*n},(_,i)=>i),rng).concat(shuffle(Array.from({length:n*n},(_,i)=>i),rng))){if(out.filter(Boolean).length>=target)break;if(!out.some((v,j)=>v&&adjacent(i,j,n)))continue;out[i]=1;if(traitor!==4&&!noFour(out,n))out[i]=0;}return out;
  }
  const out=Array(n*n).fill(0),fleet=traitor===4?[3,2,1,1,1]:[3,2,1,1];
  for(const length of fleet){let placed=false;for(let k=0;k<300;k++){const start=Math.floor(rng()*out.length),step=rng()<.5?1:n,part=Array.from({length},(_,i)=>start+i*step);if(part.some(i=>i>=out.length||(step===1&&Math.floor(i/n)!==Math.floor(start/n))||out[i]||out.some((v,j)=>v&&adjacent(i,j,n))))continue;part.forEach(i=>out[i]=1);placed=true;break;}if(!placed)return largeAnswer(type,n,traitor,rng);}return out;
@@ -190,18 +190,18 @@ function makeUnfilled(type,traitor,rng,n){
    p.clues=missing.slice(0,2).map(cell=>({cell,value:around(cell,n).filter(i=>t.has(i)).length}));
    if(traitor===4)p.clues[Math.floor(rng()*2)].value++;
   }else if(type==='shading'){
-   const height=traitor===4?(rng()<.5?2:4):3,width=traitor===4?(height===2?4:2):3,r=Math.floor(rng()*(n-height+1)),c=Math.floor(rng()*(n-width+1));answer=Array(n*n).fill(0);for(let dr=0;dr<height;dr++)for(let dc=0;dc<width;dc++)answer[(r+dr)*n+c+dc]=1;
+   answer=largeAnswer('shading',n,traitor,rng);const shaded=answer.map((v,i)=>v?i:-1).filter(i=>i>=0),rs=shaded.map(i=>Math.floor(i/n)),cs=shaded.map(i=>i%n);if(shaded.length===(Math.max(...rs)-Math.min(...rs)+1)*(Math.max(...cs)-Math.min(...cs)+1)||noFour(answer,n)===(traitor===4))continue;
    for(let i=0;i<answer.length;i++)if(!answer[i])p.circles[i]='white';
    p.clues=answer.map((v,cell)=>({cell,value:count(answer,around(cell,n))})).filter(c=>!answer[c.cell]&&c.value===sight(answer,c.cell,n));
    if(traitor===1||traitor===3){const bad=shuffle(answer.map((v,i)=>i).filter(i=>!answer[i]&&count(answer,around(i,n))!==sight(answer,i,n)),rng)[0];if(bad===undefined)continue;p.clues.push({cell:bad,value:traitor===1?sight(answer,bad,n):count(answer,around(bad,n))});}
-   p.regions=rectangles(n,rng).map(region=>({...region,value:count(answer,region.cells)}));if(traitor===2){const region=p.regions[Math.floor(rng()*p.regions.length)];region.value=(region.value+1)%(region.cells.length+1);}
+   do{p.regions=rectangles(n,rng).map(region=>({...region,value:count(answer,region.cells)}));}while(p.regions.length<3);if(traitor===2){const region=p.regions[Math.floor(rng()*p.regions.length)];region.value=(region.value+1)%(region.cells.length+1);}
   }else if(type==='numbers'){
    answer=structuredNumbers(n,traitor,rng);if(noParityTriple(answer,n)===(traitor===1))continue;
    for(const side of ['left','right','top','bottom'])for(let index=0;index<n;index++){const row=line(answer,{side,index},n),sky=skyline(row),first=row.slice(0,2),value=traitor===2?first.find(v=>v!==sky):traitor===3?(!first.includes(sky)?sky:undefined):(first.includes(sky)?sky:undefined);if(value!==undefined)p.outside.push({side,index,value});}
-   if((traitor===2||traitor===3)&&!p.outside.length)continue;
+   if(p.outside.length<n)continue;
    for(let i=0;i<n*n;i++)for(const j of [i+1,i+n])if(j<n*n&&adjacent(i,j,n)){p.inequalities.push(answer[i]<answer[j]?[i,j]:[j,i]);if((answer[i]%2===answer[j]%2)===(traitor===4))p.cages.push([i,j]);}
    if(traitor===4&&!p.cages.length)continue;
-   p.cages=disjointCages(p.cages,rng,traitor===4?1:Math.ceil(n*n/3));
+   if(traitor===4){const opposite=[];for(let i=0;i<n*n;i++)for(const j of [i+1,i+n])if(j<n*n&&adjacent(i,j,n)&&answer[i]%2!==answer[j]%2)opposite.push([i,j]);const bad=shuffle(p.cages,rng)[0];p.cages=[bad,...disjointCages(opposite.filter(c=>c.every(i=>!bad.includes(i))),rng,n)];}else p.cages=disjointCages(p.cages,rng,n+1);if(p.cages.length<3)continue;
   }else{
    answer=shipAnswer(n,traitor,p.fleet,rng);if(!answer)continue;const parts=ships(answer,n);if(diagonalFree(parts,n)===(traitor===3))continue;
    p.clues=answer.map((v,cell)=>({cell,value:count(answer,around(cell,n))})).filter(c=>!answer[c.cell]);if(traitor===1)p.clues[Math.floor(rng()*p.clues.length)].value++;
@@ -217,6 +217,15 @@ function makeUnfilled(type,traitor,rng,n){
     const result=solveLarge(test,2);if(result.complete&&result.length===1){p.circles=circles;p.clues=clues;}
    }
    if(Object.keys(p.circles).length>n)continue;
+  }
+  if(type==='loops'){
+   for(const cell of shuffle(Object.keys(p.circles),rng)){const circles={...p.circles};delete circles[cell];const test={...p,circles};if(ruleResults(test,answer).filter(Boolean).length!==3)continue;const result=solveLarge(test,2);if(result.complete&&result.length===1)p.circles=circles;}
+   if(Object.keys(p.circles).length>=answer.length*.85)continue;
+  }
+  if(type==='numbers'){
+   for(const clue of shuffle(p.outside,rng)){if(p.outside.length<=n)break;const outside=p.outside.filter(c=>c!==clue),test={...p,outside};if(ruleResults(test,answer).filter(Boolean).length!==3)continue;const result=solveLarge(test,2);if(result.complete&&result.length===1)p.outside=outside;}
+   for(const cage of shuffle(p.cages,rng)){if(p.cages.length<=Math.max(3,Math.ceil(n/2)))break;const cages=p.cages.filter(c=>c!==cage),test={...p,cages};if(ruleResults(test,answer).filter(Boolean).length!==3)continue;const result=solveLarge(test,2);if(result.complete&&result.length===1)p.cages=cages;}
+   if(p.outside.length!==n||['left','right','top','bottom'].some(side=>p.outside.filter(c=>c.side===side).length===n))continue;
   }
   if(type==='objects')for(const clue of shuffle(p.clues,rng)){const next=p.clues.filter(c=>c!==clue);const test={...p,clues:next};if(!baseHolds(test,answer)||ruleResults(test,answer).filter(Boolean).length!==3)continue;const result=solveShips(test,2,2000);if(result.complete&&result.length===1)p.clues=next;}
   if(type==='numbers')for(const clue of shuffle(p.inequalities,rng)){const next=p.inequalities.filter(c=>c!==clue),result=solveLarge({...p,inequalities:next},2);if(result.complete&&result.length===1)p.inequalities=next;if(p.inequalities.length<=n*n)break;}
@@ -330,21 +339,30 @@ function solveLoopDomains(p,limit){
 }
 function solveShading(p,limit){
  const n=p.n,size=n*n,solutions=[],seen=new Set();let nodes=0,exhausted=false;
+ const neighbours=Array.from({length:size},(_,i)=>[i-n,i+n,i-1,i+1].filter(j=>j>=0&&j<size&&adjacent(i,j,n)));
+ const runs=rows(Array.from({length:size},(_,i)=>i),n).flatMap(row=>Array.from({length:n-3},(_,k)=>row.slice(k,k+4)));
+ const rays=p.clues.map(clue=>({clue,lines:[[-1,0],[1,0],[0,-1],[0,1]].map(([dr,dc])=>{const cells=[];for(let r=Math.floor(clue.cell/n)+dr,c=clue.cell%n+dc;r>=0&&c>=0&&r<n&&c<n;r+=dr,c+=dc)cells.push(r*n+c);return cells;})}));
+ function sightBounds(a,lines){let lo=0,hi=0;for(const cells of lines){let uncertain=false;for(const i of cells){if(a[i]===0)break;hi++;if(a[i]<0)uncertain=true;if(!uncertain)lo++;}}return [lo,hi];}
+ // Each branch applies the base rule and exactly three of the four IB rules.
  for(let traitor=1;traitor<=4;traitor++){
-  const equations=[];if(traitor!==1)for(const clue of p.clues)equations.push({cells:around(clue.cell,n),value:clue.value});if(traitor!==2)equations.push(...p.regions);
+  const equations=[...(traitor!==1?p.clues.map(c=>({cells:around(c.cell,n),value:c.value})):[]),...(traitor!==2?p.regions:[])];
+  const weights=Array(size).fill(0);for(const e of equations)for(const i of e.cells)weights[i]+=4/e.cells.length;if(traitor!==3)for(const ray of rays)for(const cells of ray.lines)cells.forEach((i,k)=>weights[i]+=2/(k+1));
   const initial=Array(size).fill(-1);for(const cell of Object.keys(p.circles))initial[Number(cell)]=0;for(const clue of p.clues)initial[clue.cell]=0;for(const g of p.givens)initial[g.cell]=g.value;
   function propagate(a){
    let changed=true;while(changed){changed=false;
     for(const {cells,value} of equations){const used=cells.filter(i=>a[i]===1).length,blank=cells.filter(i=>a[i]<0);if(used>value||used+blank.length<value)return false;if(used===value||used+blank.length===value)for(const i of blank){a[i]=used===value?0:1;changed=true;}}
-    if(traitor!==4)for(const row of rows(Array.from({length:size},(_,i)=>i),n))for(let k=0;k<n-3;k++){const cells=row.slice(k,k+4),used=cells.filter(i=>a[i]===1).length;if(used===4)return false;if(used===3)for(const i of cells)if(a[i]<0){a[i]=0;changed=true;}}
-    if(traitor!==3)for(const clue of p.clues){const [lo,hi]=partialSight(a,clue.cell,n);if(lo>clue.value||hi<clue.value)return false;
-     for(const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]])for(let r=Math.floor(clue.cell/n)+dr,c=clue.cell%n+dc;r>=0&&c>=0&&r<n&&c<n;r+=dr,c+=dc){const i=r*n+c;if(a[i]===0)break;if(a[i]>=0)continue;let allowed=[];for(const v of [0,1]){a[i]=v;const [min,max]=partialSight(a,clue.cell,n);if(min<=clue.value&&max>=clue.value)allowed.push(v);}a[i]=-1;if(!allowed.length)return false;if(allowed.length===1){a[i]=allowed[0];changed=true;if(a[i]===0)break;}}
+    if(traitor!==4)for(const cells of runs){const used=cells.filter(i=>a[i]===1).length;if(used===4)return false;if(used===3)for(const i of cells)if(a[i]<0){a[i]=0;changed=true;}}
+    if(traitor!==3)for(const {clue,lines} of rays){const [lo,hi]=sightBounds(a,lines);if(lo>clue.value||hi<clue.value)return false;
+     for(const cells of lines)for(const i of cells){if(a[i]===0)break;if(a[i]>=0)continue;const allowed=[];for(const v of [0,1]){a[i]=v;const [min,max]=sightBounds(a,lines);if(min<=clue.value&&max>=clue.value)allowed.push(v);}a[i]=-1;if(!allowed.length)return false;if(allowed.length===1){a[i]=allowed[0];changed=true;if(a[i]===0)break;}}
     }
-   }
-   const first=a.findIndex(v=>v===1);if(first>=0){const reach=new Set([first]),queue=[first];for(const i of queue)for(const j of [i-n,i+n,i-1,i+1])if(j>=0&&j<size&&adjacent(i,j,n)&&a[j]!==0&&!reach.has(j)){reach.add(j);queue.push(j);}if(a.some((v,i)=>v===1&&!reach.has(i)))return false;}
-   return true;
+    // Connectivity permits every shape, including bends, branches and holes.
+    const first=a.findIndex(v=>v===1);if(first>=0){const reach=new Set([first]),queue=[first];for(const i of queue)for(const j of neighbours[i])if(a[j]!==0&&!reach.has(j)){reach.add(j);queue.push(j);}if(a.some((v,i)=>v===1&&!reach.has(i)))return false;for(let i=0;i<size;i++)if(a[i]<0&&!reach.has(i)){a[i]=0;changed=true;}}
+   }return true;
   }
-  function search(a){if(++nodes>24000){exhausted=true;return;}if(!propagate(a))return;const cell=a.findIndex(v=>v<0);if(cell<0){if(!baseHolds(p,a))return;const rules=ruleResults(p,a);if(rules.filter(Boolean).length!==3||rules[traitor-1])return;const key=a.join('');if(!seen.has(key)){seen.add(key);solutions.push({answer:a,traitor});}return;}for(const v of [0,1]){const next=a.slice();next[cell]=v;search(next);if(exhausted||solutions.length>=limit)return;}}
+  function search(a){if(++nodes>24000){exhausted=true;return;}if(!propagate(a))return;let cell=-1;for(let i=0;i<size;i++)if(a[i]<0&&(cell<0||weights[i]>weights[cell]))cell=i;
+   if(cell<0){if(!baseHolds(p,a))return;const rules=ruleResults(p,a);if(rules.filter(Boolean).length!==3||rules[traitor-1])return;const key=a.join('');if(!seen.has(key)){seen.add(key);solutions.push({answer:a,traitor});}return;}
+   for(const v of [0,1]){const next=a.slice();next[cell]=v;search(next);if(exhausted||solutions.length>=limit)return;}
+  }
   search(initial);if(exhausted||solutions.length>=limit)break;
  }solutions.complete=!exhausted;return solutions;
 }

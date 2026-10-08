@@ -33,8 +33,13 @@
  export let onArrow: ((dx:number,dy:number)=>void)|undefined = undefined;
  export let onClearArrow: (()=>void)|undefined = undefined;
  export let onDownloadPages: (()=>void)|undefined = undefined;
+ export let onDownloadSolution: (()=>void)|undefined = undefined;
+ export let onDownloadPuzzle: (()=>void)|undefined = undefined;
+ export let solutionDownloadFormat='A4 PDF';
  export let downloadingPages=false;
  export let busy=false;
+ export let searchLabel='Searching…';
+ export let cancelLabel='Cancel search';
  export let onCancel:(()=>void)|undefined=undefined;
  export let onExportBackup:(()=>void)|undefined=undefined;
  export let onImportBackup:((file:File)=>void)|undefined=undefined;
@@ -42,20 +47,21 @@
 </script>
 
 <SudokuAnswerControls {mode} {canUndo} {onDigit} {onMode} {onDelete} {onUndo}>
+ <div slot="above-keypad"><slot name="above-keypad"/></div>
  <SudokuSetSolveControls mode={editMode} onChange={onEditMode}/>
  <slot name="decorations"/>
  {#if onArrow&&onClearArrow}<SudokuArrowControls {onArrow} onClear={onClearArrow} diagonalOnly={diagonalArrowsOnly} multipleDiagonal={multipleDiagonalArrows} disabled={editMode!=='set'}/>{/if}
  {#if onHighlights}<button aria-pressed={showHighlights} onclick={onHighlights}>Highlights: {showHighlights?'On':'Off'}</button>{/if}
  {#if onConflicts}<button aria-pressed={showConflicts} onclick={onConflicts}>Show conflict: {showConflicts?'On':'Off'}</button>{/if}
- {#if busy}<div class="search-status" role="status">Searching… <button onclick={onCancel}>Cancel search</button></div>{/if}
+ {#if busy}<div class="search-status" role="status">{searchLabel} <button onclick={onCancel}>{cancelLabel}</button></div>{/if}
  <button class="primary" disabled={busy} onclick={onSolve}>Solve</button>
- <div class="clear-actions"><button onclick={onClearBoard}>Clear board</button><button onclick={onClearSolution}>Clear solution</button></div>
+ <div class="clear-actions"><button onclick={onClearBoard}>Reset</button><button onclick={onClearSolution}>Clear solution</button></div>
  {#if onRandom}<button disabled={busy} onclick={onRandom}>Random solution</button>{/if}
  {#if onExample}<button onclick={onExample}>Add example</button>{/if}
  <label>{cluesLabel}<input type="number" min="20" max={maxClues} bind:value={generationClues}/></label>
  <button disabled={busy} onclick={onGenerate}>Generate unique puzzle</button>
- <button onclick={()=>downloadSudokuSvg(boardSvg,`${filename}-puzzle.svg`)}>Download puzzle</button>
- <button onclick={()=>downloadSudokuSvg(boardSvg,`${filename}-solution.svg`,true)}>Download solution</button>
+ <button disabled={downloadingPages} onclick={()=>onDownloadPuzzle?onDownloadPuzzle():downloadSudokuSvg(boardSvg,`${filename}-puzzle.svg`)}>Download puzzle{onDownloadPuzzle?' · A4 PDF':''}</button>
+ <button disabled={downloadingPages} onclick={()=>onDownloadSolution?onDownloadSolution():downloadSudokuSvg(boardSvg,`${filename}-solution.svg`,true)}>Download solution{onDownloadSolution?' · '+solutionDownloadFormat:''}</button>
  {#if onDownloadPages}<button disabled={downloadingPages} onclick={onDownloadPages}>{downloadingPages?'Preparing PDF…':'Download puzzles · A4 PDF'}</button>{/if}
  <slot name="print-options"/>
  {#if onExportBackup&&onImportBackup}<ToolBackupControls onExport={onExportBackup} onImport={onImportBackup} {saveAvailable}/>{/if}

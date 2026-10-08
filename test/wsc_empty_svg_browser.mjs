@@ -7,8 +7,8 @@ try{
  if(await page.getByLabel('Password',{exact:true}).count()){await page.getByLabel('Password',{exact:true}).fill('กู้ชาติ');await page.getByRole('button',{name:'Enter',exact:true}).click();}
  for(const [tab,filename,count,outer] of [['Flower Sudoku','flower-sudoku.svg',90,false],['Pentagram Sudoku','pentagram-sudoku.svg',80,false],['Shifted Sudoku','shifted-sudoku.svg',81,false],['Shifted Sudoku','circular-sudoku.svg',567,true]]){
   await page.getByRole('tab',{name:tab,exact:true}).click();
-  if(outer)await page.getByRole('button',{name:'Add outer ring · 6 grids',exact:true}).click();
-  await page.getByRole('button',{name:'Clear board',exact:true}).click();
+  if(outer)await page.getByRole('button',{name:'4 rings · 6 outer grids',exact:true}).click();
+  await page.getByRole('button',{name:'Reset',exact:true}).click();
   const board=page.locator('svg[role="group"]').last();
   await page.getByRole('button',{name:'Set mode',exact:true}).click();
   await board.locator('[role="button"]').first().focus();await page.locator('.sudoku-keypad .digit-9').click();

@@ -98,7 +98,7 @@
      {#if index===boardIndex&&drag!==null&&ghost}{@const pt=centre(drag)}<line x1={pt.x} y1={pt.y} x2={ghost.x} y2={ghost.y} class="ghost"/>{/if}
     </svg></div>
       <div class="traitor-toggles" role="group" aria-label={`Puzzle ${boardIndex+1} traitor rule`}>
-       {#each [1,2,3,4] as rule}<button aria-pressed={draft.traitor===String(rule)} class:marked={draft.traitor===String(rule)} onclick={()=>markTraitor(String(rule),boardIndex)} disabled={busy||reveal}>Rule {rule}</button>{/each}
+       {#each [1,2,3,4] as rule}<button aria-pressed={draft.traitor===String(rule)} class:marked={draft.traitor===String(rule)} onclick={()=>markTraitor(String(rule),boardIndex)} disabled={busy}>Rule {rule}</button>{/each}
       </div>
       <div class="puzzle-actions"><span>{reveal?`Traitor: Rule ${puzzle.traitor}`:'Mark the traitor rule'}</span><button onclick={()=>check(boardIndex)} disabled={busy||reveal}>Check puzzle</button></div>
      </article>
@@ -114,7 +114,7 @@
    {#if puzzle?.type==='numbers'}<div class="number-modes" role="group" aria-label="Number input mode"><button class:mode-active={numberMode==='answer'} aria-pressed={numberMode==='answer'} onclick={()=>numberMode='answer'}>Answer</button><button class:mode-active={numberMode==='center'} aria-pressed={numberMode==='center'} onclick={()=>numberMode='center'}>Center marks</button></div><div class="keypad">{#each Array.from({length:puzzle.n},(_,i)=>i+1) as digit}<button onclick={()=>enter(digit)} disabled={busy||reveal}>{digit}</button>{/each}<button onclick={()=>enter(0)} disabled={busy||reveal}>⌫</button></div>{/if}
    <p class="hint">Active board: Puzzle {index+1}</p>
    <button onclick={reset} disabled={busy||!puzzle}>Clear active answer</button>
-   <label class="reveal"><input type="checkbox" bind:checked={reveal} disabled={busy||!puzzle}/> Reveal solution</label>
+   <label class="reveal"><input type="checkbox" bind:checked={reveal} onchange={event=>{reveal=event.currentTarget.checked;if(reveal&&pack)drafts=drafts.map((d,i)=>({...d,traitor:String(pack.puzzles[i].traitor)}));}} disabled={busy||!puzzle}/> Reveal solution</label>
    <p role="status" class="status">{message}</p>
    {#if pack}<p class="hint">{drafts.filter(d=>d.done).length}/4 completed · seed {pack.seed}</p>{/if}
   </aside>

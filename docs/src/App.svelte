@@ -693,8 +693,8 @@
     queueMicrotask(syncMobileToolSelection);
   }
 
-  function keypadMode(): "normal" | "center" | "corner" {
-    return noteMode === "3" ? "center" : noteMode === "2" ? "corner" : "normal";
+  function keypadMode(mode: string): "normal" | "center" | "corner" {
+    return mode === "3" ? "center" : mode === "2" ? "corner" : "normal";
   }
 
   function chooseKeypadMode(mode: "normal" | "center" | "corner") {
@@ -2624,8 +2624,19 @@
     )
       return;
     if (layer === "solution" && ["KeyZ", "KeyX", "KeyC"].includes(event.code)) {
-      noteMode =
-        event.code === "KeyZ" ? "1" : event.code === "KeyX" ? "3" : "2";
+      if (!event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        chooseNoteMode(event.code === "KeyZ" ? "1" : event.code === "KeyX" ? "3" : "2");
+        return;
+      }
+    }
+    if (layer === "solution" && (window as any).pu?.mode?.pu_a?.edit_mode === "sudoku") {
+      if (/^Key[A-Z]$/.test(event.code) && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
     }
     if (
       event.key !== "Tab" ||
@@ -2654,6 +2665,13 @@
         : (active + direction + modes.length) % modes.length;
     modes[next].click();
     modes[next].focus({ preventScroll: true });
+  }
+
+  function syncHeldNoteMode(event: KeyboardEvent) {
+    if (event.key === "Shift" || event.key === "Control" || event.key === "Meta") {
+      // Read after the legacy handler has applied or restored its temporary mode.
+      window.setTimeout(syncState, 0);
+    }
   }
 
   function moveLegacyNodes() {
@@ -2828,6 +2846,8 @@
     document.addEventListener("keydown", desktopLayerShortcut, true);
     document.addEventListener("keydown", cycleInputMode, true);
     document.addEventListener("keydown", toolPanelNumberShortcut, true);
+    document.addEventListener("keydown", syncHeldNoteMode, true);
+    document.addEventListener("keyup", syncHeldNoteMode, true);
     document.addEventListener("pointerup", requestSync);
     document.addEventListener("sudoku-solved", requestSync);
     document.addEventListener("penpa-theme-change", syncDisplayTheme);
@@ -2868,6 +2888,8 @@
       document.removeEventListener("keydown", desktopLayerShortcut, true);
       document.removeEventListener("keydown", cycleInputMode, true);
       document.removeEventListener("keydown", toolPanelNumberShortcut, true);
+      document.removeEventListener("keydown", syncHeldNoteMode, true);
+      document.removeEventListener("keyup", syncHeldNoteMode, true);
       document.removeEventListener("pointerup", requestSync);
       document.removeEventListener("sudoku-solved", requestSync);
       document.removeEventListener("penpa-theme-change", syncDisplayTheme);
@@ -3020,7 +3042,7 @@
       {:else}
         <div class="solver-shared-keypad">
           <SudokuKeypad
-            mode={keypadMode()}
+            mode={keypadMode(noteMode)}
             onMode={chooseKeypadMode}
             onDigit={(digit) => useMobileDigit(String(digit))}
           />
@@ -3726,7 +3748,7 @@
           </div>
           {#if layer === "solution"}
             <SudokuKeypad
-              mode={keypadMode()}
+              mode={keypadMode(noteMode)}
               onMode={chooseKeypadMode}
               onDigit={(digit) => useMobileDigit(String(digit))}
               onClear={useMobileClear}
@@ -3775,7 +3797,7 @@
           </div>
           {#if layer === "solution"}
             <SudokuKeypad
-              mode={keypadMode()}
+              mode={keypadMode(noteMode)}
               onMode={chooseKeypadMode}
               onDigit={(digit) => useMobileDigit(String(digit))}
               onClear={useMobileClear}

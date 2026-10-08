@@ -297,6 +297,20 @@ var SudokuCSP = (function() {
         return Object.keys(constraintRegistry);
     }
 
+    registerConstraint("allDifferentUnits", {
+        validatePartial: function(board, unit) {
+            var seen = 0;
+            for (var i = 0; i < unit.cells.length; i++) {
+                var value = cellValue(board, unit.cells[i]);
+                if (!value) continue;
+                var bit = 1 << value;
+                if (seen & bit) return false;
+                seen |= bit;
+            }
+            return true;
+        }
+    });
+
     function compileConstraints(constraints) {
         constraints = constraints || {};
         if (evaluatorCache && evaluatorCache.has(constraints)) return evaluatorCache.get(constraints);
