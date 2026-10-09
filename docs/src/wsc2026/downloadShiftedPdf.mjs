@@ -16,7 +16,7 @@ function fragment(source,inner,outer,start,width,rotation,box){
 }
 function printableBoard(board,includeSolution=false){
  const source=new DOMParser().parseFromString(puzzleSvg(board,includeSolution),'image/svg+xml').documentElement;
- source.querySelectorAll('.grid-letter').forEach(label=>label.remove());
+
  source.querySelectorAll('text').forEach(text=>{
   // svg2pdf does not support dominant-baseline: central. Use an alphabetic
   // baseline offset inside the existing cell rotation instead.
@@ -69,7 +69,9 @@ export async function downloadShiftedPdf(board,outerAngle,phase,includeOuter=tru
    await doc.svg(svg,{x:piece.x,y:piece.y,width:piece.width,height:piece.height});
   }
  }
- doc.save('shifted-sudoku-puzzles-a4.pdf');return pages.length;
+ doc.addPage();await renderShiftedAssembled(doc,board,false);
+ doc.addPage();await renderShiftedSolution(doc,board);
+ doc.save('shifted-sudoku-puzzles-and-solution-a4.pdf');return pages.length+2;
 }
 
 
@@ -78,17 +80,26 @@ export async function downloadShiftedSquarePdf(board){
  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
  const svg=printableBoard(board);
  await doc.svg(svg,{x:10,y:32,width:190,height:190});
- doc.save('shifted-sudoku-square.pdf');return 1;
+ doc.addPage();await renderShiftedSolution(doc,board);
+ doc.save('shifted-sudoku-square-puzzles-and-solution-a4.pdf');return 2;
 }
 
 export async function downloadShiftedSolutionPdf(board){
  const [{jsPDF}]=await Promise.all([import('jspdf'),import('svg2pdf.js')]);
  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
- const svg=printableBoard(board,true);
+ await renderShiftedSolution(doc,board);
+ doc.save('shifted-sudoku-solution-a4.pdf');return 1;
+}
+
+async function renderShiftedSolution(doc,board){return renderShiftedAssembled(doc,board,true);}
+
+async function renderShiftedAssembled(doc,board,solution){
+ if(solution){doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text('Solution',105,18,{align:'center'});}
+ const svg=printableBoard(board,solution);
+ if(!solution)svg.querySelectorAll('.variant-title').forEach(title=>title.remove());
  const box=svg.viewBox.baseVal;
- const scale=Math.min(190/box.width,277/box.height);
+ const scale=Math.min(190/box.width,257/box.height);
  const width=box.width*scale,height=box.height*scale;
  svg.querySelectorAll('text').forEach(text=>{text.style.fontFamily='helvetica';text.style.fontWeight='normal';text.style.fontStyle='normal';});
- await doc.svg(svg,{x:(210-width)/2,y:(297-height)/2,width,height});
- doc.save('shifted-sudoku-solution-a4.pdf');return 1;
+ await doc.svg(svg,{x:(210-width)/2,y:30+(257-height)/2,width,height});
 }

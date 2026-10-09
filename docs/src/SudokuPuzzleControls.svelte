@@ -32,6 +32,7 @@
  export let multipleDiagonalArrows=false;
  export let onArrow: ((dx:number,dy:number)=>void)|undefined = undefined;
  export let onClearArrow: (()=>void)|undefined = undefined;
+ export let onDownloadCombined: (()=>void)|undefined = undefined;
  export let onDownloadPages: (()=>void)|undefined = undefined;
  export let onDownloadSolution: (()=>void)|undefined = undefined;
  export let onDownloadPuzzle: (()=>void)|undefined = undefined;
@@ -60,9 +61,11 @@
  {#if onExample}<button onclick={onExample}>Add example</button>{/if}
  <label>{cluesLabel}<input type="number" min="20" max={maxClues} bind:value={generationClues}/></label>
  <button disabled={busy} onclick={onGenerate}>Generate unique puzzle</button>
+ {#if onDownloadCombined}<button disabled={downloadingPages} onclick={onDownloadCombined}>{downloadingPages?'Preparing PDF…':'Download puzzles & solution · A4 PDF'}</button>{:else}
  <button disabled={downloadingPages} onclick={()=>onDownloadPuzzle?onDownloadPuzzle():downloadSudokuSvg(boardSvg,`${filename}-puzzle.svg`)}>Download puzzle{onDownloadPuzzle?' · A4 PDF':''}</button>
  <button disabled={downloadingPages} onclick={()=>onDownloadSolution?onDownloadSolution():downloadSudokuSvg(boardSvg,`${filename}-solution.svg`,true)}>Download solution{onDownloadSolution?' · '+solutionDownloadFormat:''}</button>
  {#if onDownloadPages}<button disabled={downloadingPages} onclick={onDownloadPages}>{downloadingPages?'Preparing PDF…':'Download puzzles · A4 PDF'}</button>{/if}
+ {/if}
  <slot name="print-options"/>
  {#if onExportBackup&&onImportBackup}<ToolBackupControls onExport={onExportBackup} onImport={onImportBackup} {saveAvailable}/>{/if}
  <a href={`/wsc2026/WSC2026IB.pdf#page=${bookletPage}`} target="_blank" rel="noreferrer">Booklet rules &amp; example · page {bookletPage} ↗</a>

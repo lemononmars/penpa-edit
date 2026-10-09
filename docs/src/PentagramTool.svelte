@@ -8,7 +8,10 @@
  import {decoratePentagramPdf} from './wsc2026/pentagramPrint.mjs';
  let downloadingPages=false;
  const genres=[{id:'perfect',title:'1. Perfect Squares Sudoku',marks:['digits','black']},{id:'arithmetic',title:'2. Arithmetic Pairs Sudoku',marks:['digits','white']},{id:'division',title:'3. Division Sudoku',marks:['digits','white']},{id:'product',title:'4. Product Killer Sudoku',marks:['digits','cage']},{id:'killer',title:'5. Killer Sudoku',marks:['digits','cage']}];
- let genre='perfect';
+ export let initialGenre='perfect';
+ export let storageKey='pentagram';
+ export let fixedGenre=false;
+ let genre=initialGenre;
  $: activeGenre=genres.find(g=>g.id===genre)||genres[0];
  function changeGenre(next:string){genre=next;decorationMode='digits';cageDraft=[];}
  async function downloadBoard(solution=false){
@@ -95,9 +98,9 @@
  }
 
  $: savedState={values,givens,centerNotes,cornerNotes,selected,mode,editMode,generationClues,showConflicts,edgeDots,cages,cageDraft,decorationMode,dotClue,cageClue,genre};
- $: if(ready)saveAvailable=saveToolState('pentagram',savedState);
- function restoreState(state:any){({values,givens,centerNotes,cornerNotes,selected,mode,editMode,generationClues,showConflicts,edgeDots,cages,cageDraft,decorationMode,dotClue,cageClue}=state);genre=genres.some(g=>g.id===state.genre)?state.genre:'perfect';}
- onMount(()=>{const saved=loadToolState('pentagram');if(saved){restoreState(saved);message='Saved board restored.';}ready=true;});
+ $: if(ready)saveAvailable=saveToolState('pentagram',savedState,storageKey);
+ function restoreState(state:any){({values,givens,centerNotes,cornerNotes,selected,mode,editMode,generationClues,showConflicts,edgeDots,cages,cageDraft,decorationMode,dotClue,cageClue}=state);genre=fixedGenre?initialGenre:genres.some(g=>g.id===state.genre)?state.genre:'perfect';}
+ onMount(()=>{const saved=loadToolState('pentagram',storageKey);if(saved){restoreState(saved);message='Saved board restored.';}ready=true;});
  function exportBackup(){downloadToolBackup('pentagram',savedState);}
  async function importBackup(file:File){try{const state=await readToolBackup(file,'pentagram');remember();restoreState(state);message='Backup restored.';}catch(error){message=error instanceof Error?error.message:'Could not import backup.';throw error;}}
 </script>
@@ -130,7 +133,7 @@
  </svg>
  <p class="status" aria-live="polite">{complete?'Complete':usedDigits.size>8?'Use eight of the digits 1–9 across the whole puzzle.':showConflicts&&conflicts.size?'Check the highlighted conflicts.':message}</p>
  </div><SudokuPuzzleControls solutionDownloadFormat="PNG" {downloadingPages} onDownloadPuzzle={()=>downloadBoard(false)} onDownloadSolution={()=>downloadBoard(true)} busy={searchBusy} onCancel={cancelSearch} onExportBackup={exportBackup} onImportBackup={importBackup} {saveAvailable} {mode} {editMode} {showConflicts} onConflicts={()=>showConflicts=!showConflicts} canUndo={history.length>0} onDigit={enter} onMode={next=>mode=next} onEditMode={next=>editMode=next} onDelete={()=>enter(0)} onUndo={undo} onSolve={solve} onClearBoard={clear} onClearSolution={clearSolution} onRandom={random} onGenerate={generate} bind:generationClues maxClues={79} {boardSvg} filename="pentagram-sudoku" bookletPage={29}>
-  <div slot="decorations" class="genre-controls"><label>Genre<select aria-label="Pentagram genre" value={genre} onchange={event=>changeGenre(event.currentTarget.value)}>{#each genres as item}<option value={item.id}>{item.title}</option>{/each}</select></label>
+  <div slot="decorations" class="genre-controls"><label>Genre<select disabled={fixedGenre} aria-label="Pentagram genre" value={genre} onchange={event=>changeGenre(event.currentTarget.value)}>{#each genres as item}<option value={item.id}>{item.title}</option>{/each}</select></label>
   <PentagramDecorationControls allowedModes={activeGenre.marks} mode={decorationMode} bind:dotClue bind:cageClue disabled={editMode!=='set'} onMode={next=>{decorationMode=next;cageDraft=[];}} onSaveCage={saveCage} onRemoveCage={removeCage}/></div>
  </SudokuPuzzleControls></div>
 </section>

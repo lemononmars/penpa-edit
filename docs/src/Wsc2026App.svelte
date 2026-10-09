@@ -5,14 +5,14 @@
  import SamuraiRules from './wsc2026/SamuraiRules.svelte';
  import BlindPipsPractice from './wsc2026/BlindPipsPractice.svelte';
  import ShiftedSudokuTool from './ShiftedSudokuTool.svelte';
- import FlowerSudokuTool from './FlowerSudokuTool.svelte';
- import PentagramTool from './PentagramTool.svelte';
+ import FlowerRoundTool from './FlowerRoundTool.svelte';
  import round1Playable from './wsc2026/round1Playable.json';
  import HundredCombinationsTool from './HundredCombinationsTool.svelte';
  import { loadPracticeLinks, playerUrl } from './wsc2026/client';
  let tab=new URLSearchParams(location.search).get('tab')||'booklet', round='', search='', error='', sharedPuzzles:any[]=[], roundType='all';
+ $: if(tab==='pentagram')tab='flower';
  $: if (tab==='circular') tab='shifted';
- $: if (!['booklet','blind','shifted','flower','pentagram','hundred'].includes(tab)) tab='booklet';
+ $: if (!['booklet','blind','shifted','flower','hundred'].includes(tab)) tab='booklet';
  let unlocked=false, password='', passwordError='';
  async function unlock(value=password){passwordError='';try{const response=await fetch('/wsc2026/access',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:value})});if(!response.ok){passwordError=response.status===401?'Incorrect password.':'Unable to unlock the practice room. Try again.';return;}localStorage.setItem('wsc2026-password',value);unlocked=true;password='';const target=new URLSearchParams(location.search).get('returnTo');if(target){const destination=new URL(target,location.origin);if(destination.origin===location.origin&&destination.pathname.startsWith('/wsc2026/')&&!['/wsc2026/','/wsc2026/access'].includes(destination.pathname)){location.replace(destination.href);return;}}await loadLinks();}catch{passwordError='Could not unlock. Check your connection and browser storage.';}}
  function officialExampleFor(p:any){const puzzle_url=(round1Playable as Record<string,string>)[p.id];return puzzle_url?[{id:`official:${p.id}`,round:p.round,name:'Official example',source:'official',puzzle_url,booklet_ref:p.id,variant_id:p.variantId}]:[];}
@@ -50,7 +50,7 @@
 <div class="app-shell">
  <main>
   <a class="puzzle-link" href="/wpc2026/">Go to Puzzle ↗</a>
-  <div class="tabs" role="tablist" aria-label="Practice sections">{#each [['booklet','Rules & examples'],['blind','Blind Pips'],['shifted','Shifted Sudoku'],['flower','Flower Sudoku'],['pentagram','Pentagram Sudoku'],['hundred','Hundred Combinations']] as item}<button role="tab" aria-selected={tab===item[0]} class:active={tab===item[0]} onclick={()=>{tab=item[0];if(typeof history!=='undefined'){const url=new URL(location.href);url.searchParams.set('tab',item[0]);history.replaceState({},'',url);}}}>{item[1]}</button>{/each}</div>
+  <div class="tabs" role="tablist" aria-label="Practice sections">{#each [['booklet','Rules & examples'],['blind','Blind Pips'],['shifted','Shifted Sudoku'],['flower','Flower Sudoku'],['hundred','Hundred Combinations']] as item}<button role="tab" aria-selected={tab===item[0]} class:active={tab===item[0]} onclick={()=>{tab=item[0];if(typeof history!=='undefined'){const url=new URL(location.href);url.searchParams.set('tab',item[0]);history.replaceState({},'',url);}}}>{item[1]}</button>{/each}</div>
   {#if error}<p role="alert" class="message error">{error}</p>{/if}
   {#if tab==='booklet'}
    <section class="toolbar"><label>Round type<select aria-label="Round type" bind:value={roundType}><option value="all">Individual &amp; Team</option><option value="individual">Individual</option><option value="team">Team</option></select></label><label>Round<select aria-label="Round" bind:value={round}><option value="">All rounds</option>{#each visibleRounds as r}<option value={String(r.id)}>{String(r.id).padStart(2,'0')} · {r.name}</option>{/each}</select></label><label class="search">Find a puzzle<input bind:value={search} type="search" placeholder="Search names or rules…"/></label><fieldset class="layout-picker"><legend>PDF layout</legend><button type="button" aria-label="Portrait · one puzzle per page" aria-pressed={!printLandscape} class:active={!printLandscape} onclick={()=>printLandscape=false}><span class="page-icon portrait-icon"><b>1</b></span><span>Portrait</span></button><button type="button" aria-label="Landscape · two puzzles per page" aria-pressed={printLandscape} class:active={printLandscape} onclick={()=>printLandscape=true}><span class="page-icon landscape-icon"><b>1</b><b>2</b></span><span>Landscape</span></button></fieldset><div class="actions"><a href="/wsc2026/WSC2026IB.pdf" target="_blank" rel="noreferrer">Open booklet ↗</a></div></section>
@@ -67,9 +67,7 @@
   {:else if tab==='shifted'}
    <ShiftedSudokuTool initialView={new URLSearchParams(location.search).get('tab')==='circular'?'outer':'classic'}/>
   {:else if tab==='flower'}
-   <FlowerSudokuTool/>
-  {:else if tab==='pentagram'}
-   <PentagramTool/>
+   <FlowerRoundTool/>
 
   {:else if tab==='hundred'}
    <HundredCombinationsTool/>
